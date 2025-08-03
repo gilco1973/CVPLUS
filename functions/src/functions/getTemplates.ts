@@ -1,5 +1,6 @@
-import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import { CVTemplate } from '../types';
+import { corsOptions } from '../config/cors';
 
 const templates: CVTemplate[] = [
   {
@@ -70,21 +71,26 @@ const templates: CVTemplate[] = [
   }
 ];
 
-export const getTemplates = functions.https.onCall(async (data, context) => {
-  const { category, includePublic } = data;
+export const getTemplates = onCall(
+  {
+    ...corsOptions
+  },
+  async (request) => {
+    const { category, includePublic } = request.data;
 
-  let filteredTemplates = templates;
+    let filteredTemplates = templates;
 
-  if (category) {
-    filteredTemplates = templates.filter(t => t.category === category);
+    if (category) {
+      filteredTemplates = templates.filter(t => t.category === category);
+    }
+
+    if (!includePublic) {
+      filteredTemplates = filteredTemplates.filter(t => !t.isPremium);
+    }
+
+    return {
+      templates: filteredTemplates,
+      total: filteredTemplates.length
+    };
   }
-
-  if (!includePublic) {
-    filteredTemplates = filteredTemplates.filter(t => !t.isPremium);
-  }
-
-  return {
-    templates: filteredTemplates,
-    total: filteredTemplates.length
-  };
-});
+);

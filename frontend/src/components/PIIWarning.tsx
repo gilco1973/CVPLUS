@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Shield, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Shield, Eye } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface PIIWarningProps {

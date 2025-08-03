@@ -1,29 +1,26 @@
-import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { CVParser } from '../services/cvParser';
 import { PIIDetector } from '../services/piiDetector';
+import { corsOptions } from '../config/cors';
 
-export const processCV = functions
-  .runWith({
+export const processCV = onCall(
+  {
     timeoutSeconds: 300,
-    memory: '1GB'
-  })
-  .https.onCall(async (data, context) => {
+    memory: '2GiB',
+    ...corsOptions,
+    secrets: ['ANTHROPIC_API_KEY']
+  },
+  async (request) => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated to process CV'
-      );
+    if (!request.auth) {
+      throw new Error('User must be authenticated to process CV');
     }
 
-    const { jobId, fileUrl, mimeType, isUrl } = data;
+    const { jobId, fileUrl, mimeType, isUrl } = request.data;
 
     if (!jobId || (!fileUrl && !isUrl)) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Missing required parameters'
-      );
+      throw new Error('Missing required parameters');
     }
 
     try {
@@ -37,7 +34,7 @@ export const processCV = functions
         });
 
       // Initialize CV parser
-      const apiKey = functions.config().anthropic?.api_key;
+      const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
         throw new Error('Anthropic API key not configured');
       }
@@ -84,7 +81,7 @@ export const processCV = functions
         .add({
           type: 'generate-cv',
           jobId,
-          userId: context.auth.uid,
+          userId: request.auth.uid,
           createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
@@ -107,9 +104,6 @@ export const processCV = functions
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-      throw new functions.https.HttpsError(
-        'internal',
-        `Failed to process CV: ${error.message}`
-      );
+      throw new Error(`Failed to process CV: ${error.message}`);
     }
   });

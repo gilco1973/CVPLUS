@@ -9,4 +9,4 @@ export { generatePodcast } from './functions/generatePodcast';
 export { generateCV } from './functions/generateCV';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
-export { cleanupTempFiles } from './functions/cleanupTempFiles';
+export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';

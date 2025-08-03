@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
-import { subscribeToJob, processCV, Job } from '../services/cvService';
+import { subscribeToJob, processCV } from '../services/cvService';
+import type { Job } from '../services/cvService';
 
 const PROCESSING_STEPS = [
   { id: 'upload', label: 'File Uploaded', status: 'pending' },
@@ -13,13 +14,9 @@ const PROCESSING_STEPS = [
 export const ProcessingPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const [job, setJob] = useState<Job | null>(null);
   const [steps, setSteps] = useState(PROCESSING_STEPS);
   const [error, setError] = useState<string | null>(null);
-  
-  // Check if this is a quick create
-  const isQuickCreate = new URLSearchParams(location.search).get('quickCreate') === 'true';
 
   useEffect(() => {
     if (!jobId) return;
@@ -121,7 +118,7 @@ export const ProcessingPage = () => {
 
           {/* Steps */}
           <div className="space-y-4">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <div key={step.id} className="flex items-center space-x-4">
                 {getStepIcon(step.status)}
                 <div className="flex-1">

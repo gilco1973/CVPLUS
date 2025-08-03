@@ -1,20 +1,19 @@
-import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { corsOptions } from '../config/cors';
 
-export const generatePodcast = functions
-  .runWith({
+export const generatePodcast = onCall(
+  {
     timeoutSeconds: 540,
-    memory: '2GB'
-  })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated'
-      );
+    memory: '2GiB',
+    ...corsOptions
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('User must be authenticated');
     }
 
-    const { jobId, config } = data;
+    const { jobId } = request.data;
 
     try {
       // TODO: Implement NotebookLLM integration
@@ -52,9 +51,6 @@ export const generatePodcast = functions
       };
     } catch (error: any) {
       console.error('Error generating podcast:', error);
-      throw new functions.https.HttpsError(
-        'internal',
-        `Failed to generate podcast: ${error.message}`
-      );
+      throw new Error(`Failed to generate podcast: ${error.message}`);
     }
   });

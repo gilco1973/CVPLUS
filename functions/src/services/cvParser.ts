@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import * as pdfParse from 'pdf-parse';
-import * as mammoth from 'mammoth';
-import * as csv from 'csv-parser';
+import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
+import csv from 'csv-parser';
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { Readable } from 'stream';
@@ -112,7 +112,7 @@ export class CVParser {
       
       stream
         .pipe(csv())
-        .on('data', (data) => results.push(data))
+        .on('data', (data: any) => results.push(data))
         .on('end', () => {
           resolve(JSON.stringify(results, null, 2));
         })

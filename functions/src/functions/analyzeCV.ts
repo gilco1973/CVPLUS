@@ -1,23 +1,23 @@
-import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import Anthropic from '@anthropic-ai/sdk';
+import { corsOptions } from '../config/cors';
 
-export const analyzeCV = functions
-  .runWith({
+export const analyzeCV = onCall(
+  {
     timeoutSeconds: 120,
-    memory: '512MB'
-  })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated'
-      );
+    memory: '512MiB',
+    ...corsOptions,
+    secrets: ['ANTHROPIC_API_KEY']
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('User must be authenticated');
     }
 
-    const { parsedCV, targetRole } = data;
+    const { parsedCV, targetRole } = request.data;
 
     try {
-      const apiKey = functions.config().anthropic?.api_key;
+      const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
         throw new Error('Anthropic API key not configured');
       }
@@ -67,9 +67,6 @@ Please provide:
       throw new Error('Failed to get analysis from Claude');
     } catch (error: any) {
       console.error('Error analyzing CV:', error);
-      throw new functions.https.HttpsError(
-        'internal',
-        `Failed to analyze CV: ${error.message}`
-      );
+      throw new Error(`Failed to analyze CV: ${error.message}`);
     }
   });

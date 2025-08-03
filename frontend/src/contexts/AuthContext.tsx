@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  User, 
   signInAnonymously, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged
 } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 interface AuthContextType {

@@ -4,7 +4,7 @@ import { FileUpload } from '../components/FileUpload';
 import { URLInput } from '../components/URLInput';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadCV, createJob } from '../services/cvService';
-import { ArrowRight, FileText, Globe, Sparkles } from 'lucide-react';
+import { FileText, Globe, Sparkles } from 'lucide-react';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export const HomePage = () => {
 
       // Create job and upload file
       const jobId = await createJob(undefined, quickCreate);
-      const fileUrl = await uploadCV(file, jobId);
+      await uploadCV(file, jobId);
       
       // Navigate to processing page with quick create flag
       navigate(`/process/${jobId}${quickCreate ? '?quickCreate=true' : ''}`);

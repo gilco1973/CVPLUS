@@ -1,20 +1,19 @@
-import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { corsOptions } from '../config/cors';
 
-export const generateCV = functions
-  .runWith({
+export const generateCV = onCall(
+  {
     timeoutSeconds: 300,
-    memory: '1GB'
-  })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated'
-      );
+    memory: '2GiB',
+    ...corsOptions
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('User must be authenticated');
     }
 
-    const { jobId, templateId, features } = data;
+    const { jobId, templateId, features } = request.data;
 
     try {
       await admin.firestore()
@@ -51,9 +50,6 @@ export const generateCV = functions
       };
     } catch (error: any) {
       console.error('Error generating CV:', error);
-      throw new functions.https.HttpsError(
-        'internal',
-        `Failed to generate CV: ${error.message}`
-      );
+      throw new Error(`Failed to generate CV: ${error.message}`);
     }
   });

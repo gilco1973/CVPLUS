@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Play, FileText, Home, Sparkles } from 'lucide-react';
-import { getJob, Job } from '../services/cvService';
+import { getJob } from '../services/cvService';
+import type { Job } from '../services/cvService';
 import { PIIWarning } from '../components/PIIWarning';
 
 export const ResultsPage = () => {
