@@ -112,7 +112,7 @@ export const templates: CVTemplate[] = [
     id: 'modern-tech',
     name: 'Modern Tech',
     category: 'modern',
-    thumbnail: 'https://storage.googleapis.com/onecv/templates/modern-tech.png',
+    thumbnail: 'https://storage.googleapis.com/getmycv/templates/modern-tech.png',
     features: ['ATS-friendly', 'Clean design', 'Tech-focused'],
     industries: ['Technology', 'Software', 'IT'],
     config: {
@@ -156,7 +156,7 @@ export const templates: CVTemplate[] = [
     id: 'executive-classic',
     name: 'Executive Classic',
     category: 'executive',
-    thumbnail: 'https://storage.googleapis.com/onecv/templates/executive-classic.png',
+    thumbnail: 'https://storage.googleapis.com/getmycv/templates/executive-classic.png',
     features: ['Professional', 'Traditional', 'C-level appropriate'],
     industries: ['Finance', 'Consulting', 'Corporate'],
     config: {
@@ -200,7 +200,7 @@ export const templates: CVTemplate[] = [
     id: 'creative-designer',
     name: 'Creative Designer',
     category: 'creative',
-    thumbnail: 'https://storage.googleapis.com/onecv/templates/creative-designer.png',
+    thumbnail: 'https://storage.googleapis.com/getmycv/templates/creative-designer.png',
     features: ['Visual impact', 'Portfolio-ready', 'Unique layout'],
     industries: ['Design', 'Marketing', 'Creative'],
     config: {

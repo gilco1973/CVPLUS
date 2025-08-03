@@ -997,7 +997,7 @@ export class InteractiveCVGenerator {
       html: interactiveHTML,
       features: generatedFeatures,
       onlineUrl,
-      shareableLink: `https://onecv.app/cv/${jobId}`,
+      shareableLink: `https://getmycv.ai/cv/${jobId}`,
       embedCode: this.generateEmbedCode(jobId)
     };
   }
@@ -1084,14 +1084,14 @@ export class InteractiveCVGenerator {
     });
 
     // Return public URL
-    return `https://onecv.app/cv/${jobId}`;
+    return `https://getmycv.ai/cv/${jobId}`;
   }
 
   private generateEmbedCode(jobId: string): string {
     return `
       <!-- Embed Interactive CV -->
       <iframe 
-        src="https://onecv.app/embed/${jobId}" 
+        src="https://getmycv.ai/embed/${jobId}" 
         width="100%" 
         height="1200" 
         frameborder="0"

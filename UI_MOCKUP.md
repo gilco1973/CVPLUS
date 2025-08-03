@@ -83,7 +83,7 @@ graph LR
 ```mermaid
 graph TD
     subgraph "Mobile Layout"
-        Header[☰ OneCV]
+        Header[☰ GetMyCV.ai]
         
         subgraph "Upload Section"
             MobileUpload[📤 Upload CV]

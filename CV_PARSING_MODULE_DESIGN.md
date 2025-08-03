@@ -139,7 +139,7 @@ export class TextExtractor {
       // Fetch the URL content
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; OneCVBot/1.0)'
+          'User-Agent': 'Mozilla/5.0 (compatible; GetMyCVBot/1.0)'
         }
       });
 

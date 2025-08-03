@@ -1,0 +1,170 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { CheckCircle, Circle, Loader2 } from 'lucide-react';
+import { subscribeToJob, processCV, Job } from '../services/cvService';
+
+const PROCESSING_STEPS = [
+  { id: 'upload', label: 'File Uploaded', status: 'pending' },
+  { id: 'analyze', label: 'Analyzing Content', status: 'pending' },
+  { id: 'enhance', label: 'Generating Enhanced CV', status: 'pending' },
+  { id: 'podcast', label: 'Creating Podcast', status: 'pending' }
+];
+
+export const ProcessingPage = () => {
+  const { jobId } = useParams<{ jobId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [job, setJob] = useState<Job | null>(null);
+  const [steps, setSteps] = useState(PROCESSING_STEPS);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Check if this is a quick create
+  const isQuickCreate = new URLSearchParams(location.search).get('quickCreate') === 'true';
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    // Subscribe to job updates
+    const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
+      if (!updatedJob) {
+        setError('Job not found');
+        return;
+      }
+
+      setJob(updatedJob);
+
+      // Update steps based on job status
+      const newSteps = [...PROCESSING_STEPS];
+      
+      if (updatedJob.status !== 'pending') {
+        newSteps[0].status = 'completed';
+      }
+      
+      if (['processing', 'analyzed', 'generating', 'completed'].includes(updatedJob.status)) {
+        newSteps[1].status = updatedJob.status === 'processing' ? 'active' : 'completed';
+      }
+      
+      if (['generating', 'completed'].includes(updatedJob.status)) {
+        newSteps[2].status = updatedJob.status === 'generating' ? 'active' : 'completed';
+      }
+      
+      if (updatedJob.status === 'completed') {
+        newSteps[3].status = 'completed';
+      }
+
+      if (updatedJob.status === 'failed') {
+        setError(updatedJob.error || 'Processing failed');
+      }
+
+      setSteps(newSteps);
+
+      // Start processing if job is pending
+      if (updatedJob.status === 'pending' && updatedJob.fileUrl) {
+        try {
+          await processCV(
+            jobId,
+            updatedJob.fileUrl,
+            updatedJob.mimeType || '',
+            updatedJob.isUrl || false
+          );
+        } catch (err) {
+          console.error('Error starting processing:', err);
+          setError('Failed to start processing');
+        }
+      }
+
+      // Navigate to results when completed
+      if (updatedJob.status === 'completed') {
+        setTimeout(() => {
+          navigate(`/results/${jobId}`);
+        }, 1500);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [jobId, navigate]);
+
+  const getStepIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-6 h-6 text-green-500" />;
+      case 'active':
+        return <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />;
+      default:
+        return <Circle className="w-6 h-6 text-gray-300" />;
+    }
+  };
+
+  const getProgressPercentage = () => {
+    const completedSteps = steps.filter(s => s.status === 'completed').length;
+    return (completedSteps / steps.length) * 100;
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-center mb-8">Processing Your CV</h2>
+
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-full transition-all duration-500 ease-out"
+                style={{ width: `${getProgressPercentage()}%` }}
+              />
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              {Math.round(getProgressPercentage())}% Complete
+            </p>
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-4">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center space-x-4">
+                {getStepIcon(step.status)}
+                <div className="flex-1">
+                  <p className={`font-medium ${
+                    step.status === 'completed' ? 'text-gray-900' : 
+                    step.status === 'active' ? 'text-blue-600' : 
+                    'text-gray-400'
+                  }`}>
+                    {step.label}
+                  </p>
+                  {step.status === 'active' && (
+                    <p className="text-sm text-gray-500">
+                      {step.id === 'analyze' && 'Extracting information with AI...'}
+                      {step.id === 'enhance' && 'Applying professional templates...'}
+                      {step.id === 'podcast' && 'Generating audio summary...'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+              <button
+                onClick={() => navigate('/')}
+                className="mt-2 text-red-600 hover:text-red-700 text-sm font-medium"
+              >
+                Try again →
+              </button>
+            </div>
+          )}
+
+          {/* Status Message */}
+          {job?.status === 'completed' && (
+            <div className="mt-6 text-center">
+              <p className="text-green-600 font-medium">All done! Redirecting to results...</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

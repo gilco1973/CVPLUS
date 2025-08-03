@@ -6,8 +6,8 @@ This document contains all the steps needed to rename the project from "onecv" t
 
 ```bash
 cd /Users/gklainert/Documents
-mv onecv getmycv.ai
-cd getmycv.ai
+mv onecv getmycv
+cd getmycv
 ```
 
 ## Step 2: Initialize Git Repository

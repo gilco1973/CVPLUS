@@ -6,7 +6,7 @@ Use sub agents from ~/.local/share/claude-007-agents/.claude/agents in everythin
 
 ## Project Structure
 ```
-/Users/gklainert/Documents/getmycv.ai/
+/Users/gklainert/Documents/getmycv/
 ├── .claude/
 │   └── settings.local.json    # Claude Code permissions configuration
 └── CLAUDE.md                  # This file - AI assistant documentation
@@ -15,7 +15,7 @@ Use sub agents from ~/.local/share/claude-007-agents/.claude/agents in everythin
 ## Technology Stack
 **Status**: Not yet determined. The project is empty and awaiting initial setup.
 
-Based on the project name "onecv", this may be intended as a CV/resume application, but the technology stack has not been chosen yet.
+Based on the project name "getmycv", this is an AI-powered CV creation application with technology stack detailed in the initialization script.
 
 ## Development Environment
 

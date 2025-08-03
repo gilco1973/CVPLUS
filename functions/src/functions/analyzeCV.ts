@@ -1,0 +1,75 @@
+import * as functions from 'firebase-functions';
+import Anthropic from '@anthropic-ai/sdk';
+
+export const analyzeCV = functions
+  .runWith({
+    timeoutSeconds: 120,
+    memory: '512MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated'
+      );
+    }
+
+    const { parsedCV, targetRole } = data;
+
+    try {
+      const apiKey = functions.config().anthropic?.api_key;
+      if (!apiKey) {
+        throw new Error('Anthropic API key not configured');
+      }
+
+      const anthropic = new Anthropic({ apiKey });
+
+      const prompt = `Analyze this CV and provide recommendations for improvement${targetRole ? ` for a ${targetRole} position` : ''}.
+
+IMPORTANT INSTRUCTIONS:
+1. Base your analysis ONLY on the information provided in the CV below
+2. DO NOT make up or assume any skills, experiences, or qualifications not explicitly stated
+3. If information is missing, suggest adding it but don't assume what it might be
+4. Highlight and reference the actual skills and experiences present in the CV
+
+CV Data:
+${JSON.stringify(parsedCV, null, 2)}
+
+Please provide:
+1. Overall CV strength score (1-10)
+2. Key strengths
+3. Areas for improvement
+4. Specific recommendations for each section
+5. Keywords to add for ATS optimization
+6. Suggested additional sections or information`;
+
+      const response = await anthropic.messages.create({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 2000,
+        temperature: 0.7,
+        system: 'You are a professional career counselor and CV expert who provides accurate, fact-based recommendations. You MUST base all your analysis only on the information explicitly provided in the CV. Never make up, assume, or add information that is not present. If something is missing, suggest it as an area for improvement but do not assume what the content might be.',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      });
+
+      const content = response.content[0];
+      if (content.type === 'text') {
+        return {
+          success: true,
+          analysis: content.text
+        };
+      }
+
+      throw new Error('Failed to get analysis from Claude');
+    } catch (error: any) {
+      console.error('Error analyzing CV:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        `Failed to analyze CV: ${error.message}`
+      );
+    }
+  });
