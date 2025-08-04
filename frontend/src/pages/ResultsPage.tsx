@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Play, FileText, Home, Sparkles, Loader2 } from 'lucide-react';
+import { Download, Play, FileText, Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { PIIWarning } from '../components/PIIWarning';
 import { PDFService } from '../services/pdfService';
 import { DOCXService } from '../services/docxService';
+import { FeatureDashboard } from '../components/features/FeatureDashboard';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -43,6 +44,7 @@ export const ResultsPage = () => {
   });
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatingDOCX, setGeneratingDOCX] = useState(false);
+  const [showEnhancedFeatures, setShowEnhancedFeatures] = useState(false);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -606,7 +608,41 @@ export const ResultsPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Toggle between Results and Enhanced Features */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-800 rounded-lg p-1 inline-flex">
+            <button
+              onClick={() => setShowEnhancedFeatures(false)}
+              className={`px-6 py-2 rounded-md font-medium transition-all ${
+                !showEnhancedFeatures 
+                  ? 'bg-cyan-600 text-white' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              CV Results
+            </button>
+            <button
+              onClick={() => setShowEnhancedFeatures(true)}
+              className={`px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 ${
+                showEnhancedFeatures 
+                  ? 'bg-cyan-600 text-white' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Wand2 className="w-4 h-4" />
+              Enhanced Features
+            </button>
+          </div>
+        </div>
+
+        {/* Conditional rendering based on toggle */}
+        {showEnhancedFeatures ? (
+          <FeatureDashboard 
+            job={job} 
+            onJobUpdate={(updatedJob) => setJob(updatedJob)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* CV Preview */}
           <div className="lg:col-span-2">
             <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
@@ -796,6 +832,7 @@ export const ResultsPage = () => {
             </button>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

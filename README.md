@@ -1,68 +1,109 @@
-# CVisionery - From Paper to Powerful: Your CV, Reinvented
+# CVisionary - From Paper to Powerful: Your CV, Reinvented
 
-Transform your traditional CV into an interactive, AI-enhanced professional profile with cutting-edge features!
+<div align="center">
+  <img src="frontend/public/images/cvisionary-logo-with-slogan-full.svg" alt="CVisionary Logo" width="400"/>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+  [![Firebase](https://img.shields.io/badge/Firebase-Powered-orange.svg)](https://firebase.google.com/)
+  [![Claude AI](https://img.shields.io/badge/Claude_AI-Powered-purple.svg)](https://www.anthropic.com/)
+  
+  Transform your traditional CV into an interactive, AI-enhanced professional profile with cutting-edge features!
+  
+  [Live Demo](https://cvisionary.ai) | [Documentation](#-documentation) | [Contributing](#-contributing)
+</div>
 
-## 🚀 Features
+## 🌟 About CVisionary
 
-- **AI-Powered CV Analysis**: Uses Claude 4 Sonnet to intelligently parse and understand your CV
-- **PII Detection & Protection**: Automatically identifies and flags sensitive personal information
-- **Multiple Templates**: Choose from Modern, Classic, or Creative professional templates
-- **Smart Enhancement Options**:
-  - ATS Optimization
-  - Keyword Enhancement
-  - Achievement Highlighting
-  - Skills Visualization
-- **Multiple Export Formats**: HTML (available now), PDF & DOCX (coming soon)
-- **AI Career Podcast**: Generate an audio summary of your career (coming soon)
-- **Easy Sharing**: Copy link or generate QR code to share your CV
-- **Privacy Mode**: Create a masked version for public sharing
+CVisionary is an open-source AI-powered platform that revolutionizes how professionals present themselves. Created by [Gil Klainert](https://klainert.com), a Software Engineering Leader and AI Expert, this project is a gift to the community - making powerful career advancement tools accessible to everyone, regardless of their background or financial situation.
+
+## 🚀 Key Features
+
+### 🤖 AI-Powered Enhancement
+- **Intelligent CV Analysis**: Claude AI understands and enhances your professional story
+- **ATS Optimization**: Ensure your CV passes Applicant Tracking Systems
+- **Smart Keyword Enhancement**: Industry-specific terms that get you noticed
+- **Achievement Highlighting**: Quantify and showcase your impact
+
+### ✨ Interactive Elements
+- **Dynamic QR Codes**: Instant mobile access to your online profile
+- **Interactive Career Timeline**: Visual journey through your professional growth
+- **Skills Visualization**: Beautiful charts and graphs that bring data to life
+- **Contact Forms**: Let recruiters reach you directly
+
+### 🎨 Professional Design
+- **Multiple Templates**: Modern, Classic, and Creative designs
+- **Responsive Layouts**: Perfect on any device
+- **Custom Branding**: Make it uniquely yours
+- **Print-Ready Formats**: PDF and DOCX exports
+
+### 🔒 Privacy & Security
+- **Smart Privacy Mode**: PII detection and masking for public sharing
+- **Secure Storage**: Firebase-powered data protection
+- **User Control**: You own your data
+- **GDPR Compliant**: Privacy by design
+
+### 🎙️ Innovative Features
+- **AI Career Podcast**: Transform your CV into an engaging audio story
+- **Personality Insights**: AI-driven analysis of work style and preferences
+- **Video Introductions**: Make a memorable first impression
+- **Portfolio Integration**: Showcase your work seamlessly
 
 ## 🛠️ Technology Stack
 
+<table>
+<tr>
+<td align="center" width="50%">
+
 ### Frontend
 - **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Tailwind CSS** for styling
+- **Vite** for blazing fast builds
+- **Tailwind CSS** for beautiful UI
 - **React Router** for navigation
-- **Firebase SDK** for authentication and storage
+- **Firebase SDK** for real-time features
+
+</td>
+<td align="center" width="50%">
 
 ### Backend
 - **Firebase Functions** (Node.js 20)
-- **Claude 4 Sonnet API** for AI processing
-- **Firebase Firestore** for data storage
-- **Firebase Storage** for file storage
-- **Firebase Authentication** (Anonymous & Google)
+- **Claude AI API** for intelligence
+- **Firestore** for data persistence
+- **Cloud Storage** for files
+- **Authentication** (Anonymous & Google)
+
+</td>
+</tr>
+</table>
 
 ## 📋 Prerequisites
 
 - Node.js 20 or higher
 - npm or yarn
 - Firebase CLI (`npm install -g firebase-tools`)
-- An Anthropic API key for Claude
+- Anthropic API key for Claude AI
 
-## 🔧 Setup Instructions
+## 🔧 Quick Start
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/getmycv.git
-cd getmycv
+git clone https://github.com/gilco1973/CVisionary.git
+cd CVisionary
 ```
 
 ### 2. Install dependencies
-
-Frontend:
 ```bash
+# Frontend
 cd frontend
 npm install
-```
 
-Functions:
-```bash
+# Functions
 cd ../functions
 npm install
 ```
 
-### 3. Configure environment variables
+### 3. Configure environment
 
 Create `frontend/.env.local`:
 ```env
@@ -80,36 +121,30 @@ Create `functions/.env`:
 ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
 
-### 4. Set up Firebase
-
+### 4. Firebase setup
 ```bash
-# Login to Firebase
+# Login
 firebase login
 
-# Initialize Firebase (select existing project or create new)
+# Initialize (select existing project or create new)
 firebase init
 
-# Deploy Firebase rules and functions
-firebase deploy
-```
-
-### 5. Set the Anthropic API key in Firebase
-
-```bash
+# Set API key
 firebase functions:secrets:set ANTHROPIC_API_KEY
-# Enter your Anthropic API key when prompted
+
+# Deploy
+firebase deploy
 ```
 
 ## 🚀 Development
 
-### Run frontend locally:
+### Run locally:
 ```bash
+# Terminal 1 - Frontend
 cd frontend
 npm run dev
-```
 
-### Run Firebase emulators:
-```bash
+# Terminal 2 - Firebase Emulators
 firebase emulators:start
 ```
 
@@ -124,76 +159,103 @@ cd ../functions
 npm run build
 ```
 
-### Deploy:
-```bash
-firebase deploy
-```
-
 ## 📁 Project Structure
 
 ```
-getmycv/
-├── frontend/               # React frontend application
+CVisionary/
+├── frontend/               # React application
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
-│   │   ├── contexts/      # React contexts (Auth)
+│   │   ├── contexts/      # React contexts
 │   │   ├── pages/         # Page components
 │   │   ├── services/      # API services
-│   │   └── lib/          # Firebase configuration
-│   └── dist/             # Built frontend files
-├── functions/            # Firebase Cloud Functions
+│   │   └── lib/          # Utilities
+│   └── public/           # Static assets
+├── functions/            # Cloud Functions
 │   ├── src/
-│   │   ├── functions/    # Individual cloud functions
-│   │   ├── services/     # Business logic services
-│   │   └── config/       # Configuration files
-│   └── lib/             # Compiled functions
-├── firebase.json         # Firebase configuration
-├── firestore.rules      # Firestore security rules
-├── storage.rules        # Storage security rules
-└── README.md
+│   │   ├── functions/    # Function handlers
+│   │   ├── services/     # Business logic
+│   │   └── types/        # TypeScript types
+│   └── lib/             # Compiled output
+├── firebase.json         # Firebase config
+├── firestore.rules      # Security rules
+└── storage.rules        # Storage rules
 ```
 
-## 🔐 Security
+## 🎯 How It Works
 
-- All CV data is stored securely in Firebase
-- Authentication required for all operations
-- PII detection helps protect sensitive information
-- Storage rules ensure users can only access their own files
-- API keys are stored as Firebase Secrets
+1. **Upload** - Drop your CV (PDF/DOCX) or paste a LinkedIn URL
+2. **Analyze** - Claude AI extracts and enhances your content
+3. **Review** - Check PII detection and preview enhancements
+4. **Customize** - Choose templates and features
+5. **Export** - Download or share your transformed CV
 
-## 🎯 Usage Flow
+## 🔐 Security & Privacy
 
-1. **Upload CV**: Users can upload PDF, DOCX, or provide a URL
-2. **AI Analysis**: Claude 4 analyzes and extracts information
-3. **PII Review**: System shows any detected sensitive information
-4. **Generation Options**: 
-   - "Just Generate it for Me" - One-click with all enhancements
-   - Custom selection of features and templates
-5. **Download & Share**: Get your enhanced CV and share it easily
-
-## 🔜 Roadmap
-
-- [ ] PDF generation with proper formatting
-- [ ] DOCX export functionality
-- [ ] AI-generated career podcast
-- [ ] More CV templates
-- [ ] LinkedIn integration
-- [ ] Multi-language support
-- [ ] CV comparison and tracking
-- [ ] Interview preparation features
+- End-to-end encryption for sensitive data
+- Automatic PII detection and masking
+- User-controlled data retention
+- Regular security audits
+- GDPR and privacy law compliant
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! CVisionary is built for the community, by the community.
+
+### How to contribute:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Development Guidelines:
+- Follow existing code style
+- Write tests for new features
+- Update documentation
+- Ensure all tests pass
+- Keep commits atomic and descriptive
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Created with ❤️ by [Gil Klainert](https://klainert.com)
+- Powered by [Claude AI](https://www.anthropic.com/) from Anthropic
+- Built on [Firebase](https://firebase.google.com/) infrastructure
+- UI components from [Lucide Icons](https://lucide.dev/)
+- Styling with [Tailwind CSS](https://tailwindcss.com/)
 
 ## 🆘 Support
 
-For issues or questions, please create an issue in the GitHub repository.
+- **Issues**: [GitHub Issues](https://github.com/gilco1973/CVisionary/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/gilco1973/CVisionary/discussions)
+- **Email**: support@cvisionary.ai
+
+## 🚀 Roadmap
+
+- [x] Core CV transformation features
+- [x] Multiple template support
+- [x] AI-powered enhancements
+- [ ] PDF generation with advanced formatting
+- [ ] DOCX export with styles
+- [ ] AI Career Podcast generation
+- [ ] Multi-language support (10+ languages)
+- [ ] LinkedIn direct integration
+- [ ] Resume version tracking
+- [ ] Interview preparation tools
+- [ ] Career coaching AI assistant
+- [ ] Mobile app (iOS & Android)
 
 ---
 
-Built with ❤️ by the CVisionery team
+<div align="center">
+  <p>Built with passion to democratize career advancement tools</p>
+  <p>⭐ Star us on GitHub to support the project!</p>
+  
+  <a href="https://github.com/gilco1973/CVisionary">
+    <img src="https://img.shields.io/github/stars/gilco1973/CVisionary?style=social" alt="GitHub stars">
+  </a>
+</div>

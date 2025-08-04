@@ -161,12 +161,263 @@ export const analyzeCV = async (parsedCV: any, targetRole?: string) => {
   return result.data;
 };
 
-// Generate podcast
+// Generate podcast (legacy)
 export const generatePodcast = async (jobId: string, config: any) => {
-  const generatePodcastFunction = httpsCallable(functions, 'generatePodcast');
+  const generatePodcastFunction = httpsCallable(functions, 'generatePodcastLegacy');
   const result = await generatePodcastFunction({
     jobId,
     config
+  });
+  return result.data;
+};
+
+// ===== NEW ENHANCED FEATURES =====
+
+// ATS Optimization
+export const analyzeATSCompatibility = async (jobId: string, targetRole?: string, targetKeywords?: string[]) => {
+  const analyzeATSFunction = httpsCallable(functions, 'analyzeATSCompatibility');
+  const result = await analyzeATSFunction({
+    jobId,
+    targetRole,
+    targetKeywords
+  });
+  return result.data;
+};
+
+export const applyATSOptimizations = async (jobId: string, optimizations: any) => {
+  const applyATSFunction = httpsCallable(functions, 'applyATSOptimizations');
+  const result = await applyATSFunction({
+    jobId,
+    optimizations
+  });
+  return result.data;
+};
+
+export const generateATSKeywords = async (jobDescription: string, industry?: string, role?: string) => {
+  const generateKeywordsFunction = httpsCallable(functions, 'generateATSKeywords');
+  const result = await generateKeywordsFunction({
+    jobDescription,
+    industry,
+    role
+  });
+  return result.data;
+};
+
+// Personality Insights
+export const generatePersonalityInsights = async (jobId: string) => {
+  const personalityFunction = httpsCallable(functions, 'generatePersonalityInsights');
+  const result = await personalityFunction({ jobId });
+  return result.data;
+};
+
+export const comparePersonalities = async (jobIds: string[]) => {
+  const compareFunction = httpsCallable(functions, 'comparePersonalities');
+  const result = await compareFunction({ jobIds });
+  return result.data;
+};
+
+export const getPersonalityInsightsSummary = async (jobId: string) => {
+  const summaryFunction = httpsCallable(functions, 'getPersonalityInsightsSummary');
+  const result = await summaryFunction({ jobId });
+  return result.data;
+};
+
+// Public Profile Management
+export const createPublicProfile = async (jobId: string) => {
+  const createProfileFunction = httpsCallable(functions, 'createPublicProfile');
+  const result = await createProfileFunction({ jobId });
+  return result.data;
+};
+
+export const getPublicProfile = async (slug: string) => {
+  const getProfileFunction = httpsCallable(functions, 'getPublicProfile');
+  const result = await getProfileFunction({ slug });
+  return result.data;
+};
+
+export const updatePublicProfileSettings = async (jobId: string, settings: any) => {
+  const updateSettingsFunction = httpsCallable(functions, 'updatePublicProfileSettings');
+  const result = await updateSettingsFunction({
+    jobId,
+    settings
+  });
+  return result.data;
+};
+
+export const submitContactForm = async (
+  jobId: string, 
+  senderName: string, 
+  senderEmail: string, 
+  message: string,
+  senderPhone?: string,
+  company?: string
+) => {
+  const submitFormFunction = httpsCallable(functions, 'submitContactForm');
+  const result = await submitFormFunction({
+    jobId,
+    senderName,
+    senderEmail,
+    message,
+    senderPhone,
+    company
+  });
+  return result.data;
+};
+
+export const trackQRScan = async (jobId: string, metadata?: any) => {
+  const trackScanFunction = httpsCallable(functions, 'trackQRScan');
+  const result = await trackScanFunction({
+    jobId,
+    metadata
+  });
+  return result.data;
+};
+
+// RAG Chat
+export const initializeRAG = async (jobId: string, systemPrompt?: string, personality?: string) => {
+  const initRAGFunction = httpsCallable(functions, 'initializeRAG');
+  const result = await initRAGFunction({
+    jobId,
+    systemPrompt,
+    personality
+  });
+  return result.data;
+};
+
+export const startChatSession = async (jobId: string, visitorId?: string, metadata?: any) => {
+  const startChatFunction = httpsCallable(functions, 'startChatSession');
+  const result = await startChatFunction({
+    jobId,
+    visitorId,
+    metadata
+  });
+  return result.data;
+};
+
+export const sendChatMessage = async (sessionId: string, message: string) => {
+  const sendMessageFunction = httpsCallable(functions, 'sendChatMessage');
+  const result = await sendMessageFunction({
+    sessionId,
+    message
+  });
+  return result.data;
+};
+
+export const endChatSession = async (sessionId: string, rating?: number, feedback?: string) => {
+  const endChatFunction = httpsCallable(functions, 'endChatSession');
+  const result = await endChatFunction({
+    sessionId,
+    rating,
+    feedback
+  });
+  return result.data;
+};
+
+export const getChatAnalytics = async (jobId: string) => {
+  const analyticsFunction = httpsCallable(functions, 'getChatAnalytics');
+  const result = await analyticsFunction({ jobId });
+  return result.data;
+};
+
+// Skills Visualization
+export const generateSkillsVisualization = async (jobId: string) => {
+  const skillsVizFunction = httpsCallable(functions, 'generateSkillsVisualization');
+  const result = await skillsVizFunction({ jobId });
+  return result.data;
+};
+
+export const updateSkillsData = async (jobId: string, skillsUpdate: any) => {
+  const updateSkillsFunction = httpsCallable(functions, 'updateSkillsData');
+  const result = await updateSkillsFunction({
+    jobId,
+    skillsUpdate
+  });
+  return result.data;
+};
+
+export const getSkillsInsights = async (jobId: string, targetRole?: string, industry?: string) => {
+  const insightsFunction = httpsCallable(functions, 'getSkillsInsights');
+  const result = await insightsFunction({
+    jobId,
+    targetRole,
+    industry
+  });
+  return result.data;
+};
+
+export const endorseSkill = async (jobId: string, skillName: string, endorserInfo?: any) => {
+  const endorseFunction = httpsCallable(functions, 'endorseSkill');
+  const result = await endorseFunction({
+    jobId,
+    skillName,
+    endorserInfo
+  });
+  return result.data;
+};
+
+// Media Generation
+export const generateVideoIntroduction = async (jobId: string, duration?: number, style?: string) => {
+  const videoIntroFunction = httpsCallable(functions, 'generateVideoIntro');
+  const result = await videoIntroFunction({
+    jobId,
+    duration: duration || 60,
+    style: style || 'professional'
+  });
+  return result.data;
+};
+
+export const regenerateVideoIntroduction = async (jobId: string, customScript?: string) => {
+  const regenerateVideoFunction = httpsCallable(functions, 'regenerateVideoIntro');
+  const result = await regenerateVideoFunction({
+    jobId,
+    customScript
+  });
+  return result.data;
+};
+
+export const generateEnhancedPodcast = async (jobId: string, style?: 'professional' | 'conversational' | 'storytelling') => {
+  const podcastFunction = httpsCallable(functions, 'generatePodcast');
+  const result = await podcastFunction({
+    jobId,
+    format: style || 'professional',
+    duration: 300
+  });
+  return result.data;
+};
+
+export const regeneratePodcast = async (jobId: string, style?: 'professional' | 'conversational' | 'storytelling') => {
+  const regeneratePodcastFunction = httpsCallable(functions, 'regeneratePodcast');
+  const result = await regeneratePodcastFunction({
+    jobId,
+    style: style || 'professional'
+  });
+  return result.data;
+};
+
+export const generateAudioFromText = async (jobId: string, text: string, type: string, voice?: string, speed?: number) => {
+  const audioFunction = httpsCallable(functions, 'generateAudioFromText');
+  const result = await audioFunction({
+    jobId,
+    text,
+    type,
+    voice: voice || 'male',
+    speed: speed || 1.0
+  });
+  return result.data;
+};
+
+export const getMediaStatus = async (jobId: string) => {
+  const statusFunction = httpsCallable(functions, 'getMediaStatus');
+  const result = await statusFunction({ jobId });
+  return result.data;
+};
+
+export const downloadMediaContent = async (jobId: string, mediaType: string, contentType: string) => {
+  const downloadFunction = httpsCallable(functions, 'downloadMediaContent');
+  const result = await downloadFunction({
+    jobId,
+    mediaType,
+    contentType
   });
   return result.data;
 };
