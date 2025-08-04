@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   Brain, MessageSquare, BarChart3, Video, Mic, 
   FileSearch, Users, ChevronRight, Loader2, CheckCircle, 
-  AlertCircle, Clock, Sparkles 
+  AlertCircle, Clock, Sparkles, Calendar, Grid3x3, Languages
 } from 'lucide-react';
 import { ATSScore } from './ATSScore';
 import { PersonalityInsights } from './PersonalityInsights';
@@ -11,6 +11,10 @@ import { PublicProfile } from './PublicProfile';
 import { ChatInterface } from './ChatInterface';
 import { VideoIntroduction } from './VideoIntroduction';
 import { PodcastGeneration } from './PodcastGeneration';
+import { InteractiveTimeline } from './InteractiveTimeline';
+import { CalendarIntegration } from './CalendarIntegration';
+import { PortfolioGallery } from './PortfolioGallery';
+import { LanguageProficiency } from './LanguageProficiency';
 import type { Job } from '../../services/cvService';
 import * as cvService from '../../services/cvService';
 import toast from 'react-hot-toast';
@@ -20,7 +24,7 @@ interface FeatureDashboardProps {
   onJobUpdate?: (job: Job) => void;
 }
 
-type FeatureTab = 'ats' | 'personality' | 'skills' | 'public' | 'chat' | 'media';
+type FeatureTab = 'ats' | 'personality' | 'skills' | 'public' | 'chat' | 'media' | 'timeline' | 'calendar' | 'portfolio' | 'languages';
 
 interface FeatureStatus {
   enabled: boolean;
@@ -75,6 +79,34 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
       icon: <Video className="w-5 h-5" />,
       color: 'from-red-500 to-orange-500',
       description: 'Create video intros and podcasts'
+    },
+    {
+      id: 'timeline' as FeatureTab,
+      name: 'Career Timeline',
+      icon: <Clock className="w-5 h-5" />,
+      color: 'from-yellow-500 to-amber-500',
+      description: 'Interactive visual career journey'
+    },
+    {
+      id: 'calendar' as FeatureTab,
+      name: 'Calendar Sync',
+      icon: <Calendar className="w-5 h-5" />,
+      color: 'from-teal-500 to-green-500',
+      description: 'Sync milestones to your calendar'
+    },
+    {
+      id: 'portfolio' as FeatureTab,
+      name: 'Portfolio Gallery',
+      icon: <Grid3x3 className="w-5 h-5" />,
+      color: 'from-pink-500 to-rose-500',
+      description: 'Visual showcase of your work'
+    },
+    {
+      id: 'languages' as FeatureTab,
+      name: 'Language Skills',
+      icon: <Languages className="w-5 h-5" />,
+      color: 'from-emerald-500 to-teal-500',
+      description: 'Visualize language proficiencies'
     }
   ];
 
@@ -173,6 +205,58 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
     }
   };
 
+  const handleGenerateTimeline = async () => {
+    setLoading({ ...loading, timeline: true });
+    try {
+      const result = await cvService.generateTimeline(job.id) as any;
+      setFeatureData({ ...featureData, timeline: result.timeline });
+      toast.success('Timeline generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate timeline');
+    } finally {
+      setLoading({ ...loading, timeline: false });
+    }
+  };
+
+  const handleGenerateCalendarEvents = async () => {
+    setLoading({ ...loading, calendar: true });
+    try {
+      const result = await cvService.generateCalendarEvents(job.id) as any;
+      setFeatureData({ ...featureData, calendar: result });
+      toast.success('Calendar events generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate calendar events');
+    } finally {
+      setLoading({ ...loading, calendar: false });
+    }
+  };
+
+  const handleGeneratePortfolio = async () => {
+    setLoading({ ...loading, portfolio: true });
+    try {
+      const result = await cvService.generatePortfolioGallery(job.id) as any;
+      setFeatureData({ ...featureData, portfolio: result.gallery });
+      toast.success('Portfolio gallery generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate portfolio gallery');
+    } finally {
+      setLoading({ ...loading, portfolio: false });
+    }
+  };
+
+  const handleGenerateLanguages = async () => {
+    setLoading({ ...loading, languages: true });
+    try {
+      const result = await cvService.generateLanguageVisualization(job.id) as any;
+      setFeatureData({ ...featureData, languages: result.visualization });
+      toast.success('Language visualization generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate language visualization');
+    } finally {
+      setLoading({ ...loading, languages: false });
+    }
+  };
+
   // Video generation is handled inline in the component
 
   // Podcast generation is handled inline in the component
@@ -194,7 +278,11 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
             ...featureData, 
             media: { initialized: true } 
           });
-        }
+        },
+        timeline: handleGenerateTimeline,
+        calendar: handleGenerateCalendarEvents,
+        portfolio: handleGeneratePortfolio,
+        languages: handleGenerateLanguages
       };
 
       return (
@@ -318,8 +406,12 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
                 duration={mediaData.video?.duration}
                 status={mediaData.video ? 'ready' : 'not-generated'}
                 script={mediaData.video?.script}
-                onGenerateVideo={async () => {
-                  const result = await cvService.generateVideoIntroduction(job.id) as any;
+                onGenerateVideo={async (options) => {
+                  const result = await cvService.generateVideoIntroduction(
+                    job.id, 
+                    options?.duration, 
+                    options?.style
+                  ) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -329,8 +421,12 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
                   });
                   return result.video;
                 }}
-                onRegenerateVideo={async (customScript) => {
-                  const result = await cvService.regenerateVideoIntroduction(job.id, customScript) as any;
+                onRegenerateVideo={async (customScript, options) => {
+                  const result = await cvService.regenerateVideoIntroduction(
+                    job.id, 
+                    customScript,
+                    options
+                  ) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -379,6 +475,128 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               />
             </div>
           </div>
+        );
+
+      case 'timeline':
+        const timelineData = featureData.timeline || status.data;
+        return timelineData ? (
+          <InteractiveTimeline
+            events={timelineData.events.map((event: any) => ({
+              ...event,
+              startDate: new Date(event.startDate),
+              endDate: event.endDate ? new Date(event.endDate) : undefined
+            }))}
+            onEventClick={async (event) => {
+              // Optional: Handle event click for editing
+              console.log('Event clicked:', event);
+            }}
+          />
+        ) : null;
+
+      case 'calendar':
+        const calendarData = featureData.calendar || status.data;
+        return (
+          <CalendarIntegration
+            events={calendarData?.events}
+            onGenerateEvents={async () => {
+              const result = await cvService.generateCalendarEvents(job.id) as any;
+              setFeatureData({ ...featureData, calendar: result });
+              return result;
+            }}
+            onSyncGoogle={async () => {
+              const result = await cvService.syncToGoogleCalendar(job.id) as any;
+              return result.integration;
+            }}
+            onSyncOutlook={async () => {
+              const result = await cvService.syncToOutlook(job.id) as any;
+              return result.integration;
+            }}
+            onDownloadICal={async () => {
+              const result = await cvService.downloadICalFile(job.id) as any;
+              return result.integration;
+            }}
+          />
+        );
+
+      case 'portfolio':
+        const portfolioData = featureData.portfolio || status.data;
+        const portfolioInfo = (job as any).enhancedFeatures?.portfolio;
+        return (
+          <PortfolioGallery
+            gallery={portfolioData}
+            shareableUrl={portfolioInfo?.shareableUrl}
+            embedCode={portfolioInfo?.embedCode}
+            onGenerateGallery={async () => {
+              const result = await cvService.generatePortfolioGallery(job.id) as any;
+              setFeatureData({ ...featureData, portfolio: result.gallery });
+              return result.gallery;
+            }}
+            onUpdateItem={async (itemId, updates) => {
+              await cvService.updatePortfolioItem(job.id, itemId, updates);
+              toast.success('Portfolio item updated');
+            }}
+            onAddItem={async (item) => {
+              const result = await cvService.addPortfolioItem(job.id, item) as any;
+              // Update local state with new item
+              const updatedGallery = {
+                ...portfolioData,
+                items: [...portfolioData.items, result.item]
+              };
+              setFeatureData({ ...featureData, portfolio: updatedGallery });
+              return result.item;
+            }}
+            onDeleteItem={async (itemId) => {
+              await cvService.deletePortfolioItem(job.id, itemId);
+              // Update local state
+              const updatedGallery = {
+                ...portfolioData,
+                items: portfolioData.items.filter((item: any) => item.id !== itemId)
+              };
+              setFeatureData({ ...featureData, portfolio: updatedGallery });
+            }}
+            onUploadMedia={async (itemId, file) => {
+              const result = await cvService.uploadPortfolioMedia(job.id, itemId, file) as any;
+              return result;
+            }}
+            onGenerateShareableLink={async (customDomain) => {
+              const result = await cvService.generateShareablePortfolio(job.id, customDomain) as any;
+              return result;
+            }}
+          />
+        );
+
+      case 'languages':
+        const languagesData = featureData.languages || status.data;
+        return (
+          <LanguageProficiency
+            visualization={languagesData}
+            onGenerateVisualization={async () => {
+              const result = await cvService.generateLanguageVisualization(job.id) as any;
+              setFeatureData({ ...featureData, languages: result.visualization });
+              return result.visualization;
+            }}
+            onUpdateLanguage={async (languageId, updates) => {
+              await cvService.updateLanguageProficiency(job.id, languageId, updates);
+              // Refresh the visualization
+              const result = await cvService.generateLanguageVisualization(job.id) as any;
+              setFeatureData({ ...featureData, languages: result.visualization });
+              toast.success('Language updated');
+            }}
+            onAddLanguage={async (language) => {
+              const result = await cvService.addLanguageProficiency(job.id, language) as any;
+              setFeatureData({ ...featureData, languages: result.visualization });
+              toast.success('Language added');
+            }}
+            onRemoveLanguage={async (languageId) => {
+              const result = await cvService.removeLanguageProficiency(job.id, languageId) as any;
+              setFeatureData({ ...featureData, languages: result.visualization });
+              toast.success('Language removed');
+            }}
+            onGenerateCertificate={async (languageId) => {
+              const result = await cvService.generateLanguageCertificate(job.id, languageId) as any;
+              return result.certificate;
+            }}
+          />
         );
 
       default:

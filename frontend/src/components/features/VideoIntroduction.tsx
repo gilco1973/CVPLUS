@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Video, Upload, Play, Pause, RefreshCw, Download, Loader2, Sparkles } from 'lucide-react';
+import { Video, Upload, Play, Pause, RefreshCw, Download, Loader2, Sparkles, Settings, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface VideoIntroductionProps {
@@ -8,8 +8,9 @@ interface VideoIntroductionProps {
   duration?: number;
   status?: 'not-generated' | 'generating' | 'ready' | 'failed';
   script?: string;
-  onGenerateVideo: () => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number; script: string }>;
-  onRegenerateVideo: (customScript?: string) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number }>;
+  subtitles?: string;
+  onGenerateVideo: (options?: any) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number; script: string; subtitles?: string }>;
+  onRegenerateVideo: (customScript?: string, options?: any) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number }>;
 }
 
 export const VideoIntroduction = ({
@@ -18,13 +19,23 @@ export const VideoIntroduction = ({
   duration,
   status = 'not-generated',
   script,
+  subtitles,
   onGenerateVideo,
   onRegenerateVideo
 }: VideoIntroductionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showScriptEditor, setShowScriptEditor] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [customScript, setCustomScript] = useState(script || '');
+  const [videoSettings, setVideoSettings] = useState({
+    duration: 'medium' as 'short' | 'medium' | 'long',
+    style: 'professional' as 'professional' | 'friendly' | 'energetic',
+    avatarStyle: 'realistic' as 'realistic' | 'illustrated' | 'corporate',
+    background: 'office' as 'office' | 'modern' | 'gradient',
+    includeSubtitles: true,
+    includeNameCard: true
+  });
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -35,7 +46,7 @@ export const VideoIntroduction = ({
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const result = await onGenerateVideo();
+      const result = await onGenerateVideo(videoSettings);
       setCustomScript(result.script);
       toast.success('Video introduction generated successfully!');
     } catch (error) {
@@ -48,7 +59,7 @@ export const VideoIntroduction = ({
   const handleRegenerate = async () => {
     setLoading(true);
     try {
-      await onRegenerateVideo(showScriptEditor ? customScript : undefined);
+      await onRegenerateVideo(showScriptEditor ? customScript : undefined, videoSettings);
       toast.success('Video regenerated successfully!');
       setShowScriptEditor(false);
     } catch (error) {
@@ -66,23 +77,76 @@ export const VideoIntroduction = ({
           Create Your Video Introduction
         </h3>
         <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          Generate a professional 60-second video introduction that brings your CV to life with AI-powered narration.
+          Generate a professional video introduction with AI avatar that brings your CV to life.
         </p>
         <div className="space-y-4 max-w-sm mx-auto">
           <div className="text-left space-y-2">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <User className="w-4 h-4 text-cyan-500" />
+              <span>Realistic AI avatar presentation</span>
+            </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Sparkles className="w-4 h-4 text-cyan-500" />
               <span>AI-generated script based on your CV</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Sparkles className="w-4 h-4 text-cyan-500" />
-              <span>Professional voice narration</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Sparkles className="w-4 h-4 text-cyan-500" />
-              <span>Dynamic visual presentation</span>
+              <Video className="w-4 h-4 text-cyan-500" />
+              <span>HD quality with subtitles</span>
             </div>
           </div>
+          
+          {/* Quick Settings */}
+          <div className="bg-gray-700 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-200">Video Settings</span>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="text-cyan-500 hover:text-cyan-400 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </div>
+            {showSettings && (
+              <div className="space-y-3 mt-3 border-t border-gray-600 pt-3">
+                <div>
+                  <label className="text-xs text-gray-400">Duration</label>
+                  <select
+                    value={videoSettings.duration}
+                    onChange={(e) => setVideoSettings({...videoSettings, duration: e.target.value as any})}
+                    className="w-full mt-1 bg-gray-800 text-gray-200 rounded px-3 py-1 text-sm"
+                  >
+                    <option value="short">30 seconds</option>
+                    <option value="medium">60 seconds</option>
+                    <option value="long">90 seconds</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400">Avatar Style</label>
+                  <select
+                    value={videoSettings.style}
+                    onChange={(e) => setVideoSettings({...videoSettings, style: e.target.value as any})}
+                    className="w-full mt-1 bg-gray-800 text-gray-200 rounded px-3 py-1 text-sm"
+                  >
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="energetic">Energetic</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={videoSettings.includeSubtitles}
+                      onChange={(e) => setVideoSettings({...videoSettings, includeSubtitles: e.target.checked})}
+                      className="text-cyan-500"
+                    />
+                    Include subtitles
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <button
             onClick={handleGenerate}
             disabled={loading}
@@ -106,18 +170,24 @@ export const VideoIntroduction = ({
     return (
       <div className="bg-gray-800 rounded-xl p-8 text-center">
         <div className="max-w-md mx-auto">
-          <Loader2 className="w-16 h-16 text-cyan-500 animate-spin mx-auto mb-4" />
+          <div className="relative">
+            <User className="w-16 h-16 text-cyan-500 mx-auto mb-4" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+            </div>
+          </div>
           <h3 className="text-xl font-semibold text-gray-100 mb-2">
-            Creating Your Video...
+            Creating Your AI Avatar Video...
           </h3>
           <p className="text-gray-400 mb-4">
-            This may take a few minutes. We're generating your personalized video introduction.
+            This takes 2-4 minutes. Your AI avatar is being created with your personalized script.
           </p>
           <div className="space-y-2 text-sm text-gray-500">
             <p>✓ Analyzing your CV content</p>
-            <p className="text-cyan-400">→ Generating video script...</p>
-            <p>• Creating visual presentation</p>
-            <p>• Adding voice narration</p>
+            <p>✓ Generating personalized script</p>
+            <p className="text-cyan-400">→ Creating AI avatar...</p>
+            <p>• Rendering HD video</p>
+            <p>• Adding subtitles</p>
           </div>
         </div>
       </div>

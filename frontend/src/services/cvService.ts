@@ -356,21 +356,26 @@ export const endorseSkill = async (jobId: string, skillName: string, endorserInf
 };
 
 // Media Generation
-export const generateVideoIntroduction = async (jobId: string, duration?: number, style?: string) => {
-  const videoIntroFunction = httpsCallable(functions, 'generateVideoIntro');
+export const generateVideoIntroduction = async (jobId: string, duration?: 'short' | 'medium' | 'long', style?: string) => {
+  const videoIntroFunction = httpsCallable(functions, 'generateVideoIntroduction');
   const result = await videoIntroFunction({
     jobId,
-    duration: duration || 60,
-    style: style || 'professional'
+    duration: duration || 'medium',
+    style: style || 'professional',
+    avatarStyle: 'realistic',
+    background: 'office',
+    includeSubtitles: true,
+    includeNameCard: true
   });
   return result.data;
 };
 
-export const regenerateVideoIntroduction = async (jobId: string, customScript?: string) => {
-  const regenerateVideoFunction = httpsCallable(functions, 'regenerateVideoIntro');
+export const regenerateVideoIntroduction = async (jobId: string, customScript?: string, options?: any) => {
+  const regenerateVideoFunction = httpsCallable(functions, 'regenerateVideoIntroduction');
   const result = await regenerateVideoFunction({
     jobId,
-    customScript
+    customScript,
+    ...options
   });
   return result.data;
 };
@@ -419,5 +424,149 @@ export const downloadMediaContent = async (jobId: string, mediaType: string, con
     mediaType,
     contentType
   });
+  return result.data;
+};
+
+// Timeline visualization
+export const generateTimeline = async (jobId: string) => {
+  const timelineFunction = httpsCallable(functions, 'generateTimeline');
+  const result = await timelineFunction({ jobId });
+  return result.data;
+};
+
+export const updateTimelineEvent = async (jobId: string, eventId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updateTimelineEvent');
+  const result = await updateFunction({
+    jobId,
+    eventId,
+    updates
+  });
+  return result.data;
+};
+
+export const exportTimeline = async (jobId: string, format: 'json' | 'csv' | 'html' = 'json') => {
+  const exportFunction = httpsCallable(functions, 'exportTimeline');
+  const result = await exportFunction({
+    jobId,
+    format
+  });
+  return result.data;
+};
+
+// Calendar integration
+export const generateCalendarEvents = async (jobId: string) => {
+  const calendarFunction = httpsCallable(functions, 'generateCalendarEvents');
+  const result = await calendarFunction({ jobId });
+  return result.data;
+};
+
+export const syncToGoogleCalendar = async (jobId: string, accessToken?: string) => {
+  const syncFunction = httpsCallable(functions, 'syncToGoogleCalendar');
+  const result = await syncFunction({ jobId, accessToken });
+  return result.data;
+};
+
+export const syncToOutlook = async (jobId: string, accessToken?: string) => {
+  const syncFunction = httpsCallable(functions, 'syncToOutlook');
+  const result = await syncFunction({ jobId, accessToken });
+  return result.data;
+};
+
+export const downloadICalFile = async (jobId: string) => {
+  const downloadFunction = httpsCallable(functions, 'downloadICalFile');
+  const result = await downloadFunction({ jobId });
+  return result.data;
+};
+
+export const handleCalendarCallback = async (provider: 'google' | 'outlook', code: string, state: string) => {
+  const callbackFunction = httpsCallable(functions, 'handleCalendarCallback');
+  const result = await callbackFunction({ provider, code, state });
+  return result.data;
+};
+
+// Portfolio Gallery
+export const generatePortfolioGallery = async (jobId: string) => {
+  const generateFunction = httpsCallable(functions, 'generatePortfolioGallery');
+  const result = await generateFunction({ jobId });
+  return result.data;
+};
+
+export const updatePortfolioItem = async (jobId: string, itemId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updatePortfolioItem');
+  const result = await updateFunction({ jobId, itemId, updates });
+  return result.data;
+};
+
+export const addPortfolioItem = async (jobId: string, item: any) => {
+  const addFunction = httpsCallable(functions, 'addPortfolioItem');
+  const result = await addFunction({ jobId, item });
+  return result.data;
+};
+
+export const deletePortfolioItem = async (jobId: string, itemId: string) => {
+  const deleteFunction = httpsCallable(functions, 'deletePortfolioItem');
+  const result = await deleteFunction({ jobId, itemId });
+  return result.data;
+};
+
+export const uploadPortfolioMedia = async (jobId: string, itemId: string, file: File) => {
+  // Convert file to base64
+  const reader = new FileReader();
+  const base64Promise = new Promise<string>((resolve, reject) => {
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      resolve(base64.split(',')[1]); // Remove data:image/jpeg;base64, prefix
+    };
+    reader.onerror = reject;
+  });
+  reader.readAsDataURL(file);
+  
+  const mediaData = await base64Promise;
+  
+  const uploadFunction = httpsCallable(functions, 'uploadPortfolioMedia');
+  const result = await uploadFunction({
+    jobId,
+    itemId,
+    mediaData,
+    mediaType: file.type,
+    fileName: file.name
+  });
+  return result.data;
+};
+
+export const generateShareablePortfolio = async (jobId: string, customDomain?: string) => {
+  const shareFunction = httpsCallable(functions, 'generateShareablePortfolio');
+  const result = await shareFunction({ jobId, customDomain });
+  return result.data;
+};
+
+// Language Proficiency
+export const generateLanguageVisualization = async (jobId: string) => {
+  const generateFunction = httpsCallable(functions, 'generateLanguageVisualization');
+  const result = await generateFunction({ jobId });
+  return result.data;
+};
+
+export const updateLanguageProficiency = async (jobId: string, languageId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updateLanguageProficiency');
+  const result = await updateFunction({ jobId, languageId, updates });
+  return result.data;
+};
+
+export const addLanguageProficiency = async (jobId: string, language: any) => {
+  const addFunction = httpsCallable(functions, 'addLanguageProficiency');
+  const result = await addFunction({ jobId, language });
+  return result.data;
+};
+
+export const removeLanguageProficiency = async (jobId: string, languageId: string) => {
+  const removeFunction = httpsCallable(functions, 'removeLanguageProficiency');
+  const result = await removeFunction({ jobId, languageId });
+  return result.data;
+};
+
+export const generateLanguageCertificate = async (jobId: string, languageId: string) => {
+  const certFunction = httpsCallable(functions, 'generateLanguageCertificate');
+  const result = await certFunction({ jobId, languageId });
   return result.data;
 };
