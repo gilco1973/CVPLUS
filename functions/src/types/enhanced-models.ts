@@ -74,6 +74,7 @@ export interface EnhancedJob extends Job {
       systemPrompt?: string;
       allowedTopics: string[];
       language: string;
+      personality?: 'professional' | 'friendly' | 'concise' | 'detailed';
     };
   };
 }
@@ -158,17 +159,23 @@ export interface PublicCVProfile {
   jobId: string;
   userId: string;
   slug: string;
-  publicData: any; // PII-masked CV data
-  settings: {
-    showContactForm: boolean;
-    showCalendar: boolean;
-    showChat: boolean;
-    customBranding: boolean;
-    analytics: boolean;
-  };
-  createdAt: Date;
-  updatedAt: Date;
+  parsedCV: ParsedCV; // PII-masked CV data
+  features: any; // Enhanced features
+  template: string;
+  isPublic: boolean;
+  allowContactForm: boolean;
+  showAnalytics?: boolean;
+  qrCodeUrl: string;
+  publicUrl: string;
+  createdAt: Date | any; // Can be FieldValue
+  updatedAt: Date | any; // Can be FieldValue
   expiresAt?: Date; // Optional expiration
+  analytics: {
+    views: number;
+    qrScans: number;
+    contactSubmissions: number;
+    lastViewedAt: Date | null;
+  };
 }
 
 /**
@@ -275,16 +282,18 @@ export interface ChatMessage {
  */
 export interface ATSOptimizationResult {
   score: number; // 0-100
+  overall: number; // Alias for score
   passes: boolean;
   issues: ATSIssue[];
   suggestions: ATSSuggestion[];
+  recommendations: string[]; // List of recommendation strings
   optimizedContent?: Partial<ParsedCV>;
   keywords: {
     found: string[];
     missing: string[];
     recommended: string[];
   };
-}
+};
 
 export interface ATSIssue {
   type: 'format' | 'content' | 'keyword' | 'structure';

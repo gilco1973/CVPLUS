@@ -2,292 +2,447 @@
  * Cloud Functions for public CV profiles
  */
 
-import * as functions from 'firebase-functions';
-import { enhancedDbService } from '../services/enhanced-db.service';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { integrationsService } from '../services/integrations.service';
 import * as admin from 'firebase-admin';
-import { EnhancedJob, PublicCVProfile } from '../types/enhanced-models';
+import { EnhancedJob, PublicCVProfile, PrivacySettings } from '../types/enhanced-models';
 import { maskPII } from '../utils/privacy';
+
+interface CreatePublicProfileRequest {
+  jobId: string;
+}
+
+interface GetPublicProfileRequest {
+  slug: string;
+}
+
+interface UpdateProfileSettingsRequest {
+  jobId: string;
+  settings: {
+    isPublic: boolean;
+    allowContactForm: boolean;
+    showAnalytics: boolean;
+    customSlug?: string;
+  };
+}
+
+interface SubmitContactFormRequest {
+  jobId: string;
+  senderName: string;
+  senderEmail: string;
+  senderPhone?: string;
+  company?: string;
+  message: string;
+}
+
+interface TrackQRScanRequest {
+  jobId: string;
+  metadata?: {
+    userAgent?: string;
+    source?: string;
+  };
+}
 
 /**
  * Create public profile for a CV
  */
-export const createPublicProfile = functions.https.onCall(async (data, context) => {
-  // Check authentication
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId } = data;
-  if (!jobId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-  }
-
-  try {
-    // Get job and verify ownership
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
+export const createPublicProfile = onCall<CreatePublicProfileRequest>(
+  {
+    timeoutSeconds: 120,
+    cors: true
+  },
+  async (request: CallableRequest<CreatePublicProfileRequest>) => {
+    // Check authentication
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized to access this job');
+    const { jobId } = request.data;
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
-    // Check if profile already exists
-    const existingProfile = await admin.firestore()
-      .collection('publicProfiles')
-      .doc(jobId)
-      .get();
-
-    if (existingProfile.exists) {
-      return { 
-        success: true, 
-        profile: existingProfile.data(),
-        message: 'Public profile already exists' 
-      };
-    }
-
-    // Create public profile
-    const profile = await enhancedDbService.createPublicProfile(jobId, context.auth.uid);
-
-    // Generate QR code for the public URL
-    const publicUrl = `https://cvisionery.com/cv/${profile.slug}`;
-    const qrCodeBuffer = await integrationsService.generateQRCode(publicUrl);
-    const qrCodeUrl = await integrationsService.uploadQRCode(qrCodeBuffer, jobId);
-
-    // Update job with QR code
-    await admin.firestore().collection('jobs').doc(jobId).update({
-      'enhancedFeatures.qrCode': {
-        enabled: true,
-        data: { url: qrCodeUrl, publicUrl },
-        status: 'completed'
+    try {
+      // Get job and verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
       }
-    });
 
-    // Mask PII for public data
-    if (job.parsedData && job.privacySettings?.enabled) {
-      profile.publicData = maskPII(job.parsedData, job.privacySettings);
-    } else {
-      profile.publicData = job.parsedData;
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
+      }
+
+      // Check if parsed CV exists
+      if (!job.parsedData) {
+        throw new HttpsError('failed-precondition', 'CV must be parsed before creating public profile');
+      }
+
+      // Generate public profile with default privacy settings
+      const defaultPrivacySettings: PrivacySettings = {
+        enabled: true,
+        level: 'moderate',
+        maskingRules: {
+          name: false,
+          email: true,
+          phone: true,
+          address: true,
+          companies: false,
+          dates: false
+        }
+      };
+      const maskedCV = maskPII(job.parsedData, defaultPrivacySettings);
+      const publicSlug = `cv-${jobId.substring(0, 8)}-${Date.now()}`;
+      
+      // Generate QR code for the public profile
+      const publicUrl = `${process.env.PUBLIC_URL || 'https://cvisionary.ai'}/public/${publicSlug}`;
+      const qrCodeBuffer = await integrationsService.generateQRCode(publicUrl);
+      
+      // Upload QR code to storage
+      const bucket = admin.storage().bucket();
+      const qrFile = bucket.file(`public-profiles/${jobId}/qr-code.png`);
+      await qrFile.save(qrCodeBuffer, {
+        metadata: {
+          contentType: 'image/png'
+        }
+      });
+      const [qrCodeUrl] = await qrFile.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491' // Far future date
+      });
+
+      // Create public profile
+      const publicProfile: PublicCVProfile = {
+        jobId,
+        userId: job.userId,
+        slug: publicSlug,
+        parsedCV: maskedCV,
+        features: job.enhancedFeatures || {},
+        template: job.selectedTemplate || 'modern',
+        isPublic: true,
+        allowContactForm: true,
+        qrCodeUrl,
+        publicUrl,
+        createdAt: admin.firestore.FieldValue.serverTimestamp() as any,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp() as any,
+        analytics: {
+          views: 0,
+          qrScans: 0,
+          contactSubmissions: 0,
+          lastViewedAt: null
+        }
+      };
+
+      // Save to Firestore
+      await admin.firestore()
+        .collection('publicProfiles')
+        .doc(jobId)
+        .set(publicProfile);
+
+      // Update job with public profile info
+      await jobDoc.ref.update({
+        publicProfile: {
+          slug: publicSlug,
+          url: publicUrl,
+          qrCodeUrl,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        }
+      });
+
+      return {
+        success: true,
+        slug: publicSlug,
+        publicUrl,
+        qrCodeUrl
+      };
+    } catch (error: any) {
+      console.error('Error creating public profile:', error);
+      throw new HttpsError('internal', error.message || 'Failed to create public profile');
     }
-
-    // Update profile with public data
-    await admin.firestore().collection('publicProfiles').doc(jobId).update({
-      publicData: profile.publicData
-    });
-
-    return {
-      success: true,
-      profile,
-      publicUrl,
-      qrCodeUrl
-    };
-  } catch (error: any) {
-    console.error('Error creating public profile:', error);
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);
 
 /**
  * Get public profile by slug
  */
-export const getPublicProfile = functions.https.onCall(async (data) => {
-  const { slug } = data;
-  if (!slug) {
-    throw new functions.https.HttpsError('invalid-argument', 'Slug is required');
-  }
-
-  try {
-    const profile = await enhancedDbService.getPublicProfileBySlug(slug);
-    if (!profile) {
-      throw new functions.https.HttpsError('not-found', 'Profile not found');
+export const getPublicProfile = onCall<GetPublicProfileRequest>(
+  {
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest<GetPublicProfileRequest>) => {
+    const { slug } = request.data;
+    if (!slug) {
+      throw new HttpsError('invalid-argument', 'Slug is required');
     }
 
-    // Track profile view
-    await enhancedDbService.trackFeatureInteraction(profile.jobId, 'profile-view', {
-      type: 'view',
-      metadata: { slug }
-    });
+    try {
+      // Find profile by slug
+      const profilesSnapshot = await admin.firestore()
+        .collection('publicProfiles')
+        .where('slug', '==', slug)
+        .where('isPublic', '==', true)
+        .limit(1)
+        .get();
 
-    // Increment view count
-    await admin.firestore().collection('jobs').doc(profile.jobId).update({
-      'analytics.profileViews': admin.firestore.FieldValue.increment(1),
-      'analytics.lastViewedAt': new Date()
-    });
+      if (profilesSnapshot.empty) {
+        throw new HttpsError('not-found', 'Public profile not found');
+      }
 
-    return {
-      success: true,
-      profile
-    };
-  } catch (error: any) {
-    console.error('Error getting public profile:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+      const profile = profilesSnapshot.docs[0].data() as PublicCVProfile;
+
+      // Update analytics
+      await profilesSnapshot.docs[0].ref.update({
+        'analytics.views': admin.firestore.FieldValue.increment(1),
+        'analytics.lastViewedAt': admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Remove sensitive data if not authenticated as owner
+      if (!request.auth || request.auth.uid !== profile.userId) {
+        delete (profile as any).userId;
+        delete (profile as any).analytics.contactSubmissions;
+      }
+
+      return {
+        success: true,
+        profile
+      };
+    } catch (error: any) {
+      console.error('Error getting public profile:', error);
+      throw new HttpsError('internal', error.message || 'Failed to get public profile');
+    }
   }
-});
+);
 
 /**
  * Update public profile settings
  */
-export const updatePublicProfileSettings = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId, settings } = data;
-  if (!jobId || !settings) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID and settings are required');
-  }
-
-  try {
-    // Verify ownership
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
+export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
+  {
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest<UpdateProfileSettingsRequest>) => {
+    // Check authentication
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized to access this job');
+    const { jobId, settings } = request.data;
+    if (!jobId || !settings) {
+      throw new HttpsError('invalid-argument', 'Job ID and settings are required');
     }
 
-    // Update settings
-    await admin.firestore().collection('publicProfiles').doc(jobId).update({
-      settings,
-      updatedAt: new Date()
-    });
+    try {
+      // Get profile and verify ownership
+      const profileDoc = await admin.firestore()
+        .collection('publicProfiles')
+        .doc(jobId)
+        .get();
 
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error updating profile settings:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+      if (!profileDoc.exists) {
+        throw new HttpsError('not-found', 'Public profile not found');
+      }
+
+      const profile = profileDoc.data() as PublicCVProfile;
+      if (profile.userId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to profile');
+      }
+
+      // Update settings
+      const updates: any = {
+        isPublic: settings.isPublic ?? profile.isPublic,
+        allowContactForm: settings.allowContactForm ?? profile.allowContactForm,
+        showAnalytics: settings.showAnalytics ?? profile.showAnalytics,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (settings.customSlug && settings.customSlug !== profile.slug) {
+        // Check if custom slug is available
+        const existingSlug = await admin.firestore()
+          .collection('publicProfiles')
+          .where('slug', '==', settings.customSlug)
+          .limit(1)
+          .get();
+
+        if (!existingSlug.empty) {
+          throw new HttpsError('already-exists', 'This custom URL is already taken');
+        }
+
+        updates.slug = settings.customSlug;
+        updates.publicUrl = `${process.env.PUBLIC_URL || 'https://cvisionary.ai'}/public/${settings.customSlug}`;
+      }
+
+      await profileDoc.ref.update(updates);
+
+      return {
+        success: true,
+        settings: updates
+      };
+    } catch (error: any) {
+      console.error('Error updating profile settings:', error);
+      throw new HttpsError('internal', error.message || 'Failed to update profile settings');
+    }
   }
-});
+);
 
 /**
- * Submit contact form
+ * Submit contact form for public profile
  */
-export const submitContactForm = functions.https.onCall(async (data) => {
-  const { jobId, senderName, senderEmail, senderPhone, company, message } = data;
-
-  // Validate required fields
-  if (!jobId || !senderName || !senderEmail || !message) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 
-      'Required fields: jobId, senderName, senderEmail, message'
-    );
-  }
-
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(senderEmail)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid email address');
-  }
-
-  try {
-    // Get job to find owner's email
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'CV not found');
-    }
-
-    const job = jobDoc.data() as EnhancedJob;
+export const submitContactForm = onCall<SubmitContactFormRequest>(
+  {
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest<SubmitContactFormRequest>) => {
+    const { jobId, senderName, senderEmail, senderPhone, company, message } = request.data;
     
-    // Check if contact form is enabled
-    if (!job.interactiveData?.contactFormEnabled) {
-      throw new functions.https.HttpsError('failed-precondition', 'Contact form is not enabled');
+    // Validate required fields
+    if (!jobId || !senderName || !senderEmail || !message) {
+      throw new HttpsError('invalid-argument', 'Required fields missing');
     }
 
-    // Get user's email
-    const userRecord = await admin.auth().getUser(job.userId);
-    const recipientEmail = job.interactiveData?.contactEmail || userRecord.email;
-
-    if (!recipientEmail) {
-      throw new functions.https.HttpsError('failed-precondition', 'Recipient email not configured');
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(senderEmail)) {
+      throw new HttpsError('invalid-argument', 'Invalid email address');
     }
 
-    // Store submission
-    const submissionId = await enhancedDbService.storeContactFormSubmission({
-      jobId,
-      senderName,
-      senderEmail,
-      senderPhone,
-      company,
-      message,
-      status: 'pending',
-      metadata: {
-        userAgent: data.userAgent,
-        source: data.source || 'public-profile'
-      }
-    });
-
-    // Get public profile URL
-    const profileDoc = await admin.firestore().collection('publicProfiles').doc(jobId).get();
-    const profile = profileDoc.data() as PublicCVProfile;
-    const cvUrl = profile ? `https://cvisionery.com/cv/${profile.slug}` : 'https://cvisionery.com';
-
-    // Send email
     try {
-      await integrationsService.sendEmail({
-        to: recipientEmail,
-        subject: `New Contact from Your CV - ${senderName}`,
-        html: integrationsService.generateContactFormEmailTemplate({
-          senderName,
-          senderEmail,
-          senderPhone,
-          company,
-          message,
-          cvUrl
-        })
+      // Get profile
+      const profileDoc = await admin.firestore()
+        .collection('publicProfiles')
+        .doc(jobId)
+        .get();
+
+      if (!profileDoc.exists) {
+        throw new HttpsError('not-found', 'Public profile not found');
+      }
+
+      const profile = profileDoc.data() as PublicCVProfile;
+
+      // Check if contact form is enabled
+      if (!profile.allowContactForm) {
+        throw new HttpsError('failed-precondition', 'Contact form is not enabled for this profile');
+      }
+
+      // Get job to find contact email
+      const jobDoc = await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .get();
+
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
+      }
+
+      const job = jobDoc.data() as EnhancedJob;
+
+      // Create contact submission
+      const submission = {
+        jobId,
+        profileId: profile.slug,
+        senderName,
+        senderEmail,
+        senderPhone,
+        company,
+        message,
+        submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'pending'
+      };
+
+      // Save submission
+      const submissionRef = await admin.firestore()
+        .collection('contactSubmissions')
+        .add(submission);
+
+      // Update analytics
+      await profileDoc.ref.update({
+        'analytics.contactSubmissions': admin.firestore.FieldValue.increment(1)
       });
 
-      // Update submission status
-      await admin.firestore().collection('contactSubmissions').doc(submissionId).update({
-        status: 'sent'
-      });
-    } catch (emailError) {
-      console.error('Failed to send email:', emailError);
-      // Update submission status
-      await admin.firestore().collection('contactSubmissions').doc(submissionId).update({
-        status: 'failed'
-      });
-      throw new functions.https.HttpsError('internal', 'Failed to send message');
-    }
+      // Send email notification if configured
+      const contactEmail = job.interactiveData?.contactEmail || job.parsedData?.personalInfo?.email;
+      if (contactEmail) {
+        await integrationsService.sendEmail({
+          to: contactEmail,
+          subject: `New contact from your CV profile - ${senderName}`,
+          html: `
+            <h2>New Contact Submission</h2>
+            <p><strong>From:</strong> ${senderName}</p>
+            <p><strong>Email:</strong> ${senderEmail}</p>
+            ${company ? `<p><strong>Company:</strong> ${company}</p>` : ''}
+            ${senderPhone ? `<p><strong>Phone:</strong> ${senderPhone}</p>` : ''}
+            <p><strong>Message:</strong></p>
+            <p>${message.replace(/\n/g, '<br>')}</p>
+            <hr>
+            <p><small>This message was sent through your public CV profile on CVisionery.</small></p>
+          `
+        }).catch(error => {
+          console.error('Failed to send email notification:', error);
+          // Don't throw - submission was still saved
+        });
+      }
 
-    return {
-      success: true,
-      message: 'Your message has been sent successfully!'
-    };
-  } catch (error: any) {
-    console.error('Error submitting contact form:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
+      return {
+        success: true,
+        submissionId: submissionRef.id,
+        message: 'Your message has been sent successfully!'
+      };
+    } catch (error: any) {
+      console.error('Error submitting contact form:', error);
+      throw new HttpsError('internal', error.message || 'Failed to submit contact form');
     }
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);
 
 /**
  * Track QR code scan
  */
-export const trackQRScan = functions.https.onCall(async (data) => {
-  const { jobId, metadata } = data;
-  if (!jobId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-  }
+export const trackQRScan = onCall<TrackQRScanRequest>(
+  {
+    timeoutSeconds: 30,
+    cors: true
+  },
+  async (request: CallableRequest<TrackQRScanRequest>) => {
+    const { jobId, metadata } = request.data;
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
+    }
 
-  try {
-    await enhancedDbService.trackQRCodeScan({
-      jobId,
-      location: metadata?.location,
-      device: metadata?.device,
-      referrer: metadata?.referrer
-    });
+    try {
+      // Update analytics
+      const profileRef = admin.firestore()
+        .collection('publicProfiles')
+        .doc(jobId);
 
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error tracking QR scan:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+      await profileRef.update({
+        'analytics.qrScans': admin.firestore.FieldValue.increment(1)
+      });
+
+      // Log scan event
+      await admin.firestore()
+        .collection('qrScans')
+        .add({
+          jobId,
+          scannedAt: admin.firestore.FieldValue.serverTimestamp(),
+          userAgent: metadata?.userAgent,
+          source: metadata?.source || 'qr',
+          ip: request.rawRequest?.ip || 'unknown'
+        });
+
+      return {
+        success: true,
+        message: 'QR scan tracked'
+      };
+    } catch (error: any) {
+      console.error('Error tracking QR scan:', error);
+      // Don't throw - we don't want to break the user experience
+      return {
+        success: false,
+        message: 'Failed to track scan'
+      };
+    }
   }
-});
+);

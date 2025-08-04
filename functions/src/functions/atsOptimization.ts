@@ -2,7 +2,7 @@
  * Cloud Functions for ATS Optimization
  */
 
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { atsOptimizationService } from '../services/ats-optimization.service';
 import { EnhancedJob } from '../types/enhanced-models';
@@ -10,421 +10,326 @@ import { EnhancedJob } from '../types/enhanced-models';
 /**
  * Analyze CV for ATS compatibility
  */
-export const analyzeATSCompatibility = functions
-  .runWith({ timeoutSeconds: 120 })
-  .https.onCall(async (data, context) => {
+export const analyzeATSCompatibility = onCall(
+  { 
+    timeoutSeconds: 120,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const { jobId, targetRole, targetKeywords } = data;
     if (!jobId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized to access this job');
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
 
-      if (!job.parsedData) {
-        throw new functions.https.HttpsError('failed-precondition', 'CV must be parsed before ATS analysis');
-      }
-
-      // Update status
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.atsOptimization': {
-          enabled: true,
-          status: 'processing',
-          processedAt: new Date()
-        }
-      });
-
-      // Analyze CV
-      console.log('Analyzing CV for ATS compatibility...');
-      const analysis = await atsOptimizationService.analyzeCV(
-        job.parsedData,
+      // Analyze ATS compatibility
+      const atsScore = await atsOptimizationService.analyzeATSCompatibility(
+        job.parsedData!,
         targetRole,
         targetKeywords
       );
 
-      // Store results
-      await admin.firestore().collection('jobs').doc(jobId).update({
+      // Update job with ATS analysis
+      await jobDoc.ref.update({
         'enhancedFeatures.atsOptimization': {
           enabled: true,
+          data: {
+            score: atsScore,
+            targetRole,
+            targetKeywords,
+            analyzedAt: new Date()
+          },
           status: 'completed',
-          data: analysis,
           processedAt: new Date()
         }
       });
 
-      // Track analytics
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'analytics.atsScans': admin.firestore.FieldValue.increment(1),
-        'analytics.lastATSScan': new Date()
-      });
-
       return {
         success: true,
-        analysis: {
-          score: analysis.score,
-          passes: analysis.passes,
-          issueCount: analysis.issues.length,
-          issues: analysis.issues,
-          suggestions: analysis.suggestions,
-          keywords: analysis.keywords
-        }
+        atsScore,
+        recommendations: atsScore.recommendations
       };
     } catch (error: any) {
       console.error('Error analyzing ATS compatibility:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.atsOptimization': {
-          enabled: false,
-          status: 'failed',
-          error: error.message,
-          processedAt: new Date()
-        }
+        'enhancedFeatures.atsOptimization.status': 'failed',
+        'enhancedFeatures.atsOptimization.error': error.message
       });
       
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to analyze ATS compatibility');
     }
-  });
+  }
+);
 
 /**
  * Apply ATS optimizations to CV
  */
-export const applyATSOptimizations = functions
-  .runWith({ timeoutSeconds: 120 })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+export const applyATSOptimizations = onCall(
+  { 
+    timeoutSeconds: 180,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const { jobId, optimizations } = data;
     if (!jobId || !optimizations) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID and optimizations are required');
+      throw new HttpsError('invalid-argument', 'Job ID and optimizations are required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
 
-      // Apply optimizations to parsed data
-      const optimizedData = {
-        ...job.parsedData,
-        ...optimizations
-      };
+      // Apply optimizations
+      const optimizedCV = await atsOptimizationService.applyOptimizations(
+        job.parsedData!,
+        optimizations
+      );
 
-      // Update job with optimized data
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        parsedData: optimizedData,
-        'enhancedFeatures.atsOptimization.optimizationsApplied': true,
-        'enhancedFeatures.atsOptimization.appliedAt': new Date()
+      // Update job with optimized CV
+      await jobDoc.ref.update({
+        parsedData: optimizedCV,
+        'enhancedFeatures.atsOptimization.data.appliedOptimizations': optimizations,
+        'enhancedFeatures.atsOptimization.data.optimizedAt': new Date()
       });
 
-      // Trigger CV regeneration if it was already generated
-      if (job.status === 'completed' && job.generatedCV) {
-        await admin.firestore().collection('jobs').doc(jobId).update({
-          status: 'generating',
-          'enhancedFeatures.atsOptimization.regenerating': true
-        });
-      }
-
       return {
         success: true,
-        message: 'ATS optimizations applied successfully',
-        optimizedData
+        optimizedCV,
+        appliedOptimizations: optimizations
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error applying ATS optimizations:', error);
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to apply ATS optimizations');
     }
-  });
+  }
+);
 
 /**
- * Get ATS-friendly CV templates
+ * Get ATS-optimized templates
  */
-export const getATSTemplates = functions.https.onCall(async (data, context) => {
-  try {
-    // Get ATS-friendly templates
-    const templatesSnapshot = await admin.firestore()
-      .collection('templates')
-      .where('atsOptimized', '==', true)
-      .get();
+export const getATSTemplates = onCall(
+  { 
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data } = request;
+    const { industry, role } = data;
 
-    const templates = templatesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    // If no ATS templates exist, return default recommendations
-    if (templates.length === 0) {
+    try {
+      const templates = await atsOptimizationService.getATSTemplates(industry, role);
+      
       return {
         success: true,
-        templates: [
-          {
-            id: 'ats-simple',
-            name: 'ATS Simple',
-            description: 'Clean, simple format optimized for ATS parsing',
-            features: ['Single column', 'Standard fonts', 'Clear sections', 'No graphics'],
-            score: 95
-          },
-          {
-            id: 'ats-professional',
-            name: 'ATS Professional',
-            description: 'Professional format with ATS-friendly structure',
-            features: ['Chronological order', 'Bullet points', 'Keywords optimized', 'Clean headers'],
-            score: 90
-          },
-          {
-            id: 'ats-modern',
-            name: 'ATS Modern',
-            description: 'Modern look while maintaining ATS compatibility',
-            features: ['Subtle design', 'ATS-safe formatting', 'Skills section', 'Clear hierarchy'],
-            score: 85
-          }
-        ]
+        templates
       };
+    } catch (error) {
+      console.error('Error getting ATS templates:', error);
+      throw new HttpsError('internal', 'Failed to get ATS templates');
     }
-
-    return {
-      success: true,
-      templates
-    };
-  } catch (error: any) {
-    console.error('Error getting ATS templates:', error);
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);
 
 /**
- * Generate ATS keyword suggestions
+ * Generate ATS-optimized keywords
  */
-export const generateATSKeywords = functions
-  .runWith({ timeoutSeconds: 60 })
-  .https.onCall(async (data) => {
-    const { jobDescription, industry, role } = data;
+export const generateATSKeywords = onCall(
+  { 
+    timeoutSeconds: 90,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
     
-    if (!jobDescription && !role) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Either job description or role is required'
-      );
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { jobId, jobDescription, targetRole } = data;
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
-      // Extract keywords from job description
-      const keywords = new Set<string>();
-      
-      // Common technical keywords by industry
-      const industryKeywords: Record<string, string[]> = {
-        'technology': ['agile', 'scrum', 'git', 'ci/cd', 'cloud', 'aws', 'docker', 'kubernetes'],
-        'marketing': ['seo', 'sem', 'analytics', 'campaign', 'roi', 'conversion', 'engagement'],
-        'finance': ['analysis', 'reporting', 'compliance', 'risk', 'portfolio', 'investment'],
-        'healthcare': ['patient care', 'hipaa', 'ehr', 'clinical', 'diagnosis', 'treatment'],
-        'sales': ['crm', 'pipeline', 'quota', 'negotiation', 'client relations', 'revenue']
-      };
-      
-      // Add industry-specific keywords
-      if (industry && industryKeywords[industry.toLowerCase()]) {
-        industryKeywords[industry.toLowerCase()].forEach(k => keywords.add(k));
+      // Get job and verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
       }
-      
-      // Extract keywords from job description
-      if (jobDescription) {
-        // Look for skills and requirements
-        const skillPatterns = [
-          /required:?\s*([^.]+)/gi,
-          /skills:?\s*([^.]+)/gi,
-          /experience with\s+([^.]+)/gi,
-          /knowledge of\s+([^.]+)/gi,
-          /proficient in\s+([^.]+)/gi
-        ];
-        
-        skillPatterns.forEach(pattern => {
-          const matches = jobDescription.matchAll(pattern);
-          for (const match of matches) {
-            const skills = match[1].split(/[,;]/).map(s => s.trim().toLowerCase());
-            skills.forEach(skill => {
-              if (skill.length > 2 && skill.length < 30) {
-                keywords.add(skill);
-              }
-            });
-          }
-        });
-        
-        // Extract technology/tool names
-        const techPattern = /\b[A-Z][a-zA-Z0-9+#.-]+\b/g;
-        const techMatches = jobDescription.match(techPattern);
-        if (techMatches) {
-          techMatches.forEach(tech => {
-            if (tech.length > 1 && tech.length < 20) {
-              keywords.add(tech.toLowerCase());
-            }
-          });
-        }
+
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
+
+      // Generate keywords
+      const keywords = await atsOptimizationService.generateKeywords(
+        job.parsedData!,
+        jobDescription,
+        targetRole
+      );
+
+      // Extract current skills from parsed CV
+      const currentSkills = job.parsedData!.skills?.technical?.map((s: any) => s.name || s) || [];
       
-      // Role-based keywords
-      const roleKeywords: Record<string, string[]> = {
-        'developer': ['programming', 'debugging', 'testing', 'deployment', 'architecture'],
-        'manager': ['leadership', 'planning', 'budgeting', 'team building', 'strategy'],
-        'analyst': ['data analysis', 'reporting', 'visualization', 'insights', 'metrics'],
-        'designer': ['ui/ux', 'wireframing', 'prototyping', 'user research', 'figma']
-      };
-      
-      if (role) {
-        const roleKey = Object.keys(roleKeywords).find(k => 
-          role.toLowerCase().includes(k)
-        );
-        if (roleKey) {
-          roleKeywords[roleKey].forEach(k => keywords.add(k));
-        }
-      }
-      
+      // Find missing keywords
+      const missingKeywords = keywords.filter((keyword: string) => 
+        !currentSkills.some((skill: string) => 
+          skill.toLowerCase().includes(keyword.toLowerCase()) ||
+          keyword.toLowerCase().includes(skill.toLowerCase())
+        )
+      );
+
+      // Extract industry-specific terms
+      const industryTerms = keywords.filter((kw: string) => 
+        ['cloud', 'aws', 'azure', 'devops', 'agile', 'saas', 'fintech', 'healthcare', 'blockchain']
+          .some((tech: string) => kw.toLowerCase().includes(tech))
+      );
+
       return {
         success: true,
-        keywords: Array.from(keywords).slice(0, 30), // Return top 30 keywords
-        categories: {
-          technical: Array.from(keywords).filter(k => 
-            k.match(/^[a-z0-9+#.-]+$/i)
-          ),
-          skills: Array.from(keywords).filter(k => 
-            k.includes(' ') || k.length > 10
-          ),
-          action: ['managed', 'developed', 'implemented', 'designed', 'led', 'created']
+        keywords: {
+          all: keywords,
+          missing: missingKeywords,
+          industry: industryTerms,
+          technical: keywords.filter((kw: string) => 
+            /^[A-Z]/.test(kw) || kw.includes('.') || kw.includes('#')
+          )
         }
       };
-    } catch (error: any) {
-      console.error('Error generating keywords:', error);
-      throw new functions.https.HttpsError('internal', error.message);
+    } catch (error) {
+      console.error('Error generating ATS keywords:', error);
+      throw new HttpsError('internal', 'Failed to generate ATS keywords');
     }
-  });
+  }
+);
 
 /**
- * Batch ATS analysis for multiple CVs
+ * Batch analyze multiple CVs for ATS optimization
  */
-export const batchATSAnalysis = functions
-  .runWith({ timeoutSeconds: 540, memory: '1GB' })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+export const batchATSAnalysis = onCall(
+  { 
+    timeoutSeconds: 300,
+    memory: '1GiB',
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { jobIds, targetRole, targetKeywords } = data;
+    const { jobIds, targetRole } = data;
     if (!jobIds || !Array.isArray(jobIds) || jobIds.length === 0) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job IDs array is required');
+      throw new HttpsError('invalid-argument', 'Job IDs array is required');
     }
 
     if (jobIds.length > 10) {
-      throw new functions.https.HttpsError('invalid-argument', 'Maximum 10 CVs per batch');
+      throw new HttpsError('invalid-argument', 'Maximum 10 jobs can be analyzed at once');
     }
 
     try {
-      const results = [];
-      
-      for (const jobId of jobIds) {
-        try {
-          // Get job and verify ownership
-          const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-          if (!jobDoc.exists) {
-            results.push({
-              jobId,
-              success: false,
-              error: 'Job not found'
-            });
-            continue;
-          }
-
-          const job = jobDoc.data() as EnhancedJob;
-          if (job.userId !== context.auth.uid) {
-            results.push({
-              jobId,
-              success: false,
-              error: 'Not authorized'
-            });
-            continue;
-          }
-
-          if (!job.parsedData) {
-            results.push({
-              jobId,
-              success: false,
-              error: 'CV not parsed'
-            });
-            continue;
-          }
-
-          // Analyze CV
-          const analysis = await atsOptimizationService.analyzeCV(
-            job.parsedData,
-            targetRole,
-            targetKeywords
-          );
-
-          // Store results
-          await admin.firestore().collection('jobs').doc(jobId).update({
-            'enhancedFeatures.atsOptimization': {
-              enabled: true,
-              status: 'completed',
-              data: {
-                score: analysis.score,
-                passes: analysis.passes,
-                issueCount: analysis.issues.length
-              },
-              processedAt: new Date()
+      const results = await Promise.all(
+        jobIds.map(async (jobId: string) => {
+          try {
+            // Get job and verify ownership
+            const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+            if (!jobDoc.exists) {
+              return { jobId, success: false, error: 'Job not found' };
             }
-          });
 
-          results.push({
-            jobId,
-            success: true,
-            score: analysis.score,
-            passes: analysis.passes,
-            issueCount: analysis.issues.length
-          });
-        } catch (error: any) {
-          results.push({
-            jobId,
-            success: false,
-            error: error.message
-          });
-        }
-      }
+            const job = jobDoc.data() as EnhancedJob;
+            if (job.userId !== auth.uid) {
+              return { jobId, success: false, error: 'Unauthorized' };
+            }
+
+            // Analyze ATS compatibility
+            const atsScore = await atsOptimizationService.analyzeATSCompatibility(
+              job.parsedData!,
+              targetRole
+            );
+
+            // Update job
+            await jobDoc.ref.update({
+              'enhancedFeatures.atsOptimization': {
+                enabled: true,
+                data: {
+                  score: atsScore,
+                  targetRole,
+                  analyzedAt: new Date()
+                },
+                status: 'completed',
+                processedAt: new Date()
+              }
+            });
+
+            return {
+              jobId,
+              success: true,
+              atsScore: atsScore.overall,
+              recommendations: atsScore.recommendations.slice(0, 3)
+            };
+          } catch (error) {
+            console.error(`Error analyzing job ${jobId}:`, error);
+            return { jobId, success: false, error: 'Analysis failed' };
+          }
+        })
+      );
+
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
 
       return {
         success: true,
-        results,
-        summary: {
-          total: results.length,
-          successful: results.filter(r => r.success).length,
-          failed: results.filter(r => !r.success).length,
-          averageScore: results
-            .filter(r => r.success && r.score)
-            .reduce((sum, r) => sum + r.score, 0) / 
-            results.filter(r => r.success).length || 0
-        }
+        analyzed: successful.length,
+        failed: failed.length,
+        results: successful,
+        errors: failed,
+        averageScore: successful.length > 0
+          ? successful.reduce((sum, r) => sum + (r.atsScore || 0), 0) / successful.length
+          : 0
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error in batch ATS analysis:', error);
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to perform batch ATS analysis');
     }
-  });
+  }
+);

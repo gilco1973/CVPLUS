@@ -10,12 +10,19 @@ import { ChatMessage, UserRAGProfile } from '../types/enhanced-models';
 import { nanoid } from 'nanoid';
 
 export class ChatService {
-  private openai: OpenAI;
+  private openai: OpenAI | null = null;
   
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: config.rag.openaiApiKey,
-    });
+    // Initialize OpenAI lazily when needed
+  }
+
+  private getOpenAI(): OpenAI {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '',
+      });
+    }
+    return this.openai;
   }
   
   /**
@@ -94,6 +101,9 @@ export class ChatService {
       jobId,
       userId,
       visitorId,
+      createdAt: new Date(),
+      lastActivity: new Date(),
+      messages: [],
       metadata: {
         ...metadata,
         startTime: new Date(),
@@ -162,7 +172,7 @@ Important guidelines:
     systemPrompt: string,
     settings: UserRAGProfile['settings']
   ): Promise<{ content: string; tokens: number }> {
-    const completion = await this.openai.chat.completions.create({
+    const completion = await this.getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         { role: 'system', content: systemPrompt },

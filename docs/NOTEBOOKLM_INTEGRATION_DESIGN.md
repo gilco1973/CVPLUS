@@ -1,7 +1,13 @@
 # NotebookLLM Integration Design
 
+**Status**: ✅ **IMPLEMENTED** - Podcast generation is live in production
+
+**Last Updated**: August 2025
+
 ## Overview
 The NotebookLLM integration enables the generation of AI-powered podcast summaries from CV data. This feature creates engaging audio content that presents career achievements in a conversational format, making CVs more accessible and memorable.
+
+**Current Implementation**: Located in `/functions/src/functions/generatePodcast.ts` and integrated into the CV generation pipeline.
 
 ## Architecture
 

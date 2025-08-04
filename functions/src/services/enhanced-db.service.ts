@@ -12,7 +12,8 @@ import {
   ChatMessage,
   ContactFormSubmission,
   QRCodeScan,
-  FeatureInteraction
+  FeatureInteraction,
+  ParsedCV
 } from '../types/enhanced-models';
 import { generateSlug } from '../utils/slug';
 
@@ -29,11 +30,13 @@ export class EnhancedDatabaseService {
     const jobRef = this.db.collection('jobs').doc(jobId);
     
     const updates: any = {};
-    for (const [featureId, featureData] of Object.entries(features)) {
-      updates[`enhancedFeatures.${featureId}`] = {
-        ...featureData,
-        processedAt: new Date()
-      };
+    if (features) {
+      for (const [featureId, featureData] of Object.entries(features)) {
+        updates[`enhancedFeatures.${featureId}`] = {
+          ...featureData,
+          processedAt: new Date()
+        };
+      }
     }
     
     await jobRef.update(updates);
@@ -49,16 +52,22 @@ export class EnhancedDatabaseService {
       jobId,
       userId,
       slug,
-      publicData: {}, // Will be populated with PII-masked data
-      settings: {
-        showContactForm: true,
-        showCalendar: false,
-        showChat: true,
-        customBranding: false,
-        analytics: true
-      },
+      parsedCV: {} as ParsedCV, // Will be populated with PII-masked data
+      features: {},
+      template: 'modern',
+      isPublic: true,
+      allowContactForm: true,
+      showAnalytics: true,
+      qrCodeUrl: '',
+      publicUrl: `https://cvisionary.ai/public/${slug}`,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      analytics: {
+        views: 0,
+        qrScans: 0,
+        contactSubmissions: 0,
+        lastViewedAt: null
+      }
     };
     
     await this.db.collection('publicProfiles').doc(jobId).set(profile);

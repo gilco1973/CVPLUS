@@ -9,19 +9,32 @@ import { CVChunk, ParsedCV } from '../types/enhanced-models';
 import { nanoid } from 'nanoid';
 
 export class EmbeddingService {
-  private openai: OpenAI;
-  private pinecone: Pinecone;
+  private openai: OpenAI | null = null;
+  private pinecone: Pinecone | null = null;
   
   constructor() {
-    // Initialize OpenAI
-    this.openai = new OpenAI({
-      apiKey: config.rag.openaiApiKey,
-    });
-    
-    // Initialize Pinecone
-    this.pinecone = new Pinecone({
-      apiKey: config.rag.pineconeApiKey!
-    });
+    // Initialize Pinecone lazily when needed
+  }
+
+  private getPinecone(): Pinecone {
+    if (!this.pinecone) {
+      if (!config.rag.pineconeApiKey) {
+        throw new Error('Pinecone API key is not configured');
+      }
+      this.pinecone = new Pinecone({
+        apiKey: config.rag.pineconeApiKey
+      });
+    }
+    return this.pinecone;
+  }
+
+  private getOpenAI(): OpenAI {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '',
+      });
+    }
+    return this.openai;
   }
   
   /**
@@ -160,20 +173,42 @@ export class EmbeddingService {
     userId: string,
     jobId: string
   ): Promise<void> {
-    const index = this.pinecone.index(config.rag.pineconeIndex);
+    const index = this.getPinecone().index(config.rag.pineconeIndex);
     
     // Prepare vectors for Pinecone
-    const vectors = chunks.map(chunk => ({
-      id: chunk.id,
-      values: chunk.embedding!,
-      metadata: {
-        ...chunk.metadata,
+    const vectors = chunks.map(chunk => {
+      // Convert metadata to Pinecone-compatible format
+      const metadata: Record<string, any> = {
+        section: chunk.metadata.section,
+        subsection: chunk.metadata.subsection || '',
+        importance: chunk.metadata.importance,
+        keywords: chunk.metadata.keywords.join(','), // Convert array to string
         content: chunk.content,
         userId,
         jobId,
         chunkId: chunk.id
+      };
+
+      // Handle dateRange if present
+      if (chunk.metadata.dateRange) {
+        metadata.dateRangeStart = chunk.metadata.dateRange.start.toISOString();
+        metadata.dateRangeEnd = chunk.metadata.dateRange.end.toISOString();
       }
-    }));
+
+      // Handle arrays as comma-separated strings
+      if (chunk.metadata.technologies) {
+        metadata.technologies = chunk.metadata.technologies.join(',');
+      }
+      if (chunk.metadata.companies) {
+        metadata.companies = chunk.metadata.companies.join(',');
+      }
+
+      return {
+        id: chunk.id,
+        values: chunk.embedding!,
+        metadata
+      };
+    });
     
     // Upsert vectors in batches
     const batchSize = 100;
@@ -195,7 +230,7 @@ export class EmbeddingService {
     // Generate query embedding
     const queryEmbedding = await this.generateSingleEmbedding(query);
     
-    const index = this.pinecone.index(config.rag.pineconeIndex);
+    const index = this.getPinecone().index(config.rag.pineconeIndex);
     
     // Query Pinecone
     const results = await index.namespace(vectorNamespace).query({
@@ -212,7 +247,7 @@ export class EmbeddingService {
    * Delete embeddings for a job
    */
   async deleteEmbeddings(vectorNamespace: string, jobId: string): Promise<void> {
-    const index = this.pinecone.index(config.rag.pineconeIndex);
+    const index = this.getPinecone().index(config.rag.pineconeIndex);
     
     // Delete all vectors for this job
     await index.namespace(vectorNamespace).deleteMany({
@@ -223,7 +258,7 @@ export class EmbeddingService {
   // Helper methods
   
   private async generateSingleEmbedding(text: string): Promise<number[]> {
-    const response = await this.openai.embeddings.create({
+    const response = await this.getOpenAI().embeddings.create({
       model: 'text-embedding-ada-002',
       input: text
     });
@@ -232,7 +267,7 @@ export class EmbeddingService {
   }
   
   private async batchEmbeddings(texts: string[]): Promise<number[][]> {
-    const response = await this.openai.embeddings.create({
+    const response = await this.getOpenAI().embeddings.create({
       model: 'text-embedding-ada-002',
       input: texts
     });

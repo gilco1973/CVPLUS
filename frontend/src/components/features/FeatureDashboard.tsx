@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { 
-  Brain, Shield, MessageSquare, BarChart3, Video, Mic, 
+  Brain, MessageSquare, BarChart3, Video, Mic, 
   FileSearch, Users, ChevronRight, Loader2, CheckCircle, 
   AlertCircle, Clock, Sparkles 
 } from 'lucide-react';
@@ -11,7 +11,7 @@ import { PublicProfile } from './PublicProfile';
 import { ChatInterface } from './ChatInterface';
 import { VideoIntroduction } from './VideoIntroduction';
 import { PodcastGeneration } from './PodcastGeneration';
-import { Job } from '../../services/cvService';
+import type { Job } from '../../services/cvService';
 import * as cvService from '../../services/cvService';
 import toast from 'react-hot-toast';
 
@@ -28,7 +28,7 @@ interface FeatureStatus {
   data?: any;
 }
 
-export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) => {
+export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
   const [activeTab, setActiveTab] = useState<FeatureTab>('ats');
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [featureData, setFeatureData] = useState<Record<string, any>>({});
@@ -111,7 +111,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   const handleATSAnalysis = async () => {
     setLoading({ ...loading, ats: true });
     try {
-      const result = await cvService.analyzeATSCompatibility(job.id);
+      const result = await cvService.analyzeATSCompatibility(job.id) as any;
       setFeatureData({ ...featureData, ats: result });
       toast.success('ATS analysis completed!');
     } catch (error) {
@@ -124,7 +124,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   const handlePersonalityAnalysis = async () => {
     setLoading({ ...loading, personality: true });
     try {
-      const result = await cvService.generatePersonalityInsights(job.id);
+      const result = await cvService.generatePersonalityInsights(job.id) as any;
       setFeatureData({ ...featureData, personality: result.insights });
       toast.success('Personality analysis completed!');
     } catch (error) {
@@ -137,7 +137,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   const handleSkillsVisualization = async () => {
     setLoading({ ...loading, skills: true });
     try {
-      const result = await cvService.generateSkillsVisualization(job.id);
+      const result = await cvService.generateSkillsVisualization(job.id) as any;
       setFeatureData({ ...featureData, skills: result.visualization });
       toast.success('Skills visualization generated!');
     } catch (error) {
@@ -150,7 +150,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   const handleCreatePublicProfile = async () => {
     setLoading({ ...loading, public: true });
     try {
-      const result = await cvService.createPublicProfile(job.id);
+      const result = await cvService.createPublicProfile(job.id) as any;
       setFeatureData({ ...featureData, public: result.profile });
       toast.success('Public profile created!');
     } catch (error) {
@@ -163,7 +163,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   const handleInitializeChat = async () => {
     setLoading({ ...loading, chat: true });
     try {
-      const result = await cvService.initializeRAG(job.id);
+      await cvService.initializeRAG(job.id);
       setFeatureData({ ...featureData, chat: { initialized: true } });
       toast.success('Chat assistant initialized!');
     } catch (error) {
@@ -173,43 +173,9 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
     }
   };
 
-  const handleGenerateVideo = async () => {
-    setLoading({ ...loading, media: true });
-    try {
-      const result = await cvService.generateVideoIntroduction(job.id);
-      setFeatureData({ 
-        ...featureData, 
-        media: { 
-          ...featureData.media,
-          video: result.video 
-        } 
-      });
-      toast.success('Video introduction generated!');
-    } catch (error) {
-      toast.error('Failed to generate video');
-    } finally {
-      setLoading({ ...loading, media: false });
-    }
-  };
+  // Video generation is handled inline in the component
 
-  const handleGeneratePodcast = async () => {
-    setLoading({ ...loading, media: true });
-    try {
-      const result = await cvService.generateEnhancedPodcast(job.id);
-      setFeatureData({ 
-        ...featureData, 
-        media: { 
-          ...featureData.media,
-          podcast: result.podcast 
-        } 
-      });
-      toast.success('Career podcast generated!');
-    } catch (error) {
-      toast.error('Failed to generate podcast');
-    } finally {
-      setLoading({ ...loading, media: false });
-    }
-  };
+  // Podcast generation is handled inline in the component
 
   const renderFeatureContent = () => {
     const status = getFeatureStatus(activeTab);
@@ -232,8 +198,8 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
       };
 
       return (
-        <div className="flex flex-col items-center justify-center py-16">
-          <Sparkles className="w-16 h-16 text-gray-600 mb-4" />
+        <div className="flex flex-col items-center justify-center py-16 animate-fade-in-up">
+          <Sparkles className="w-16 h-16 text-gray-600 mb-4 animate-pulse-slow" />
           <h3 className="text-xl font-semibold text-gray-100 mb-2">
             Feature Not Activated
           </h3>
@@ -243,7 +209,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
           <button
             onClick={initHandlers[activeTab]}
             disabled={loading[activeTab]}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50"
+            className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 hover-glow"
           >
             {loading[activeTab] ? (
               <>
@@ -261,12 +227,12 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
     // Show loading state
     if (status.status === 'processing') {
       return (
-        <div className="flex flex-col items-center justify-center py-16">
+        <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
           <Loader2 className="w-16 h-16 text-cyan-500 animate-spin mb-4" />
           <h3 className="text-xl font-semibold text-gray-100 mb-2">
             Processing...
           </h3>
-          <p className="text-gray-400">
+          <p className="text-gray-400 animate-pulse">
             This may take a few moments. Please wait.
           </p>
         </div>
@@ -281,7 +247,6 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
           <ATSScore
             score={atsData.analysis?.score || 0}
             passes={atsData.analysis?.passes || false}
-            issueCount={atsData.analysis?.issueCount || 0}
             issues={atsData.analysis?.issues}
             suggestions={atsData.analysis?.suggestions}
             keywords={atsData.analysis?.keywords}
@@ -318,14 +283,14 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
         return (
           <ChatInterface
             onStartSession={async () => {
-              const result = await cvService.startChatSession(job.id);
+              const result = await cvService.startChatSession(job.id) as any;
               return {
                 sessionId: result.sessionId,
                 suggestedQuestions: result.suggestedQuestions || []
               };
             }}
             onSendMessage={async (sessionId, message) => {
-              const result = await cvService.sendChatMessage(sessionId, message);
+              const result = await cvService.sendChatMessage(sessionId, message) as any;
               return {
                 content: result.response.content,
                 confidence: result.response.confidence
@@ -354,7 +319,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
                 status={mediaData.video ? 'ready' : 'not-generated'}
                 script={mediaData.video?.script}
                 onGenerateVideo={async () => {
-                  const result = await cvService.generateVideoIntroduction(job.id);
+                  const result = await cvService.generateVideoIntroduction(job.id) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -365,7 +330,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
                   return result.video;
                 }}
                 onRegenerateVideo={async (customScript) => {
-                  const result = await cvService.regenerateVideoIntroduction(job.id, customScript);
+                  const result = await cvService.regenerateVideoIntroduction(job.id, customScript) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -391,7 +356,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
                 chapters={mediaData.podcast?.chapters}
                 status={mediaData.podcast ? 'ready' : 'not-generated'}
                 onGeneratePodcast={async () => {
-                  const result = await cvService.generateEnhancedPodcast(job.id);
+                  const result = await cvService.generateEnhancedPodcast(job.id) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -402,7 +367,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
                   return result.podcast;
                 }}
                 onRegeneratePodcast={async (style) => {
-                  const result = await cvService.regeneratePodcast(job.id, style);
+                  const result = await cvService.regeneratePodcast(job.id, style) as any;
                   setFeatureData({ 
                     ...featureData, 
                     media: { 
@@ -424,7 +389,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-800 rounded-xl p-4">
+      <div className="w-64 bg-gray-800 rounded-xl p-4 animate-fade-in-left">
         <h3 className="text-lg font-semibold text-gray-100 mb-4">CV Features</h3>
         <div className="space-y-2">
           {features.map((feature) => {
@@ -433,7 +398,7 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
               <button
                 key={feature.id}
                 onClick={() => setActiveTab(feature.id)}
-                className={`w-full text-left p-3 rounded-lg transition-all ${
+                className={`w-full text-left p-3 rounded-lg transition-all hover-scale ${
                   activeTab === feature.id
                     ? 'bg-gradient-to-r ' + feature.color + ' text-white'
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
@@ -459,12 +424,12 @@ export const FeatureDashboard = ({ job, onJobUpdate }: FeatureDashboardProps) =>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 bg-gray-800 rounded-xl p-6">
+      <div className="flex-1 bg-gray-800 rounded-xl p-6 animate-fade-in-right animation-delay-200">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-100">
+          <h2 className="text-2xl font-bold text-gray-100 animate-fade-in-up">
             {features.find(f => f.id === activeTab)?.name}
           </h2>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-400 mt-1 animate-fade-in-up animation-delay-100">
             {features.find(f => f.id === activeTab)?.description}
           </p>
         </div>

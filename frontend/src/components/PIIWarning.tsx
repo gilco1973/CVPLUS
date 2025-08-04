@@ -1,6 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Shield, Eye } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Shield } from 'lucide-react';
 
 interface PIIWarningProps {
   hasPII: boolean;
@@ -12,74 +11,33 @@ interface PIIWarningProps {
 
 export const PIIWarning: React.FC<PIIWarningProps> = ({
   hasPII,
-  detectedTypes,
-  recommendations,
-  onTogglePrivacyMode,
-  privacyModeEnabled = false
+  detectedTypes
 }) => {
   if (!hasPII || detectedTypes.length === 0) return null;
 
   return (
-    <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 mb-6">
+    <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-lg p-4 mb-6 animate-fade-in">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+        <Shield className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h4 className="font-semibold text-amber-300 mb-1">
-            Sensitive Information Detected
-          </h4>
-          <p className="text-sm text-amber-400 mb-3">
-            We've detected the following sensitive information in your CV:
-          </p>
-          
-          <div className="mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-medium text-yellow-300">
+              Privacy Notice
+            </h4>
             <div className="flex flex-wrap gap-2">
               {detectedTypes.map((type, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/30 text-amber-400 border border-amber-700/50"
+                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-900/20 text-yellow-400"
                 >
                   {type}
                 </span>
               ))}
             </div>
           </div>
-
-          {recommendations.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm font-medium text-amber-300 mb-1">
-                Privacy Recommendations:
-              </p>
-              <ul className="list-disc list-inside text-sm text-amber-400 space-y-1">
-                {recommendations.map((rec, index) => (
-                  <li key={index}>{rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {onTogglePrivacyMode && (
-            <button
-              onClick={onTogglePrivacyMode}
-              className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                privacyModeEnabled
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-amber-600 text-white hover:bg-amber-700"
-              )}
-            >
-              {privacyModeEnabled ? (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Show Original Version
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  Enable Privacy Mode
-                </>
-              )}
-            </button>
-          )}
+          <p className="text-sm text-gray-400">
+            We detected sensitive information in your CV. Enable <strong className="text-yellow-400">Privacy Mode</strong> in the features below to automatically mask this information for public sharing.
+          </p>
         </div>
       </div>
     </div>

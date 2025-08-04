@@ -151,21 +151,21 @@ export const HomePage = () => {
           </div>
           
           <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-100 mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-100 mb-6 leading-tight animate-fade-in-up">
               From Paper to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Powerful</span>
             </h1>
-            <p className="text-3xl md:text-4xl font-light text-gray-300 mb-8">
+            <p className="text-3xl md:text-4xl font-light text-gray-300 mb-8 animate-fade-in-up animation-delay-200">
               Your CV, Reinvented
             </p>
             
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
               Transform your traditional CV into an interactive masterpiece with AI-powered features, stunning templates, and one-click magic
             </p>
             
-            <div className="flex justify-center mb-12">
+            <div className="flex justify-center mb-12 animate-fade-in-up animation-delay-400">
               <button 
                 onClick={() => document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 hover-glow"
               >
                 Get Started Free
               </button>
@@ -188,7 +188,7 @@ export const HomePage = () => {
             </div>
 
             {/* Upload Options */}
-            <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
+            <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-fade-in-up animation-delay-600">
               <h2 className="text-2xl font-bold text-gray-100 mb-6">Start Your Transformation</h2>
               <div className="flex justify-center mb-8">
                 <div className="inline-flex items-center gap-6">
@@ -286,18 +286,19 @@ export const HomePage = () => {
           </div>
         </section>
 
-        {/* Features Section */}
+
+        {/* Original Features Section */}
         <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl font-bold text-center text-gray-100 mb-4">
-              Why Choose CVisionery?
+              Core Features
             </h2>
             <p className="text-xl text-gray-400 text-center mb-16 max-w-3xl mx-auto">
-              We combine cutting-edge AI technology with beautiful design to create CVs that get noticed
+              Professional CV generation with smart enhancements
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 stagger-animation">
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all hover-lift hover-glow">
                 <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg p-4 w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl">🤖</span>
                 </div>

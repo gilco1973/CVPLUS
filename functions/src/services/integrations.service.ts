@@ -13,7 +13,7 @@ export class IntegrationsService {
   constructor() {
     // Initialize email transporter (using Gmail as example)
     // In production, use SendGrid or similar service
-    this.emailTransporter = nodemailer.createTransporter({
+    this.emailTransporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: config.email?.user || process.env.EMAIL_USER,

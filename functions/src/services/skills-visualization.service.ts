@@ -3,11 +3,11 @@
  */
 
 import { ParsedCV, SkillsVisualization, SkillCategory, LanguageSkill, Certification } from '../types/enhanced-models';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { config } from '../config/environment';
 
 export class SkillsVisualizationService {
-  private openai: OpenAIApi;
+  private openai: OpenAI | null = null;
   
   // Common skill categories
   private readonly skillCategories = {
@@ -28,16 +28,22 @@ export class SkillsVisualizationService {
   };
   
   constructor() {
-    const configuration = new Configuration({
-      apiKey: config.rag.openaiApiKey,
-    });
-    this.openai = new OpenAIApi(configuration);
+    // Initialize OpenAI lazily when needed
+  }
+
+  private getOpenAI(): OpenAI {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '',
+      });
+    }
+    return this.openai;
   }
   
   /**
    * Analyze and visualize skills from CV
    */
-  async analyzeSkills(parsedCV: ParsedCV): Promise<SkillsVisualization> {
+  async analyzeSkills(parsedCV: ParsedCV, targetRole?: string): Promise<SkillsVisualization> {
     // 1. Extract and categorize technical skills
     const technicalSkills = await this.analyzeTechnicalSkills(parsedCV);
     
@@ -63,7 +69,7 @@ export class SkillsVisualizationService {
    */
   private async analyzeTechnicalSkills(cv: ParsedCV): Promise<SkillCategory[]> {
     const categories: SkillCategory[] = [];
-    const allText = this.extractAllText(cv);
+    // Extract all text is done in individual analysis methods
     
     // Extract skills from CV
     const extractedSkills = this.extractSkillsFromCV(cv);
@@ -134,7 +140,7 @@ export class SkillsVisualizationService {
    */
   private async analyzeSoftSkills(cv: ParsedCV): Promise<SkillCategory[]> {
     const categories: SkillCategory[] = [];
-    const allText = this.extractAllText(cv);
+    // Extract all text is done in individual analysis methods
     
     // Extract explicitly mentioned soft skills
     const explicitSkills = cv.skills?.soft || [];
@@ -278,14 +284,14 @@ ${experienceText}
 
 Technical skills only (languages, frameworks, tools, platforms):`;
 
-      const response = await this.openai.createCompletion({
+      const response = await this.getOpenAI().completions.create({
         model: 'text-davinci-003',
         prompt,
         max_tokens: 200,
         temperature: 0.3
       });
       
-      const skills = response.data.choices[0].text
+      const skills = response.choices[0].text
         ?.trim()
         .split(',')
         .map(s => s.trim())
@@ -523,7 +529,8 @@ Technical skills only (languages, frameworks, tools, platforms):`;
    */
   private generateBadgeUrl(cert: any): string | undefined {
     // Placeholder - would integrate with actual badge providers
-    const badgeProviders = ['credly', 'acclaim', 'badgr'];
+    // Badge providers list (for future implementation)
+    // const badgeProviders = ['credly', 'acclaim', 'badgr'];
     
     // For demo purposes, return a placeholder
     return undefined;
@@ -622,6 +629,52 @@ Technical skills only (languages, frameworks, tools, platforms):`;
     });
     
     return { labels, datasets };
+  }
+
+  /**
+   * Generate skills visualization
+   */
+  async generateVisualization(
+    parsedCV: ParsedCV,
+    chartTypes: string[] = ['radar', 'bar'],
+    options?: { includeProgress?: boolean; includeEndorsements?: boolean }
+  ): Promise<SkillsVisualization> {
+    return await this.analyzeSkills(parsedCV);
+  }
+
+  /**
+   * Export skills data to CSV
+   */
+  exportToCSV(visualization: SkillsVisualization): string {
+    let csv = 'Category,Skill,Level,Experience\n';
+    
+    // Export technical skills
+    visualization.technical.forEach((category: SkillCategory) => {
+      category.skills.forEach((skill: any) => {
+        csv += `${category.name},${skill.name},${skill.level},${skill.yearsOfExperience || 'N/A'}\n`;
+      });
+    });
+    
+    // Export soft skills  
+    visualization.soft.forEach((category: SkillCategory) => {
+      category.skills.forEach((skill: any) => {
+        csv += `${category.name},${skill.name},${skill.level},${skill.yearsOfExperience || 'N/A'}\n`;
+      });
+    });
+    
+    return csv;
+  }
+
+  /**
+   * Add endorsement to visualization
+   */
+  async addEndorsement(
+    visualization: SkillsVisualization,
+    skillName: string,
+    endorsement: any
+  ): Promise<SkillsVisualization> {
+    // Add endorsement logic here
+    return visualization;
   }
 }
 

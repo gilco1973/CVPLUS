@@ -2,19 +2,25 @@
  * Media Generation Service for Video Intros and Podcasts
  */
 
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { config } from '../config/environment';
 import { ParsedCV } from '../types/enhanced-models';
-import * as admin from 'firebase-admin';
+// import * as admin from 'firebase-admin'; // Unused import
 
 export class MediaGenerationService {
-  private openai: OpenAIApi;
+  private openai: OpenAI | null = null;
   
   constructor() {
-    const configuration = new Configuration({
-      apiKey: config.rag.openaiApiKey,
-    });
-    this.openai = new OpenAIApi(configuration);
+    // Initialize OpenAI lazily when needed
+  }
+
+  private getOpenAI(): OpenAI {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '',
+      });
+    }
+    return this.openai;
   }
   
   /**
@@ -113,7 +119,7 @@ export class MediaGenerationService {
       creative: 'engaging and dynamic, highlighting unique aspects and personality'
     };
     
-    const prompt = `Create a ${targetWords}-word video introduction script for a professional. Style: ${stylePrompts[style]}.
+    const prompt = `Create a ${targetWords}-word video introduction script for a professional. Style: ${stylePrompts[style as keyof typeof stylePrompts]}.
 
 Professional Details:
 Name: ${cv.personalInfo?.name || 'Professional'}
@@ -132,14 +138,14 @@ Write in first person, as if the professional is speaking. Include:
 Keep it exactly ${targetWords} words.`;
 
     try {
-      const response = await this.openai.createCompletion({
+      const response = await this.getOpenAI().completions.create({
         model: 'text-davinci-003',
         prompt,
         max_tokens: targetWords * 2,
         temperature: 0.7
       });
       
-      return response.data.choices[0].text?.trim() || this.generateDefaultIntroScript(cv, targetWords);
+      return response.choices[0].text?.trim() || this.generateDefaultIntroScript(cv, targetWords);
     } catch (error) {
       console.error('Error generating intro script:', error);
       return this.generateDefaultIntroScript(cv, targetWords);
@@ -433,14 +439,14 @@ Style: Concise, impactful, third-person narrative.`;
    */
   private async generateSegment(prompt: string, targetWords: number): Promise<string> {
     try {
-      const response = await this.openai.createCompletion({
+      const response = await this.getOpenAI().completions.create({
         model: 'text-davinci-003',
         prompt,
         max_tokens: targetWords * 2,
         temperature: 0.7
       });
       
-      return response.data.choices[0].text?.trim() || '';
+      return response.choices[0].text?.trim() || '';
     } catch (error) {
       console.error('Error generating segment:', error);
       return '';

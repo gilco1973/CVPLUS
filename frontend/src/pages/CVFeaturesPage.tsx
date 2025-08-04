@@ -13,14 +13,14 @@ import {
   Calendar,
   Globe,
   Award,
-  PersonStanding,
   Trophy,
   Target,
   Zap,
   FileSearch,
   Mic,
   ChevronRight,
-  Home
+  Home,
+  Users
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { UserMenu } from '../components/UserMenu';
@@ -53,15 +53,15 @@ const features: Feature[] = [
   },
   {
     id: 'personality-insights',
-    title: 'AI Personality Insights',
-    description: 'Advanced AI analysis reveals personality traits and work style preferences based on your career history and achievements.',
-    icon: <PersonStanding className="w-6 h-6" />,
+    title: 'Personality Analysis',
+    description: 'AI-powered personality insights show your work style and culture fit based on your career history.',
+    icon: <Brain className="w-6 h-6" />,
     category: 'ai',
     benefits: [
-      'Visual personality assessment charts',
-      'Work style compatibility indicators',
-      'Team dynamics insights',
-      'Leadership potential analysis'
+      'Leadership potential',
+      'Team compatibility',
+      'Work style analysis',
+      'Culture fit assessment'
     ]
   },
   {
@@ -114,6 +114,58 @@ const features: Feature[] = [
       'Selective information masking',
       'Public/private version toggle',
       'GDPR compliance ready'
+    ]
+  },
+  {
+    id: 'ai-chat-assistant',
+    title: 'AI Chat Assistant',
+    description: 'Let visitors chat with an AI that knows everything about your experience and can answer questions about your background.',
+    icon: <MessageSquare className="w-6 h-6" />,
+    category: 'ai',
+    benefits: [
+      '24/7 availability',
+      'Instant responses',
+      'Privacy-aware answers',
+      'Professional tone'
+    ]
+  },
+  {
+    id: 'public-profile',
+    title: 'Public Profile',
+    description: 'Share your CV with a custom link, QR code, and built-in contact form for easy sharing and networking.',
+    icon: <Users className="w-6 h-6" />,
+    category: 'ai',
+    benefits: [
+      'Custom URL',
+      'Analytics tracking',
+      'Privacy controls',
+      'SEO optimized'
+    ]
+  },
+  {
+    id: 'skills-analytics',
+    title: 'Skills Analytics',
+    description: 'Interactive charts and visualizations showcase your expertise levels and skill categories dynamically.',
+    icon: <BarChart3 className="w-6 h-6" />,
+    category: 'ai',
+    benefits: [
+      'Skill categorization',
+      'Proficiency levels',
+      'Industry comparison',
+      'Growth tracking'
+    ]
+  },
+  {
+    id: 'video-podcast',
+    title: 'Video & Podcast',
+    description: 'Auto-generate video introductions and career story podcasts to make your application stand out.',
+    icon: <Video className="w-6 h-6" />,
+    category: 'ai',
+    benefits: [
+      '60-second video intro',
+      '5-minute career podcast',
+      'Multiple styles',
+      'Professional quality'
     ]
   },
   
@@ -294,7 +346,7 @@ export const CVFeaturesPage = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50">
+      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50 animate-fade-in-down">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Logo size="small" />
@@ -328,16 +380,16 @@ export const CVFeaturesPage = () => {
       {/* Hero Section */}
       <section className="relative py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6 animate-fade-in-up">
             CV Enhancement Features
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
             Discover the powerful features that transform your traditional CV into an interactive, 
             AI-enhanced masterpiece that gets you noticed and hired faster.
           </p>
           <button 
             onClick={() => navigate('/')}
-            className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+            className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 animate-fade-in-up animation-delay-300 hover-glow"
           >
             Start Creating Your CV
           </button>
@@ -347,22 +399,29 @@ export const CVFeaturesPage = () => {
       {/* Features Grid */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {featureCategories.map((category) => (
+          {featureCategories.map((category, categoryIndex) => (
             <div key={category.id} className="mb-16">
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-8 animate-fade-in-left" style={{ animationDelay: `${categoryIndex * 200}ms` }}>
                 <div className="p-2 bg-cyan-900/30 rounded-lg">
                   {category.icon}
                 </div>
                 <h2 className="text-3xl font-bold text-gray-100">{category.title}</h2>
+                {category.id === 'ai' && (
+                  <div className="ml-4 inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 px-4 py-2 rounded-full text-sm font-medium">
+                    <Sparkles className="w-4 h-4" />
+                    NEW
+                  </div>
+                )}
               </div>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {features
                   .filter(feature => feature.category === category.id)
-                  .map((feature) => (
+                  .map((feature, featureIndex) => (
                     <div 
                       key={feature.id}
-                      className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all group"
+                      className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all group animate-fade-in-up hover-lift"
+                      style={{ animationDelay: `${(categoryIndex * 200) + (featureIndex * 100) + 100}ms` }}
                     >
                       <div className="flex items-start gap-4 mb-4">
                         <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all">
@@ -400,25 +459,25 @@ export const CVFeaturesPage = () => {
       {/* CTA Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-800">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full mb-6 animate-bounce-in">
             <Zap className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-100 mb-4">
+          <h2 className="text-3xl font-bold text-gray-100 mb-4 animate-fade-in-up animation-delay-100">
             Ready to Transform Your CV?
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-gray-300 mb-8 animate-fade-in-up animation-delay-200">
             All these features are available with a single click. Upload your CV and let our AI work its magic.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               onClick={() => navigate('/')}
-              className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+              className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 animate-fade-in-up animation-delay-300 hover-glow"
             >
               Get Started Now
             </button>
             <button 
               onClick={() => navigate('/')}
-              className="px-8 py-4 bg-gray-700 text-gray-100 font-semibold rounded-lg shadow-lg hover:shadow-xl border border-gray-600 transform hover:-translate-y-1 transition-all duration-200 hover:bg-gray-600"
+              className="px-8 py-4 bg-gray-700 text-gray-100 font-semibold rounded-lg shadow-lg hover:shadow-xl border border-gray-600 transform hover:-translate-y-1 transition-all duration-200 hover:bg-gray-600 animate-fade-in-up animation-delay-400"
             >
               <Home className="inline w-5 h-5 mr-2" />
               Back to Home

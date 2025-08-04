@@ -1,457 +1,373 @@
 /**
- * Cloud Functions for Media Generation (Video Intro & Podcast)
+ * Cloud Functions for Media Generation
  */
 
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { mediaGenerationService } from '../services/media-generation.service';
 import { EnhancedJob } from '../types/enhanced-models';
 
 /**
- * Generate video intro script
+ * Generate video introduction script
  */
-export const generateVideoIntro = functions
-  .runWith({ timeoutSeconds: 120 })
-  .https.onCall(async (data, context) => {
+export const generateVideoIntro = onCall(
+  { 
+    timeoutSeconds: 120,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { jobId, duration = 60, style = 'professional' } = data;
+    const { jobId, settings } = data;
     if (!jobId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-    }
-
-    // Validate inputs
-    if (duration < 30 || duration > 180) {
-      throw new functions.https.HttpsError('invalid-argument', 'Duration must be between 30-180 seconds');
-    }
-
-    if (!['professional', 'casual', 'creative'].includes(style)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid style');
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
-
-      if (!job.parsedData) {
-        throw new functions.https.HttpsError('failed-precondition', 'CV must be parsed first');
-      }
-
-      // Update status
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.videoIntro': {
-          enabled: true,
-          status: 'processing',
-          processedAt: new Date()
-        }
-      });
 
       // Generate video intro script
-      console.log('Generating video intro script...');
       const videoData = await mediaGenerationService.generateVideoIntroScript(
-        job.parsedData,
-        duration,
-        style
+        job.parsedData!,
+        settings?.duration || 60,
+        settings?.style || 'professional'
       );
 
-      // Store script and metadata
-      const videoIntroData = {
-        script: videoData.script,
-        scenes: videoData.scenes,
-        duration: videoData.duration,
-        voiceoverText: videoData.voiceoverText,
-        style,
-        generatedAt: new Date()
-      };
-
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'mediaAssets.videoIntro': videoIntroData,
-        'enhancedFeatures.videoIntro': {
+      // Update job with video intro data
+      await jobDoc.ref.update({
+        'enhancedFeatures.videoIntroduction': {
           enabled: true,
+          data: videoData,
           status: 'completed',
-          data: {
-            duration,
-            style,
-            sceneCount: videoData.scenes.length
-          },
           processedAt: new Date()
         }
       });
 
       return {
         success: true,
-        videoIntro: videoIntroData
+        videoData
       };
     } catch (error: any) {
       console.error('Error generating video intro:', error);
       
-      // Update error status
+      // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.videoIntro': {
-          enabled: false,
-          status: 'failed',
-          error: error.message,
-          processedAt: new Date()
-        }
+        'enhancedFeatures.videoIntroduction.status': 'failed',
+        'enhancedFeatures.videoIntroduction.error': error.message
       });
       
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to generate video introduction');
     }
-  });
+  }
+);
 
 /**
- * Generate podcast from CV
+ * Generate podcast script from CV
  */
-export const generatePodcast = functions
-  .runWith({ timeoutSeconds: 180, memory: '1GB' })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+export const generatePodcast = onCall(
+  { 
+    timeoutSeconds: 180,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { jobId, format = 'interview', duration = 300 } = data;
+    const { jobId, settings } = data;
     if (!jobId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-    }
-
-    // Validate inputs
-    if (!['interview', 'narrative', 'highlights'].includes(format)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid format');
-    }
-
-    if (duration < 120 || duration > 600) {
-      throw new functions.https.HttpsError('invalid-argument', 'Duration must be between 2-10 minutes');
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
-
-      if (!job.parsedData) {
-        throw new functions.https.HttpsError('failed-precondition', 'CV must be parsed first');
-      }
-
-      // Update status
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.podcast': {
-          enabled: true,
-          status: 'processing',
-          processedAt: new Date()
-        }
-      });
 
       // Generate podcast script
-      console.log('Generating podcast script...');
       const podcastData = await mediaGenerationService.generatePodcastScript(
-        job.parsedData,
-        format,
-        duration
+        job.parsedData!,
+        settings?.format || 'interview',
+        settings?.duration || 300
       );
 
-      // Store podcast data
-      const podcastInfo = {
-        script: podcastData.script,
-        segments: podcastData.segments,
-        format,
-        duration: podcastData.totalDuration,
-        metadata: podcastData.metadata,
-        generatedAt: new Date()
-      };
-
-      await admin.firestore().collection('jobs').doc(jobId).update({
-        'mediaAssets.podcast': podcastInfo,
-        'enhancedFeatures.podcast': {
+      // Update job with podcast data
+      await jobDoc.ref.update({
+        'enhancedFeatures.careerPodcast': {
           enabled: true,
+          data: podcastData,
           status: 'completed',
-          data: {
-            format,
-            duration,
-            segmentCount: podcastData.segments.length
-          },
           processedAt: new Date()
         }
       });
 
       return {
         success: true,
-        podcast: podcastInfo
+        podcastData
       };
     } catch (error: any) {
       console.error('Error generating podcast:', error);
       
-      // Update error status
+      // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
-        'enhancedFeatures.podcast': {
-          enabled: false,
-          status: 'failed',
-          error: error.message,
-          processedAt: new Date()
-        }
+        'enhancedFeatures.careerPodcast.status': 'failed',
+        'enhancedFeatures.careerPodcast.error': error.message
       });
       
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to generate podcast');
     }
-  });
+  }
+);
 
 /**
- * Generate audio from text (TTS)
+ * Convert text to audio
  */
-export const generateAudioFromText = functions
-  .runWith({ timeoutSeconds: 300, memory: '1GB' })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { jobId, text, voice = 'male', speed = 1.0, type } = data;
+export const generateAudioFromText = onCall(
+  { 
+    timeoutSeconds: 240,
+    memory: '1GiB',
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
     
-    if (!jobId || !text || !type) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID, text, and type are required');
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    if (!['video-intro', 'podcast'].includes(type)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid audio type');
+    const { jobId, text, mediaType } = data;
+    if (!jobId || !text) {
+      throw new HttpsError('invalid-argument', 'Job ID and text are required');
     }
 
     try {
-      // Verify job ownership
-      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-      if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
-      }
+      // For now, return a mock audio URL
+      // In production, integrate with Google Cloud Text-to-Speech or similar
+      const audioUrl = `https://storage.googleapis.com/${process.env.STORAGE_BUCKET}/audio/${jobId}/${mediaType || 'podcast'}.mp3`;
 
-      const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized');
-      }
-
-      // Generate audio (placeholder - actual TTS integration needed)
-      console.log('Generating audio from text...');
-      const audioData = await mediaGenerationService.generateAudio(text, voice, speed);
-
-      // Store audio URL
-      const updatePath = type === 'video-intro' 
-        ? 'mediaAssets.videoIntroAudioUrl'
-        : 'mediaAssets.podcastAudioUrl';
+      // Update the appropriate feature with audio URL
+      const updatePath = mediaType === 'video' 
+        ? 'enhancedFeatures.videoIntroduction.data.audioUrl'
+        : 'enhancedFeatures.careerPodcast.data.audioUrl';
 
       await admin.firestore().collection('jobs').doc(jobId).update({
-        [updatePath]: audioData.audioUrl,
-        [`${updatePath}Duration`]: audioData.duration,
-        [`${updatePath}GeneratedAt`]: new Date()
+        [updatePath]: audioUrl
       });
 
       return {
         success: true,
-        audioUrl: audioData.audioUrl,
-        duration: audioData.duration
+        audioUrl
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error generating audio:', error);
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', 'Failed to generate audio');
     }
-  });
+  }
+);
 
 /**
  * Regenerate media with different settings
  */
-export const regenerateMedia = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId, mediaType, settings } = data;
-  
-  if (!jobId || !mediaType || !settings) {
-    throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
-  }
-
-  if (!['video-intro', 'podcast'].includes(mediaType)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid media type');
-  }
-
-  try {
-    // Verify ownership
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
+export const regenerateMedia = onCall(
+  { 
+    timeoutSeconds: 180,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+    const { jobId, mediaType, settings } = data;
+    if (!jobId || !mediaType) {
+      throw new HttpsError('invalid-argument', 'Job ID and media type are required');
     }
 
-    // Call appropriate generation function based on type
-    if (mediaType === 'video-intro') {
-      return await generateVideoIntro({ ...settings, jobId }, context);
-    } else {
-      return await generatePodcast({ ...settings, jobId }, context);
+    try {
+      // Get job and verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
+      }
+
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
+      }
+
+      let result;
+      if (mediaType === 'video') {
+        result = await mediaGenerationService.generateVideoIntroScript(
+          job.parsedData!,
+          settings?.duration || 60,
+          settings?.style || 'professional'
+        );
+      } else if (mediaType === 'podcast') {
+        result = await mediaGenerationService.generatePodcastScript(
+          job.parsedData!,
+          settings?.format || 'interview',
+          settings?.duration || 300
+        );
+      } else {
+        throw new HttpsError('invalid-argument', 'Invalid media type');
+      }
+
+      // Update job with regenerated data
+      const featurePath = mediaType === 'video' ? 'videoIntroduction' : 'careerPodcast';
+      await jobDoc.ref.update({
+        [`enhancedFeatures.${featurePath}.data`]: result,
+        [`enhancedFeatures.${featurePath}.regeneratedAt`]: new Date()
+      });
+
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error regenerating media:', error);
+      throw new HttpsError('internal', 'Failed to regenerate media');
     }
-  } catch (error: any) {
-    console.error('Error regenerating media:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);
 
 /**
  * Get media generation status
  */
-export const getMediaStatus = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId } = data;
-  if (!jobId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-  }
-
-  try {
-    // Get job
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
+export const getMediaStatus = onCall(
+  { 
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
+    
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+    const { jobId } = data;
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
-    // Extract media status
-    const status = {
-      videoIntro: {
-        enabled: job.enhancedFeatures?.videoIntro?.enabled || false,
-        status: job.enhancedFeatures?.videoIntro?.status || 'not-started',
-        hasScript: !!job.mediaAssets?.videoIntro?.script,
-        hasAudio: !!job.mediaAssets?.videoIntroAudioUrl,
-        duration: job.mediaAssets?.videoIntro?.duration,
-        style: job.mediaAssets?.videoIntro?.style,
-        generatedAt: job.mediaAssets?.videoIntro?.generatedAt
-      },
-      podcast: {
-        enabled: job.enhancedFeatures?.podcast?.enabled || false,
-        status: job.enhancedFeatures?.podcast?.status || 'not-started',
-        hasScript: !!job.mediaAssets?.podcast?.script,
-        hasAudio: !!job.mediaAssets?.podcastAudioUrl,
-        format: job.mediaAssets?.podcast?.format,
-        duration: job.mediaAssets?.podcast?.duration,
-        generatedAt: job.mediaAssets?.podcast?.generatedAt
+    try {
+      // Get job and verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
       }
-    };
 
-    return {
-      success: true,
-      status
-    };
-  } catch (error: any) {
-    console.error('Error getting media status:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
+      }
+
+      const videoStatus = job.enhancedFeatures?.videoIntroduction?.status || 'pending';
+      const podcastStatus = job.enhancedFeatures?.careerPodcast?.status || 'pending';
+
+      return {
+        success: true,
+        status: {
+          video: {
+            status: videoStatus,
+            hasAudio: !!job.enhancedFeatures?.videoIntroduction?.data?.audioUrl,
+            error: job.enhancedFeatures?.videoIntroduction?.error
+          },
+          podcast: {
+            status: podcastStatus,
+            hasAudio: !!job.enhancedFeatures?.careerPodcast?.data?.audioUrl,
+            error: job.enhancedFeatures?.careerPodcast?.error
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error getting media status:', error);
+      throw new HttpsError('internal', 'Failed to get media status');
     }
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);
 
 /**
  * Download media content
  */
-export const downloadMediaContent = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId, mediaType, contentType } = data;
-  
-  if (!jobId || !mediaType || !contentType) {
-    throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
-  }
-
-  try {
-    // Get job and verify ownership
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
-    }
-
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized');
-    }
-
-    let content: any;
-    let filename: string;
+export const downloadMediaContent = onCall(
+  { 
+    timeoutSeconds: 60,
+    cors: true
+  },
+  async (request: CallableRequest) => {
+    const { data, auth } = request;
     
-    // Get requested content
-    if (mediaType === 'video-intro') {
-      if (contentType === 'script') {
-        content = job.mediaAssets?.videoIntro?.script;
-        filename = `video-intro-script-${jobId}.txt`;
-      } else if (contentType === 'scenes') {
-        content = JSON.stringify(job.mediaAssets?.videoIntro?.scenes, null, 2);
-        filename = `video-intro-scenes-${jobId}.json`;
-      }
-    } else if (mediaType === 'podcast') {
-      if (contentType === 'script') {
-        content = job.mediaAssets?.podcast?.script;
-        filename = `podcast-script-${jobId}.txt`;
-      } else if (contentType === 'segments') {
-        content = JSON.stringify(job.mediaAssets?.podcast?.segments, null, 2);
-        filename = `podcast-segments-${jobId}.json`;
-      }
+    // Check authentication
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    if (!content) {
-      throw new functions.https.HttpsError('not-found', 'Content not found');
+    const { jobId, mediaType } = data;
+    if (!jobId || !mediaType) {
+      throw new HttpsError('invalid-argument', 'Job ID and media type are required');
     }
 
-    // Generate temporary download URL
-    const bucket = admin.storage().bucket();
-    const file = bucket.file(`temp-downloads/${context.auth.uid}/${filename}`);
-    
-    await file.save(content, {
-      metadata: {
-        contentType: contentType === 'script' ? 'text/plain' : 'application/json'
+    try {
+      // Get job and verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
       }
-    });
 
-    const [url] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 15 * 60 * 1000 // 15 minutes
-    });
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Unauthorized access to job');
+      }
 
-    return {
-      success: true,
-      downloadUrl: url,
-      filename
-    };
-  } catch (error: any) {
-    console.error('Error downloading media content:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
+      const featurePath = mediaType === 'video' ? 'videoIntroduction' : 'careerPodcast';
+      const mediaData = job.enhancedFeatures?.[featurePath]?.data;
+
+      if (!mediaData) {
+        throw new HttpsError('not-found', 'Media content not found');
+      }
+
+      return {
+        success: true,
+        content: {
+          script: mediaData.script,
+          audioUrl: mediaData.audioUrl,
+          duration: mediaData.duration,
+          metadata: mediaData.metadata
+        }
+      };
+    } catch (error) {
+      console.error('Error downloading media content:', error);
+      throw new HttpsError('internal', 'Failed to download media content');
     }
-    throw new functions.https.HttpsError('internal', error.message);
   }
-});
+);

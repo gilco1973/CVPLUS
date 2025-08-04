@@ -2,7 +2,7 @@
  * Cloud Functions for RAG Chat feature
  */
 
-import * as functions from 'firebase-functions';
+import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { embeddingService } from '../services/embedding.service';
 import { chatService } from '../services/chat.service';
@@ -13,37 +13,41 @@ import { nanoid } from 'nanoid';
 /**
  * Initialize RAG for a CV
  */
-export const initializeRAG = functions
-  .runWith({ timeoutSeconds: 540, memory: '2GB' })
-  .https.onCall(async (data, context) => {
+export const initializeRAG = onCall(
+  {
+    cors: true,
+    timeoutSeconds: 540,
+    memory: '2GiB'
+  },
+  async (request: CallableRequest<{ jobId: string; systemPrompt?: string; personality?: string }>) => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { jobId } = data;
+    const { jobId } = request.data;
     if (!jobId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized to access this job');
+      if (job.userId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'Not authorized to access this job');
       }
 
       if (!job.parsedData) {
-        throw new functions.https.HttpsError('failed-precondition', 'CV must be parsed before initializing RAG');
+        throw new HttpsError('failed-precondition', 'CV must be parsed before initializing RAG');
       }
 
       // Generate vector namespace
-      const vectorNamespace = `user-${context.auth.uid}-job-${jobId}`;
+      const vectorNamespace = `user-${request.auth.uid}-job-${jobId}`;
 
       // Create CV chunks
       console.log('Creating CV chunks...');
@@ -58,13 +62,13 @@ export const initializeRAG = functions
       await embeddingService.storeEmbeddings(
         chunksWithEmbeddings,
         vectorNamespace,
-        context.auth.uid,
+        request.auth.uid,
         jobId
       );
 
       // Create RAG profile
       const ragProfile: UserRAGProfile = {
-        userId: context.auth.uid,
+        userId: request.auth.uid,
         jobId,
         vectorNamespace,
         embeddingModel: 'openai',
@@ -74,9 +78,9 @@ export const initializeRAG = functions
         settings: {
           temperature: 0.7,
           maxTokens: 500,
-          systemPrompt: data.systemPrompt,
+          systemPrompt: request.data.systemPrompt,
           allowedTopics: ['experience', 'skills', 'education', 'projects', 'achievements'],
-          personality: data.personality || 'professional'
+          personality: (request.data.personality || 'professional') as 'professional' | 'friendly' | 'concise' | 'detailed'
         },
         statistics: {
           totalQueries: 0,
@@ -121,44 +125,46 @@ export const initializeRAG = functions
         }
       });
       
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', error.message);
     }
   });
 
 /**
  * Start a new chat session
  */
-export const startChatSession = functions.https.onCall(async (data) => {
-  const { jobId, visitorId, metadata } = data;
+export const startChatSession = onCall(
+  { cors: true },
+  async (request: CallableRequest<{ jobId: string; visitorId?: string; metadata?: any }>) => {
+    const { jobId, visitorId, metadata } = request.data;
 
-  if (!jobId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-  }
-
-  try {
-    // Get job to check if RAG is enabled
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'CV not found');
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (!job.ragChat?.enabled) {
-      throw new functions.https.HttpsError('failed-precondition', 'Chat is not enabled for this CV');
-    }
-
-    // Get public profile settings
-    const publicProfileDoc = await admin.firestore()
-      .collection('publicProfiles')
-      .doc(jobId)
-      .get();
-
-    if (publicProfileDoc.exists) {
-      const publicProfile = publicProfileDoc.data();
-      if (!publicProfile?.settings?.showChat) {
-        throw new functions.https.HttpsError('permission-denied', 'Chat is disabled for this profile');
+    try {
+      // Get job to check if RAG is enabled
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'CV not found');
       }
-    }
+
+      const job = jobDoc.data() as EnhancedJob;
+      if (!job.ragChat?.enabled) {
+        throw new HttpsError('failed-precondition', 'Chat is not enabled for this CV');
+      }
+
+      // Get public profile settings
+      const publicProfileDoc = await admin.firestore()
+        .collection('publicProfiles')
+        .doc(jobId)
+        .get();
+
+      if (publicProfileDoc.exists) {
+        const publicProfile = publicProfileDoc.data();
+        if (!publicProfile?.settings?.showChat) {
+          throw new HttpsError('permission-denied', 'Chat is disabled for this profile');
+        }
+      }
 
     // Create new session
     const sessionId = await chatService.initializeSession(
@@ -179,36 +185,39 @@ export const startChatSession = functions.https.onCall(async (data) => {
       sessionId,
       suggestedQuestions,
       settings: {
-        personality: job.ragChat.settings.personality,
+        personality: job.ragChat.settings.personality || 'professional',
         language: job.ragChat.settings.language || 'en'
       }
     };
-  } catch (error: any) {
-    console.error('Error starting chat session:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
+    } catch (error: any) {
+      console.error('Error starting chat session:', error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError('internal', error.message);
     }
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
+  });
 
 /**
  * Send a chat message
  */
-export const sendChatMessage = functions
-  .runWith({ timeoutSeconds: 60 })
-  .https.onCall(async (data) => {
-    const { sessionId, message } = data;
+export const sendChatMessage = onCall(
+  {
+    cors: true,
+    timeoutSeconds: 60
+  },
+  async (request: CallableRequest<{ sessionId: string; message: string }>) => {
+    const { sessionId, message } = request.data;
 
     if (!sessionId || !message) {
-      throw new functions.https.HttpsError('invalid-argument', 'Session ID and message are required');
+      throw new HttpsError('invalid-argument', 'Session ID and message are required');
     }
 
     try {
       // Validate message
       const validation = chatService.validateMessage(message);
       if (!validation.valid) {
-        throw new functions.https.HttpsError('invalid-argument', validation.error);
+        throw new HttpsError('invalid-argument', validation.error || 'Invalid message');
       }
 
       // Get session
@@ -218,7 +227,7 @@ export const sendChatMessage = functions
         .get();
 
       if (!sessionDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Session not found');
+        throw new HttpsError('not-found', 'Session not found');
       }
 
       const session = sessionDoc.data();
@@ -229,7 +238,7 @@ export const sendChatMessage = functions
       const job = jobDoc.data() as EnhancedJob;
 
       if (!job.ragChat?.enabled) {
-        throw new functions.https.HttpsError('failed-precondition', 'Chat is not available');
+        throw new HttpsError('failed-precondition', 'Chat is not available');
       }
 
       // Get RAG profile
@@ -239,7 +248,7 @@ export const sendChatMessage = functions
         .get();
 
       if (!ragProfileDoc.exists) {
-        throw new functions.https.HttpsError('failed-precondition', 'RAG profile not found');
+        throw new HttpsError('failed-precondition', 'RAG profile not found');
       }
 
       const ragProfile = ragProfileDoc.data() as UserRAGProfile;
@@ -273,73 +282,79 @@ export const sendChatMessage = functions
       };
     } catch (error: any) {
       console.error('Error processing chat message:', error);
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', error.message);
     }
   });
 
 /**
  * End chat session and collect feedback
  */
-export const endChatSession = functions.https.onCall(async (data) => {
-  const { sessionId, rating, feedback } = data;
+export const endChatSession = onCall(
+  { cors: true },
+  async (request: CallableRequest<{ sessionId: string; rating?: number; feedback?: string }>) => {
+    const { sessionId, rating, feedback } = request.data;
 
-  if (!sessionId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Session ID is required');
-  }
+    if (!sessionId) {
+      throw new HttpsError('invalid-argument', 'Session ID is required');
+    }
 
-  try {
-    // Update session with feedback
-    await admin.firestore()
-      .collection('chatSessions')
-      .doc(sessionId)
-      .update({
-        'satisfaction.rating': rating,
-        'satisfaction.feedback': feedback,
-        endedAt: new Date()
-      });
+    try {
+      // Update session with feedback
+      await admin.firestore()
+        .collection('chatSessions')
+        .doc(sessionId)
+        .update({
+          'satisfaction.rating': rating,
+          'satisfaction.feedback': feedback,
+          endedAt: new Date()
+        });
 
-    return {
-      success: true,
-      message: 'Thank you for your feedback!'
-    };
-  } catch (error: any) {
-    console.error('Error ending chat session:', error);
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
+      return {
+        success: true,
+        message: 'Thank you for your feedback!'
+      };
+    } catch (error: any) {
+      console.error('Error ending chat session:', error);
+      throw new HttpsError('internal', error.message);
+    }
+  });
 
 /**
  * Update RAG embeddings when CV is updated
  */
-export const updateRAGEmbeddings = functions
-  .runWith({ timeoutSeconds: 540, memory: '2GB' })
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+export const updateRAGEmbeddings = onCall(
+  {
+    cors: true,
+    timeoutSeconds: 540,
+    memory: '2GiB'
+  },
+  async (request: CallableRequest<{ jobId: string }>) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { jobId } = data;
+    const { jobId } = request.data;
     if (!jobId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
     try {
       // Get job and verify ownership
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       if (!jobDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
-      if (job.userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+      if (job.userId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'Not authorized');
       }
 
       if (!job.ragChat?.enabled || !job.ragChat?.vectorNamespace) {
-        throw new functions.https.HttpsError('failed-precondition', 'RAG not initialized');
+        throw new HttpsError('failed-precondition', 'RAG not initialized');
       }
 
       // Delete old embeddings
@@ -353,14 +368,14 @@ export const updateRAGEmbeddings = functions
       await embeddingService.storeEmbeddings(
         chunksWithEmbeddings,
         job.ragChat.vectorNamespace,
-        context.auth.uid,
+        request.auth.uid,
         jobId
       );
 
       // Update RAG profile
       await admin.firestore()
         .collection('ragProfiles')
-        .doc(`${context.auth.uid}_${jobId}`)
+        .doc(`${request.auth.uid}_${jobId}`)
         .update({
           chunks: chunksWithEmbeddings,
           lastIndexed: new Date()
@@ -378,59 +393,61 @@ export const updateRAGEmbeddings = functions
       };
     } catch (error: any) {
       console.error('Error updating RAG embeddings:', error);
-      throw new functions.https.HttpsError('internal', error.message);
+      throw new HttpsError('internal', error.message);
     }
   });
 
 /**
  * Get chat analytics
  */
-export const getChatAnalytics = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { jobId } = data;
-  if (!jobId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Job ID is required');
-  }
-
-  try {
-    // Verify ownership
-    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
-    if (!jobDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Job not found');
+export const getChatAnalytics = onCall(
+  { cors: true },
+  async (request: CallableRequest<{ jobId: string }>) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const job = jobDoc.data() as EnhancedJob;
-    if (job.userId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Not authorized');
+    const { jobId } = request.data;
+    if (!jobId) {
+      throw new HttpsError('invalid-argument', 'Job ID is required');
     }
 
-    // Get chat sessions
-    const sessions = await admin.firestore()
-      .collection('chatSessions')
-      .where('jobId', '==', jobId)
-      .orderBy('createdAt', 'desc')
-      .limit(100)
-      .get();
+    try {
+      // Verify ownership
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new HttpsError('not-found', 'Job not found');
+      }
 
-    // Calculate analytics
-    const sessionData = sessions.docs.map(doc => doc.data());
-    const totalSessions = sessionData.length;
-    const completedSessions = sessionData.filter(s => s.satisfaction?.rating).length;
-    const averageRating = completedSessions > 0
-      ? sessionData.reduce((sum, s) => sum + (s.satisfaction?.rating || 0), 0) / completedSessions
-      : 0;
+      const job = jobDoc.data() as EnhancedJob;
+      if (job.userId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'Not authorized');
+      }
 
-    const messageCount = sessionData.reduce((sum, s) => sum + (s.messages?.length || 0), 0);
-    const averageMessagesPerSession = totalSessions > 0 ? messageCount / totalSessions : 0;
+      // Get chat sessions
+      const sessions = await admin.firestore()
+        .collection('chatSessions')
+        .where('jobId', '==', jobId)
+        .orderBy('createdAt', 'desc')
+        .limit(100)
+        .get();
 
-    // Get RAG profile stats
-    const ragProfileDoc = await admin.firestore()
-      .collection('ragProfiles')
-      .doc(`${context.auth.uid}_${jobId}`)
-      .get();
+      // Calculate analytics
+      const sessionData = sessions.docs.map(doc => doc.data());
+      const totalSessions = sessionData.length;
+      const completedSessions = sessionData.filter(s => s.satisfaction?.rating).length;
+      const averageRating = completedSessions > 0
+        ? sessionData.reduce((sum, s) => sum + (s.satisfaction?.rating || 0), 0) / completedSessions
+        : 0;
+
+      const messageCount = sessionData.reduce((sum, s) => sum + (s.messages?.length || 0), 0);
+      const averageMessagesPerSession = totalSessions > 0 ? messageCount / totalSessions : 0;
+
+      // Get RAG profile stats
+      const ragProfileDoc = await admin.firestore()
+        .collection('ragProfiles')
+        .doc(`${request.auth.uid}_${jobId}`)
+        .get();
 
     const ragStats = ragProfileDoc.exists ? ragProfileDoc.data()?.statistics : null;
 
@@ -457,8 +474,8 @@ export const getChatAnalytics = functions.https.onCall(async (data, context) => 
         }))
       }
     };
-  } catch (error: any) {
-    console.error('Error getting chat analytics:', error);
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
+    } catch (error: any) {
+      console.error('Error getting chat analytics:', error);
+      throw new HttpsError('internal', error.message);
+    }
+  });

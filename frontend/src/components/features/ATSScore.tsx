@@ -3,7 +3,6 @@ import { CheckCircle, XCircle, AlertCircle, TrendingUp } from 'lucide-react';
 interface ATSScoreProps {
   score: number;
   passes: boolean;
-  issueCount: number;
   issues?: {
     type: string;
     severity: 'error' | 'warning' | 'info';
@@ -25,7 +24,7 @@ interface ATSScoreProps {
   };
 }
 
-export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions = [], keywords }: ATSScoreProps) => {
+export const ATSScore = ({ score, passes, issues = [], suggestions = [], keywords }: ATSScoreProps) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-yellow-500';
@@ -63,7 +62,7 @@ export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions =
   return (
     <div className="space-y-6">
       {/* Score Display */}
-      <div className="bg-gray-800 rounded-xl p-8 text-center">
+      <div className="bg-gray-800 rounded-xl p-8 text-center animate-scale-in">
         <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br ${getScoreBgColor(score)} mb-4`}>
           <span className={`text-5xl font-bold ${getScoreColor(score)}`}>{score}%</span>
         </div>
@@ -79,7 +78,7 @@ export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions =
 
       {/* Issues Summary */}
       {issues.length > 0 && (
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="bg-gray-800 rounded-xl p-6 animate-fade-in-up animation-delay-200">
           <h4 className="text-lg font-semibold text-gray-100 mb-4">Issues Found ({issues.length})</h4>
           <div className="space-y-3">
             {issues.slice(0, 5).map((issue, index) => (
@@ -109,7 +108,7 @@ export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions =
 
       {/* Top Suggestions */}
       {suggestions.length > 0 && (
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="bg-gray-800 rounded-xl p-6 animate-fade-in-up animation-delay-300">
           <h4 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-cyan-500" />
             Top Suggestions
@@ -140,7 +139,7 @@ export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions =
 
       {/* Keywords Analysis */}
       {keywords && (
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="bg-gray-800 rounded-xl p-6 animate-fade-in-up animation-delay-400">
           <h4 className="text-lg font-semibold text-gray-100 mb-4">Keyword Analysis</h4>
           <div className="grid md:grid-cols-3 gap-4">
             {keywords.found.length > 0 && (
@@ -195,8 +194,8 @@ export const ATSScore = ({ score, passes, issueCount, issues = [], suggestions =
       )}
 
       {/* Apply Optimizations Button */}
-      <div className="text-center">
-        <button className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+      <div className="text-center animate-fade-in animation-delay-500">
+        <button className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all hover-glow">
           Apply All Optimizations
         </button>
       </div>
