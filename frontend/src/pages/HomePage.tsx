@@ -17,6 +17,7 @@ export const HomePage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: any } | null>(null);
+  const [userInstructions, setUserInstructions] = useState<string>('');
 
   const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
     try {
@@ -39,7 +40,7 @@ export const HomePage = () => {
       }
 
       // Create job and upload file
-      const jobId = await createJob(undefined, quickCreate);
+      const jobId = await createJob(undefined, quickCreate, userInstructions);
       await uploadCV(file, jobId);
       
       // Navigate to processing page with quick create flag
@@ -65,7 +66,7 @@ export const HomePage = () => {
       }
 
       // Create job for URL
-      const jobId = await createJob(url);
+      const jobId = await createJob(url, false, userInstructions);
       
       // Navigate to processing page
       navigate(`/process/${jobId}`);
@@ -154,29 +155,32 @@ export const HomePage = () => {
             {/* Upload Options */}
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="flex justify-center mb-8">
-                <div className="inline-flex rounded-lg border border-gray-200 p-1">
-                  <button
-                    onClick={() => setUploadMode('file')}
-                    className={`px-4 py-2 rounded-md transition ${
-                      uploadMode === 'file'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <FileText className="inline-block w-4 h-4 mr-2" />
-                    Upload File
-                  </button>
-                  <button
-                    onClick={() => setUploadMode('url')}
-                    className={`px-4 py-2 rounded-md transition ${
-                      uploadMode === 'url'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <Globe className="inline-block w-4 h-4 mr-2" />
-                    Enter URL
-                  </button>
+                <div className="inline-flex items-center gap-6">
+                  <label className="text-sm font-medium text-gray-700">Upload Method:</label>
+                  <div className="inline-flex rounded-lg bg-gray-100 p-1">
+                    <div
+                      onClick={() => setUploadMode('file')}
+                      className={`px-4 py-2 rounded-md cursor-pointer transition ${
+                        uploadMode === 'file'
+                          ? 'bg-white text-blue-600 shadow-sm font-medium'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <FileText className="inline-block w-4 h-4 mr-2" />
+                      File Upload
+                    </div>
+                    <div
+                      onClick={() => setUploadMode('url')}
+                      className={`px-4 py-2 rounded-md cursor-pointer transition ${
+                        uploadMode === 'url'
+                          ? 'bg-white text-blue-600 shadow-sm font-medium'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Globe className="inline-block w-4 h-4 mr-2" />
+                      URL Import
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -191,6 +195,34 @@ export const HomePage = () => {
                   isLoading={isLoading}
                 />
               )}
+
+              {/* User Instructions Input */}
+              <div className="mt-6">
+                <label htmlFor="userInstructions" className="block text-left text-sm font-medium text-gray-700 mb-2">
+                  Special Instructions (Optional)
+                </label>
+                <div className="relative">
+                  <textarea
+                    id="userInstructions"
+                    value={userInstructions}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 500) {
+                        setUserInstructions(e.target.value);
+                      }
+                    }}
+                    placeholder="E.g., 'Focus on my leadership experience', 'Highlight Python skills', 'Make it suitable for tech startups', 'Emphasize remote work experience'..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                    {userInstructions.length}/500
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Provide specific instructions to customize how AI analyzes and enhances your CV
+                </p>
+              </div>
 
               {/* Quick Create Button */}
               {selectedFile && (
@@ -229,14 +261,14 @@ export const HomePage = () => {
                   <span className="text-2xl">🎨</span>
                 </div>
                 <h3 className="font-semibold mb-2">Pro Templates</h3>
-                <p className="text-gray-600 text-sm">10+ professional designs</p>
+                <p className="text-gray-600 text-sm">3 professional designs</p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-2xl">🎙️</span>
+                  <span className="text-2xl">✨</span>
                 </div>
-                <h3 className="font-semibold mb-2">AI Podcast</h3>
-                <p className="text-gray-600 text-sm">Audio summary of achievements</p>
+                <h3 className="font-semibold mb-2">Interactive Features</h3>
+                <p className="text-gray-600 text-sm">QR codes, timelines, charts & more</p>
               </div>
               <div className="text-center">
                 <div className="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">

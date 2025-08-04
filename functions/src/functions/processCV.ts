@@ -33,6 +33,15 @@ export const processCV = onCall(
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
+      // Get job data to retrieve user instructions
+      const jobDoc = await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .get();
+      
+      const jobData = jobDoc.data();
+      const userInstructions = jobData?.userInstructions;
+
       // Initialize CV parser
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
@@ -44,7 +53,7 @@ export const processCV = onCall(
 
       if (isUrl) {
         // Parse from URL
-        parsedCV = await parser.parseFromURL(fileUrl);
+        parsedCV = await parser.parseFromURL(fileUrl, userInstructions);
       } else {
         // Download file from storage
         const bucket = admin.storage().bucket();
@@ -65,7 +74,7 @@ export const processCV = onCall(
         const [buffer] = await file.download();
         
         // Parse the CV
-        parsedCV = await parser.parseCV(buffer, mimeType);
+        parsedCV = await parser.parseCV(buffer, mimeType, userInstructions);
       }
 
       // Detect PII
@@ -89,12 +98,7 @@ export const processCV = onCall(
         });
 
       // Check if this is a quick create job
-      const jobDoc = await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .get();
-      
-      const jobData = jobDoc.data();
+      // (we already have jobData from earlier)
       
       // If quick create, automatically generate CV
       if (jobData?.quickCreate || jobData?.settings?.applyAllEnhancements) {

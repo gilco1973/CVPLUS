@@ -22,6 +22,19 @@ export const ResultsPage = () => {
     skillsVisualization: false,
     generatePodcast: true,
     privacyMode: true,
+    embedQRCode: true,
+    interactiveTimeline: true,
+    skillsChart: true,
+    videoIntroduction: false,
+    portfolioGallery: false,
+    testimonialsCarousel: false,
+    contactForm: true,
+    socialMediaLinks: true,
+    availabilityCalendar: false,
+    languageProficiency: true,
+    certificationBadges: true,
+    personalityInsights: false,
+    achievementsShowcase: true,
   });
   const [selectedFormats, setSelectedFormats] = useState({
     pdf: true,
@@ -237,28 +250,164 @@ export const ResultsPage = () => {
                   </div>
                 </div>
 
-                {/* Additional Options */}
+                {/* AI Generated Features */}
                 <div>
-                  <h4 className="font-semibold mb-4">Additional Options</h4>
+                  <h4 className="font-semibold mb-4">AI Generated Features</h4>
                   <div className="space-y-3">
-                    <label className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
-                        checked={selectedFeatures.generatePodcast}
-                        onChange={(e) => setSelectedFeatures({...selectedFeatures, generatePodcast: e.target.checked})}
-                      />
-                      <span>Generate AI Podcast - Create an audio summary of your career</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
-                        checked={selectedFeatures.privacyMode}
-                        onChange={(e) => setSelectedFeatures({...selectedFeatures, privacyMode: e.target.checked})}
-                      />
-                      <span>Privacy Mode - Use masked version for public sharing</span>
-                    </label>
+                    {/* Core AI Features */}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">🤖 Core AI Features</h5>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.generatePodcast}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, generatePodcast: e.target.checked})}
+                        />
+                        <span>AI Career Podcast - Embedded audio player with your career story</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.personalityInsights}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, personalityInsights: e.target.checked})}
+                        />
+                        <span>AI Personality Insights - Visual personality assessment</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.privacyMode}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, privacyMode: e.target.checked})}
+                        />
+                        <span>Privacy Mode - Smart PII masking for public sharing</span>
+                      </label>
+                    </div>
+
+                    {/* Interactive Elements */}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">✨ Interactive Elements</h5>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.embedQRCode}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, embedQRCode: e.target.checked})}
+                        />
+                        <span>QR Code - Scannable code embedded in CV header</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.interactiveTimeline}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, interactiveTimeline: e.target.checked})}
+                        />
+                        <span>Interactive Timeline - Clickable career journey visualization</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.contactForm}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, contactForm: e.target.checked})}
+                        />
+                        <span>Contact Form - Built-in form for instant messaging</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.availabilityCalendar}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, availabilityCalendar: e.target.checked})}
+                        />
+                        <span>Availability Calendar - Schedule meetings directly</span>
+                      </label>
+                    </div>
+
+                    {/* Visual Enhancements */}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">📊 Visual Enhancements</h5>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.skillsChart}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, skillsChart: e.target.checked})}
+                        />
+                        <span>Skills Charts - Interactive radar/bar charts for skills</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.achievementsShowcase}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, achievementsShowcase: e.target.checked})}
+                        />
+                        <span>Achievements Showcase - Animated accomplishment cards</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.languageProficiency}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, languageProficiency: e.target.checked})}
+                        />
+                        <span>Language Proficiency - Visual language skill indicators</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.certificationBadges}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, certificationBadges: e.target.checked})}
+                        />
+                        <span>Certification Badges - Verified credential displays</span>
+                      </label>
+                    </div>
+
+                    {/* Media & Social */}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">🎥 Media & Social</h5>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.videoIntroduction}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, videoIntroduction: e.target.checked})}
+                        />
+                        <span>Video Introduction - Embedded video player section</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.portfolioGallery}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, portfolioGallery: e.target.checked})}
+                        />
+                        <span>Portfolio Gallery - Interactive project showcase</span>
+                      </label>
+                      <label className="flex items-center mb-2">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.testimonialsCarousel}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, testimonialsCarousel: e.target.checked})}
+                        />
+                        <span>Testimonials Carousel - Rotating recommendations</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="mr-3 h-4 w-4 text-blue-600" 
+                          checked={selectedFeatures.socialMediaLinks}
+                          onChange={(e) => setSelectedFeatures({...selectedFeatures, socialMediaLinks: e.target.checked})}
+                        />
+                        <span>Social Media Links - Clickable social icons</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -273,6 +422,19 @@ export const ResultsPage = () => {
                       if (selectedFeatures.skillsVisualization) features.push('skills-visualization');
                       if (selectedFeatures.generatePodcast) features.push('generate-podcast');
                       if (selectedFeatures.privacyMode) features.push('privacy-mode');
+                      if (selectedFeatures.embedQRCode) features.push('embed-qr-code');
+                      if (selectedFeatures.interactiveTimeline) features.push('interactive-timeline');
+                      if (selectedFeatures.skillsChart) features.push('skills-chart');
+                      if (selectedFeatures.videoIntroduction) features.push('video-introduction');
+                      if (selectedFeatures.portfolioGallery) features.push('portfolio-gallery');
+                      if (selectedFeatures.testimonialsCarousel) features.push('testimonials-carousel');
+                      if (selectedFeatures.contactForm) features.push('contact-form');
+                      if (selectedFeatures.socialMediaLinks) features.push('social-media-links');
+                      if (selectedFeatures.availabilityCalendar) features.push('availability-calendar');
+                      if (selectedFeatures.languageProficiency) features.push('language-proficiency');
+                      if (selectedFeatures.certificationBadges) features.push('certification-badges');
+                      if (selectedFeatures.personalityInsights) features.push('personality-insights');
+                      if (selectedFeatures.achievementsShowcase) features.push('achievements-showcase');
                       
                       // Add format features
                       if (selectedFormats.pdf) features.push('format-pdf');

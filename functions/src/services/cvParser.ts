@@ -75,7 +75,7 @@ export class CVParser {
     return this.anthropic;
   }
 
-  async parseCV(fileBuffer: Buffer, mimeType: string): Promise<ParsedCV> {
+  async parseCV(fileBuffer: Buffer, mimeType: string, userInstructions?: string): Promise<ParsedCV> {
     let text = '';
 
     // Extract text based on file type
@@ -95,12 +95,12 @@ export class CVParser {
     }
 
     // Use Claude to parse the CV text
-    return await this.parseWithClaude(text);
+    return await this.parseWithClaude(text, userInstructions);
   }
 
-  async parseFromURL(url: string): Promise<ParsedCV> {
+  async parseFromURL(url: string, userInstructions?: string): Promise<ParsedCV> {
     const text = await this.extractFromURL(url);
-    return await this.parseWithClaude(text);
+    return await this.parseWithClaude(text, userInstructions);
   }
 
   private async extractFromPDF(buffer: Buffer): Promise<string> {
@@ -148,14 +148,21 @@ export class CVParser {
     }
   }
 
-  private async parseWithClaude(text: string): Promise<ParsedCV> {
+  private async parseWithClaude(text: string, userInstructions?: string): Promise<ParsedCV> {
     const prompt = `Please analyze the following CV/resume text and extract structured information.
+
+${userInstructions ? `USER SPECIAL INSTRUCTIONS (HIGHEST PRIORITY):
+${userInstructions}
+
+These user instructions should take precedence and guide how you analyze and extract information from the CV.
+` : ''}
 
 IMPORTANT INSTRUCTIONS:
 1. Use ONLY the provided context from the CV to answer accurately
 2. DO NOT MAKE UP ANY INFORMATION THAT IS NOT IN THE CV
 3. If any information isn't in the context, use null or empty values - do not fabricate data
 4. Highlight and preserve all relevant skills, experiences, and achievements exactly as stated in the CV
+5. ${userInstructions ? 'Pay special attention to the user instructions above when parsing and organizing the CV data' : ''}
 
 Return a JSON object with the following structure:
 

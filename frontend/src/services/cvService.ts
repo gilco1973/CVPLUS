@@ -21,6 +21,7 @@ export interface Job {
   fileUrl?: string;
   mimeType?: string;
   isUrl?: boolean;
+  userInstructions?: string;
   parsedData?: any;
   generatedCV?: {
     html: string;
@@ -50,7 +51,7 @@ export interface Job {
 }
 
 // Create a new job
-export const createJob = async (url?: string, quickCreate: boolean = false): Promise<string> => {
+export const createJob = async (url?: string, quickCreate: boolean = false, userInstructions?: string): Promise<string> => {
   const user = auth.currentUser;
   if (!user) throw new Error('User not authenticated');
 
@@ -61,6 +62,7 @@ export const createJob = async (url?: string, quickCreate: boolean = false): Pro
     isUrl: !!url,
     fileUrl: url || null,
     quickCreate,
+    userInstructions: userInstructions || null,
     settings: quickCreate ? {
       applyAllEnhancements: true,
       generateAllFormats: true,
