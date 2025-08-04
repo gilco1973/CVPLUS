@@ -70,8 +70,8 @@ export const ProcessingPage = () => {
         }
       }
 
-      // Navigate to results when completed
-      if (updatedJob.status === 'completed') {
+      // Navigate to results when analyzed or completed
+      if (updatedJob.status === 'analyzed' || updatedJob.status === 'completed') {
         setTimeout(() => {
           navigate(`/results/${jobId}`);
         }, 1500);

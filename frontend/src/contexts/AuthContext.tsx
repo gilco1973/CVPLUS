@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  signInAnonymously, 
+  signInAnonymously as firebaseSignInAnonymously, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
@@ -13,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInAnonymous: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -43,9 +46,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInAnonymous = async () => {
     try {
-      await signInAnonymously(auth);
+      await firebaseSignInAnonymously(auth);
     } catch (error) {
       console.error('Error signing in anonymously:', error);
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
       throw error;
     }
   };
@@ -81,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     signInAnonymous,
+    signInWithGoogle,
     signIn,
     signUp,
     signOut

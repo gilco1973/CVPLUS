@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 
 export interface PIIDetectionResult {
   hasPII: boolean;
@@ -23,12 +22,21 @@ export interface PIIMaskingOptions {
 }
 
 export class PIIDetector {
-  private anthropic: Anthropic;
+  private anthropic: any;
+  private apiKey: string;
 
   constructor(apiKey: string) {
-    this.anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    this.apiKey = apiKey;
+  }
+
+  private async getAnthropicClient() {
+    if (!this.anthropic) {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      this.anthropic = new Anthropic({
+        apiKey: this.apiKey,
+      });
+    }
+    return this.anthropic;
   }
 
   async detectAndMaskPII(
@@ -94,8 +102,9 @@ For masking, use:
 - Other sensitive: [SENSITIVE_MASKED]`;
 
     try {
-      const response = await this.anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+      const anthropic = await this.getAnthropicClient();
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         temperature: 0,
         system: 'You are a privacy expert specializing in PII detection and data protection. You MUST only identify PII that actually exists in the provided data. Never add, assume, or make up any information. Your role is to accurately detect existing PII, not to enhance or add to the data.',

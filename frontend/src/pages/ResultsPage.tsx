@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Play, FileText, Home, Sparkles } from 'lucide-react';
-import { getJob } from '../services/cvService';
+import { Download, Play, FileText, Home, Sparkles, Loader2 } from 'lucide-react';
+import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { PIIWarning } from '../components/PIIWarning';
+import { PDFService } from '../services/pdfService';
+import { DOCXService } from '../services/docxService';
+import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -11,6 +14,22 @@ export const ResultsPage = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [selectedFeatures, setSelectedFeatures] = useState({
+    atsOptimization: true,
+    keywordEnhancement: true,
+    achievementHighlighting: true,
+    skillsVisualization: false,
+    generatePodcast: true,
+    privacyMode: true,
+  });
+  const [selectedFormats, setSelectedFormats] = useState({
+    pdf: true,
+    docx: true,
+    html: true,
+  });
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [generatingDOCX, setGeneratingDOCX] = useState(false);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -37,17 +56,337 @@ export const ResultsPage = () => {
     );
   }
 
-  if (!job || job.status !== 'completed') {
+  if (!job) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">CV Not Found</h2>
-          <p className="text-gray-600 mb-6">The CV you're looking for doesn't exist or isn't ready yet.</p>
+          <p className="text-gray-600 mb-6">The CV you're looking for doesn't exist.</p>
           <button
             onClick={() => navigate('/')}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
             Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show template selection for analyzed CVs
+  if (job.status === 'analyzed') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              >
+                <Home className="w-5 h-5" />
+                <span>Home</span>
+              </button>
+              <h1 className="text-xl font-semibold">CV Analysis Complete</h1>
+              <div className="w-20"></div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* PII Warning */}
+          {job.piiDetection && (
+            <PIIWarning
+              hasPII={job.piiDetection.hasPII}
+              detectedTypes={job.piiDetection.detectedTypes}
+              recommendations={job.piiDetection.recommendations}
+              onTogglePrivacyMode={() => setPrivacyMode(!privacyMode)}
+              privacyModeEnabled={privacyMode}
+            />
+          )}
+
+          {/* Parsed CV Summary */}
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Your CV has been analyzed!</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Personal Information</h3>
+                <p className="text-gray-600">{job.parsedData?.personalInfo?.name}</p>
+                <p className="text-gray-600">{job.parsedData?.personalInfo?.email}</p>
+                <p className="text-gray-600">{job.parsedData?.personalInfo?.phone}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Experience</h3>
+                <p className="text-gray-600">{job.parsedData?.experience?.length || 0} positions found</p>
+                <h3 className="font-semibold text-gray-700 mb-2 mt-4">Skills</h3>
+                <p className="text-gray-600">{job.parsedData?.skills?.technical?.length || 0} technical skills</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Generation Options */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Features Selection Sidebar */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-xl font-bold mb-6">Customize Your CV Generation</h3>
+                
+                {/* Template Selection */}
+                <div className="mb-8">
+                  <h4 className="font-semibold mb-4">Select Template</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <button 
+                      onClick={() => setSelectedTemplate('modern')}
+                      className={`p-4 border-2 ${selectedTemplate === 'modern' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-blue-50 transition`}
+                    >
+                      <div className="text-2xl mb-2">🎨</div>
+                      <p className="text-sm font-medium">Modern</p>
+                    </button>
+                    <button 
+                      onClick={() => setSelectedTemplate('classic')}
+                      className={`p-4 border-2 ${selectedTemplate === 'classic' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-gray-50 transition`}
+                    >
+                      <div className="text-2xl mb-2">📄</div>
+                      <p className="text-sm font-medium">Classic</p>
+                    </button>
+                    <button 
+                      onClick={() => setSelectedTemplate('creative')}
+                      className={`p-4 border-2 ${selectedTemplate === 'creative' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-gray-50 transition`}
+                    >
+                      <div className="text-2xl mb-2">🎭</div>
+                      <p className="text-sm font-medium">Creative</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Enhancement Features */}
+                <div className="mb-8">
+                  <h4 className="font-semibold mb-4">Enhancement Features</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.atsOptimization}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, atsOptimization: e.target.checked})}
+                      />
+                      <span>ATS Optimization - Ensure your CV passes applicant tracking systems</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.keywordEnhancement}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, keywordEnhancement: e.target.checked})}
+                      />
+                      <span>Keyword Enhancement - Add industry-specific keywords</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.achievementHighlighting}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, achievementHighlighting: e.target.checked})}
+                      />
+                      <span>Achievement Highlighting - Emphasize your accomplishments</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.skillsVisualization}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, skillsVisualization: e.target.checked})}
+                      />
+                      <span>Skills Visualization - Add visual skill ratings</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Output Formats */}
+                <div className="mb-8">
+                  <h4 className="font-semibold mb-4">Output Formats</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFormats.pdf}
+                        onChange={(e) => setSelectedFormats({...selectedFormats, pdf: e.target.checked})}
+                      />
+                      <span>PDF - Professional document format</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFormats.docx}
+                        onChange={(e) => setSelectedFormats({...selectedFormats, docx: e.target.checked})}
+                      />
+                      <span>DOCX - Editable Word document</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFormats.html}
+                        onChange={(e) => setSelectedFormats({...selectedFormats, html: e.target.checked})}
+                      />
+                      <span>HTML - Web-ready format</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Additional Options */}
+                <div>
+                  <h4 className="font-semibold mb-4">Additional Options</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.generatePodcast}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, generatePodcast: e.target.checked})}
+                      />
+                      <span>Generate AI Podcast - Create an audio summary of your career</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 h-4 w-4 text-blue-600" 
+                        checked={selectedFeatures.privacyMode}
+                        onChange={(e) => setSelectedFeatures({...selectedFeatures, privacyMode: e.target.checked})}
+                      />
+                      <span>Privacy Mode - Use masked version for public sharing</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      const features = [];
+                      if (selectedFeatures.atsOptimization) features.push('ats-optimization');
+                      if (selectedFeatures.keywordEnhancement) features.push('keyword-enhancement');
+                      if (selectedFeatures.achievementHighlighting) features.push('achievement-highlighting');
+                      if (selectedFeatures.skillsVisualization) features.push('skills-visualization');
+                      if (selectedFeatures.generatePodcast) features.push('generate-podcast');
+                      if (selectedFeatures.privacyMode) features.push('privacy-mode');
+                      
+                      // Add format features
+                      if (selectedFormats.pdf) features.push('format-pdf');
+                      if (selectedFormats.docx) features.push('format-docx');
+                      if (selectedFormats.html) features.push('format-html');
+                      
+                      await generateCV(jobId!, selectedTemplate, features);
+                      toast.success('Generating your CV with selected options!');
+                      navigate(`/process/${jobId}`);
+                    } catch (error) {
+                      console.error('Error:', error);
+                      toast.error('Failed to generate CV');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="mt-8 w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="inline-block w-5 h-5 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate with Selected Options'
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Generate Card */}
+            <div>
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-8 text-center sticky top-8">
+                <Sparkles className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold mb-4">Just Generate it for Me!</h3>
+                <p className="text-gray-700 mb-6">
+                  Let AI select the best options for you. Includes all enhancements, 
+                  professional template, and multiple formats.
+                </p>
+                <ul className="text-left text-sm text-gray-600 mb-6 space-y-2">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span>
+                    Best template auto-selected
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span>
+                    All enhancement features
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span>
+                    PDF, DOCX & HTML formats
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-2">✓</span>
+                    AI Career Podcast
+                  </li>
+                </ul>
+                <button
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      // Update job to enable all features
+                      await generateCV(jobId!, 'modern', [
+                        'ats-optimization',
+                        'keyword-enhancement',
+                        'achievement-highlighting',
+                        'skills-visualization',
+                        'generate-podcast',
+                        'all-formats'
+                      ]);
+                      toast.success('Generating your enhanced CV with all features!');
+                      navigate(`/process/${jobId}`);
+                    } catch (error) {
+                      console.error('Error:', error);
+                      toast.error('Failed to generate CV');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="inline-block w-5 h-5 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="inline-block w-5 h-5 mr-2" />
+                      Just Generate it for Me
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (job.status !== 'completed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Processing...</h2>
+          <p className="text-gray-600 mb-6">Your CV is still being processed.</p>
+          <button
+            onClick={() => navigate(`/process/${jobId}`)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+          >
+            View Progress
           </button>
         </div>
       </div>
@@ -106,14 +445,33 @@ export const ResultsPage = () => {
           {/* CV Preview */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="p-6 border-b">
+              <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="text-xl font-semibold">CV Preview</h2>
+                {job.generatedCV?.htmlUrl && (
+                  <a 
+                    href={job.generatedCV.htmlUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    Open in New Tab →
+                  </a>
+                )}
               </div>
               <div className="p-8">
-                {/* Placeholder for CV preview */}
-                <div className="aspect-[8.5/11] bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">CV Preview Coming Soon</p>
-                </div>
+                {job.generatedCV?.html ? (
+                  <div className="aspect-[8.5/11] bg-white rounded-lg border overflow-auto">
+                    <iframe 
+                      srcDoc={job.generatedCV.html}
+                      className="w-full h-full"
+                      title="CV Preview"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-[8.5/11] bg-gray-100 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-500">Generating CV preview...</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -124,57 +482,141 @@ export const ResultsPage = () => {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Download Your CV</h3>
               <div className="space-y-3">
-                <button className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
+                <button 
+                  onClick={async () => {
+                    if (job.generatedCV?.html) {
+                      try {
+                        setGeneratingPDF(true);
+                        toast.loading('Generating PDF...');
+                        const pdfBlob = await PDFService.generatePDFFromHTML(
+                          job.generatedCV.html,
+                          `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`
+                        );
+                        PDFService.downloadPDF(pdfBlob, `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`);
+                        toast.dismiss();
+                        toast.success('PDF downloaded successfully!');
+                      } catch (error) {
+                        console.error('Error generating PDF:', error);
+                        toast.dismiss();
+                        toast.error('Failed to generate PDF');
+                      } finally {
+                        setGeneratingPDF(false);
+                      }
+                    }
+                  }}
+                  disabled={generatingPDF || !job.generatedCV?.html}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <span className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    PDF Format
+                    {generatingPDF ? 'Generating PDF...' : 'PDF Format'}
                   </span>
-                  <Download className="w-4 h-4" />
+                  {generatingPDF ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
                 </button>
-                <button className="w-full flex items-center justify-between px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition">
+                
+                <button 
+                  onClick={async () => {
+                    if (job) {
+                      try {
+                        setGeneratingDOCX(true);
+                        toast.loading('Generating DOCX...');
+                        const docxBlob = await DOCXService.generateDOCXFromJob(job);
+                        DOCXService.downloadDOCX(docxBlob, `${job.parsedData?.personalInfo?.name || 'cv'}.docx`);
+                        toast.dismiss();
+                        toast.success('DOCX downloaded successfully!');
+                      } catch (error) {
+                        console.error('Error generating DOCX:', error);
+                        toast.dismiss();
+                        toast.error('Failed to generate DOCX');
+                      } finally {
+                        setGeneratingDOCX(false);
+                      }
+                    }
+                  }}
+                  disabled={generatingDOCX || !job.parsedData}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <span className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    DOCX Format
+                    {generatingDOCX ? 'Generating DOCX...' : 'DOCX Format'}
                   </span>
-                  <Download className="w-4 h-4" />
+                  {generatingDOCX ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
                 </button>
-                <button className="w-full flex items-center justify-between px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition">
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    HTML Format
-                  </span>
-                  <Download className="w-4 h-4" />
-                </button>
+                
+                {job.generatedCV?.htmlUrl && (
+                  <a 
+                    href={job.generatedCV.htmlUrl}
+                    download="cv.html"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      HTML Format
+                    </span>
+                    <Download className="w-4 h-4" />
+                  </a>
+                )}
               </div>
             </div>
 
             {/* Podcast Player */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold mb-4">AI Career Podcast</h3>
-              <div className="bg-gray-100 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-600">Duration: 3:45</span>
-                  <button className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition">
-                    <Play className="w-4 h-4" />
-                  </button>
+              {job.generatedCV?.features?.includes('generate-podcast') ? (
+                <>
+                  <div className="bg-gray-100 rounded-lg p-4">
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Play className="w-8 h-8 text-purple-600" />
+                        </div>
+                        <p className="text-sm text-gray-600">Podcast generation coming soon!</p>
+                        <p className="text-xs text-gray-500 mt-1">AI-generated audio summary of your career</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  <p>Podcast not included in this generation.</p>
+                  <p className="text-xs mt-1">Regenerate with podcast option enabled.</p>
                 </div>
-                <div className="w-full bg-gray-300 rounded-full h-1">
-                  <div className="bg-blue-600 h-1 rounded-full" style={{ width: '0%' }}></div>
-                </div>
-              </div>
-              <button className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
-                View Transcript →
-              </button>
+              )}
             </div>
 
             {/* Share Options */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Share Your CV</h3>
               <div className="space-y-3">
-                <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                <button 
+                  onClick={() => {
+                    if (job.generatedCV?.htmlUrl) {
+                      navigator.clipboard.writeText(job.generatedCV.htmlUrl);
+                      toast.success('Link copied to clipboard!');
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
                   Copy Shareable Link
                 </button>
-                <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                <button 
+                  onClick={() => {
+                    if (job.generatedCV?.htmlUrl) {
+                      // Generate QR code URL using qr-server.com API
+                      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(job.generatedCV.htmlUrl)}`;
+                      window.open(qrUrl, '_blank');
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
                   Generate QR Code
                 </button>
               </div>

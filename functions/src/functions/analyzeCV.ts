@@ -1,5 +1,4 @@
 import { onCall } from 'firebase-functions/v2/https';
-import Anthropic from '@anthropic-ai/sdk';
 import { corsOptions } from '../config/cors';
 
 export const analyzeCV = onCall(
@@ -22,6 +21,7 @@ export const analyzeCV = onCall(
         throw new Error('Anthropic API key not configured');
       }
 
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
       const anthropic = new Anthropic({ apiKey });
 
       const prompt = `Analyze this CV and provide recommendations for improvement${targetRole ? ` for a ${targetRole} position` : ''}.
@@ -44,7 +44,7 @@ Please provide:
 6. Suggested additional sections or information`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         temperature: 0.7,
         system: 'You are a professional career counselor and CV expert who provides accurate, fact-based recommendations. You MUST base all your analysis only on the information explicitly provided in the CV. Never make up, assume, or add information that is not present. If something is missing, suggest it as an area for improvement but do not assume what the content might be.',

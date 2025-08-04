@@ -2,16 +2,21 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileUpload } from '../components/FileUpload';
 import { URLInput } from '../components/URLInput';
+import { SignInDialog } from '../components/SignInDialog';
+import { UserMenu } from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadCV, createJob } from '../services/cvService';
 import { FileText, Globe, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const { user, signInAnonymous } = useAuth();
+  const { user, signInAnonymous, signInWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showSignInDialog, setShowSignInDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: any } | null>(null);
 
   const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
     try {
@@ -20,8 +25,17 @@ export const HomePage = () => {
       // Sign in anonymously if not authenticated
       let currentUser = user;
       if (!currentUser) {
-        await signInAnonymous();
-        currentUser = user;
+        try {
+          await signInAnonymous();
+          // Wait a bit for the auth state to update
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (authError: any) {
+          // If anonymous sign-in fails, show sign-in dialog
+          setIsLoading(false);
+          setPendingAction({ type: 'file', data: { file, quickCreate } });
+          setShowSignInDialog(true);
+          return;
+        }
       }
 
       // Create job and upload file
@@ -30,9 +44,9 @@ export const HomePage = () => {
       
       // Navigate to processing page with quick create flag
       navigate(`/process/${jobId}${quickCreate ? '?quickCreate=true' : ''}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
-      // TODO: Show error toast
+      toast.error(error.message || 'Failed to upload CV. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +60,8 @@ export const HomePage = () => {
       let currentUser = user;
       if (!currentUser) {
         await signInAnonymous();
-        currentUser = user;
+        // Wait a bit for the auth state to update
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       // Create job for URL
@@ -54,9 +69,9 @@ export const HomePage = () => {
       
       // Navigate to processing page
       navigate(`/process/${jobId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing URL:', error);
-      // TODO: Show error toast
+      toast.error(error.message || 'Failed to process URL. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +88,17 @@ export const HomePage = () => {
     handleFileUpload(file);
   };
 
+  const handleSignInSuccess = () => {
+    setShowSignInDialog(false);
+    // Retry the pending action after successful sign-in
+    if (pendingAction) {
+      if (pendingAction.type === 'file') {
+        handleFileUpload(pendingAction.data.file, pendingAction.data.quickCreate);
+      }
+      setPendingAction(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -86,9 +112,29 @@ export const HomePage = () => {
             <nav className="flex items-center space-x-6">
               <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
               <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                Sign In
-              </button>
+              {user ? (
+                <UserMenu />
+              ) : (
+                <button 
+                  onClick={async () => {
+                    try {
+                      await signInWithGoogle();
+                      toast.success('Signed in successfully!');
+                    } catch (error) {
+                      toast.error('Failed to sign in');
+                    }
+                  }}
+                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  Sign in with Google
+                </button>
+              )}
             </nav>
           </div>
         </div>
@@ -208,10 +254,17 @@ export const HomePage = () => {
       <footer className="bg-gray-50 border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
-            <p>&copy; 2024 GetMyCV.ai. All rights reserved.</p>
+            <p>&copy; 2025 GetMyCV.ai. All rights reserved.</p>
           </div>
         </div>
       </footer>
+      
+      {/* Sign In Dialog */}
+      <SignInDialog 
+        isOpen={showSignInDialog}
+        onClose={() => setShowSignInDialog(false)}
+        onSuccess={handleSignInSuccess}
+      />
     </div>
   );
 };

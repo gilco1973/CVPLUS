@@ -1,3 +1,6 @@
+// Import polyfills first
+import './utils/polyfills';
+
 import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin

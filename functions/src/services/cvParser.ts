@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import csv from 'csv-parser';
@@ -59,12 +58,21 @@ export interface ParsedCV {
 }
 
 export class CVParser {
-  private anthropic: Anthropic;
+  private anthropic: any;
+  private apiKey: string;
 
   constructor(apiKey: string) {
-    this.anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    this.apiKey = apiKey;
+  }
+
+  private async getAnthropicClient() {
+    if (!this.anthropic) {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      this.anthropic = new Anthropic({
+        apiKey: this.apiKey,
+      });
+    }
+    return this.anthropic;
   }
 
   async parseCV(fileBuffer: Buffer, mimeType: string): Promise<ParsedCV> {
@@ -224,8 +232,9 @@ CV Text to analyze:
 ${text}`;
 
     try {
-      const response = await this.anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+      const anthropic = await this.getAnthropicClient();
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         temperature: 0,
         system: 'You are a professional CV parser that extracts structured data from CVs with absolute accuracy. You MUST only extract information that is explicitly present in the CV text. Never make up, invent, or assume any information. If data is not present, use null or empty values. Your role is to faithfully represent what is in the CV, not to enhance or add to it.',

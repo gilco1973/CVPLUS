@@ -24,8 +24,11 @@ export interface Job {
   parsedData?: any;
   generatedCV?: {
     html: string;
+    htmlUrl?: string;
     pdfUrl: string;
     docxUrl: string;
+    template?: string;
+    features?: string[];
   };
   piiDetection?: {
     hasPII: boolean;
