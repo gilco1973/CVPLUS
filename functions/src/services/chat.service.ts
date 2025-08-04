@@ -2,7 +2,7 @@
  * Chat service for RAG-based conversations
  */
 
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { config } from '../config/environment';
 import { embeddingService } from './embedding.service';
 import { enhancedDbService } from './enhanced-db.service';
@@ -10,13 +10,12 @@ import { ChatMessage, UserRAGProfile } from '../types/enhanced-models';
 import { nanoid } from 'nanoid';
 
 export class ChatService {
-  private openai: OpenAIApi;
+  private openai: OpenAI;
   
   constructor() {
-    const configuration = new Configuration({
+    this.openai = new OpenAI({
       apiKey: config.rag.openaiApiKey,
     });
-    this.openai = new OpenAIApi(configuration);
   }
   
   /**
@@ -163,7 +162,7 @@ Important guidelines:
     systemPrompt: string,
     settings: UserRAGProfile['settings']
   ): Promise<{ content: string; tokens: number }> {
-    const completion = await this.openai.createChatCompletion({
+    const completion = await this.openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -176,8 +175,8 @@ Important guidelines:
       presence_penalty: 0.5
     });
     
-    const response = completion.data.choices[0].message;
-    const tokens = completion.data.usage?.total_tokens || 0;
+    const response = completion.choices[0].message;
+    const tokens = completion.usage?.total_tokens || 0;
     
     return {
       content: response?.content || 'I apologize, but I was unable to generate a response.',

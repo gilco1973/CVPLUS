@@ -2,27 +2,25 @@
  * Embedding service for RAG feature
  */
 
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { config } from '../config/environment';
 import { CVChunk, ParsedCV } from '../types/enhanced-models';
 import { nanoid } from 'nanoid';
 
 export class EmbeddingService {
-  private openai: OpenAIApi;
+  private openai: OpenAI;
   private pinecone: Pinecone;
   
   constructor() {
     // Initialize OpenAI
-    const configuration = new Configuration({
+    this.openai = new OpenAI({
       apiKey: config.rag.openaiApiKey,
     });
-    this.openai = new OpenAIApi(configuration);
     
     // Initialize Pinecone
     this.pinecone = new Pinecone({
-      apiKey: config.rag.pineconeApiKey!,
-      environment: config.rag.pineconeEnvironment
+      apiKey: config.rag.pineconeApiKey!
     });
   }
   
@@ -225,21 +223,21 @@ export class EmbeddingService {
   // Helper methods
   
   private async generateSingleEmbedding(text: string): Promise<number[]> {
-    const response = await this.openai.createEmbedding({
+    const response = await this.openai.embeddings.create({
       model: 'text-embedding-ada-002',
       input: text
     });
     
-    return response.data.data[0].embedding;
+    return response.data[0].embedding;
   }
   
   private async batchEmbeddings(texts: string[]): Promise<number[][]> {
-    const response = await this.openai.createEmbedding({
+    const response = await this.openai.embeddings.create({
       model: 'text-embedding-ada-002',
       input: texts
     });
     
-    return response.data.data.map(d => d.embedding);
+    return response.data.map(d => d.embedding);
   }
   
   private formatPersonalInfo(info: any): string {

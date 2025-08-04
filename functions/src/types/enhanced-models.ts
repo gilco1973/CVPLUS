@@ -2,7 +2,9 @@
  * Enhanced data models for CV enhancement features
  */
 
-import { Job, ParsedCV } from './job';
+import { Job } from './job';
+import type { ParsedCV } from './job';
+export type { ParsedCV } from './job';
 
 /**
  * Enhanced Job interface with all new features
