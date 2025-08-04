@@ -1,7 +1,7 @@
-# Project: getmycv.ai
+# Project: CVisionery
 
 ## Overview
-GetMyCV.ai is an AI-powered Single Click CV Creator that transforms traditional CVs into interactive, multimedia-rich professional profiles. The system uses Anthropic's Claude API for intelligent CV analysis and provides personalized recommendations for different formats, industries, and purposes.
+CVisionery is an AI-powered CV transformation platform that takes traditional CVs "From Paper to Powerful", reinventing them into interactive, multimedia-rich professional profiles. The system uses Anthropic's Claude API for intelligent CV analysis and provides personalized recommendations with cutting-edge interactive features.
 Use sub agents from ~/.local/share/claude-007-agents/.claude/agents in everything you do.
 
 ## Project Structure

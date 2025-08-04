@@ -63,21 +63,21 @@ export const ResultsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">CV Not Found</h2>
-          <p className="text-gray-600 mb-6">The CV you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold mb-4 text-gray-100">CV Not Found</h2>
+          <p className="text-gray-400 mb-6">The CV you're looking for doesn't exist.</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            className="bg-cyan-600 text-white px-6 py-3 rounded-lg hover:bg-cyan-700 transition"
           >
             Go Home
           </button>
@@ -89,19 +89,19 @@ export const ResultsPage = () => {
   // Show template selection for analyzed CVs
   if (job.status === 'analyzed') {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-900">
         {/* Header */}
-        <header className="bg-white shadow-sm">
+        <header className="bg-gray-800 shadow-sm border-b border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+                className="flex items-center space-x-2 text-gray-300 hover:text-gray-100"
               >
                 <Home className="w-5 h-5" />
                 <span>Home</span>
               </button>
-              <h1 className="text-xl font-semibold">CV Analysis Complete</h1>
+              <h1 className="text-xl font-semibold text-gray-100">CV Analysis Complete</h1>
               <div className="w-20"></div>
             </div>
           </div>
@@ -120,20 +120,20 @@ export const ResultsPage = () => {
           )}
 
           {/* Parsed CV Summary */}
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold mb-4">Your CV has been analyzed!</h2>
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-8 border border-gray-700">
+            <h2 className="text-2xl font-bold mb-4 text-gray-100">Your CV has been analyzed!</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Personal Information</h3>
-                <p className="text-gray-600">{job.parsedData?.personalInfo?.name}</p>
-                <p className="text-gray-600">{job.parsedData?.personalInfo?.email}</p>
-                <p className="text-gray-600">{job.parsedData?.personalInfo?.phone}</p>
+                <h3 className="font-semibold text-gray-300 mb-2">Personal Information</h3>
+                <p className="text-gray-400">{job.parsedData?.personalInfo?.name}</p>
+                <p className="text-gray-400">{job.parsedData?.personalInfo?.email}</p>
+                <p className="text-gray-400">{job.parsedData?.personalInfo?.phone}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Experience</h3>
-                <p className="text-gray-600">{job.parsedData?.experience?.length || 0} positions found</p>
-                <h3 className="font-semibold text-gray-700 mb-2 mt-4">Skills</h3>
-                <p className="text-gray-600">{job.parsedData?.skills?.technical?.length || 0} technical skills</p>
+                <h3 className="font-semibold text-gray-300 mb-2">Experience</h3>
+                <p className="text-gray-400">{job.parsedData?.experience?.length || 0} positions found</p>
+                <h3 className="font-semibold text-gray-300 mb-2 mt-4">Skills</h3>
+                <p className="text-gray-400">{job.parsedData?.skills?.technical?.length || 0} technical skills</p>
               </div>
             </div>
           </div>
@@ -142,270 +142,273 @@ export const ResultsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Features Selection Sidebar */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-xl font-bold mb-6">Customize Your CV Generation</h3>
+              <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+                <h3 className="text-xl font-bold mb-6 text-gray-100">Customize Your CV Generation</h3>
                 
                 {/* Template Selection */}
                 <div className="mb-8">
-                  <h4 className="font-semibold mb-4">Select Template</h4>
+                  <h4 className="font-semibold mb-4 text-gray-200">Select Template</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <button 
                       onClick={() => setSelectedTemplate('modern')}
-                      className={`p-4 border-2 ${selectedTemplate === 'modern' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-blue-50 transition`}
+                      className={`p-6 border-2 ${selectedTemplate === 'modern' ? 'border-cyan-500 bg-cyan-900/20 ring-2 ring-cyan-500/30' : 'border-gray-600 bg-gray-700/50'} rounded-lg hover:border-cyan-400 transition-all`}
                     >
-                      <div className="text-2xl mb-2">🎨</div>
-                      <p className="text-sm font-medium">Modern</p>
+                      <div className="text-4xl mb-3">🎨</div>
+                      <p className="text-sm font-semibold text-gray-200">Modern</p>
+                      <p className="text-xs text-gray-400 mt-1">Clean & contemporary</p>
                     </button>
                     <button 
                       onClick={() => setSelectedTemplate('classic')}
-                      className={`p-4 border-2 ${selectedTemplate === 'classic' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-gray-50 transition`}
+                      className={`p-6 border-2 ${selectedTemplate === 'classic' ? 'border-cyan-500 bg-cyan-900/20 ring-2 ring-cyan-500/30' : 'border-gray-600 bg-gray-700/50'} rounded-lg hover:border-cyan-400 transition-all`}
                     >
-                      <div className="text-2xl mb-2">📄</div>
-                      <p className="text-sm font-medium">Classic</p>
+                      <div className="text-4xl mb-3">📄</div>
+                      <p className="text-sm font-semibold text-gray-200">Classic</p>
+                      <p className="text-xs text-gray-400 mt-1">Traditional & professional</p>
                     </button>
                     <button 
                       onClick={() => setSelectedTemplate('creative')}
-                      className={`p-4 border-2 ${selectedTemplate === 'creative' ? 'border-blue-600 bg-blue-50' : 'border-gray-300'} rounded-lg text-center hover:bg-gray-50 transition`}
+                      className={`p-6 border-2 ${selectedTemplate === 'creative' ? 'border-cyan-500 bg-cyan-900/20 ring-2 ring-cyan-500/30' : 'border-gray-600 bg-gray-700/50'} rounded-lg hover:border-cyan-400 transition-all`}
                     >
-                      <div className="text-2xl mb-2">🎭</div>
-                      <p className="text-sm font-medium">Creative</p>
+                      <div className="text-4xl mb-3">✨</div>
+                      <p className="text-sm font-semibold text-gray-200">Creative</p>
+                      <p className="text-xs text-gray-400 mt-1">Bold & unique</p>
                     </button>
                   </div>
                 </div>
 
                 {/* Enhancement Features */}
                 <div className="mb-8">
-                  <h4 className="font-semibold mb-4">Enhancement Features</h4>
+                  <h4 className="font-semibold mb-4 text-gray-200">Enhancement Features</h4>
                   <div className="space-y-3">
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFeatures.atsOptimization}
                         onChange={(e) => setSelectedFeatures({...selectedFeatures, atsOptimization: e.target.checked})}
                       />
-                      <span>ATS Optimization - Ensure your CV passes applicant tracking systems</span>
+                      <span className="text-gray-300">ATS Optimization - Ensure your CV passes applicant tracking systems</span>
                     </label>
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFeatures.keywordEnhancement}
                         onChange={(e) => setSelectedFeatures({...selectedFeatures, keywordEnhancement: e.target.checked})}
                       />
-                      <span>Keyword Enhancement - Add industry-specific keywords</span>
+                      <span className="text-gray-300">Keyword Enhancement - Add industry-specific keywords</span>
                     </label>
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFeatures.achievementHighlighting}
                         onChange={(e) => setSelectedFeatures({...selectedFeatures, achievementHighlighting: e.target.checked})}
                       />
-                      <span>Achievement Highlighting - Emphasize your accomplishments</span>
+                      <span className="text-gray-300">Achievement Highlighting - Emphasize your accomplishments</span>
                     </label>
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFeatures.skillsVisualization}
                         onChange={(e) => setSelectedFeatures({...selectedFeatures, skillsVisualization: e.target.checked})}
                       />
-                      <span>Skills Visualization - Add visual skill ratings</span>
+                      <span className="text-gray-300">Skills Visualization - Add visual skill ratings</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Output Formats */}
                 <div className="mb-8">
-                  <h4 className="font-semibold mb-4">Output Formats</h4>
+                  <h4 className="font-semibold mb-4 text-gray-200">Output Formats</h4>
                   <div className="space-y-3">
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFormats.pdf}
                         onChange={(e) => setSelectedFormats({...selectedFormats, pdf: e.target.checked})}
                       />
-                      <span>PDF - Professional document format</span>
+                      <span className="text-gray-300">PDF - Professional document format</span>
                     </label>
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFormats.docx}
                         onChange={(e) => setSelectedFormats({...selectedFormats, docx: e.target.checked})}
                       />
-                      <span>DOCX - Editable Word document</span>
+                      <span className="text-gray-300">DOCX - Editable Word document</span>
                     </label>
                     <label className="flex items-center">
                       <input 
                         type="checkbox" 
-                        className="mr-3 h-4 w-4 text-blue-600" 
+                        className="mr-3 h-4 w-4 text-cyan-500" 
                         checked={selectedFormats.html}
                         onChange={(e) => setSelectedFormats({...selectedFormats, html: e.target.checked})}
                       />
-                      <span>HTML - Web-ready format</span>
+                      <span className="text-gray-300">HTML - Web-ready format</span>
                     </label>
                   </div>
                 </div>
 
                 {/* AI Generated Features */}
                 <div>
-                  <h4 className="font-semibold mb-4">AI Generated Features</h4>
+                  <h4 className="font-semibold mb-4 text-gray-200">AI Generated Features</h4>
                   <div className="space-y-3">
                     {/* Core AI Features */}
                     <div className="mb-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">🤖 Core AI Features</h5>
+                      <h5 className="text-sm font-medium text-gray-300 mb-2">🤖 Core AI Features</h5>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.generatePodcast}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, generatePodcast: e.target.checked})}
                         />
-                        <span>AI Career Podcast - Embedded audio player with your career story</span>
+                        <span className="text-gray-300">AI Career Podcast - Embedded audio player with your career story</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.personalityInsights}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, personalityInsights: e.target.checked})}
                         />
-                        <span>AI Personality Insights - Visual personality assessment</span>
+                        <span className="text-gray-300">AI Personality Insights - Visual personality assessment</span>
                       </label>
                       <label className="flex items-center">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.privacyMode}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, privacyMode: e.target.checked})}
                         />
-                        <span>Privacy Mode - Smart PII masking for public sharing</span>
+                        <span className="text-gray-300">Privacy Mode - Smart PII masking for public sharing</span>
                       </label>
                     </div>
 
                     {/* Interactive Elements */}
                     <div className="mb-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">✨ Interactive Elements</h5>
+                      <h5 className="text-sm font-medium text-gray-300 mb-2">✨ Interactive Elements</h5>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.embedQRCode}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, embedQRCode: e.target.checked})}
                         />
-                        <span>QR Code - Scannable code embedded in CV header</span>
+                        <span className="text-gray-300">QR Code - Scannable code embedded in CV header</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.interactiveTimeline}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, interactiveTimeline: e.target.checked})}
                         />
-                        <span>Interactive Timeline - Clickable career journey visualization</span>
+                        <span className="text-gray-300">Interactive Timeline - Clickable career journey visualization</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.contactForm}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, contactForm: e.target.checked})}
                         />
-                        <span>Contact Form - Built-in form for instant messaging</span>
+                        <span className="text-gray-300">Contact Form - Built-in form for instant messaging</span>
                       </label>
                       <label className="flex items-center">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.availabilityCalendar}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, availabilityCalendar: e.target.checked})}
                         />
-                        <span>Availability Calendar - Schedule meetings directly</span>
+                        <span className="text-gray-300">Availability Calendar - Schedule meetings directly</span>
                       </label>
                     </div>
 
                     {/* Visual Enhancements */}
                     <div className="mb-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">📊 Visual Enhancements</h5>
+                      <h5 className="text-sm font-medium text-gray-300 mb-2">📊 Visual Enhancements</h5>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.skillsChart}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, skillsChart: e.target.checked})}
                         />
-                        <span>Skills Charts - Interactive radar/bar charts for skills</span>
+                        <span className="text-gray-300">Skills Charts - Interactive radar/bar charts for skills</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.achievementsShowcase}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, achievementsShowcase: e.target.checked})}
                         />
-                        <span>Achievements Showcase - Animated accomplishment cards</span>
+                        <span className="text-gray-300">Achievements Showcase - Animated accomplishment cards</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.languageProficiency}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, languageProficiency: e.target.checked})}
                         />
-                        <span>Language Proficiency - Visual language skill indicators</span>
+                        <span className="text-gray-300">Language Proficiency - Visual language skill indicators</span>
                       </label>
                       <label className="flex items-center">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.certificationBadges}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, certificationBadges: e.target.checked})}
                         />
-                        <span>Certification Badges - Verified credential displays</span>
+                        <span className="text-gray-300">Certification Badges - Verified credential displays</span>
                       </label>
                     </div>
 
                     {/* Media & Social */}
                     <div className="mb-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">🎥 Media & Social</h5>
+                      <h5 className="text-sm font-medium text-gray-300 mb-2">🎥 Media & Social</h5>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.videoIntroduction}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, videoIntroduction: e.target.checked})}
                         />
-                        <span>Video Introduction - Embedded video player section</span>
+                        <span className="text-gray-300">Video Introduction - Embedded video player section</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.portfolioGallery}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, portfolioGallery: e.target.checked})}
                         />
-                        <span>Portfolio Gallery - Interactive project showcase</span>
+                        <span className="text-gray-300">Portfolio Gallery - Interactive project showcase</span>
                       </label>
                       <label className="flex items-center mb-2">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.testimonialsCarousel}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, testimonialsCarousel: e.target.checked})}
                         />
-                        <span>Testimonials Carousel - Rotating recommendations</span>
+                        <span className="text-gray-300">Testimonials Carousel - Rotating recommendations</span>
                       </label>
                       <label className="flex items-center">
                         <input 
                           type="checkbox" 
-                          className="mr-3 h-4 w-4 text-blue-600" 
+                          className="mr-3 h-4 w-4 text-cyan-500" 
                           checked={selectedFeatures.socialMediaLinks}
                           onChange={(e) => setSelectedFeatures({...selectedFeatures, socialMediaLinks: e.target.checked})}
                         />
-                        <span>Social Media Links - Clickable social icons</span>
+                        <span className="text-gray-300">Social Media Links - Clickable social icons</span>
                       </label>
                     </div>
                   </div>
@@ -452,7 +455,7 @@ export const ResultsPage = () => {
                     }
                   }}
                   disabled={loading}
-                  className="mt-8 w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-8 w-full bg-cyan-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-cyan-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -468,14 +471,14 @@ export const ResultsPage = () => {
 
             {/* Quick Generate Card */}
             <div>
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-8 text-center sticky top-8">
-                <Sparkles className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold mb-4">Just Generate it for Me!</h3>
-                <p className="text-gray-700 mb-6">
+              <div className="bg-gradient-to-r from-purple-900/20 to-cyan-900/20 rounded-lg shadow-lg p-8 text-center sticky top-8 border border-purple-700/50">
+                <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold mb-4 text-gray-100">Just Generate it for Me!</h3>
+                <p className="text-gray-300 mb-6">
                   Let AI select the best options for you. Includes all enhancements, 
                   professional template, and multiple formats.
                 </p>
-                <ul className="text-left text-sm text-gray-600 mb-6 space-y-2">
+                <ul className="text-left text-sm text-gray-400 mb-6 space-y-2">
                   <li className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
                     Best template auto-selected
@@ -516,7 +519,7 @@ export const ResultsPage = () => {
                     }
                   }}
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-8 py-4 rounded-lg font-medium hover:from-purple-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {loading ? (
                     <>
@@ -540,13 +543,13 @@ export const ResultsPage = () => {
 
   if (job.status !== 'completed') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Processing...</h2>
-          <p className="text-gray-600 mb-6">Your CV is still being processed.</p>
+          <h2 className="text-2xl font-bold mb-4 text-gray-100">Processing...</h2>
+          <p className="text-gray-400 mb-6">Your CV is still being processed.</p>
           <button
             onClick={() => navigate(`/process/${jobId}`)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            className="bg-cyan-600 text-white px-6 py-3 rounded-lg hover:bg-cyan-700 transition"
           >
             View Progress
           </button>
@@ -556,19 +559,19 @@ export const ResultsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center space-x-2 text-gray-300 hover:text-gray-100"
             >
               <Home className="w-5 h-5" />
               <span>Home</span>
             </button>
-            <h1 className="text-xl font-semibold">Your Enhanced CV is Ready!</h1>
+            <h1 className="text-xl font-semibold text-gray-100">Your Enhanced CV is Ready!</h1>
             <div className="w-20"></div>
           </div>
         </div>
@@ -588,14 +591,14 @@ export const ResultsPage = () => {
 
         {/* Quick Create Success Banner */}
         {job.quickCreate && (
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <div className="bg-gradient-to-r from-purple-900/20 to-cyan-900/20 border border-purple-700/50 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-purple-400" />
               <div>
-                <h4 className="font-semibold text-purple-900">
+                <h4 className="font-semibold text-purple-300">
                   Quick Create Mode Activated!
                 </h4>
-                <p className="text-sm text-purple-700">
+                <p className="text-sm text-purple-400">
                   All enhancements have been automatically applied and your CV is being generated in all available formats.
                 </p>
               </div>
@@ -606,15 +609,15 @@ export const ResultsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* CV Preview */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-semibold">CV Preview</h2>
+            <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
+              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-100">CV Preview</h2>
                 {job.generatedCV?.htmlUrl && (
                   <a 
                     href={job.generatedCV.htmlUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
                   >
                     Open in New Tab →
                   </a>
@@ -630,8 +633,8 @@ export const ResultsPage = () => {
                     />
                   </div>
                 ) : (
-                  <div className="aspect-[8.5/11] bg-gray-100 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">Generating CV preview...</p>
+                  <div className="aspect-[8.5/11] bg-gray-700 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-400">Generating CV preview...</p>
                   </div>
                 )}
               </div>
@@ -641,8 +644,8 @@ export const ResultsPage = () => {
           {/* Actions Sidebar */}
           <div className="space-y-6">
             {/* Download Options */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Download Your CV</h3>
+            <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-100">Download Your CV</h3>
               <div className="space-y-3">
                 <button 
                   onClick={async () => {
@@ -667,7 +670,7 @@ export const ResultsPage = () => {
                     }
                   }}
                   disabled={generatingPDF || !job.generatedCV?.html}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-cyan-900/30 text-cyan-400 rounded-lg hover:bg-cyan-900/50 transition disabled:opacity-50 disabled:cursor-not-allowed border border-cyan-700/50"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
@@ -700,7 +703,7 @@ export const ResultsPage = () => {
                     }
                   }}
                   disabled={generatingDOCX || !job.parsedData}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-green-900/30 text-green-400 rounded-lg hover:bg-green-900/50 transition disabled:opacity-50 disabled:cursor-not-allowed border border-green-700/50"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
@@ -717,7 +720,7 @@ export const ResultsPage = () => {
                   <a 
                     href={job.generatedCV.htmlUrl}
                     download="cv.html"
-                    className="w-full flex items-center justify-between px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-purple-900/30 text-purple-400 rounded-lg hover:bg-purple-900/50 transition border border-purple-700/50"
                   >
                     <span className="flex items-center gap-2">
                       <FileText className="w-5 h-5" />
@@ -730,33 +733,33 @@ export const ResultsPage = () => {
             </div>
 
             {/* Podcast Player */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">AI Career Podcast</h3>
+            <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-100">AI Career Podcast</h3>
               {job.generatedCV?.features?.includes('generate-podcast') ? (
                 <>
-                  <div className="bg-gray-100 rounded-lg p-4">
+                  <div className="bg-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-center py-8">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Play className="w-8 h-8 text-purple-600" />
+                        <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Play className="w-8 h-8 text-purple-400" />
                         </div>
-                        <p className="text-sm text-gray-600">Podcast generation coming soon!</p>
-                        <p className="text-xs text-gray-500 mt-1">AI-generated audio summary of your career</p>
+                        <p className="text-sm text-gray-300">Podcast generation coming soon!</p>
+                        <p className="text-xs text-gray-400 mt-1">AI-generated audio summary of your career</p>
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="text-center py-4 text-gray-500 text-sm">
+                <div className="text-center py-4 text-gray-400 text-sm">
                   <p>Podcast not included in this generation.</p>
-                  <p className="text-xs mt-1">Regenerate with podcast option enabled.</p>
+                  <p className="text-xs mt-1 text-gray-500">Regenerate with podcast option enabled.</p>
                 </div>
               )}
             </div>
 
             {/* Share Options */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Share Your CV</h3>
+            <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-100">Share Your CV</h3>
               <div className="space-y-3">
                 <button 
                   onClick={() => {
@@ -765,7 +768,7 @@ export const ResultsPage = () => {
                       toast.success('Link copied to clipboard!');
                     }
                   }}
-                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  className="w-full px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
                 >
                   Copy Shareable Link
                 </button>
@@ -777,7 +780,7 @@ export const ResultsPage = () => {
                       window.open(qrUrl, '_blank');
                     }
                   }}
-                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  className="w-full px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
                 >
                   Generate QR Code
                 </button>
@@ -787,7 +790,7 @@ export const ResultsPage = () => {
             {/* Create Another */}
             <button
               onClick={() => navigate('/')}
-              className="w-full px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition"
+              className="w-full px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition"
             >
               Create Another CV
             </button>

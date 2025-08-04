@@ -4,9 +4,10 @@ import { FileUpload } from '../components/FileUpload';
 import { URLInput } from '../components/URLInput';
 import { SignInDialog } from '../components/SignInDialog';
 import { UserMenu } from '../components/UserMenu';
+import { Logo } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadCV, createJob } from '../services/cvService';
-import { FileText, Globe, Sparkles } from 'lucide-react';
+import { FileText, Globe, Sparkles, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const HomePage = () => {
@@ -101,18 +102,22 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Sparkles className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">GetMyCV.ai</h1>
-            </div>
-            <nav className="flex items-center space-x-6">
-              <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
+      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Logo size="small" />
+            
+            {/* Mobile menu button */}
+            <button className="md:hidden p-2 rounded-lg hover:bg-gray-700">
+              <Menu className="w-6 h-6 text-gray-300" />
+            </button>
+            
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="/" className="text-cyan-400 font-medium">Home</a>
+              <a href="/features" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">Features</a>
+              <a href="/about" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">About</a>
               {user ? (
                 <UserMenu />
               ) : (
@@ -125,15 +130,9 @@ export const HomePage = () => {
                       toast.error('Failed to sign in');
                     }
                   }}
-                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors font-medium shadow-sm"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Sign in with Google
+                  Sign In
                 </button>
               )}
             </nav>
@@ -143,27 +142,64 @@ export const HomePage = () => {
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6">
-              Transform Your CV in One Click
-            </h2>
-            <p className="text-xl text-gray-600 mb-12">
-              AI-Powered Professional CV Creator with Podcast Generation
+        <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob"></div>
+            <div className="absolute top-40 right-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          </div>
+          
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-100 mb-6 leading-tight">
+              From Paper to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Powerful</span>
+            </h1>
+            <p className="text-3xl md:text-4xl font-light text-gray-300 mb-8">
+              Your CV, Reinvented
             </p>
+            
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+              Transform your traditional CV into an interactive masterpiece with AI-powered features, stunning templates, and one-click magic
+            </p>
+            
+            <div className="flex justify-center mb-12">
+              <button 
+                onClick={() => document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+              >
+                Get Started Free
+              </button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap justify-center gap-8 mb-16">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-400">10,000+</div>
+                <div className="text-sm text-gray-400">CVs Transformed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-400">4.9/5</div>
+                <div className="text-sm text-gray-400">User Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-400">30 sec</div>
+                <div className="text-sm text-gray-400">Average Time</div>
+              </div>
+            </div>
 
             {/* Upload Options */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-100 mb-6">Start Your Transformation</h2>
               <div className="flex justify-center mb-8">
                 <div className="inline-flex items-center gap-6">
-                  <label className="text-sm font-medium text-gray-700">Upload Method:</label>
-                  <div className="inline-flex rounded-lg bg-gray-100 p-1">
+                  <label className="text-sm font-medium text-gray-300">Upload Method:</label>
+                  <div className="inline-flex rounded-lg bg-gray-700 p-1">
                     <div
                       onClick={() => setUploadMode('file')}
                       className={`px-4 py-2 rounded-md cursor-pointer transition ${
                         uploadMode === 'file'
-                          ? 'bg-white text-blue-600 shadow-sm font-medium'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? 'bg-gray-900 text-cyan-400 shadow-sm font-medium'
+                          : 'text-gray-400 hover:text-gray-200'
                       }`}
                     >
                       <FileText className="inline-block w-4 h-4 mr-2" />
@@ -173,8 +209,8 @@ export const HomePage = () => {
                       onClick={() => setUploadMode('url')}
                       className={`px-4 py-2 rounded-md cursor-pointer transition ${
                         uploadMode === 'url'
-                          ? 'bg-white text-blue-600 shadow-sm font-medium'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? 'bg-gray-900 text-cyan-400 shadow-sm font-medium'
+                          : 'text-gray-400 hover:text-gray-200'
                       }`}
                     >
                       <Globe className="inline-block w-4 h-4 mr-2" />
@@ -198,7 +234,7 @@ export const HomePage = () => {
 
               {/* User Instructions Input */}
               <div className="mt-6">
-                <label htmlFor="userInstructions" className="block text-left text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="userInstructions" className="block text-left text-sm font-medium text-gray-300 mb-2">
                   Special Instructions (Optional)
                 </label>
                 <div className="relative">
@@ -211,7 +247,7 @@ export const HomePage = () => {
                       }
                     }}
                     placeholder="E.g., 'Focus on my leadership experience', 'Highlight Python skills', 'Make it suitable for tech startups', 'Emphasize remote work experience'..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none placeholder-gray-400"
                     rows={3}
                     maxLength={500}
                   />
@@ -219,7 +255,7 @@ export const HomePage = () => {
                     {userInstructions.length}/500
                   </div>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-400">
                   Provide specific instructions to customize how AI analyzes and enhances your CV
                 </p>
               </div>
@@ -247,35 +283,118 @@ export const HomePage = () => {
               )}
             </div>
 
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-16">
-              <div className="text-center">
-                <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-4xl font-bold text-center text-gray-100 mb-4">
+              Why Choose CVisionery?
+            </h2>
+            <p className="text-xl text-gray-400 text-center mb-16 max-w-3xl mx-auto">
+              We combine cutting-edge AI technology with beautiful design to create CVs that get noticed
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all">
+                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg p-4 w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl">🤖</span>
                 </div>
-                <h3 className="font-semibold mb-2">AI Analysis</h3>
-                <p className="text-gray-600 text-sm">Smart parsing with Claude AI</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-100">AI-Powered Analysis</h3>
+                <p className="text-gray-400">Claude AI intelligently parses and enhances your CV content for maximum impact</p>
               </div>
-              <div className="text-center">
-                <div className="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-4 w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl">🎨</span>
                 </div>
-                <h3 className="font-semibold mb-2">Pro Templates</h3>
-                <p className="text-gray-600 text-sm">3 professional designs</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-100">Stunning Templates</h3>
+                <p className="text-gray-400">Professional designs that make your experience shine through</p>
               </div>
-              <div className="text-center">
-                <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all">
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg p-4 w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl">✨</span>
                 </div>
-                <h3 className="font-semibold mb-2">Interactive Features</h3>
-                <p className="text-gray-600 text-sm">QR codes, timelines, charts & more</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-100">Interactive Elements</h3>
+                <p className="text-gray-400">QR codes, timelines, charts, and more to make your CV memorable</p>
               </div>
-              <div className="text-center">
-                <div className="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all">
+                <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-4 w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl">📄</span>
                 </div>
-                <h3 className="font-semibold mb-2">Multi-format</h3>
-                <p className="text-gray-600 text-sm">PDF, DOCX, HTML export</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-100">Multiple Formats</h3>
+                <p className="text-gray-400">Export to PDF, DOCX, or share online with a single click</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How it Works Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-4xl font-bold text-center text-gray-100 mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-400 text-center mb-16 max-w-3xl mx-auto">
+              Transform your CV in three simple steps
+            </p>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="mb-6">
+                  <img 
+                    src="/images/upload-cv-illustration.svg" 
+                    alt="Upload Your CV" 
+                    className="w-full h-48 object-contain mx-auto"
+                  />
+                </div>
+                <div className="bg-cyan-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-gray-900 font-bold text-lg">1</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-100">Upload Your CV</h3>
+                <p className="text-gray-400">
+                  Simply upload your existing CV or paste a URL. We support PDF, DOCX, and online profiles.
+                </p>
+              </div>
+              
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="mb-6">
+                  <img 
+                    src="/images/ai-enhancement-illustration.svg" 
+                    alt="AI Enhancement" 
+                    className="w-full h-48 object-contain mx-auto"
+                  />
+                </div>
+                <div className="bg-cyan-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-gray-900 font-bold text-lg">2</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-100">AI Enhancement</h3>
+                <p className="text-gray-400">
+                  Our AI analyzes and enhances your content, optimizing for ATS and adding interactive features.
+                </p>
+              </div>
+              
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="mb-6">
+                  <img 
+                    src="/images/download-share-illustration.svg" 
+                    alt="Download & Share" 
+                    className="w-full h-48 object-contain mx-auto"
+                  />
+                </div>
+                <div className="bg-cyan-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-gray-900 font-bold text-lg">3</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-100">Download & Share</h3>
+                <p className="text-gray-400">
+                  Export your enhanced CV as PDF, DOCX, or share online with a unique link.
+                </p>
               </div>
             </div>
           </div>
@@ -283,10 +402,10 @@ export const HomePage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t">
+      <footer className="bg-gray-800 border-t border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2025 GetMyCV.ai. All rights reserved.</p>
+          <div className="text-center text-gray-400">
+            <p>&copy; 2025 CVisionery. All rights reserved.</p>
           </div>
         </div>
       </footer>

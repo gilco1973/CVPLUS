@@ -86,9 +86,9 @@ export const ProcessingPage = () => {
       case 'completed':
         return <CheckCircle className="w-6 h-6 text-green-500" />;
       case 'active':
-        return <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />;
+        return <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />;
       default:
-        return <Circle className="w-6 h-6 text-gray-300" />;
+        return <Circle className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -98,20 +98,20 @@ export const ProcessingPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-8">Processing Your CV</h2>
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
+          <h2 className="text-2xl font-bold text-center mb-8 text-gray-100">Processing Your CV</h2>
 
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
               <div 
-                className="bg-blue-600 h-full transition-all duration-500 ease-out"
+                className="bg-cyan-500 h-full transition-all duration-500 ease-out"
                 style={{ width: `${getProgressPercentage()}%` }}
               />
             </div>
-            <p className="text-center text-sm text-gray-500 mt-2">
+            <p className="text-center text-sm text-gray-400 mt-2">
               {Math.round(getProgressPercentage())}% Complete
             </p>
           </div>
@@ -123,14 +123,14 @@ export const ProcessingPage = () => {
                 {getStepIcon(step.status)}
                 <div className="flex-1">
                   <p className={`font-medium ${
-                    step.status === 'completed' ? 'text-gray-900' : 
-                    step.status === 'active' ? 'text-blue-600' : 
-                    'text-gray-400'
+                    step.status === 'completed' ? 'text-gray-100' : 
+                    step.status === 'active' ? 'text-cyan-400' : 
+                    'text-gray-500'
                   }`}>
                     {step.label}
                   </p>
                   {step.status === 'active' && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                       {step.id === 'analyze' && 'Extracting information with AI...'}
                       {step.id === 'enhance' && 'Applying professional templates...'}
                       {step.id === 'podcast' && 'Generating audio summary...'}
@@ -143,11 +143,11 @@ export const ProcessingPage = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="mt-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
               <button
                 onClick={() => navigate('/')}
-                className="mt-2 text-red-600 hover:text-red-700 text-sm font-medium"
+                className="mt-2 text-red-500 hover:text-red-400 text-sm font-medium"
               >
                 Try again →
               </button>
@@ -157,7 +157,7 @@ export const ProcessingPage = () => {
           {/* Status Message */}
           {job?.status === 'completed' && (
             <div className="mt-6 text-center">
-              <p className="text-green-600 font-medium">All done! Redirecting to results...</p>
+              <p className="text-green-400 font-medium">All done! Redirecting to results...</p>
             </div>
           )}
         </div>

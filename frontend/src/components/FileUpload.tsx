@@ -54,10 +54,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading 
         {...getRootProps()}
         className={cn(
           "relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all",
-          isDragActive && !isDragReject && "border-blue-500 bg-blue-50",
-          isDragReject && "border-red-500 bg-red-50",
+          isDragActive && !isDragReject && "border-cyan-500 bg-cyan-900/20",
+          isDragReject && "border-red-500 bg-red-900/20",
           isLoading && "opacity-50 cursor-not-allowed",
-          !isDragActive && !isDragReject && !isLoading && "border-gray-300 hover:border-gray-400"
+          !isDragActive && !isDragReject && !isLoading && "border-gray-600 hover:border-gray-500 bg-gray-800/50"
         )}
       >
         <input {...getInputProps()} />
@@ -66,21 +66,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading 
           {isDragReject ? (
             <>
               <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-              <p className="text-lg font-medium text-red-700">Invalid file type</p>
-              <p className="text-sm text-red-600 mt-2">
+              <p className="text-lg font-medium text-red-400">Invalid file type</p>
+              <p className="text-sm text-red-500 mt-2">
                 Please upload a PDF, DOCX, DOC, or CSV file
               </p>
             </>
           ) : (
             <>
-              <Upload className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium text-gray-700">
+              <Upload className="w-12 h-12 text-gray-500 mb-4" />
+              <p className="text-lg font-medium text-gray-200">
                 {isDragActive ? "Drop your CV here" : "Drag & Drop your CV here"}
               </p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-400 mt-2">
                 or click to browse
               </p>
-              <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">
+              <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
                 <FileText className="w-4 h-4" />
                 <span>PDF, DOCX, DOC, CSV (Max 10MB)</span>
               </div>
@@ -89,19 +89,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading 
         </div>
 
         {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl">
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center rounded-xl">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-sm text-gray-600">Uploading...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500"></div>
+              <p className="mt-2 text-sm text-gray-300">Uploading...</p>
             </div>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mt-4 p-3 bg-red-900/20 border border-red-800 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
     </div>

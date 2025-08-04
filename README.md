@@ -1,6 +1,6 @@
-# GetMyCV.ai - AI-Powered CV Creator
+# CVisionery - From Paper to Powerful: Your CV, Reinvented
 
-Transform your traditional CV into a professional, AI-enhanced resume with just one click!
+Transform your traditional CV into an interactive, AI-enhanced professional profile with cutting-edge features!
 
 ## 🚀 Features
 
@@ -196,4 +196,4 @@ For issues or questions, please create an issue in the GitHub repository.
 
 ---
 
-Built with ❤️ by the GetMyCV.ai team
+Built with ❤️ by the CVisionery team

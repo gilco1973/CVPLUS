@@ -20,9 +20,9 @@ export const UserMenu: React.FC = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition"
+        className="flex items-center space-x-2 text-gray-300 hover:text-cyan-400 transition font-medium"
       >
-        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+        <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
           {user.photoURL ? (
             <img src={user.photoURL} alt={displayName} className="w-8 h-8 rounded-full" />
           ) : (
@@ -38,11 +38,11 @@ export const UserMenu: React.FC = () => {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-20">
-            <div className="px-4 py-2 border-b">
-              <p className="text-sm font-medium text-gray-900">{displayName}</p>
+          <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg py-1 z-20 border border-gray-700">
+            <div className="px-4 py-2 border-b border-gray-700">
+              <p className="text-sm font-medium text-gray-100">{displayName}</p>
               {user.email && (
-                <p className="text-xs text-gray-500">{user.email}</p>
+                <p className="text-xs text-gray-400">{user.email}</p>
               )}
             </div>
             <button
@@ -50,7 +50,7 @@ export const UserMenu: React.FC = () => {
                 await signOut();
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
             >
               <LogOut className="w-4 h-4" />
               Sign Out

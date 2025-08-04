@@ -20,14 +20,14 @@ export const PIIWarning: React.FC<PIIWarningProps> = ({
   if (!hasPII || detectedTypes.length === 0) return null;
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+    <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 mb-6">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h4 className="font-semibold text-amber-900 mb-1">
+          <h4 className="font-semibold text-amber-300 mb-1">
             Sensitive Information Detected
           </h4>
-          <p className="text-sm text-amber-800 mb-3">
+          <p className="text-sm text-amber-400 mb-3">
             We've detected the following sensitive information in your CV:
           </p>
           
@@ -36,7 +36,7 @@ export const PIIWarning: React.FC<PIIWarningProps> = ({
               {detectedTypes.map((type, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/30 text-amber-400 border border-amber-700/50"
                 >
                   {type}
                 </span>
@@ -46,10 +46,10 @@ export const PIIWarning: React.FC<PIIWarningProps> = ({
 
           {recommendations.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-amber-900 mb-1">
+              <p className="text-sm font-medium text-amber-300 mb-1">
                 Privacy Recommendations:
               </p>
-              <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
+              <ul className="list-disc list-inside text-sm text-amber-400 space-y-1">
                 {recommendations.map((rec, index) => (
                   <li key={index}>{rec}</li>
                 ))}

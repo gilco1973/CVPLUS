@@ -4,12 +4,22 @@ import { HomePage } from './pages/HomePage';
 import { ProcessingPage } from './pages/ProcessingPage';
 import { ResultsPage } from './pages/ResultsPage';
 import { TemplatesPage } from './pages/TemplatesPage';
+import { CVFeaturesPage } from './pages/CVFeaturesPage';
+import { AboutPage } from './pages/AboutPage';
 import { AuthProvider } from './contexts/AuthContext';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+  },
+  {
+    path: '/features',
+    element: <CVFeaturesPage />,
+  },
+  {
+    path: '/about',
+    element: <AboutPage />,
   },
   {
     path: '/process/:jobId',

@@ -42,7 +42,7 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
       <div className="space-y-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Globe className="h-5 w-5 text-gray-400" />
+            <Globe className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
@@ -50,17 +50,17 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/my-cv"
             className={cn(
-              "w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 transition-all",
+              "w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-gray-800 text-gray-100 placeholder-gray-500",
               error 
-                ? "border-red-300 focus:ring-red-500" 
-                : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                ? "border-red-500 focus:ring-red-500" 
+                : "border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"
             )}
             disabled={isLoading}
           />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-red-600">
+          <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <p className="text-sm">{error}</p>
           </div>
@@ -72,8 +72,8 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
           className={cn(
             "w-full py-4 px-6 rounded-lg font-medium flex items-center justify-center gap-2 transition-all",
             isLoading
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+              : "bg-cyan-600 text-white hover:bg-cyan-700"
           )}
         >
           {isLoading ? (
@@ -90,7 +90,7 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
         </button>
 
         <div className="text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-400">
             Enter the URL of your online CV or LinkedIn profile
           </p>
         </div>

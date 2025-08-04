@@ -25,25 +25,25 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Sign in to Continue</h2>
+          <h2 className="text-2xl font-semibold text-gray-100">Sign in to Continue</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-gray-200"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
         
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-300 mb-6">
           To upload and process your CV, please sign in with your Google account.
         </p>
 
         <button
           onClick={handleGoogleSignIn}
-          className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 flex items-center justify-center gap-3 hover:bg-gray-600 transition text-gray-100"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -54,7 +54,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
           Sign in with Google
         </button>
 
-        <p className="text-xs text-gray-500 mt-4 text-center">
+        <p className="text-xs text-gray-400 mt-4 text-center">
           By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

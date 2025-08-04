@@ -52,7 +52,7 @@ export class CVGenerator {
 
     // QR Code
     if (features.includes('embed-qr-code')) {
-      const cvUrl = `https://getmycv-ai.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
+      const cvUrl = `https://cvisionary.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
       qrCode = `
         <div class="qr-code">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(cvUrl)}" 
@@ -1171,6 +1171,10 @@ export class CVGenerator {
         ${interactiveFeatures.calendar || ''}
         
         ${interactiveFeatures.contactForm || ''}
+        
+        <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
+            <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+        </footer>
     </div>
 </body>
 </html>`;
@@ -1449,6 +1453,10 @@ export class CVGenerator {
             </div>
         </section>
         ` : ''}
+        
+        <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
+            <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+        </footer>
     </div>
 </body>
 </html>`;
@@ -1836,6 +1844,10 @@ export class CVGenerator {
                 </div>
             </section>
             ` : ''}
+            
+            <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
+                <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+            </footer>
         </div>
     </div>
 </body>

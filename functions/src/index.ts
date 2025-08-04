@@ -13,3 +13,22 @@ export { generateCV } from './functions/generateCV';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
 export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';
+
+// Export enhanced CV features functions
+export { 
+  createPublicProfile,
+  getPublicProfile,
+  updatePublicProfileSettings,
+  submitContactForm,
+  trackQRScan
+} from './functions/publicProfile';
+
+// Export RAG chat functions
+export {
+  initializeRAG,
+  startChatSession,
+  sendChatMessage,
+  endChatSession,
+  updateRAGEmbeddings,
+  getChatAnalytics
+} from './functions/ragChat';
