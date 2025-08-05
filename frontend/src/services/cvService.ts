@@ -570,3 +570,120 @@ export const generateLanguageCertificate = async (jobId: string, languageId: str
   const result = await certFunction({ jobId, languageId });
   return result.data;
 };
+
+// Testimonials functions
+export const generateTestimonialsCarousel = async (jobId: string) => {
+  const generateFunction = httpsCallable(functions, 'generateTestimonialsCarousel');
+  const result = await generateFunction({ jobId });
+  return result.data;
+};
+
+export const addTestimonial = async (jobId: string, testimonial: any) => {
+  const addFunction = httpsCallable(functions, 'addTestimonial');
+  const result = await addFunction({ jobId, testimonial });
+  return result.data;
+};
+
+export const updateTestimonial = async (jobId: string, testimonialId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updateTestimonial');
+  const result = await updateFunction({ jobId, testimonialId, updates });
+  return result.data;
+};
+
+export const removeTestimonial = async (jobId: string, testimonialId: string) => {
+  const removeFunction = httpsCallable(functions, 'removeTestimonial');
+  const result = await removeFunction({ jobId, testimonialId });
+  return result.data;
+};
+
+export const updateCarouselLayout = async (jobId: string, layoutOptions: any) => {
+  const updateFunction = httpsCallable(functions, 'updateCarouselLayout');
+  const result = await updateFunction({ jobId, layoutOptions });
+  return result.data;
+};
+
+// Enhanced QR Code functions
+export const generateQRCode = async (jobId: string, config: any) => {
+  const generateFunction = httpsCallable(functions, 'generateQRCode');
+  const result = await generateFunction({ jobId, config });
+  return result.data;
+};
+
+export const trackQRCodeScan = async (qrCodeId: string, scanData: any) => {
+  const trackFunction = httpsCallable(functions, 'trackQRCodeScan');
+  const result = await trackFunction({ qrCodeId, scanData });
+  return result.data;
+};
+
+export const getQRCodes = async (jobId: string) => {
+  const getFunction = httpsCallable(functions, 'getQRCodes');
+  const result = await getFunction({ jobId });
+  return result.data;
+};
+
+export const updateQRCode = async (jobId: string, qrCodeId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updateQRCode');
+  const result = await updateFunction({ jobId, qrCodeId, updates });
+  return result.data;
+};
+
+export const deleteQRCode = async (jobId: string, qrCodeId: string) => {
+  const deleteFunction = httpsCallable(functions, 'deleteQRCode');
+  const result = await deleteFunction({ jobId, qrCodeId });
+  return result.data;
+};
+
+export const getQRAnalytics = async (jobId: string, qrCodeId?: string) => {
+  const analyticsFunction = httpsCallable(functions, 'getQRAnalytics');
+  const result = await analyticsFunction({ jobId, qrCodeId });
+  return result.data;
+};
+
+export const getQRTemplates = async () => {
+  const templatesFunction = httpsCallable(functions, 'getQRTemplates');
+  const result = await templatesFunction({});
+  return result.data;
+};
+
+// Social Media Integration functions
+export const generateSocialMediaIntegration = async (jobId: string) => {
+  const generateFunction = httpsCallable(functions, 'generateSocialMediaIntegration');
+  const result = await generateFunction({ jobId });
+  return result.data;
+};
+
+export const addSocialProfile = async (jobId: string, profile: any) => {
+  const addFunction = httpsCallable(functions, 'addSocialProfile');
+  const result = await addFunction({ jobId, profile });
+  return result.data;
+};
+
+export const updateSocialProfile = async (jobId: string, profileId: string, updates: any) => {
+  const updateFunction = httpsCallable(functions, 'updateSocialProfile');
+  const result = await updateFunction({ jobId, profileId, updates });
+  return result.data;
+};
+
+export const removeSocialProfile = async (jobId: string, profileId: string) => {
+  const removeFunction = httpsCallable(functions, 'removeSocialProfile');
+  const result = await removeFunction({ jobId, profileId });
+  return result.data;
+};
+
+export const trackSocialClick = async (jobId: string, platform: string, metadata?: any) => {
+  const trackFunction = httpsCallable(functions, 'trackSocialClick');
+  const result = await trackFunction({ jobId, platform, metadata });
+  return result.data;
+};
+
+export const getSocialAnalytics = async (jobId: string) => {
+  const analyticsFunction = httpsCallable(functions, 'getSocialAnalytics');
+  const result = await analyticsFunction({ jobId });
+  return result.data;
+};
+
+export const updateSocialDisplaySettings = async (jobId: string, displaySettings: any) => {
+  const updateFunction = httpsCallable(functions, 'updateSocialDisplaySettings');
+  const result = await updateFunction({ jobId, displaySettings });
+  return result.data;
+};

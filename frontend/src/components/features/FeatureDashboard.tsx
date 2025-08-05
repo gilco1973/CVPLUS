@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   Brain, MessageSquare, BarChart3, Video, Mic, 
   FileSearch, Users, ChevronRight, Loader2, CheckCircle, 
-  AlertCircle, Clock, Sparkles, Calendar, Grid3x3, Languages
+  AlertCircle, Clock, Sparkles, Calendar, Grid3x3, Languages, Quote
 } from 'lucide-react';
 import { ATSScore } from './ATSScore';
 import { PersonalityInsights } from './PersonalityInsights';
@@ -15,6 +15,7 @@ import { InteractiveTimeline } from './InteractiveTimeline';
 import { CalendarIntegration } from './CalendarIntegration';
 import { PortfolioGallery } from './PortfolioGallery';
 import { LanguageProficiency } from './LanguageProficiency';
+import { TestimonialsCarousel } from './TestimonialsCarousel';
 import type { Job } from '../../services/cvService';
 import * as cvService from '../../services/cvService';
 import toast from 'react-hot-toast';
@@ -24,7 +25,7 @@ interface FeatureDashboardProps {
   onJobUpdate?: (job: Job) => void;
 }
 
-type FeatureTab = 'ats' | 'personality' | 'skills' | 'public' | 'chat' | 'media' | 'timeline' | 'calendar' | 'portfolio' | 'languages';
+type FeatureTab = 'ats' | 'personality' | 'skills' | 'public' | 'chat' | 'media' | 'timeline' | 'calendar' | 'portfolio' | 'languages' | 'testimonials';
 
 interface FeatureStatus {
   enabled: boolean;
@@ -107,6 +108,13 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
       icon: <Languages className="w-5 h-5" />,
       color: 'from-emerald-500 to-teal-500',
       description: 'Visualize language proficiencies'
+    },
+    {
+      id: 'testimonials' as FeatureTab,
+      name: 'Testimonials',
+      icon: <Quote className="w-5 h-5" />,
+      color: 'from-rose-500 to-pink-500',
+      description: 'Professional recommendations'
     }
   ];
 
@@ -257,6 +265,19 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
     }
   };
 
+  const handleGenerateTestimonials = async () => {
+    setLoading({ ...loading, testimonials: true });
+    try {
+      const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+      setFeatureData({ ...featureData, testimonials: result.carousel });
+      toast.success('Testimonials carousel generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate testimonials carousel');
+    } finally {
+      setLoading({ ...loading, testimonials: false });
+    }
+  };
+
   // Video generation is handled inline in the component
 
   // Podcast generation is handled inline in the component
@@ -282,7 +303,8 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
         timeline: handleGenerateTimeline,
         calendar: handleGenerateCalendarEvents,
         portfolio: handleGeneratePortfolio,
-        languages: handleGenerateLanguages
+        languages: handleGenerateLanguages,
+        testimonials: handleGenerateTestimonials
       };
 
       return (
@@ -561,6 +583,47 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               const result = await cvService.addLanguageProficiency(job.id, language) as any;
               setFeatureData({ ...featureData, languages: result.visualization });
               toast.success('Language added');
+            }}
+          />
+        );
+
+      case 'testimonials':
+        const testimonialsData = featureData.testimonials || status.data;
+        return (
+          <TestimonialsCarousel
+            carousel={testimonialsData}
+            onGenerateCarousel={async () => {
+              const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+              setFeatureData({ ...featureData, testimonials: result.carousel });
+              return result.carousel;
+            }}
+            onAddTestimonial={async (testimonial) => {
+              await cvService.addTestimonial(job.id, testimonial);
+              // Refresh the carousel
+              const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+              setFeatureData({ ...featureData, testimonials: result.carousel });
+              toast.success('Testimonial added');
+            }}
+            onUpdateTestimonial={async (testimonialId, updates) => {
+              await cvService.updateTestimonial(job.id, testimonialId, updates);
+              // Refresh the carousel
+              const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+              setFeatureData({ ...featureData, testimonials: result.carousel });
+              toast.success('Testimonial updated');
+            }}
+            onRemoveTestimonial={async (testimonialId) => {
+              await cvService.removeTestimonial(job.id, testimonialId);
+              // Refresh the carousel
+              const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+              setFeatureData({ ...featureData, testimonials: result.carousel });
+              toast.success('Testimonial removed');
+            }}
+            onUpdateLayout={async (layoutOptions) => {
+              await cvService.updateCarouselLayout(job.id, layoutOptions);
+              // Refresh the carousel
+              const result = await cvService.generateTestimonialsCarousel(job.id) as any;
+              setFeatureData({ ...featureData, testimonials: result.carousel });
+              toast.success('Layout updated');
             }}
           />
         );

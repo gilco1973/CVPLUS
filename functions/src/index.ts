@@ -110,3 +110,34 @@ export {
   removeLanguageProficiency,
   generateLanguageCertificate
 } from './functions/languageProficiency';
+
+// Export testimonials functions
+export {
+  generateTestimonialsCarousel,
+  addTestimonial,
+  updateTestimonial,
+  removeTestimonial,
+  updateCarouselLayout
+} from './functions/testimonials';
+
+// Export enhanced QR code functions
+export {
+  generateQRCode,
+  trackQRCodeScan,
+  getQRCodes,
+  updateQRCode,
+  deleteQRCode,
+  getQRAnalytics,
+  getQRTemplates
+} from './functions/enhancedQR';
+
+// Export social media integration functions
+export {
+  generateSocialMediaIntegration,
+  addSocialProfile,
+  updateSocialProfile,
+  removeSocialProfile,
+  trackSocialClick,
+  getSocialAnalytics,
+  updateSocialDisplaySettings
+} from './functions/socialMedia';
