@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
-  Globe, Languages, Award, Plus, Edit2, Trash2, 
-  Download, BarChart3, PieChart, Radar, Grid3x3,
+  Globe, Languages, Award, Plus, 
+  BarChart3, PieChart, Grid3x3,
   CheckCircle, AlertCircle, Loader2, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,24 +48,17 @@ interface LanguageVisualization {
 interface LanguageProficiencyProps {
   visualization?: LanguageVisualization;
   onGenerateVisualization: () => Promise<LanguageVisualization>;
-  onUpdateLanguage: (languageId: string, updates: Partial<LanguageProficiency>) => Promise<void>;
   onAddLanguage: (language: Partial<LanguageProficiency>) => Promise<void>;
-  onRemoveLanguage: (languageId: string) => Promise<void>;
-  onGenerateCertificate?: (languageId: string) => Promise<any>;
 }
 
 export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
   visualization,
   onGenerateVisualization,
-  onUpdateLanguage,
-  onAddLanguage,
-  onRemoveLanguage,
-  onGenerateCertificate
+  onAddLanguage
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedView, setSelectedView] = useState<'circular' | 'bar' | 'radar' | 'flags' | 'matrix'>('circular');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingLanguage, setEditingLanguage] = useState<string | null>(null);
 
   const levelColors = {
     'Native': '#10B981',
@@ -199,7 +192,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
             className={`bg-gray-800 rounded-lg p-4 border-2 transition-all cursor-pointer hover:shadow-lg ${
               lang.certified ? 'border-green-500' : 'border-gray-700'
             }`}
-            onClick={() => setEditingLanguage(lang.name)}
+            onClick={() => {}}
           >
             <div className="text-center">
               <div className="text-4xl mb-2">{lang.flag}</div>

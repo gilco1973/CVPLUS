@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Calendar, Download, Link, Check, Loader2, AlertCircle, Clock, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Download, Check, Loader2, Clock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -120,9 +120,10 @@ export const CalendarIntegration = ({
       
       setSyncInstructions(result.instructions);
       
-      if (result.syncUrl || result.downloadUrl) {
-        // Open URL in new tab
-        window.open(result.syncUrl || result.downloadUrl, '_blank');
+      if ('syncUrl' in result && result.syncUrl) {
+        window.open(result.syncUrl, '_blank');
+      } else if ('downloadUrl' in result && result.downloadUrl) {
+        window.open(result.downloadUrl, '_blank');
       }
       
       toast.success(`${provider === 'ical' ? 'Calendar file ready for download' : `Syncing with ${provider}`}`);

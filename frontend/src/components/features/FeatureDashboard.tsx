@@ -531,21 +531,7 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               setFeatureData({ ...featureData, portfolio: result.gallery });
               return result.gallery;
             }}
-            onUpdateItem={async (itemId, updates) => {
-              await cvService.updatePortfolioItem(job.id, itemId, updates);
-              toast.success('Portfolio item updated');
-            }}
-            onAddItem={async (item) => {
-              const result = await cvService.addPortfolioItem(job.id, item) as any;
-              // Update local state with new item
-              const updatedGallery = {
-                ...portfolioData,
-                items: [...portfolioData.items, result.item]
-              };
-              setFeatureData({ ...featureData, portfolio: updatedGallery });
-              return result.item;
-            }}
-            onDeleteItem={async (itemId) => {
+            onDeleteItem={async (itemId: string) => {
               await cvService.deletePortfolioItem(job.id, itemId);
               // Update local state
               const updatedGallery = {
@@ -554,11 +540,7 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               };
               setFeatureData({ ...featureData, portfolio: updatedGallery });
             }}
-            onUploadMedia={async (itemId, file) => {
-              const result = await cvService.uploadPortfolioMedia(job.id, itemId, file) as any;
-              return result;
-            }}
-            onGenerateShareableLink={async (customDomain) => {
+            onGenerateShareableLink={async (customDomain?: string) => {
               const result = await cvService.generateShareablePortfolio(job.id, customDomain) as any;
               return result;
             }}
@@ -575,26 +557,10 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               setFeatureData({ ...featureData, languages: result.visualization });
               return result.visualization;
             }}
-            onUpdateLanguage={async (languageId, updates) => {
-              await cvService.updateLanguageProficiency(job.id, languageId, updates);
-              // Refresh the visualization
-              const result = await cvService.generateLanguageVisualization(job.id) as any;
-              setFeatureData({ ...featureData, languages: result.visualization });
-              toast.success('Language updated');
-            }}
             onAddLanguage={async (language) => {
               const result = await cvService.addLanguageProficiency(job.id, language) as any;
               setFeatureData({ ...featureData, languages: result.visualization });
               toast.success('Language added');
-            }}
-            onRemoveLanguage={async (languageId) => {
-              const result = await cvService.removeLanguageProficiency(job.id, languageId) as any;
-              setFeatureData({ ...featureData, languages: result.visualization });
-              toast.success('Language removed');
-            }}
-            onGenerateCertificate={async (languageId) => {
-              const result = await cvService.generateLanguageCertificate(job.id, languageId) as any;
-              return result.certificate;
             }}
           />
         );

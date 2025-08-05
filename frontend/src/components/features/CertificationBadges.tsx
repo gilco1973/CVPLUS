@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { 
   Award, Shield, CheckCircle, Plus, ExternalLink, 
-  Calendar, Clock, Filter, Grid3x3, List, Loader2,
-  Share2, Download, AlertCircle, X, Edit2, Trash2
+  Calendar, Clock, Grid3x3, List, Loader2,
+  Share2, AlertCircle, X, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -76,7 +76,6 @@ interface CertificationBadgesProps {
 export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
   collection,
   onGenerateBadges,
-  onVerifyCertification,
   onUpdateDisplayOptions,
   onAddCertification,
   onRemoveCertification,
@@ -86,8 +85,6 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedBadge, setSelectedBadge] = useState<CertificationBadge | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [verifyingBadgeId, setVerifyingBadgeId] = useState<string | null>(null);
 
   const categoryColors = {
     technical: 'from-blue-500 to-cyan-500',
@@ -116,16 +113,6 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
     }
   };
 
-  const handleVerify = async (badgeId: string, verificationData: any) => {
-    try {
-      await onVerifyCertification(badgeId, verificationData);
-      toast.success('Certification verified!');
-      setShowVerifyModal(false);
-      setVerifyingBadgeId(null);
-    } catch (error) {
-      toast.error('Failed to verify certification');
-    }
-  };
 
   const getFilteredBadges = () => {
     if (!collection) return [];
@@ -570,15 +557,14 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                       <>
                         <AlertCircle className="w-5 h-5 text-yellow-400" />
                         <span className="text-yellow-400">Not Verified</span>
-                        <button
+                        {/* <button
                           onClick={() => {
-                            setVerifyingBadgeId(selectedBadge.id);
-                            setShowVerifyModal(true);
+                            // TODO: Implement verification modal
                           }}
                           className="text-cyan-400 hover:text-cyan-300 text-sm underline"
                         >
                           Verify Now
-                        </button>
+                        </button> */}
                       </>
                     )}
                   </div>

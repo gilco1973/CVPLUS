@@ -19,7 +19,6 @@ export const VideoIntroduction = ({
   duration,
   status = 'not-generated',
   script,
-  subtitles,
   onGenerateVideo,
   onRegenerateVideo
 }: VideoIntroductionProps) => {

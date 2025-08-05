@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
-  Grid3x3, List, Clock, Eye, Tag, Link, Upload, 
-  Plus, Edit2, Trash2, Download, Share2, Loader2,
-  Image, FileText, Video, ExternalLink, X, Check,
+  Grid3x3, List, Clock, Tag, 
+  Trash2, Share2, Loader2,
+  FileText, ExternalLink, X,
   Briefcase, Trophy, Award, BookOpen, Mic
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,10 +67,7 @@ interface PortfolioGalleryProps {
   shareableUrl?: string;
   embedCode?: string;
   onGenerateGallery: () => Promise<PortfolioGallery>;
-  onUpdateItem: (itemId: string, updates: Partial<PortfolioItem>) => Promise<void>;
-  onAddItem: (item: Omit<PortfolioItem, 'id'>) => Promise<PortfolioItem>;
   onDeleteItem: (itemId: string) => Promise<void>;
-  onUploadMedia: (itemId: string, file: File) => Promise<{ mediaUrl: string; thumbnailUrl: string }>;
   onGenerateShareableLink: (customDomain?: string) => Promise<{ url: string; embedCode: string }>;
 }
 
@@ -79,18 +76,13 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
   shareableUrl,
   embedCode,
   onGenerateGallery,
-  onUpdateItem,
-  onAddItem,
   onDeleteItem,
-  onUploadMedia,
   onGenerateShareableLink
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'timeline'>('grid');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   const typeIcons = {
@@ -121,16 +113,6 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
     }
   };
 
-  const handleFileUpload = async (itemId: string, file: File) => {
-    try {
-      const result = await onUploadMedia(itemId, file);
-      toast.success('Media uploaded successfully!');
-      return result;
-    } catch (error) {
-      toast.error('Failed to upload media');
-      throw error;
-    }
-  };
 
   const filteredItems = gallery?.items.filter(item => 
     selectedCategory === 'all' || item.category === selectedCategory
@@ -176,13 +158,13 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
         </div>
         
         <div className="flex gap-3">
-          <button
+          {/* <button
             onClick={() => setShowAddForm(true)}
             className="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Item
-          </button>
+          </button> */}
           
           <button
             onClick={() => setShowShareModal(true)}
@@ -651,13 +633,6 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button
-                  onClick={() => setIsEditMode(true)}
-                  className="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
                 
                 <button
                   onClick={async () => {
@@ -747,7 +722,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                   <p className="text-gray-400 mb-6">Generate a shareable link for your portfolio gallery</p>
                   <button
                     onClick={async () => {
-                      const result = await onGenerateShareableLink();
+                      await onGenerateShareableLink();
                       toast.success('Shareable link generated!');
                     }}
                     className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-lg hover:shadow-lg transition-all"
