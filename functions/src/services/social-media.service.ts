@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
-import { ParsedCV } from '../types';
+import { ParsedCV } from './cvParsing.service';
 
 interface SocialMediaProfile {
   platform: 'linkedin' | 'twitter' | 'github' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'behance' | 'dribbble' | 'medium' | 'custom';

@@ -1,4 +1,4 @@
-import { ParsedCV } from '../types';
+import { ParsedCV } from './cvParsing.service';
 import * as admin from 'firebase-admin';
 
 interface Testimonial {

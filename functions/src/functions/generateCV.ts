@@ -52,7 +52,7 @@ export const generateCV = onCall(
 
       // Generate CV HTML
       const generator = new CVGenerator();
-      const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features);
+      const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
       
       // Save generated files and get URLs
       const { pdfUrl, docxUrl, htmlUrl } = await generator.saveGeneratedFiles(
@@ -80,15 +80,15 @@ export const generateCV = onCall(
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-      // If podcast generation is requested, trigger it
+      // If podcast generation is requested, initialize it
       if (features?.includes('generate-podcast')) {
+        // Set initial podcast status
         await admin.firestore()
-          .collection('tasks')
-          .add({
-            type: 'generate-podcast',
-            jobId,
-            userId: request.auth.uid,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          .collection('jobs')
+          .doc(jobId)
+          .update({
+            podcastStatus: 'generating',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
           });
       }
 

@@ -942,6 +942,18 @@ export const ResultsPage = () => {
             {/* Download Options */}
             <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Download Your CV</h3>
+              
+              {/* PDF Limitations Warning */}
+              <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4 mb-4">
+                <h4 className="text-yellow-300 font-medium flex items-center gap-2">
+                  <span>⚠️</span> PDF Download Notice
+                </h4>
+                <p className="text-yellow-200 text-sm mt-1">
+                  PDF version contains static content only. Interactive features (podcast player, forms, timeline animations) 
+                  are converted to static elements. For full functionality, use the HTML version or share the public link.
+                </p>
+              </div>
+              
               <div className="space-y-3">
                 <button 
                   onClick={async () => {

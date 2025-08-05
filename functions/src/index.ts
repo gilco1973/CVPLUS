@@ -13,6 +13,7 @@ export { generateCV } from './functions/generateCV';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
 export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';
+export { podcastStatus } from './functions/podcastStatus';
 
 // Export video generation functions
 export { 

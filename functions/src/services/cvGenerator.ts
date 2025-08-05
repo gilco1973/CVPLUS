@@ -2,7 +2,7 @@ import * as admin from 'firebase-admin';
 import { ParsedCV } from './cvParser';
 
 export class CVGenerator {
-  async generateHTML(parsedCV: ParsedCV, template: string, features?: string[]): Promise<string> {
+  async generateHTML(parsedCV: ParsedCV, template: string, features?: string[], jobId?: string): Promise<string> {
     const templates: Record<string, (cv: ParsedCV, features?: string[]) => string> = {
       modern: this.modernTemplate.bind(this),
       classic: this.classicTemplate.bind(this),
@@ -10,7 +10,14 @@ export class CVGenerator {
     };
 
     const templateFn = templates[template] || templates.modern;
-    return templateFn(parsedCV, features);
+    let html = templateFn(parsedCV, features);
+    
+    // Replace jobId placeholder if podcast feature is enabled
+    if (features?.includes('generate-podcast') && jobId) {
+      html = html.replace('{{JOB_ID}}', jobId);
+    }
+    
+    return html;
   }
 
   private generateInteractiveFeatures(cv: ParsedCV, features?: string[]): {
@@ -100,10 +107,19 @@ export class CVGenerator {
           <div class="podcast-banner">
             <h3>🎙️ AI Career Podcast</h3>
             <p>Listen to an AI-generated summary of my career journey</p>
-            <div class="podcast-player">
-              <button class="play-button" onclick="alert('Podcast feature coming soon!')">
-                ▶️ Play Career Story (3 min)
-              </button>
+            <div class="podcast-player" id="podcastPlayer">
+              <div class="podcast-status" id="podcastStatus">
+                <div class="loading-spinner"></div>
+                <p>Generating your personalized career podcast...</p>
+                <small>This usually takes 2-3 minutes</small>
+              </div>
+              <audio id="careerPodcast" controls style="display: none; width: 100%; margin-top: 15px;">
+                Your browser does not support the audio element.
+              </audio>
+              <div class="podcast-transcript" id="podcastTranscript" style="display: none;">
+                <button class="transcript-toggle" onclick="toggleTranscript()">Show Transcript</button>
+                <div class="transcript-content" id="transcriptContent" style="display: none;"></div>
+              </div>
             </div>
           </div>
         </div>`;
@@ -129,19 +145,55 @@ export class CVGenerator {
         .podcast-player {
           margin-top: 15px;
         }
-        .play-button {
-          background: white;
-          color: #667eea;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 24px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s;
-          font-size: 14px;
+        .podcast-status {
+          text-align: center;
+          padding: 20px;
         }
-        .play-button:hover {
-          transform: scale(1.05);
+        .loading-spinner {
+          display: inline-block;
+          width: 24px;
+          height: 24px;
+          border: 3px solid rgba(255,255,255,0.3);
+          border-top: 3px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 10px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .podcast-status p {
+          margin: 10px 0 5px 0;
+          font-weight: 600;
+        }
+        .podcast-status small {
+          opacity: 0.8;
+          font-size: 12px;
+        }
+        .transcript-toggle {
+          background: rgba(255,255,255,0.2);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.3);
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          cursor: pointer;
+          margin-top: 10px;
+          transition: all 0.3s;
+        }
+        .transcript-toggle:hover {
+          background: rgba(255,255,255,0.3);
+        }
+        .transcript-content {
+          background: rgba(255,255,255,0.1);
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 10px;
+          font-size: 13px;
+          line-height: 1.6;
+          max-height: 200px;
+          overflow-y: auto;
         }
         @media print, screen {
           .podcast-section {
@@ -154,13 +206,18 @@ export class CVGenerator {
           .podcast-banner h3 {
             color: #667eea !important;
           }
-          .play-button {
+          .loading-spinner {
+            border-top-color: #667eea !important;
+            border-color: rgba(102, 126, 234, 0.3) !important;
+          }
+          .transcript-toggle {
             background: #667eea !important;
             color: white !important;
-            transform: none !important;
+            border-color: #667eea !important;
           }
-          .play-button:hover {
-            transform: none !important;
+          .transcript-content {
+            background: #f0f0f0 !important;
+            color: #333 !important;
           }
         }`;
     }
@@ -798,6 +855,140 @@ export class CVGenerator {
         }`;
     }
 
+    // Add JavaScript for podcast functionality
+    if (features.includes('generate-podcast')) {
+      additionalScripts += `
+        function toggleTranscript() {
+          const content = document.getElementById('transcriptContent');
+          const button = event.target;
+          if (content.style.display === 'none') {
+            content.style.display = 'block';
+            button.textContent = 'Hide Transcript';
+          } else {
+            content.style.display = 'none';
+            button.textContent = 'Show Transcript';
+          }
+        }
+        
+        function loadPodcast() {
+          // This will be called by the frontend when podcast is ready
+          // For now, check for podcast data in localStorage or make API call
+          const podcastData = localStorage.getItem('podcastData');
+          if (podcastData) {
+            const data = JSON.parse(podcastData);
+            const statusEl = document.getElementById('podcastStatus');
+            const audioEl = document.getElementById('careerPodcast');
+            const transcriptEl = document.getElementById('podcastTranscript');
+            const transcriptContent = document.getElementById('transcriptContent');
+            
+            if (data.audioUrl) {
+              statusEl.style.display = 'none';
+              audioEl.src = data.audioUrl;
+              audioEl.style.display = 'block';
+              
+              if (data.transcript) {
+                transcriptEl.style.display = 'block';
+                transcriptContent.textContent = data.transcript;
+              }
+            }
+          }
+        }
+        
+        // Check for podcast every 5 seconds for up to 5 minutes
+        let checkCount = 0;
+        const maxChecks = 60; // 5 minutes
+        
+        function extractJobIdFromCurrentPage() {
+          // Try multiple methods to get jobId
+          const urlParams = new URLSearchParams(window.location.search);
+          const jobId = urlParams.get('jobId') || 
+                       urlParams.get('id') || 
+                       localStorage.getItem('currentJobId') ||
+                       document.querySelector('meta[name="job-id"]')?.getAttribute('content');
+          return jobId;
+        }
+        
+        // Function to start podcast generation
+        async function startPodcastGeneration(jobId) {
+          try {
+            const functions = firebase.functions();
+            const generatePodcast = functions.httpsCallable('generatePodcast');
+            
+            console.log('Starting podcast generation for job:', jobId);
+            await generatePodcast({ jobId });
+          } catch (error) {
+            console.error('Failed to start podcast generation:', error);
+            const statusEl = document.getElementById('podcastStatus');
+            if (statusEl) {
+              statusEl.innerHTML = '<p>❌ Failed to start podcast generation</p><small>Please refresh the page or contact support</small>';
+            }
+          }
+        }
+        
+        const checkInterval = setInterval(async function() {
+          if (checkCount >= maxChecks) {
+            clearInterval(checkInterval);
+            const statusEl = document.getElementById('podcastStatus');
+            if (statusEl) {
+              statusEl.innerHTML = '<p>❌ Podcast generation timed out</p><small>Please refresh the page or contact support</small>';
+            }
+            return;
+          }
+          
+          const jobId = extractJobIdFromCurrentPage();
+          if (!jobId) {
+            console.log('No job ID found, cannot check podcast status');
+            checkCount++;
+            return;
+          }
+          
+          try {
+            // Import Firebase functions
+            if (typeof firebase !== 'undefined' && firebase.functions) {
+              const functions = firebase.functions();
+              const podcastStatus = functions.httpsCallable('podcastStatus');
+              
+              const result = await podcastStatus({ jobId });
+              const data = result.data;
+              
+              if (data.status === 'ready' && data.audioUrl) {
+                clearInterval(checkInterval);
+                const statusEl = document.getElementById('podcastStatus');
+                const audioEl = document.getElementById('careerPodcast');
+                const transcriptEl = document.getElementById('podcastTranscript');
+                const transcriptContent = document.getElementById('transcriptContent');
+                
+                statusEl.style.display = 'none';
+                audioEl.src = data.audioUrl;
+                audioEl.style.display = 'block';
+                
+                if (data.transcript) {
+                  transcriptEl.style.display = 'block';
+                  transcriptContent.textContent = data.transcript;
+                }
+              } else if (data.status === 'failed') {
+                clearInterval(checkInterval);
+                const statusEl = document.getElementById('podcastStatus');
+                if (statusEl) {
+                  statusEl.innerHTML = '<p>❌ Podcast generation failed</p><small>' + (data.error || 'Unknown error') + '</small>';
+                }
+              } else if (data.status === 'not-started' && checkCount === 0) {
+                // Start podcast generation on first check if not started
+                await startPodcastGeneration(jobId);
+              }
+            }
+          } catch (error) {
+            console.log('Checking for podcast... attempt', checkCount + 1);
+          }
+          
+          checkCount++;
+        }, 5000);
+        
+        // Load podcast on page load
+        document.addEventListener('DOMContentLoaded', loadPodcast);
+      `;
+    }
+
     return {
       qrCode,
       podcastPlayer,
@@ -827,6 +1018,7 @@ export class CVGenerator {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${cv.personalInfo.name} - CV</title>
+    ${features?.includes('generate-podcast') ? '<meta name="job-id" content="{{JOB_ID}}">' : ''}
     <style>
         * {
             margin: 0;
@@ -1060,6 +1252,23 @@ export class CVGenerator {
         }
         ${interactiveFeatures.additionalStyles || ''}
     </style>
+    ${features?.includes('generate-podcast') ? `
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+    <script>
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgANn5E7V3jcdHOU3M0A9Du_ZjF_3Xmcs",
+        authDomain: "getmycv-ai.firebaseapp.com",
+        projectId: "getmycv-ai",
+        storageBucket: "getmycv-ai.firebasestorage.app",
+        messagingSenderId: "515594461216",
+        appId: "1:515594461216:web:99452fce1dff7557dc9c45"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>` : ''}
     ${interactiveFeatures.additionalScripts ? `<script>${interactiveFeatures.additionalScripts}</script>` : ''}
 </head>
 <body>
@@ -1876,11 +2085,198 @@ export class CVGenerator {
       expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
     });
     
-    // For now, PDF and DOCX generation are placeholders
-    // These would require additional libraries and processing
-    const pdfUrl = '';
-    const docxUrl = '';
+    // Generate PDF using Puppeteer
+    let pdfUrl = '';
+    let docxUrl = '';
+    
+    try {
+      const puppeteer = require('puppeteer');
+      const browser = await puppeteer.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      });
+      
+      const page = await browser.newPage();
+      
+      // Set viewport for consistent rendering
+      await page.setViewport({ width: 794, height: 1123 }); // A4 size in pixels
+      
+      // Create PDF-optimized HTML content
+      const pdfOptimizedHtml = this.optimizeHtmlForPdf(htmlContent);
+      
+      // Set content and wait for resources
+      await page.setContent(pdfOptimizedHtml, { 
+        waitUntil: ['networkidle0', 'domcontentloaded']
+      });
+      
+      // Generate PDF with proper settings
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        displayHeaderFooter: false,
+        margin: {
+          top: '10mm',
+          bottom: '10mm',
+          left: '10mm',
+          right: '10mm'
+        }
+      });
+      
+      await browser.close();
+      
+      // Save PDF to Firebase Storage
+      const pdfFileName = `users/${userId}/generated/${jobId}/cv.pdf`;
+      const pdfFile = bucket.file(pdfFileName);
+      
+      await pdfFile.save(pdfBuffer, {
+        metadata: {
+          contentType: 'application/pdf',
+          cacheControl: 'public, max-age=31536000'
+        }
+      });
+      
+      const [pdfSignedUrl] = await pdfFile.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+      });
+      
+      pdfUrl = pdfSignedUrl;
+      
+      console.log(`PDF generated successfully: ${pdfFileName}`);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // PDF generation failed, but continue with HTML
+    }
     
     return { pdfUrl, docxUrl, htmlUrl };
+  }
+
+  /**
+   * Optimize HTML content for PDF generation
+   * Converts interactive elements to static PDF-friendly versions
+   */
+  private optimizeHtmlForPdf(htmlContent: string): string {
+    let optimizedHtml = htmlContent;
+    
+    // Replace interactive podcast players with static references
+    optimizedHtml = optimizedHtml.replace(
+      /<div class="podcast-player">[\s\S]*?<\/div>/g,
+      `<div class="podcast-section">
+         <h3>🎙️ AI Career Podcast</h3>
+         <p>📱 Scan QR code or visit online version to listen</p>
+         <div class="qr-placeholder">
+           <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://getmycv-ai.web.app" 
+                alt="QR Code" style="width: 80px; height: 80px; border: 1px solid #ccc;"/>
+         </div>
+       </div>`
+    );
+    
+    // Convert interactive timeline to static timeline
+    optimizedHtml = optimizedHtml.replace(
+      /onclick="[^"]*"/g, ''
+    );
+    
+    // Replace contact forms with contact information display
+    optimizedHtml = optimizedHtml.replace(
+      /<form[\s\S]*?onsubmit="[^"]*"[\s\S]*?<\/form>/g,
+      `<div class="contact-info-static">
+         <h3>📞 Contact Information</h3>
+         <p>Visit the online version to use the interactive contact form</p>
+       </div>`
+    );
+    
+    // Convert interactive buttons to static elements
+    optimizedHtml = optimizedHtml.replace(
+      /<button[^>]*onclick="[^"]*"[^>]*>(.*?)<\/button>/g,
+      '<div class="static-button">$1</div>'
+    );
+    
+    // Remove JavaScript and event handlers
+    optimizedHtml = optimizedHtml.replace(
+      /<script[\s\S]*?<\/script>/g, ''
+    );
+    
+    // Replace input fields with placeholder text
+    optimizedHtml = optimizedHtml.replace(
+      /<input[^>]*>/g, 
+      '<span class="form-field-placeholder">[Interactive form field - use online version]</span>'
+    );
+    
+    // Add PDF-specific styles
+    const pdfStyles = `
+      <style>
+        @media print, screen {
+          .static-button {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+            color: #007bff;
+            text-align: center;
+            font-weight: 500;
+            margin: 4px;
+          }
+          .form-field-placeholder {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 4px;
+            color: #666;
+            font-style: italic;
+          }
+          .contact-info-static, .podcast-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+          }
+          .qr-placeholder {
+            text-align: center;
+            margin: 12px 0;
+          }
+          /* Ensure proper layout for PDF */
+          * {
+            box-sizing: border-box;
+          }
+          .container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 20px !important;
+          }
+          .interactive-timeline .timeline-item {
+            cursor: default !important;
+          }
+          .skills-chart {
+            page-break-inside: avoid;
+          }
+        }
+      </style>
+    `;
+    
+    // Insert PDF styles before closing head tag
+    optimizedHtml = optimizedHtml.replace(
+      '</head>',
+      pdfStyles + '</head>'
+    );
+    
+    // Add note about interactive features
+    const interactiveNote = `
+      <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 12px; margin: 20px 0; font-size: 14px;">
+        <strong>📄 PDF Version Notice:</strong> 
+        This PDF contains static content. For interactive features (podcast, forms, animations), 
+        visit: <strong>https://getmycv-ai.web.app</strong>
+      </div>
+    `;
+    
+    // Insert note after body opening tag
+    optimizedHtml = optimizedHtml.replace(
+      '<body>',
+      '<body>' + interactiveNote
+    );
+    
+    return optimizedHtml;
   }
 }
