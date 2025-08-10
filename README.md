@@ -1,4 +1,4 @@
-# CVisionary - From Paper to Powerful: Your CV, Reinvented
+# CVPlus - From Paper to Powerful: Your CV, Reinvented
 
 <div align="center">
   <img src="frontend/public/images/cvisionary-logo-with-slogan-full.svg" alt="CVisionary Logo" width="400"/>
