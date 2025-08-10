@@ -1,7 +1,7 @@
 # CVPlus - From Paper to Powerful: Your CV, Reinvented
 
 <div align="center">
-  <img src="frontend/public/images/cvisionary-logo-with-slogan-full.svg" alt="CVisionary Logo" width="400"/>
+  <img src="frontend/public/images/CVPlus-logo-with-slogan-full.svg" alt="CVisionary Logo" width="400"/>
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
@@ -11,12 +11,12 @@
   
   Transform your traditional CV into an interactive, AI-enhanced professional profile with cutting-edge features!
   
-  [Live Demo](https://cvisionary.ai) | [Documentation](#-documentation) | [Contributing](#-contributing)
+  [Live Demo](https://CVPlus.ai) | [Documentation](#-documentation) | [Contributing](#-contributing)
 </div>
 
-## 🌟 About CVisionary
+## 🌟 About CVPlus
 
-CVisionary is an open-source AI-powered platform that revolutionizes how professionals present themselves. Created by [Gil Klainert](https://klainert.com), a Software Engineering Leader and AI Expert, this project is a gift to the community - making powerful career advancement tools accessible to everyone, regardless of their background or financial situation.
+CVPlus is an open-source AI-powered platform that revolutionizes how professionals present themselves. Created by [Gil Klainert](https://klainert.com), a Software Engineering Leader and AI Expert, this project is a gift to the community - making powerful career advancement tools accessible to everyone, regardless of their background or financial situation.
 
 ## 🚀 Key Features
 
@@ -88,8 +88,8 @@ CVisionary is an open-source AI-powered platform that revolutionizes how profess
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/gilco1973/CVisionary.git
-cd CVisionary
+git clone https://github.com/gilco1973/CVPlus.git
+cd CVPlus
 ```
 
 ### 2. Install dependencies
@@ -230,9 +230,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/gilco1973/CVisionary/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/gilco1973/CVisionary/discussions)
-- **Email**: support@cvisionary.ai
+- **Issues**: [GitHub Issues](https://github.com/gilco1973/CVPlus/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/gilco1973/CVPlus/discussions)
+- **Email**: support@CVPlus.ai
 
 ## 🚀 Roadmap
 
@@ -255,7 +255,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   <p>Built with passion to democratize career advancement tools</p>
   <p>⭐ Star us on GitHub to support the project!</p>
   
-  <a href="https://github.com/gilco1973/CVisionary">
-    <img src="https://img.shields.io/github/stars/gilco1973/CVisionary?style=social" alt="GitHub stars">
+  <a href="https://github.com/gilco1973/CVPlus">
+    <img src="https://img.shields.io/github/stars/gilco1973/CVPlus?style=social" alt="GitHub stars">
   </a>
 </div>
