@@ -11,12 +11,12 @@ export const config = {
     appId: process.env.APP_ID
   },
   storage: {
-    bucketName: process.env.STORAGE_BUCKET || 'cvplus.appspot.com'
+    bucketName: process.env.STORAGE_BUCKET || 'getmycv-ai.firebasestorage.app'
   },
   email: {
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
-    from: process.env.EMAIL_FROM || 'CVPlus <noreply@cvplus.com>'
+    from: process.env.EMAIL_FROM || 'CVPlus <noreply@getmycv-ai.com>'
   },
   rag: {
     openaiApiKey: process.env.OPENAI_API_KEY,
@@ -55,7 +55,7 @@ export const config = {
   },
   features: {
     publicProfiles: {
-      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://cvplus.web.app/cv'
+      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://getmycv-ai.web.app/cv'
     },
     enableVideoGeneration: process.env.ENABLE_VIDEO_GENERATION === 'true',
     enablePodcastGeneration: process.env.ENABLE_PODCAST_GENERATION === 'true',
