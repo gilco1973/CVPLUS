@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { config } from '../config/environment';
 import { ParsedCV } from './cvParser';
 import { PDFDocument, PDFForm, PDFButton, PDFCheckBox, rgb, StandardFonts, PDFPage, PDFDict, PDFName, PDFString } from 'pdf-lib';
 
@@ -474,12 +475,12 @@ export class CVGenerator {
               return new Promise((resolve) => {
                 functionsScript.onload = () => {
                   firebase.initializeApp({
-                    apiKey: "AIzaSyDLdwFKEOEb4uUiR1MJNZczZdVdnqfZBW8",
-                    authDomain: "cvplus.firebaseapp.com",
-                    projectId: "cvplus",
-                    storageBucket: "cvplus.appspot.com",
-                    messagingSenderId: "123456789",
-                    appId: "1:123456789:web:abcdef123456"
+                    apiKey: "${config.firebase.apiKey}",
+                    authDomain: "${config.firebase.authDomain || 'cvplus.firebaseapp.com'}",
+                    projectId: "${config.firebase.projectId || 'cvplus'}",
+                    storageBucket: "${config.storage.bucketName || 'cvplus.appspot.com'}",
+                    messagingSenderId: "${config.firebase.messagingSenderId}",
+                    appId: "${config.firebase.appId}"
                   });
                   resolve();
                 };
@@ -1645,12 +1646,12 @@ export class CVGenerator {
     <script>
       // Initialize Firebase
       const firebaseConfig = {
-        apiKey: "AIzaSyAgANn5E7V3jcdHOU3M0A9Du_ZjF_3Xmcs",
-        authDomain: "cvplus.firebaseapp.com",
-        projectId: "cvplus",
-        storageBucket: "cvplus.firebasestorage.app",
-        messagingSenderId: "515594461216",
-        appId: "1:515594461216:web:99452fce1dff7557dc9c45"
+        apiKey: "${config.firebase.apiKey}",
+        authDomain: "${config.firebase.authDomain || 'cvplus.firebaseapp.com'}",
+        projectId: "${config.firebase.projectId || 'cvplus'}",
+        storageBucket: "${config.storage.bucketName || 'cvplus.firebasestorage.app'}",
+        messagingSenderId: "${config.firebase.messagingSenderId}",
+        appId: "${config.firebase.appId}"
       };
       firebase.initializeApp(firebaseConfig);
     </script>` : ''}

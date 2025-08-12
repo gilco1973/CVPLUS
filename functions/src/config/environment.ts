@@ -3,8 +3,15 @@
  */
 
 export const config = {
+  firebase: {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID
+  },
   storage: {
-    bucketName: process.env.STORAGE_BUCKET || 'cvplus-storage'
+    bucketName: process.env.STORAGE_BUCKET || 'cvplus.appspot.com'
   },
   email: {
     user: process.env.EMAIL_USER,
@@ -43,9 +50,16 @@ export const config = {
       }
     }
   },
+  search: {
+    serperApiKey: process.env.SERPER_API_KEY
+  },
   features: {
     publicProfiles: {
-      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://cvplus.com/cv'
-    }
+      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://cvplus.web.app/cv'
+    },
+    enableVideoGeneration: process.env.ENABLE_VIDEO_GENERATION === 'true',
+    enablePodcastGeneration: process.env.ENABLE_PODCAST_GENERATION === 'true',
+    enablePublicProfiles: process.env.ENABLE_PUBLIC_PROFILES === 'true',
+    enableRagChat: process.env.ENABLE_RAG_CHAT === 'true'
   }
 };

@@ -3,9 +3,14 @@
  */
 
 import OpenAI from 'openai';
+import * as admin from 'firebase-admin';
+import * as ffmpeg from 'fluent-ffmpeg';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import axios from 'axios';
 import { config } from '../config/environment';
 import { ParsedCV } from '../types/enhanced-models';
-// import * as admin from 'firebase-admin'; // Unused import
 
 export class MediaGenerationService {
   private openai: OpenAI | null = null;
@@ -530,10 +535,127 @@ Style: Concise, impactful, third-person narrative.`;
     segments: Array<{ audioUrl: string; duration: number }>,
     transitions: boolean = true
   ): Promise<string> {
-    // TODO: Implement audio merging using ffmpeg or cloud service
-    // For now, return placeholder
+    const tempDir = path.join(os.tmpdir(), `merge-${Date.now()}`);
+    const outputPath = path.join(tempDir, 'merged-audio.mp3');
     
-    return 'merged-audio-url';
+    try {
+      // Create temp directory
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Download audio files to temp directory
+      const tempFiles: string[] = [];
+      const listFileContent: string[] = [];
+      
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        const tempFile = path.join(tempDir, `segment-${i}.mp3`);
+        
+        // Download audio file
+        const response = await axios.get(segment.audioUrl, { 
+          responseType: 'arraybuffer' 
+        });
+        fs.writeFileSync(tempFile, Buffer.from(response.data));
+        
+        tempFiles.push(tempFile);
+        listFileContent.push(`file '${tempFile}'`);
+        
+        // Add transition silence if requested
+        if (transitions && i < segments.length - 1) {
+          const silenceFile = path.join(tempDir, `silence-${i}.mp3`);
+          await this.generateSilenceFile(500, silenceFile); // 500ms pause
+          tempFiles.push(silenceFile);
+          listFileContent.push(`file '${silenceFile}'`);
+        }
+      }
+      
+      // Write list file for FFmpeg concat
+      const listFilePath = path.join(tempDir, 'filelist.txt');
+      fs.writeFileSync(listFilePath, listFileContent.join('\n'));
+      
+      // Merge audio files using FFmpeg
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg()
+          .input(listFilePath)
+          .inputOptions(['-f', 'concat', '-safe', '0'])
+          .audioCodec('mp3')
+          .audioBitrate('128k')
+          .audioFrequency(44100)
+          .audioChannels(2)
+          .output(outputPath)
+          .on('end', () => resolve())
+          .on('error', (err) => reject(new Error(`Audio merging failed: ${err.message}`)))
+          .run();
+      });
+      
+      // Upload merged file to storage (implement based on your storage solution)
+      const mergedBuffer = fs.readFileSync(outputPath);
+      const bucket = admin.storage().bucket();
+      const fileName = `merged-audio/${Date.now()}/merged.mp3`;
+      const file = bucket.file(fileName);
+      
+      await file.save(mergedBuffer, {
+        metadata: {
+          contentType: 'audio/mpeg',
+          metadata: {
+            segmentCount: segments.length,
+            totalDuration: segments.reduce((sum, s) => sum + s.duration, 0)
+          }
+        }
+      });
+      
+      await file.makePublic();
+      
+      // Clean up temp files
+      this.cleanupTempFiles([...tempFiles, listFilePath, outputPath]);
+      
+      return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      
+    } catch (error) {
+      console.error('Error merging audio segments:', error);
+      this.cleanupTempFiles([tempDir]);
+      throw new Error(`Failed to merge audio segments: ${error}`);
+    }
+  }
+  
+  /**
+   * Generate silence file using FFmpeg
+   */
+  private async generateSilenceFile(durationMs: number, outputPath: string): Promise<void> {
+    const durationSeconds = durationMs / 1000;
+    
+    return new Promise<void>((resolve, reject) => {
+      ffmpeg()
+        .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+        .inputOptions(['-f', 'lavfi'])
+        .audioCodec('mp3')
+        .audioBitrate('128k')
+        .duration(durationSeconds)
+        .output(outputPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err))
+        .run();
+    });
+  }
+  
+  /**
+   * Clean up temporary files
+   */
+  private cleanupTempFiles(filePaths: string[]): void {
+    filePaths.forEach(filePath => {
+      try {
+        if (fs.existsSync(filePath)) {
+          if (fs.lstatSync(filePath).isDirectory()) {
+            fs.rmSync(filePath, { recursive: true, force: true });
+          } else {
+            fs.unlinkSync(filePath);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to cleanup file ${filePath}:`, error);
+      }
+    });
   }
   
   /**

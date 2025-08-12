@@ -48,25 +48,25 @@ export class VideoGenerationService {
       apiKey: config.openai?.apiKey || process.env.OPENAI_API_KEY || ''
     });
     
-    this.didApiKey = process.env.DID_API_KEY || '';
+    this.didApiKey = config.videoGeneration?.didApiKey || process.env.DID_API_KEY || '';
     
     // Configure available avatars
     this.avatarConfig = {
       professional: {
-        avatarId: process.env.DID_PROFESSIONAL_AVATAR_ID || 'amy-Aq6OmGZnMt',
-        voiceId: process.env.DID_PROFESSIONAL_VOICE_ID || 'en-US-JennyNeural',
+        avatarId: config.videoGeneration?.avatars?.professional?.id || process.env.DID_PROFESSIONAL_AVATAR_ID || 'amy-Aq6OmGZnMt',
+        voiceId: config.videoGeneration?.avatars?.professional?.voiceId || process.env.DID_PROFESSIONAL_VOICE_ID || 'en-US-JennyNeural',
         name: 'Professional Amy',
         style: 'Corporate professional'
       },
       friendly: {
-        avatarId: process.env.DID_FRIENDLY_AVATAR_ID || 'josh-z3Y1cJO7mR',
-        voiceId: process.env.DID_FRIENDLY_VOICE_ID || 'en-US-GuyNeural',
+        avatarId: config.videoGeneration?.avatars?.friendly?.id || process.env.DID_FRIENDLY_AVATAR_ID || 'josh-z3Y1cJO7mR',
+        voiceId: config.videoGeneration?.avatars?.friendly?.voiceId || process.env.DID_FRIENDLY_VOICE_ID || 'en-US-GuyNeural',
         name: 'Friendly Josh',
         style: 'Approachable and warm'
       },
       energetic: {
-        avatarId: process.env.DID_ENERGETIC_AVATAR_ID || 'maya-pI7XQbvFNY',
-        voiceId: process.env.DID_ENERGETIC_VOICE_ID || 'en-US-AriaNeural',
+        avatarId: config.videoGeneration?.avatars?.energetic?.id || process.env.DID_ENERGETIC_AVATAR_ID || 'maya-pI7XQbvFNY',
+        voiceId: config.videoGeneration?.avatars?.energetic?.voiceId || process.env.DID_ENERGETIC_VOICE_ID || 'en-US-AriaNeural',
         name: 'Energetic Maya',
         style: 'Dynamic and enthusiastic'
       }

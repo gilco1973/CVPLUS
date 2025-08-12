@@ -8,6 +8,10 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
+import * as ffmpeg from 'fluent-ffmpeg';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 interface ConversationalScript {
   segments: Array<{
@@ -42,17 +46,17 @@ export class PodcastGenerationService {
       apiKey: config.openai?.apiKey || process.env.OPENAI_API_KEY || ''
     });
     
-    this.elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || '';
+    this.elevenLabsApiKey = config.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY || '';
     
     // Configure voices for conversational podcast
     this.voiceConfig = {
       host1: {
-        voiceId: process.env.ELEVENLABS_HOST1_VOICE_ID || 'pNInz6obpgDQGcFmaJgB', // Adam
+        voiceId: config.elevenLabs?.host1VoiceId || process.env.ELEVENLABS_HOST1_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
         name: 'Sarah',
         style: 'Professional podcast host'
       },
       host2: {
-        voiceId: process.env.ELEVENLABS_HOST2_VOICE_ID || 'yoZ06aMxZJJ28mfd3POQ', // Sam
+        voiceId: config.elevenLabs?.host2VoiceId || process.env.ELEVENLABS_HOST2_VOICE_ID || 'yoZ06aMxZJJ28mfd3POQ',
         name: 'Mike',
         style: 'Engaging co-host'
       }
@@ -281,37 +285,138 @@ Focus: ${options.focus || 'balanced'}`;
   }
   
   /**
-   * Merge audio segments into final podcast
+   * Merge audio segments into final podcast using FFmpeg
    */
   private async mergeAudioSegments(
     segments: Array<{ speaker: string; audioBuffer: Buffer; duration: number; }>,
     jobId: string
   ): Promise<string> {
-    // In production, you would use ffmpeg or a cloud service to merge audio
-    // For now, we'll save the first segment as a demo
+    const tempDir = path.join(os.tmpdir(), `podcast-${jobId}`);
+    const outputPath = path.join(tempDir, 'final-podcast.mp3');
     
-    const bucket = admin.storage().bucket();
-    const fileName = `podcasts/${jobId}/career-podcast.mp3`;
-    const file = bucket.file(fileName);
-    
-    // For demo: just save the first non-pause segment
-    const firstAudioSegment = segments.find(s => s.speaker !== 'pause');
-    if (firstAudioSegment) {
-      await file.save(firstAudioSegment.audioBuffer, {
+    try {
+      // Create temp directory
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Save individual audio segments to temp files
+      const tempFiles: string[] = [];
+      const listFilePath = path.join(tempDir, 'filelist.txt');
+      const listFileContent: string[] = [];
+      
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        
+        if (segment.speaker === 'pause') {
+          // Generate silence file
+          const silenceFile = path.join(tempDir, `silence-${i}.mp3`);
+          await this.generateSilenceFile(segment.duration, silenceFile);
+          tempFiles.push(silenceFile);
+          listFileContent.push(`file '${silenceFile}'`);
+        } else {
+          // Save audio segment
+          const segmentFile = path.join(tempDir, `segment-${i}.mp3`);
+          fs.writeFileSync(segmentFile, segment.audioBuffer);
+          tempFiles.push(segmentFile);
+          listFileContent.push(`file '${segmentFile}'`);
+        }
+      }
+      
+      // Write list file for FFmpeg concat
+      fs.writeFileSync(listFilePath, listFileContent.join('\n'));
+      
+      // Merge audio files using FFmpeg
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg()
+          .input(listFilePath)
+          .inputOptions(['-f', 'concat', '-safe', '0'])
+          .audioCodec('mp3')
+          .audioBitrate('128k')
+          .audioFrequency(44100)
+          .audioChannels(2)
+          .output(outputPath)
+          .on('end', () => {
+            console.log('Audio merging completed');
+            resolve();
+          })
+          .on('error', (err) => {
+            console.error('FFmpeg error:', err);
+            reject(new Error(`Audio merging failed: ${err.message}`));
+          })
+          .run();
+      });
+      
+      // Upload merged file to Firebase Storage
+      const bucket = admin.storage().bucket();
+      const fileName = `podcasts/${jobId}/career-podcast.mp3`;
+      const file = bucket.file(fileName);
+      
+      const mergedAudioBuffer = fs.readFileSync(outputPath);
+      await file.save(mergedAudioBuffer, {
         metadata: {
           contentType: 'audio/mpeg',
           metadata: {
             jobId,
-            generatedAt: new Date().toISOString()
+            generatedAt: new Date().toISOString(),
+            segmentCount: segments.length,
+            totalDuration: segments.reduce((sum, s) => sum + s.duration, 0)
           }
         }
       });
       
       await file.makePublic();
+      
+      // Clean up temp files
+      this.cleanupTempFiles([...tempFiles, listFilePath, outputPath]);
+      
       return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      
+    } catch (error) {
+      console.error('Error merging audio segments:', error);
+      // Clean up temp files on error
+      this.cleanupTempFiles([tempDir]);
+      throw new Error(`Failed to merge audio segments: ${error}`);
     }
+  }
+  
+  /**
+   * Generate silence file using FFmpeg
+   */
+  private async generateSilenceFile(durationMs: number, outputPath: string): Promise<void> {
+    const durationSeconds = durationMs / 1000;
     
-    throw new Error('No audio segments generated');
+    return new Promise<void>((resolve, reject) => {
+      ffmpeg()
+        .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+        .inputOptions(['-f', 'lavfi'])
+        .audioCodec('mp3')
+        .audioBitrate('128k')
+        .duration(durationSeconds)
+        .output(outputPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err))
+        .run();
+    });
+  }
+  
+  /**
+   * Clean up temporary files
+   */
+  private cleanupTempFiles(filePaths: string[]): void {
+    filePaths.forEach(filePath => {
+      try {
+        if (fs.existsSync(filePath)) {
+          if (fs.lstatSync(filePath).isDirectory()) {
+            fs.rmSync(filePath, { recursive: true, force: true });
+          } else {
+            fs.unlinkSync(filePath);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to cleanup file ${filePath}:`, error);
+      }
+    });
   }
   
   /**

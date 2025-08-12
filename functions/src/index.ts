@@ -15,6 +15,7 @@ export { analyzeCV } from './functions/analyzeCV';
 export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';
 export { podcastStatus } from './functions/podcastStatus';
 export { podcastStatusPublic } from './functions/podcastStatusPublic';
+export { testConfiguration } from './functions/testConfiguration';
 
 // Export video generation functions
 export { 
