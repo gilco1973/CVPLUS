@@ -400,26 +400,9 @@ export const regeneratePodcast = async (jobId: string, style?: 'professional' | 
 };
 
 export const getPodcastStatus = async (jobId: string) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('User not authenticated');
-
-  const token = await user.getIdToken();
-  
-  const response = await fetch('https://us-central1-getmycv-ai.cloudfunctions.net/podcastStatus', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ jobId })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to get podcast status');
-  }
-
-  return await response.json();
+  const statusFunction = httpsCallable(functions, 'podcastStatus');
+  const result = await statusFunction({ jobId });
+  return result.data;
 };
 
 export const generateAudioFromText = async (jobId: string, text: string, type: string, voice?: string, speed?: number) => {

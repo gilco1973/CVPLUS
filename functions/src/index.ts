@@ -16,6 +16,7 @@ export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFile
 export { podcastStatus } from './functions/podcastStatus';
 export { podcastStatusPublic } from './functions/podcastStatusPublic';
 export { testConfiguration } from './functions/testConfiguration';
+export { testAuth } from './functions/testAuth';
 
 // Export video generation functions
 export { 

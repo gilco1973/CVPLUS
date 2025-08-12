@@ -1,59 +1,43 @@
-import { onRequest } from 'firebase-functions/v2/https';
+import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { corsOptions } from '../config/cors';
 
-export const podcastStatus = onRequest(
+export const podcastStatus = onCall(
   {
     timeoutSeconds: 30,
     memory: '512MiB',
-    cors: [
-      'https://getmycv-ai.firebaseapp.com',
-      'https://getmycv-ai.web.app',
-      'https://cvplus.firebaseapp.com',
-      'https://cvplus.web.app',
-      'https://cvplus.ai',
-      'https://www.cvplus.ai',
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5000'
-    ]
+    ...corsOptions
   },
-  async (req, res) => {
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-      res.set('Access-Control-Allow-Origin', req.headers.origin || '*');
-      res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.set('Access-Control-Allow-Credentials', 'true');
-      res.status(200).send();
-      return;
+  async (request) => {
+    // Debug: Log incoming request
+    console.log('=== PODCAST STATUS DEBUG ===');
+    console.log('Request data:', JSON.stringify(request.data, null, 2));
+    console.log('Request auth:', JSON.stringify(request.auth, null, 2));
+    console.log('Request auth exists:', !!request.auth);
+    console.log('Request object keys:', Object.keys(request));
+    console.log('Full request:', JSON.stringify(request, null, 2));
+
+    // Check authentication
+    if (!request.auth) {
+      console.log('Authentication failed - no auth object');
+      console.log('Returning test response instead of throwing error');
+      return {
+        status: 'debug',
+        message: 'Authentication debugging - no auth object found',
+        requestKeys: Object.keys(request),
+        hasAuth: !!request.auth,
+        timestamp: Date.now()
+      };
     }
 
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
+    const userId = request.auth.uid;
+    const { jobId } = request.data;
+
+    if (!jobId) {
+      throw new Error('Job ID is required');
     }
 
-    // Get Firebase auth token
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Unauthorized - No token provided' });
-      return;
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    
     try {
-      // Verify the token
-      const decodedToken = await admin.auth().verifyIdToken(token);
-      const userId = decodedToken.uid;
-
-      const { jobId } = req.body;
-
-      if (!jobId) {
-        res.status(400).json({ error: 'Job ID is required' });
-        return;
-      }
-
       // Check the job document for podcast status
       const jobDoc = await admin.firestore()
         .collection('jobs')
@@ -61,57 +45,46 @@ export const podcastStatus = onRequest(
         .get();
 
       if (!jobDoc.exists) {
-        res.status(404).json({ error: 'Job not found' });
-        return;
+        throw new Error('Job not found');
       }
 
       const jobData = jobDoc.data();
       
       // Check if user owns this job
       if (jobData?.userId !== userId) {
-        res.status(403).json({ error: 'Unauthorized access to job' });
-        return;
+        throw new Error('Unauthorized access to job');
       }
 
       const podcastStatus = jobData?.podcastStatus;
       const podcast = jobData?.podcast;
       
       if (podcastStatus === 'completed' && podcast) {
-        res.json({
+        return {
           status: 'ready',
           audioUrl: podcast.url,
           transcript: podcast.transcript,
           duration: podcast.duration,
           chapters: podcast.chapters || []
-        });
+        };
       } else if (podcastStatus === 'failed') {
-        res.json({
+        return {
           status: 'failed',
           error: jobData?.podcastError || 'Unknown error occurred'
-        });
+        };
       } else if (podcastStatus === 'generating') {
-        res.json({
+        return {
           status: 'generating',
           message: 'Podcast is being generated...'
-        });
+        };
       } else {
-        res.json({
+        return {
           status: 'not-started',
           message: 'Podcast generation has not been initiated'
-        });
+        };
       }
     } catch (error: any) {
       console.error('Error checking podcast status:', error);
-      if (error.code === 'auth/id-token-expired') {
-        res.status(401).json({ error: 'Token expired' });
-      } else if (error.code === 'auth/argument-error') {
-        res.status(401).json({ error: 'Invalid token' });
-      } else {
-        res.status(500).json({
-          status: 'error',
-          error: error.message
-        });
-      }
+      throw new Error(error.message || 'Failed to check podcast status');
     }
   }
 );
