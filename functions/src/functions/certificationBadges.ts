@@ -6,7 +6,7 @@ import { certificationBadgesService } from '../services/certification-badges.ser
 export const generateCertificationBadges = onCall(
   {
     timeoutSeconds: 60,
-    // secrets: ['OPENAI_API_KEY'] // Temporarily disabled,
+    secrets: ['OPENAI_API_KEY'],
     ...corsOptions
   },
   async (request) => {

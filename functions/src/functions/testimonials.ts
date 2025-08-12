@@ -9,7 +9,7 @@ const cvParsingService = new CVParsingService();
 export const generateTestimonialsCarousel = onCall(
   { 
     cors: true,
-    // secrets: ['OPENAI_API_KEY'] // Temporarily disabled
+    secrets: ['OPENAI_API_KEY']
   },
   async (request: CallableRequest) => {
     try {

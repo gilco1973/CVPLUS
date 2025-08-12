@@ -1,776 +1,372 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { 
-  LLMVerificationService, 
-  ValidationCriteria, 
-  VerificationRequest 
-} from './llm-verification.service';
-import { config } from '../config/environment';
-
 /**
  * Verified Claude Service
  * 
- * This service wraps all Anthropic Claude API calls with automatic verification
- * using OpenAI GPT-4. It provides the same interface as the Claude API but
- * adds comprehensive response validation, retry logic, and audit logging.
+ * Drop-in replacement for Anthropic Claude that includes automatic response verification
+ * using OpenAI GPT-4. Provides seamless integration with existing codebase.
  */
 
-export interface VerifiedClaudeConfig {
-  apiKey?: string;
-  maxRetries?: number;
-  verificationEnabled?: boolean;
-  validationCriteria?: ValidationCriteria;
-  timeoutMs?: number;
-  enableAuditLogging?: boolean;
+import Anthropic from '@anthropic-ai/sdk';
+import { LLMVerificationService, VerificationRequest, VerificationResult, VerificationConfig } from './llm-verification.service';
+
+export interface VerifiedClaudeConfig extends Partial<VerificationConfig> {
+  enableVerification?: boolean;
+  service?: string;
+  context?: string;
+  fallbackToOriginal?: boolean;
 }
 
-export interface VerifiedMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
-export interface VerifiedClaudeRequest {
+export interface VerifiedMessageOptions {
   model?: string;
-  messages: VerifiedMessage[];
   max_tokens?: number;
   temperature?: number;
+  messages: Array<{ role: string; content: string }>;
+  timeout?: number;
   system?: string;
-  context?: Record<string, any>;
-  service: string; // Service name for audit logging
-  validationCriteria?: ValidationCriteria;
+  service?: string;
+  context?: string;
+  validationCriteria?: string[];
+  maxRetries?: number;
 }
 
-export interface VerifiedClaudeResponse {
-  content: string;
-  verified: boolean;
-  verificationScore: number;
-  verificationDetails: {
-    confidence: number;
-    issues: Array<{
-      category: string;
-      severity: string;
-      description: string;
-    }>;
-    processingTime: number;
-  };
+export interface VerifiedResponse {
+  content: Array<{ type: 'text'; text: string }>;
+  model: string;
+  role: string;
+  stop_reason?: string | null;
+  stop_sequence?: string | null;
+  type: string;
   usage?: {
     input_tokens: number;
     output_tokens: number;
   };
-  auditId: string;
-  retryCount: number;
+  verification?: VerificationResult;
 }
 
 export class VerifiedClaudeService {
   private anthropic: Anthropic;
   private verificationService: LLMVerificationService;
-  private config: Required<VerifiedClaudeConfig>;
+  private config: VerifiedClaudeConfig;
 
-  constructor(customConfig?: VerifiedClaudeConfig) {
-    const defaultConfig: Required<VerifiedClaudeConfig> = {
-      apiKey: process.env.ANTHROPIC_API_KEY || '',
+  constructor(config?: VerifiedClaudeConfig) {
+    this.config = {
+      enableVerification: true,
+      service: 'verified-claude',
+      fallbackToOriginal: true,
       maxRetries: 3,
-      verificationEnabled: true,
-      validationCriteria: {
-        accuracy: true,
-        completeness: true,
-        relevance: true,
-        consistency: true,
-        safety: true,
-        format: true
-      },
-      timeoutMs: 60000,
-      enableAuditLogging: true
+      confidenceThreshold: 0.7,
+      qualityThreshold: 75,
+      enableLogging: true,
+      ...config
     };
 
-    this.config = { ...defaultConfig, ...customConfig };
-
-    // Initialize Anthropic client
     this.anthropic = new Anthropic({
-      apiKey: this.config.apiKey
+      apiKey: process.env.ANTHROPIC_API_KEY || ''
     });
 
-    // Initialize verification service
     this.verificationService = new LLMVerificationService({
       maxRetries: this.config.maxRetries,
-      timeoutMs: this.config.timeoutMs,
-      enableDetailedLogging: this.config.enableAuditLogging
+      confidenceThreshold: this.config.confidenceThreshold,
+      qualityThreshold: this.config.qualityThreshold,
+      enableLogging: this.config.enableLogging
+    });
+
+    console.log(`[VERIFIED-CLAUDE] Service initialized`, {
+      verificationEnabled: this.config.enableVerification,
+      service: this.config.service,
+      maxRetries: this.config.maxRetries
     });
   }
 
   /**
-   * Create a verified message with Claude
-   * 
-   * This method mirrors the Claude messages.create API but adds comprehensive
-   * verification using OpenAI GPT-4 as a cross-validation system.
+   * Create a verified message - drop-in replacement for anthropic.messages.create()
    */
-  async createVerifiedMessage(request: VerifiedClaudeRequest): Promise<VerifiedClaudeResponse> {
+  async createVerifiedMessage(options: VerifiedMessageOptions): Promise<VerifiedResponse> {
     const startTime = Date.now();
-    let retryCount = 0;
-    let currentPrompt = this.buildPromptFromMessages(request);
-    let lastClaudeResponse = '';
-    let auditId = '';
 
-    // Validate required fields
-    if (!request.service) {
-      throw new Error('Service name is required for audit logging');
-    }
+    try {
+      // Step 1: Get initial response from Claude
+      const claudeResponse = await this.anthropic.messages.create({
+        model: options.model || 'claude-sonnet-4-20250514',
+        max_tokens: options.max_tokens || 4000,
+        temperature: options.temperature || 0.3,
+        messages: options.messages,
+        timeout: options.timeout || 30000,
+        ...(options.system && { system: options.system })
+      });
 
-    if (!request.messages || request.messages.length === 0) {
-      throw new Error('Messages array cannot be empty');
-    }
-
-    while (retryCount <= this.config.maxRetries) {
-      try {
-        // Call Claude API
-        const claudeResponse = await this.callClaude({
-          ...request,
-          messages: request.messages
-        });
-
-        lastClaudeResponse = claudeResponse.content;
-
-        // Skip verification if disabled
-        if (!this.config.verificationEnabled) {
-          return {
-            content: claudeResponse.content,
-            verified: true,
-            verificationScore: 100,
-            verificationDetails: {
-              confidence: 1,
-              issues: [],
-              processingTime: Date.now() - startTime
-            },
-            usage: claudeResponse.usage,
-            auditId: 'verification_disabled',
-            retryCount
-          };
-        }
-
-        // Perform verification
-        const verificationResult = await this.verificationService.verifyResponse({
-          id: this.generateRequestId(),
-          service: request.service,
-          originalPrompt: currentPrompt,
-          claudeResponse: claudeResponse.content,
-          context: {
-            ...request.context,
-            model: request.model,
-            temperature: request.temperature,
-            max_tokens: request.max_tokens
-          },
-          validationCriteria: request.validationCriteria || this.config.validationCriteria,
-          timestamp: new Date()
-        });
-
-        auditId = verificationResult.auditId;
-
-        // Check if verification passed
-        if (verificationResult.result.verified && 
-            verificationResult.result.overallScore >= 70 &&
-            verificationResult.result.confidence >= 0.7) {
-          
-          return {
-            content: claudeResponse.content,
-            verified: true,
-            verificationScore: verificationResult.result.overallScore,
-            verificationDetails: {
-              confidence: verificationResult.result.confidence,
-              issues: verificationResult.result.issues,
-              processingTime: verificationResult.result.processingTime
-            },
-            usage: claudeResponse.usage,
-            auditId,
-            retryCount
-          };
-        }
-
-        // If verification failed and we have retries left
-        if (retryCount < this.config.maxRetries) {
-          retryCount++;
-          
-          // Generate improved prompt based on verification feedback
-          currentPrompt = this.generateRetryPrompt(
-            currentPrompt,
-            claudeResponse.content,
-            verificationResult.result.issues,
-            verificationResult.result.feedback
-          );
-
-          // Update request messages with retry prompt
-          request.messages = [{
-            role: 'user',
-            content: currentPrompt
-          }];
-
-          // Wait before retry (exponential backoff)
-          await this.delay(1000 * Math.pow(2, retryCount - 1));
-          
-          console.warn(`Verification failed, retrying (${retryCount}/${this.config.maxRetries})`);
-          continue;
-        }
-
-        // All retries exhausted
-        console.error('Verification failed after all retries');
-        return {
-          content: claudeResponse.content,
-          verified: false,
-          verificationScore: verificationResult.result.overallScore,
-          verificationDetails: {
-            confidence: verificationResult.result.confidence,
-            issues: verificationResult.result.issues,
-            processingTime: verificationResult.result.processingTime
-          },
-          usage: claudeResponse.usage,
-          auditId,
-          retryCount
-        };
-
-      } catch (error) {
-        console.error(`Attempt ${retryCount + 1} failed:`, error);
-        
-        if (retryCount >= this.config.maxRetries) {
-          throw new Error(`Failed to get verified response after ${this.config.maxRetries} attempts: ${error}`);
-        }
-        
-        retryCount++;
-        await this.delay(1000 * retryCount);
+      const initialResponse = claudeResponse.content[0];
+      if (initialResponse.type !== 'text') {
+        throw new Error('Invalid response type from Anthropic');
       }
-    }
 
-    throw new Error('Unexpected end of retry loop');
-  }
+      // Step 2: If verification is disabled, return original response
+      if (!this.config.enableVerification) {
+        console.log(`[VERIFIED-CLAUDE] Verification disabled, returning original response`);
+        return this.formatResponse(claudeResponse, undefined);
+      }
 
-  /**
-   * Call Claude API directly
-   */
-  private async callClaude(request: VerifiedClaudeRequest): Promise<{
-    content: string;
-    usage?: { input_tokens: number; output_tokens: number };
-  }> {
-    const response = await this.anthropic.messages.create({
-      model: request.model || 'claude-sonnet-4-20250514',
-      max_tokens: request.max_tokens || 4000,
-      temperature: request.temperature || 0,
-      system: request.system,
-      messages: request.messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }))
-    });
+      // Step 3: Verify response using OpenAI
+      const verificationRequest: VerificationRequest = {
+        anthropicResponse: initialResponse.text,
+        originalPrompt: this.buildOriginalPrompt(options),
+        context: options.context || this.config.context,
+        history: options.messages.slice(0, -1), // All messages except the last one
+        service: options.service || this.config.service || 'verified-claude',
+        maxRetries: options.maxRetries || this.config.maxRetries,
+        validationCriteria: options.validationCriteria
+      };
 
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
+      const verificationResult = await this.verificationService.verifyResponse(verificationRequest);
 
-    return {
-      content: content.text,
-      usage: response.usage ? {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens
-      } : undefined
-    };
-  }
-
-  /**
-   * Build prompt string from messages array
-   */
-  private buildPromptFromMessages(request: VerifiedClaudeRequest): string {
-    let prompt = '';
-    
-    if (request.system) {
-      prompt += `System: ${request.system}\n\n`;
-    }
-
-    request.messages.forEach(message => {
-      prompt += `${message.role}: ${message.content}\n`;
-    });
-
-    return prompt.trim();
-  }
-
-  /**
-   * Generate retry prompt with verification feedback
-   */
-  private generateRetryPrompt(
-    originalPrompt: string,
-    failedResponse: string,
-    issues: Array<{ category: string; severity: string; description: string; suggestion?: string }>,
-    feedback?: string
-  ): string {
-    const criticalIssues = issues.filter(i => i.severity === 'critical');
-    const highIssues = issues.filter(i => i.severity === 'high');
-
-    let retryPrompt = `${originalPrompt}\n\n`;
-    
-    retryPrompt += `IMPORTANT: Your previous response had quality issues that need to be addressed:\n\n`;
-
-    if (criticalIssues.length > 0) {
-      retryPrompt += `CRITICAL ISSUES (MUST FIX):\n`;
-      criticalIssues.forEach(issue => {
-        retryPrompt += `- ${issue.description}`;
-        if (issue.suggestion) {
-          retryPrompt += ` → ${issue.suggestion}`;
-        }
-        retryPrompt += '\n';
+      console.log(`[VERIFIED-CLAUDE] Verification completed`, {
+        service: verificationRequest.service,
+        isValid: verificationResult.isValid,
+        confidence: verificationResult.confidence,
+        qualityScore: verificationResult.qualityScore,
+        retryCount: verificationResult.retryCount,
+        processingTimeMs: Date.now() - startTime
       });
-      retryPrompt += '\n';
-    }
 
-    if (highIssues.length > 0) {
-      retryPrompt += `HIGH PRIORITY ISSUES:\n`;
-      highIssues.forEach(issue => {
-        retryPrompt += `- ${issue.description}`;
-        if (issue.suggestion) {
-          retryPrompt += ` → ${issue.suggestion}`;
-        }
-        retryPrompt += '\n';
-      });
-      retryPrompt += '\n';
-    }
+      // Step 4: Return formatted response with verification results
+      return this.formatResponse(claudeResponse, verificationResult);
 
-    if (feedback) {
-      retryPrompt += `SPECIFIC FEEDBACK:\n${feedback}\n\n`;
-    }
-
-    retryPrompt += `Please provide a corrected response that addresses all the issues above while maintaining accuracy and completeness.`;
-
-    return retryPrompt;
-  }
-
-  /**
-   * Utility methods
-   */
-  private generateRequestId(): string {
-    return `claude_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Get verification service statistics
-   */
-  public getVerificationStats() {
-    return this.verificationService.getVerificationStats();
-  }
-
-  /**
-   * Get recent audit logs
-   */
-  public getAuditLogs(limit?: number) {
-    return this.verificationService.getAuditLogs(limit);
-  }
-
-  /**
-   * Batch processing for multiple verification requests
-   */
-  async createBatchVerifiedMessages(
-    requests: VerifiedClaudeRequest[],
-    options?: {
-      maxConcurrent?: number;
-      stopOnFirstFailure?: boolean;
-    }
-  ): Promise<{
-    results: (VerifiedClaudeResponse | Error)[];
-    successCount: number;
-    failureCount: number;
-    totalTime: number;
-  }> {
-    const startTime = Date.now();
-    const maxConcurrent = options?.maxConcurrent || 3;
-    const stopOnFirstFailure = options?.stopOnFirstFailure || false;
-    
-    const results: (VerifiedClaudeResponse | Error)[] = [];
-    let successCount = 0;
-    let failureCount = 0;
-
-    // Process requests in batches to avoid overwhelming APIs
-    for (let i = 0; i < requests.length; i += maxConcurrent) {
-      const batch = requests.slice(i, i + maxConcurrent);
+    } catch (error) {
+      console.error(`[VERIFIED-CLAUDE] Error in createVerifiedMessage:`, error);
       
-      const batchPromises = batch.map(async (request) => {
+      // If fallback is enabled and we have API connectivity issues, try original Claude
+      if (this.config.fallbackToOriginal && error instanceof Error && 
+          (error.message.includes('network') || error.message.includes('timeout'))) {
+        
+        console.log(`[VERIFIED-CLAUDE] Falling back to original Claude due to error`);
+        
         try {
-          const result = await this.createVerifiedMessage(request);
-          if (result.verified) {
-            successCount++;
-          } else {
-            failureCount++;
-          }
-          return result;
-        } catch (error) {
-          failureCount++;
-          return error instanceof Error ? error : new Error(String(error));
-        }
-      });
-
-      const batchResults = await Promise.allSettled(batchPromises);
-      
-      for (const result of batchResults) {
-        if (result.status === 'fulfilled') {
-          results.push(result.value);
-        } else {
-          results.push(new Error(result.reason));
-          if (stopOnFirstFailure) {
-            return {
-              results,
-              successCount,
-              failureCount,
-              totalTime: Date.now() - startTime
-            };
-          }
+          const fallbackResponse = await this.anthropic.messages.create({
+            model: options.model || 'claude-sonnet-4-20250514',
+            max_tokens: options.max_tokens || 4000,
+            temperature: options.temperature || 0.3,
+            messages: options.messages,
+            timeout: options.timeout || 30000,
+            ...(options.system && { system: options.system })
+          });
+          
+          return this.formatResponse(fallbackResponse, {
+            isValid: false,
+            confidence: 0.5,
+            qualityScore: 50,
+            issues: ['Verification failed - used fallback'],
+            suggestions: ['Check verification service connectivity'],
+            retryCount: 0,
+            processingTimeMs: Date.now() - startTime,
+            finalResponse: fallbackResponse.content[0].type === 'text' ? fallbackResponse.content[0].text : ''
+          });
+        } catch (fallbackError) {
+          throw new Error(`Both verification and fallback failed: ${error.message}`);
         }
       }
-    }
 
-    return {
-      results,
-      successCount,
-      failureCount,
-      totalTime: Date.now() - startTime
-    };
-  }
-
-  /**
-   * Stream verified responses for real-time applications
-   */
-  async *streamVerifiedMessage(
-    request: VerifiedClaudeRequest
-  ): AsyncGenerator<{
-    type: 'progress' | 'partial' | 'verification' | 'complete' | 'error';
-    data: any;
-  }> {
-    try {
-      yield { type: 'progress', data: { stage: 'initializing', message: 'Starting Claude request...' } };
-      
-      const startTime = Date.now();
-      
-      // Call Claude API (in a real streaming implementation, this would use Claude's streaming API)
-      yield { type: 'progress', data: { stage: 'claude_request', message: 'Calling Claude API...' } };
-      
-      const claudeResponse = await this.callClaude(request);
-      
-      yield { 
-        type: 'partial', 
-        data: { 
-          content: claudeResponse.content,
-          usage: claudeResponse.usage,
-          processingTime: Date.now() - startTime
-        } 
-      };
-
-      if (this.config.verificationEnabled) {
-        yield { type: 'progress', data: { stage: 'verification', message: 'Starting verification...' } };
-        
-        const verificationResult = await this.verificationService.verifyResponse({
-          id: this.generateRequestId(),
-          service: request.service,
-          originalPrompt: this.buildPromptFromMessages(request),
-          claudeResponse: claudeResponse.content,
-          context: request.context,
-          validationCriteria: request.validationCriteria || this.config.validationCriteria,
-          timestamp: new Date()
-        });
-
-        yield {
-          type: 'verification',
-          data: {
-            verified: verificationResult.result.verified,
-            confidence: verificationResult.result.confidence,
-            score: verificationResult.result.overallScore,
-            issues: verificationResult.result.issues
-          }
-        };
-
-        yield {
-          type: 'complete',
-          data: {
-            content: claudeResponse.content,
-            verified: verificationResult.result.verified,
-            verificationScore: verificationResult.result.overallScore,
-            verificationDetails: {
-              confidence: verificationResult.result.confidence,
-              issues: verificationResult.result.issues,
-              processingTime: verificationResult.result.processingTime
-            },
-            usage: claudeResponse.usage,
-            auditId: verificationResult.auditId,
-            retryCount: 0
-          }
-        };
-      } else {
-        yield {
-          type: 'complete',
-          data: {
-            content: claudeResponse.content,
-            verified: true,
-            verificationScore: 100,
-            verificationDetails: {
-              confidence: 1,
-              issues: [],
-              processingTime: 0
-            },
-            usage: claudeResponse.usage,
-            auditId: 'verification_disabled',
-            retryCount: 0
-          }
-        };
-      }
-    } catch (error) {
-      yield {
-        type: 'error',
-        data: {
-          error: error instanceof Error ? error.message : String(error),
-          timestamp: new Date()
-        }
-      };
+      throw error;
     }
   }
 
   /**
-   * Advanced configuration management
+   * Convenience method for simple text prompts
    */
-  public updateConfiguration(newConfig: Partial<VerifiedClaudeConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-    
-    // Reinitialize services if needed
-    if (newConfig.apiKey) {
-      this.anthropic = new Anthropic({
-        apiKey: newConfig.apiKey
-      });
+  async askVerified(
+    prompt: string, 
+    options?: {
+      service?: string;
+      context?: string;
+      maxRetries?: number;
+      validationCriteria?: string[];
     }
-
-    // Log configuration change
-    console.info('VerifiedClaudeService configuration updated', {
-      timestamp: new Date(),
-      updatedFields: Object.keys(newConfig),
-      verificationEnabled: this.config.verificationEnabled
+  ): Promise<{ text: string; verification: VerificationResult }> {
+    const response = await this.createVerifiedMessage({
+      messages: [{ role: 'user', content: prompt }],
+      service: options?.service,
+      context: options?.context,
+      maxRetries: options?.maxRetries,
+      validationCriteria: options?.validationCriteria
     });
-  }
-
-  /**
-   * Performance optimization: Warm up the service
-   */
-  public async warmUp(): Promise<{
-    success: boolean;
-    anthropicReady: boolean;
-    verificationReady: boolean;
-    responseTime: number;
-  }> {
-    const startTime = Date.now();
-    let anthropicReady = false;
-    let verificationReady = false;
-
-    try {
-      // Test Claude API
-      await this.callClaude({
-        service: 'warmup',
-        messages: [{ role: 'user', content: 'Warmup test - respond with OK' }],
-        max_tokens: 5,
-        temperature: 0
-      });
-      anthropicReady = true;
-
-      if (this.config.verificationEnabled) {
-        // Test verification service
-        const healthCheck = await this.verificationService.healthCheck();
-        verificationReady = healthCheck.healthy;
-      } else {
-        verificationReady = true; // Not applicable when verification is disabled
-      }
-
-      return {
-        success: anthropicReady && verificationReady,
-        anthropicReady,
-        verificationReady,
-        responseTime: Date.now() - startTime
-      };
-    } catch (error) {
-      console.error('Service warmup failed:', error);
-      return {
-        success: false,
-        anthropicReady,
-        verificationReady,
-        responseTime: Date.now() - startTime
-      };
-    }
-  }
-
-  /**
-   * Get comprehensive service health status
-   */
-  public async getHealthStatus(): Promise<{
-    service: 'healthy' | 'degraded' | 'unhealthy';
-    components: {
-      claude: 'healthy' | 'degraded' | 'unhealthy';
-      verification: 'healthy' | 'degraded' | 'unhealthy';
-      memory: 'healthy' | 'degraded' | 'unhealthy';
-    };
-    metrics: {
-      totalRequests: number;
-      successRate: number;
-      averageResponseTime: number;
-      uptime: number;
-    };
-    timestamp: Date;
-  }> {
-    const startTime = Date.now();
-    
-    // Check Claude API
-    let claudeStatus: 'healthy' | 'degraded' | 'unhealthy' = 'unhealthy';
-    try {
-      await this.callClaude({
-        service: 'health-check',
-        messages: [{ role: 'user', content: 'Health check - respond briefly' }],
-        max_tokens: 5,
-        temperature: 0
-      });
-      claudeStatus = 'healthy';
-    } catch (error) {
-      console.error('Claude health check failed:', error);
-    }
-
-    // Check verification service if enabled
-    let verificationStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    if (this.config.verificationEnabled) {
-      try {
-        const healthCheck = await this.verificationService.healthCheck();
-        verificationStatus = healthCheck.status;
-      } catch (error) {
-        console.error('Verification service health check failed:', error);
-        verificationStatus = 'unhealthy';
-      }
-    }
-
-    // Check memory usage
-    const memoryUsage = process.memoryUsage();
-    const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
-    let memoryStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    if (memoryMB > 512) {
-      memoryStatus = 'unhealthy';
-    } else if (memoryMB > 256) {
-      memoryStatus = 'degraded';
-    }
-
-    // Get verification statistics
-    const stats = this.getVerificationStats();
-    
-    // Determine overall service status
-    const components = { claude: claudeStatus, verification: verificationStatus, memory: memoryStatus };
-    const unhealthyComponents = Object.values(components).filter(status => status === 'unhealthy').length;
-    const degradedComponents = Object.values(components).filter(status => status === 'degraded').length;
-    
-    let serviceStatus: 'healthy' | 'degraded' | 'unhealthy';
-    if (unhealthyComponents > 0) {
-      serviceStatus = 'unhealthy';
-    } else if (degradedComponents > 0) {
-      serviceStatus = 'degraded';
-    } else {
-      serviceStatus = 'healthy';
-    }
 
     return {
-      service: serviceStatus,
-      components,
-      metrics: {
-        totalRequests: stats.totalVerifications,
-        successRate: stats.successRate,
-        averageResponseTime: stats.averageProcessingTime,
-        uptime: Date.now() - startTime
-      },
-      timestamp: new Date()
+      text: response.content[0].text,
+      verification: response.verification!
     };
   }
 
   /**
-   * Create specialized validation criteria for different service types
+   * Batch process multiple prompts with verification
    */
-  public static createValidationCriteria(serviceType: string): ValidationCriteria {
-    const baseCriteria: ValidationCriteria = {
-      accuracy: true,
-      completeness: true,
-      relevance: true,
-      consistency: true,
-      safety: true,
-      format: true
+  async batchVerified(
+    prompts: Array<{
+      messages: Array<{ role: string; content: string }>;
+      service?: string;
+      context?: string;
+    }>,
+    options?: {
+      maxConcurrency?: number;
+      validationCriteria?: string[];
+    }
+  ): Promise<Array<{ response: VerifiedResponse; index: number }>> {
+    const maxConcurrency = options?.maxConcurrency || 3;
+    const results: Array<{ response: VerifiedResponse; index: number }> = [];
+
+    // Process in batches to avoid overwhelming APIs
+    for (let i = 0; i < prompts.length; i += maxConcurrency) {
+      const batch = prompts.slice(i, i + maxConcurrency);
+      
+      const batchPromises = batch.map(async (prompt, batchIndex) => {
+        const response = await this.createVerifiedMessage({
+          messages: prompt.messages,
+          service: prompt.service,
+          context: prompt.context,
+          validationCriteria: options?.validationCriteria
+        });
+        
+        return {
+          response,
+          index: i + batchIndex
+        };
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+
+    return results.sort((a, b) => a.index - b.index);
+  }
+
+  /**
+   * Health check for the verified service
+   */
+  async healthCheck(): Promise<{
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    details: any;
+    timestamp: string;
+  }> {
+    try {
+      const startTime = Date.now();
+
+      // Test basic Claude connectivity
+      const claudeTest = await this.anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Health check' }],
+        timeout: 5000
+      });
+
+      // Test verification service if enabled
+      let verificationHealth = null;
+      if (this.config.enableVerification) {
+        verificationHealth = await this.verificationService.healthCheck();
+      }
+
+      const totalTime = Date.now() - startTime;
+
+      const status = verificationHealth?.status === 'unhealthy' ? 'degraded' : 'healthy';
+
+      return {
+        status,
+        details: {
+          responseTimeMs: totalTime,
+          claude: {
+            status: 'connected',
+            model: 'claude-sonnet-4-20250514'
+          },
+          verification: this.config.enableVerification ? verificationHealth : { status: 'disabled' },
+          config: {
+            verificationEnabled: this.config.enableVerification,
+            maxRetries: this.config.maxRetries,
+            confidenceThreshold: this.config.confidenceThreshold,
+            qualityThreshold: this.config.qualityThreshold
+          }
+        },
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          config: {
+            verificationEnabled: this.config.enableVerification,
+            maxRetries: this.config.maxRetries
+          }
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Get service statistics
+   */
+  getStats(): {
+    service: string;
+    verificationEnabled: boolean;
+    config: VerifiedClaudeConfig;
+    apiKeysConfigured: {
+      anthropic: boolean;
+      openai: boolean;
+    };
+  } {
+    return {
+      service: 'VerifiedClaudeService',
+      verificationEnabled: this.config.enableVerification || false,
+      config: { ...this.config },
+      apiKeysConfigured: {
+        anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+        openai: Boolean(process.env.OPENAI_API_KEY)
+      }
+    };
+  }
+
+  /**
+   * Update configuration at runtime
+   */
+  updateConfig(newConfig: Partial<VerifiedClaudeConfig>): void {
+    this.config = { ...this.config, ...newConfig };
+    console.log(`[VERIFIED-CLAUDE] Configuration updated:`, newConfig);
+  }
+
+  /**
+   * Enable/disable verification at runtime
+   */
+  setVerification(enabled: boolean): void {
+    this.config.enableVerification = enabled;
+    console.log(`[VERIFIED-CLAUDE] Verification ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Private helper methods
+   */
+  private buildOriginalPrompt(options: VerifiedMessageOptions): string {
+    const systemPrompt = options.system ? `System: ${options.system}\n\n` : '';
+    const messages = options.messages.map(m => `${m.role}: ${m.content}`).join('\n');
+    return systemPrompt + messages;
+  }
+
+  private formatResponse(claudeResponse: any, verification?: VerificationResult): VerifiedResponse {
+    const baseResponse = {
+      content: claudeResponse.content,
+      model: claudeResponse.model,
+      role: claudeResponse.role,
+      stop_reason: claudeResponse.stop_reason,
+      stop_sequence: claudeResponse.stop_sequence,
+      type: claudeResponse.type,
+      usage: claudeResponse.usage
     };
 
-    switch (serviceType) {
-      case 'cv-parsing':
-        return {
-          ...baseCriteria,
-          customCriteria: [
-            {
-              name: 'data_extraction_accuracy',
-              description: 'Verify that personal information, work experience, and skills are accurately extracted',
-              weight: 0.9
-            },
-            {
-              name: 'json_structure_compliance',
-              description: 'Ensure response follows required JSON schema for CV data',
-              weight: 0.8
-            }
-          ]
-        };
-
-      case 'pii-detection':
-        return {
-          ...baseCriteria,
-          safety: true,
-          customCriteria: [
-            {
-              name: 'pii_identification',
-              description: 'Accurately identify all types of personally identifiable information',
-              weight: 1.0
-            },
-            {
-              name: 'false_positive_minimization',
-              description: 'Minimize false positives while maintaining high sensitivity',
-              weight: 0.7
-            }
-          ]
-        };
-
-      case 'skills-analysis':
-        return {
-          ...baseCriteria,
-          customCriteria: [
-            {
-              name: 'skill_categorization',
-              description: 'Properly categorize skills by type and proficiency level',
-              weight: 0.8
-            },
-            {
-              name: 'market_relevance',
-              description: 'Assess current market relevance of identified skills',
-              weight: 0.6
-            }
-          ]
-        };
-
-      case 'achievements-extraction':
-        return {
-          ...baseCriteria,
-          customCriteria: [
-            {
-              name: 'quantifiable_metrics',
-              description: 'Extract specific, quantifiable achievements with metrics',
-              weight: 0.9
-            },
-            {
-              name: 'impact_assessment',
-              description: 'Assess business impact and significance of achievements',
-              weight: 0.7
-            }
-          ]
-        };
-
-      default:
-        return baseCriteria;
+    // If verification was performed, use the final verified response
+    if (verification) {
+      return {
+        ...baseResponse,
+        content: [{ type: 'text' as const, text: verification.finalResponse }],
+        verification
+      };
     }
+
+    return baseResponse;
   }
 }
-
-// Export singleton instance
-export const verifiedClaudeService = new VerifiedClaudeService();

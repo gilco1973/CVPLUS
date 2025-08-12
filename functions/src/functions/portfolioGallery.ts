@@ -6,7 +6,7 @@ import { portfolioGalleryService } from '../services/portfolio-gallery.service';
 export const generatePortfolioGallery = onCall(
   {
     timeoutSeconds: 120,
-    // secrets: ['OPENAI_API_KEY'] // Temporarily disabled,
+    secrets: ['OPENAI_API_KEY'],
     ...corsOptions
   },
   async (request) => {

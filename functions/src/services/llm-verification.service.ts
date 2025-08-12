@@ -1,911 +1,449 @@
+/**
+ * LLM Verification Service
+ * 
+ * Validates Anthropic Claude responses using OpenAI GPT-4 for quality assurance.
+ * Implements retry logic with exponential backoff and comprehensive logging.
+ */
+
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config/environment';
 
-// Types and Interfaces
 export interface VerificationRequest {
-  id: string;
-  service: string;
+  anthropicResponse: string;
   originalPrompt: string;
-  claudeResponse: string;
-  context?: Record<string, any>;
+  context?: string;
   history?: Array<{ role: string; content: string }>;
-  validationCriteria?: ValidationCriteria;
-  timestamp: Date;
-  userId?: string;
-  sessionId?: string;
-}
-
-export interface ValidationCriteria {
-  accuracy: boolean;
-  completeness: boolean;
-  relevance: boolean;
-  consistency: boolean;
-  safety: boolean;
-  format: boolean;
-  customCriteria?: Array<{
-    name: string;
-    description: string;
-    weight: number; // 0-1
-  }>;
+  service: string;
+  maxRetries?: number;
+  validationCriteria?: string[];
 }
 
 export interface VerificationResult {
-  verified: boolean;
-  confidence: number; // 0-1
-  issues: VerificationIssue[];
-  overallScore: number; // 0-100
-  detailedScores: {
-    accuracy: number;
-    completeness: number;
-    relevance: number;
-    consistency: number;
-    safety: number;
-    format: number;
+  isValid: boolean;
+  confidence: number; // 0-1 scale
+  qualityScore: number; // 0-100 scale
+  issues: string[];
+  suggestions: string[];
+  retryCount: number;
+  processingTimeMs: number;
+  finalResponse: string;
+}
+
+export interface VerificationConfig {
+  maxRetries: number;
+  timeoutMs: number;
+  enableLogging: boolean;
+  validationCriteria: {
+    accuracy: boolean;
+    completeness: boolean;
+    relevance: boolean;
+    consistency: boolean;
+    safety: boolean;
+    format: boolean;
   };
-  recommendation: 'approve' | 'retry' | 'manual_review';
-  feedback?: string;
-  processingTime: number;
+  retryDelayMs: number;
+  confidenceThreshold: number;
+  qualityThreshold: number;
 }
 
-export interface VerificationIssue {
-  category: 'accuracy' | 'completeness' | 'relevance' | 'consistency' | 'safety' | 'format' | 'custom';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  location?: string;
-  suggestion?: string;
-}
-
-export interface RetryAttempt {
-  attemptNumber: number;
-  timestamp: Date;
-  reason: string;
-  previousIssues: VerificationIssue[];
-}
-
-export interface VerificationAuditLog {
-  requestId: string;
-  service: string;
-  userId?: string;
-  sessionId?: string;
-  originalPrompt: string;
-  claudeResponse: string;
-  verificationResult: VerificationResult;
-  retryAttempts: RetryAttempt[];
-  finalOutcome: 'approved' | 'rejected' | 'manual_review';
-  totalProcessingTime: number;
-  timestamp: Date;
-  apiCosts: {
-    claude: number;
-    openai: number;
-  };
-}
-
-// Configuration
-const DEFAULT_VALIDATION_CRITERIA: ValidationCriteria = {
-  accuracy: true,
-  completeness: true,
-  relevance: true,
-  consistency: true,
-  safety: true,
-  format: true
-};
-
-const DEFAULT_CONFIG = {
-  maxRetries: 3,
-  retryDelay: 1000, // ms
-  timeoutMs: 30000,
-  confidenceThreshold: 0.7,
-  scoreThreshold: 70,
-  rateLimitPerMinute: 60,
-  enableDetailedLogging: true,
-  sanitizeLogsForPII: true
-};
-
-/**
- * LLM Response Verification Service
- * 
- * This service implements a comprehensive verification system for LLM responses
- * using cross-validation between Anthropic Claude and OpenAI GPT-4.
- * 
- * Key Features:
- * - Response quality validation
- * - Retry logic with failure analysis
- * - Security audit logging
- * - Rate limiting protection
- * - PII sanitization
- * - Performance optimization
- */
 export class LLMVerificationService {
   private openai: OpenAI;
-  private rateLimitCounter: Map<string, number[]> = new Map();
-  private auditLogs: VerificationAuditLog[] = [];
-  private config = DEFAULT_CONFIG;
+  private anthropic: Anthropic;
+  private config: VerificationConfig;
 
-  constructor(customConfig?: Partial<typeof DEFAULT_CONFIG>) {
-    this.openai = new OpenAI({
-      apiKey: config.openai?.apiKey || process.env.OPENAI_API_KEY || ''
+  constructor(customConfig?: Partial<VerificationConfig>) {
+    this.openai = new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY || config.openai?.apiKey || ''
     });
     
-    if (customConfig) {
-      this.config = { ...DEFAULT_CONFIG, ...customConfig };
-    }
+    this.anthropic = new Anthropic({ 
+      apiKey: process.env.ANTHROPIC_API_KEY || config.anthropic?.apiKey || ''
+    });
 
-    // Initialize rate limiting cleanup
-    this.initializeRateLimitCleanup();
+    // Default configuration
+    this.config = {
+      maxRetries: 3,
+      timeoutMs: 30000,
+      enableLogging: true,
+      validationCriteria: {
+        accuracy: true,
+        completeness: true,
+        relevance: true,
+        consistency: true,
+        safety: true,
+        format: true
+      },
+      retryDelayMs: 1000,
+      confidenceThreshold: 0.7,
+      qualityThreshold: 75,
+      ...customConfig
+    };
+
+    this.logInfo('LLM Verification Service initialized', {
+      maxRetries: this.config.maxRetries,
+      timeoutMs: this.config.timeoutMs,
+      confidenceThreshold: this.config.confidenceThreshold,
+      qualityThreshold: this.config.qualityThreshold
+    });
   }
 
   /**
-   * Main verification method - validates Claude response using OpenAI GPT-4
+   * Verify an Anthropic response using OpenAI GPT-4
    */
-  async verifyResponse(request: VerificationRequest): Promise<{
-    result: VerificationResult;
-    auditId: string;
-  }> {
+  async verifyResponse(request: VerificationRequest): Promise<VerificationResult> {
     const startTime = Date.now();
-    
-    // Check rate limits
-    if (!this.checkRateLimit(request.service)) {
-      throw new Error(`Rate limit exceeded for service: ${request.service}`);
-    }
+    let retryCount = 0;
+    let currentResponse = request.anthropicResponse;
+    let finalResult: VerificationResult;
 
-    // Initialize audit log entry
-    const auditLog: VerificationAuditLog = {
-      requestId: request.id,
+    const maxRetries = request.maxRetries || this.config.maxRetries;
+
+    this.logInfo('Starting LLM verification', {
       service: request.service,
-      userId: request.userId,
-      sessionId: request.sessionId,
-      originalPrompt: this.sanitizeForLogging(request.originalPrompt),
-      claudeResponse: this.sanitizeForLogging(request.claudeResponse),
-      verificationResult: {} as VerificationResult,
-      retryAttempts: [],
-      finalOutcome: 'approved',
-      totalProcessingTime: 0,
-      timestamp: new Date(),
-      apiCosts: { claude: 0, openai: 0 }
-    };
+      promptLength: request.originalPrompt.length,
+      responseLength: request.anthropicResponse.length,
+      maxRetries
+    });
 
-    try {
-      // Perform verification
-      const verificationResult = await this.performVerification(request);
-      
-      auditLog.verificationResult = verificationResult;
-      auditLog.totalProcessingTime = Date.now() - startTime;
-      
-      // Determine final outcome
-      if (verificationResult.verified && verificationResult.overallScore >= this.config.scoreThreshold) {
-        auditLog.finalOutcome = 'approved';
-      } else if (verificationResult.recommendation === 'manual_review') {
-        auditLog.finalOutcome = 'manual_review';
-      } else {
-        auditLog.finalOutcome = 'rejected';
-      }
-
-      // Store audit log
-      const auditId = this.storeAuditLog(auditLog);
-      
-      return {
-        result: verificationResult,
-        auditId
-      };
-
-    } catch (error) {
-      auditLog.totalProcessingTime = Date.now() - startTime;
-      auditLog.finalOutcome = 'rejected';
-      const auditId = this.storeAuditLog(auditLog);
-      
-      console.error('LLM Verification failed:', error);
-      throw new Error(`Verification failed: ${error}`);
-    }
-  }
-
-  /**
-   * Comprehensive response verification with retry logic
-   */
-  async verifyWithRetry(
-    service: string,
-    originalPrompt: string,
-    claudeResponse: string,
-    context?: Record<string, any>,
-    validationCriteria?: ValidationCriteria
-  ): Promise<{
-    verified: boolean;
-    result: VerificationResult;
-    finalResponse: string;
-    auditId: string;
-  }> {
-    const request: VerificationRequest = {
-      id: this.generateRequestId(),
-      service,
-      originalPrompt,
-      claudeResponse,
-      context,
-      validationCriteria: validationCriteria || DEFAULT_VALIDATION_CRITERIA,
-      timestamp: new Date(),
-      userId: context?.userId,
-      sessionId: context?.sessionId
-    };
-
-    let currentResponse = claudeResponse;
-    let attempts = 0;
-    let lastVerificationResult: VerificationResult;
-
-    while (attempts < this.config.maxRetries) {
-      attempts++;
-      
+    while (retryCount <= maxRetries) {
       try {
-        const verification = await this.verifyResponse({
-          ...request,
-          claudeResponse: currentResponse
-        });
+        // Step 1: Validate current response with OpenAI
+        const validation = await this.validateWithOpenAI(request, currentResponse, retryCount);
 
-        lastVerificationResult = verification.result;
+        finalResult = {
+          isValid: validation.isValid,
+          confidence: validation.confidence,
+          qualityScore: validation.qualityScore,
+          issues: validation.issues,
+          suggestions: validation.suggestions,
+          retryCount,
+          processingTimeMs: Date.now() - startTime,
+          finalResponse: currentResponse
+        };
 
-        // Check if verification passed
-        if (verification.result.verified && 
-            verification.result.overallScore >= this.config.scoreThreshold &&
-            verification.result.confidence >= this.config.confidenceThreshold) {
-          
-          return {
-            verified: true,
-            result: verification.result,
-            finalResponse: currentResponse,
-            auditId: verification.auditId
-          };
+        // Step 2: Check if validation passed
+        if (validation.isValid) {
+          this.logInfo('Verification successful', {
+            service: request.service,
+            retryCount,
+            confidence: validation.confidence,
+            qualityScore: validation.qualityScore,
+            processingTimeMs: finalResult.processingTimeMs
+          });
+          return finalResult;
         }
 
-        // If not the last attempt, prepare retry
-        if (attempts < this.config.maxRetries) {
-          // Generate retry prompt with feedback
-          const retryPrompt = this.generateRetryPrompt(
-            originalPrompt,
-            currentResponse,
-            verification.result.issues,
-            verification.result.feedback
-          );
+        // Step 3: If validation failed and we have retries left, retry with Anthropic
+        if (retryCount < maxRetries) {
+          this.logWarning('Verification failed, retrying with Anthropic', {
+            service: request.service,
+            retryCount: retryCount + 1,
+            issues: validation.issues,
+            suggestions: validation.suggestions
+          });
 
-          // Wait before retry
-          await this.delay(this.config.retryDelay * attempts);
+          // Add delay before retry (exponential backoff)
+          await this.delay(this.config.retryDelayMs * Math.pow(2, retryCount));
 
-          // Get new response from Claude (this would be implemented in calling service)
-          // For now, we'll just use the same response to demonstrate the system
-          // In actual implementation, the calling service would re-query Claude
-          console.warn(`Verification failed, retry attempt ${attempts}/${this.config.maxRetries}`);
+          currentResponse = await this.retryWithAnthropic(request, validation, retryCount + 1);
+          retryCount++;
+        } else {
+          // Max retries reached
+          this.logError('Max retries reached, verification failed', {
+            service: request.service,
+            maxRetries,
+            finalIssues: validation.issues
+          });
+          return finalResult;
         }
 
       } catch (error) {
-        console.error(`Verification attempt ${attempts} failed:`, error);
-        
-        if (attempts === this.config.maxRetries) {
-          throw error;
-        }
-        
-        await this.delay(this.config.retryDelay * attempts);
+        this.logError('Verification process error', {
+          service: request.service,
+          retryCount,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+
+        // Return failed result on error
+        return {
+          isValid: false,
+          confidence: 0,
+          qualityScore: 0,
+          issues: [`Verification error: ${error instanceof Error ? error.message : 'Unknown error'}`],
+          suggestions: ['Check API connectivity and retry'],
+          retryCount,
+          processingTimeMs: Date.now() - startTime,
+          finalResponse: currentResponse
+        };
       }
     }
 
-    // All retries exhausted
-    return {
-      verified: false,
-      result: lastVerificationResult!,
-      finalResponse: currentResponse,
-      auditId: this.generateRequestId()
-    };
+    // This should not be reached, but just in case
+    return finalResult!;
   }
 
   /**
-   * Core verification logic using OpenAI GPT-4
+   * Validate response using OpenAI GPT-4
    */
-  private async performVerification(request: VerificationRequest): Promise<VerificationResult> {
-    const startTime = Date.now();
-    const criteria = request.validationCriteria || DEFAULT_VALIDATION_CRITERIA;
+  private async validateWithOpenAI(
+    request: VerificationRequest, 
+    responseToValidate: string, 
+    retryCount: number
+  ): Promise<{
+    isValid: boolean;
+    confidence: number;
+    qualityScore: number;
+    issues: string[];
+    suggestions: string[];
+  }> {
+    const validationPrompt = this.buildValidationPrompt(request, responseToValidate, retryCount);
 
-    if (!this.openai.apiKey) {
-      throw new Error('OpenAI API key not configured for verification');
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [{ role: 'user', content: validationPrompt }],
+      temperature: 0.1,
+      max_tokens: 1000,
+      timeout: this.config.timeoutMs
+    });
+
+    const validationResult = response.choices[0].message.content;
+    if (!validationResult) {
+      throw new Error('Empty validation response from OpenAI');
     }
 
-    const verificationPrompt = this.buildVerificationPrompt(request, criteria);
-
-    try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert AI response validator. Your job is to evaluate the quality, accuracy, and appropriateness of AI-generated responses. You must provide detailed, objective analysis based on specific criteria.
-
-CRITICAL REQUIREMENTS:
-1. Be thorough and objective in your evaluation
-2. Identify specific issues with concrete examples
-3. Provide actionable feedback for improvement
-4. Score each criterion on a scale of 0-100
-5. Consider the context and intended use case
-6. Flag any potential safety or ethical concerns
-7. Assess whether the response adequately addresses the original prompt
-
-Return your analysis as valid JSON with the exact structure specified in the user prompt.`
-          },
-          {
-            role: 'user',
-            content: verificationPrompt
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 2000,
-        timeout: this.config.timeoutMs
-      });
-
-      const content = response.choices[0].message.content;
-      if (!content) {
-        throw new Error('Empty response from verification service');
-      }
-
-      // Parse verification result
-      const verificationData = JSON.parse(content);
-      
-      // Calculate processing time
-      const processingTime = Date.now() - startTime;
-
-      // Build final verification result
-      const result: VerificationResult = {
-        verified: verificationData.verified,
-        confidence: verificationData.confidence,
-        issues: verificationData.issues || [],
-        overallScore: verificationData.overallScore,
-        detailedScores: verificationData.detailedScores,
-        recommendation: verificationData.recommendation,
-        feedback: verificationData.feedback,
-        processingTime
-      };
-
-      // Additional safety checks
-      this.performSafetyValidation(result, request);
-
-      return result;
-
-    } catch (error) {
-      console.error('Error in verification process:', error);
-      
-      // Return failure result
-      return {
-        verified: false,
-        confidence: 0,
-        issues: [{
-          category: 'safety',
-          severity: 'critical',
-          description: 'Verification service failed',
-          suggestion: 'Manual review required'
-        }],
-        overallScore: 0,
-        detailedScores: {
-          accuracy: 0,
-          completeness: 0,
-          relevance: 0,
-          consistency: 0,
-          safety: 0,
-          format: 0
-        },
-        recommendation: 'manual_review',
-        feedback: `Verification failed: ${error}`,
-        processingTime: Date.now() - startTime
-      };
-    }
+    return this.parseValidationResult(validationResult);
   }
 
   /**
-   * Build comprehensive verification prompt for OpenAI
+   * Retry with Anthropic using feedback from OpenAI validation
    */
-  private buildVerificationPrompt(request: VerificationRequest, criteria: ValidationCriteria): string {
-    return `
-TASK: Evaluate the quality and appropriateness of an AI response from Claude.
+  private async retryWithAnthropic(
+    request: VerificationRequest,
+    validationFailure: { issues: string[]; suggestions: string[] },
+    retryAttempt: number
+  ): Promise<string> {
+    const improvedPrompt = this.buildImprovedPrompt(request, validationFailure, retryAttempt);
 
-ORIGINAL PROMPT:
+    const response = await this.anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      temperature: 0.3,
+      messages: [{ role: 'user', content: improvedPrompt }],
+      timeout: this.config.timeoutMs
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Invalid response type from Anthropic');
+    }
+
+    return content.text;
+  }
+
+  /**
+   * Build validation prompt for OpenAI
+   */
+  private buildValidationPrompt(
+    request: VerificationRequest, 
+    responseToValidate: string, 
+    retryCount: number
+  ): string {
+    const criteria = request.validationCriteria || Object.keys(this.config.validationCriteria);
+    
+    return `You are an expert AI response validator. Evaluate the following AI response for quality and correctness.
+
+**SERVICE CONTEXT**: ${request.service}
+**RETRY ATTEMPT**: ${retryCount + 1}
+
+**ORIGINAL PROMPT**:
 ${request.originalPrompt}
 
-CLAUDE'S RESPONSE:
-${request.claudeResponse}
+**CONTEXT** (if provided):
+${request.context || 'No additional context provided'}
 
-${request.context ? `
-CONTEXT:
-${JSON.stringify(request.context, null, 2)}
-` : ''}
+**CONVERSATION HISTORY** (if provided):
+${request.history ? request.history.map(h => `${h.role}: ${h.content}`).join('\n') : 'No conversation history'}
 
-${request.history ? `
-CONVERSATION HISTORY:
-${request.history.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
-` : ''}
+**AI RESPONSE TO VALIDATE**:
+${responseToValidate}
 
-EVALUATION CRITERIA:
-${criteria.accuracy ? '✓ ACCURACY: Is the information factually correct and based on the provided context?' : ''}
-${criteria.completeness ? '✓ COMPLETENESS: Does the response fully address all aspects of the prompt?' : ''}
-${criteria.relevance ? '✓ RELEVANCE: Is the response directly relevant to the question asked?' : ''}
-${criteria.consistency ? '✓ CONSISTENCY: Is the response internally consistent and logical?' : ''}
-${criteria.safety ? '✓ SAFETY: Does the response avoid harmful, biased, or inappropriate content?' : ''}
-${criteria.format ? '✓ FORMAT: Is the response properly structured and formatted as requested?' : ''}
+**VALIDATION CRITERIA**:
+Please evaluate the response against these criteria: ${criteria.join(', ')}
 
-${criteria.customCriteria?.map(cc => 
-  `✓ ${cc.name.toUpperCase()}: ${cc.description} (Weight: ${cc.weight})`
-).join('\n') || ''}
-
-SPECIFIC EVALUATION REQUIREMENTS:
-1. SERVICE CONTEXT: This is for the "${request.service}" service in a CV analysis platform
-2. USER SAFETY: Ensure no PII exposure or security vulnerabilities
-3. BUSINESS LOGIC: Verify response aligns with CV processing workflows
-4. DATA INTEGRITY: Check that extracted data is realistic and properly formatted
-
-Please evaluate the response and return a JSON object with this exact structure:
+**REQUIRED OUTPUT FORMAT** (JSON only):
 {
-  "verified": boolean,
-  "confidence": number (0-1),
-  "overallScore": number (0-100),
-  "detailedScores": {
-    "accuracy": number (0-100),
-    "completeness": number (0-100),
-    "relevance": number (0-100),
-    "consistency": number (0-100),
-    "safety": number (0-100),
-    "format": number (0-100)
-  },
-  "issues": [
-    {
-      "category": "accuracy|completeness|relevance|consistency|safety|format|custom",
-      "severity": "low|medium|high|critical",
-      "description": "Detailed description of the issue",
-      "location": "Where in the response (optional)",
-      "suggestion": "How to fix this issue"
-    }
-  ],
-  "recommendation": "approve|retry|manual_review",
-  "feedback": "Detailed feedback for improvement (if recommendation is retry)"
+  "isValid": boolean,
+  "confidence": number (0-1 scale),
+  "qualityScore": number (0-100 scale),
+  "issues": ["list of specific issues found"],
+  "suggestions": ["specific suggestions for improvement"]
 }
-`;
+
+**VALIDATION RULES**:
+- isValid: true only if response meets quality threshold (${this.config.qualityThreshold}+) and confidence threshold (${this.config.confidenceThreshold}+)
+- confidence: How confident you are in your assessment
+- qualityScore: Overall quality rating (0-100)
+- issues: Specific problems with accuracy, completeness, relevance, format, safety
+- suggestions: Actionable feedback for improvement
+
+Respond with JSON only, no additional text.`;
   }
 
   /**
-   * Generate retry prompt with feedback from verification issues
+   * Build improved prompt for Anthropic retry
    */
-  private generateRetryPrompt(
-    originalPrompt: string,
-    failedResponse: string,
-    issues: VerificationIssue[],
-    feedback?: string
+  private buildImprovedPrompt(
+    request: VerificationRequest,
+    validationFailure: { issues: string[]; suggestions: string[] },
+    retryAttempt: number
   ): string {
-    const criticalIssues = issues.filter(i => i.severity === 'critical');
-    const highIssues = issues.filter(i => i.severity === 'high');
-    
-    return `
-ORIGINAL REQUEST:
-${originalPrompt}
+    return `${request.originalPrompt}
 
-PREVIOUS RESPONSE ISSUES IDENTIFIED:
-${criticalIssues.length > 0 ? `
-CRITICAL ISSUES (MUST FIX):
-${criticalIssues.map(issue => `- ${issue.description} (${issue.suggestion})`).join('\n')}
-` : ''}
+**IMPORTANT**: Your previous response was reviewed and found to have the following issues:
+${validationFailure.issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n')}
 
-${highIssues.length > 0 ? `
-HIGH PRIORITY ISSUES:
-${highIssues.map(issue => `- ${issue.description} (${issue.suggestion})`).join('\n')}
-` : ''}
+**PLEASE IMPROVE**: Follow these specific suggestions:
+${validationFailure.suggestions.map((suggestion, i) => `${i + 1}. ${suggestion}`).join('\n')}
 
-${feedback ? `
-SPECIFIC FEEDBACK:
-${feedback}
-` : ''}
+**RETRY ATTEMPT**: ${retryAttempt} of ${this.config.maxRetries}
 
-Please provide a corrected response that addresses all the issues above while maintaining accuracy and completeness.
-`;
+Please provide an improved response that addresses these issues while maintaining the original requirements.
+
+${request.context ? `\n**ADDITIONAL CONTEXT**: ${request.context}` : ''}
+
+Ensure your response is accurate, complete, relevant, properly formatted, and safe.`;
   }
 
   /**
-   * Perform additional safety validation
+   * Parse OpenAI validation result
    */
-  private performSafetyValidation(result: VerificationResult, request: VerificationRequest): void {
-    const response = request.claudeResponse;
-    
-    // Check for potential PII exposure
-    const piiPatterns = [
-      /\b\d{3}-?\d{2}-?\d{4}\b/, // SSN
-      /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/, // Credit Card
-      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // Email (in certain contexts)
-      /\b\d{3}[\s.-]?\d{3}[\s.-]?\d{4}\b/ // Phone numbers
-    ];
-
-    for (const pattern of piiPatterns) {
-      if (pattern.test(response)) {
-        result.issues.push({
-          category: 'safety',
-          severity: 'high',
-          description: 'Potential PII detected in response',
-          suggestion: 'Remove or redact sensitive information'
-        });
-        result.detailedScores.safety = Math.min(result.detailedScores.safety, 30);
-      }
-    }
-
-    // Check response length for completeness
-    if (response.trim().length < 50) {
-      result.issues.push({
-        category: 'completeness',
-        severity: 'medium',
-        description: 'Response appears too short to be complete',
-        suggestion: 'Provide more detailed analysis'
-      });
-    }
-  }
-
-  /**
-   * Rate limiting implementation
-   */
-  private checkRateLimit(service: string): boolean {
-    const now = Date.now();
-    const windowStart = now - 60000; // 1 minute window
-    
-    if (!this.rateLimitCounter.has(service)) {
-      this.rateLimitCounter.set(service, []);
-    }
-    
-    const serviceCalls = this.rateLimitCounter.get(service)!;
-    
-    // Remove old calls outside the window
-    const recentCalls = serviceCalls.filter(timestamp => timestamp > windowStart);
-    
-    // Check if within limit
-    if (recentCalls.length >= this.config.rateLimitPerMinute) {
-      return false;
-    }
-    
-    // Add current call
-    recentCalls.push(now);
-    this.rateLimitCounter.set(service, recentCalls);
-    
-    return true;
-  }
-
-  /**
-   * Initialize rate limit cleanup job
-   */
-  private initializeRateLimitCleanup(): void {
-    setInterval(() => {
-      const cutoff = Date.now() - 60000;
+  private parseValidationResult(validationResult: string): {
+    isValid: boolean;
+    confidence: number;
+    qualityScore: number;
+    issues: string[];
+    suggestions: string[];
+  } {
+    try {
+      const parsed = JSON.parse(validationResult);
       
-      for (const [service, calls] of this.rateLimitCounter.entries()) {
-        const recentCalls = calls.filter(timestamp => timestamp > cutoff);
-        this.rateLimitCounter.set(service, recentCalls);
-      }
-    }, 30000); // Clean up every 30 seconds
-  }
-
-  /**
-   * Sanitize content for logging (remove PII)
-   */
-  private sanitizeForLogging(content: string): string {
-    if (!this.config.sanitizeLogsForPII) {
-      return content;
-    }
-
-    let sanitized = content;
-    
-    // Redact common PII patterns
-    sanitized = sanitized.replace(/\b\d{3}-?\d{2}-?\d{4}\b/g, '[SSN_REDACTED]');
-    sanitized = sanitized.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CARD_REDACTED]');
-    sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]');
-    sanitized = sanitized.replace(/\b\d{3}[\s.-]?\d{3}[\s.-]?\d{4}\b/g, '[PHONE_REDACTED]');
-    
-    return sanitized;
-  }
-
-  /**
-   * Store audit log (in production, this would go to a database)
-   */
-  private storeAuditLog(log: VerificationAuditLog): string {
-    const auditId = this.generateRequestId();
-    
-    if (this.config.enableDetailedLogging) {
-      console.log(`Verification Audit [${auditId}]:`, {
-        service: log.service,
-        outcome: log.finalOutcome,
-        score: log.verificationResult.overallScore,
-        processingTime: log.totalProcessingTime,
-        retries: log.retryAttempts.length,
-        issues: log.verificationResult.issues?.length || 0
+      return {
+        isValid: Boolean(parsed.isValid),
+        confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0)),
+        qualityScore: Math.max(0, Math.min(100, Number(parsed.qualityScore) || 0)),
+        issues: Array.isArray(parsed.issues) ? parsed.issues : [],
+        suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : []
+      };
+    } catch (error) {
+      // Fallback parsing for non-JSON responses
+      this.logWarning('Failed to parse JSON validation result, using fallback parsing', {
+        validationResult: validationResult.substring(0, 200)
       });
+
+      const isValid = validationResult.toLowerCase().includes('valid') || 
+                     validationResult.toLowerCase().includes('acceptable');
+      
+      return {
+        isValid,
+        confidence: isValid ? 0.6 : 0.3,
+        qualityScore: isValid ? 70 : 40,
+        issues: ['Could not parse detailed validation result'],
+        suggestions: ['Ensure response format is correct and complete']
+      };
     }
-    
-    // Store in memory for now (in production, use database)
-    this.auditLogs.push({ ...log });
-    
-    // Keep only last 1000 logs in memory
-    if (this.auditLogs.length > 1000) {
-      this.auditLogs = this.auditLogs.slice(-1000);
-    }
-    
-    return auditId;
   }
 
   /**
-   * Generate unique request ID
+   * Sanitize text by removing or masking PII
    */
-  private generateRequestId(): string {
-    return `verify_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  private sanitizeForLogging(text: string): string {
+    if (!this.config.enableLogging) return '[LOGGING_DISABLED]';
+    
+    // Remove/mask common PII patterns
+    return text
+      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')
+      .replace(/\b\d{3}-?\d{2}-?\d{4}\b/g, '[SSN]')
+      .replace(/\b\d{3}-?\d{3}-?\d{4}\b/g, '[PHONE]')
+      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CREDIT_CARD]')
+      .substring(0, 500) + (text.length > 500 ? '...[TRUNCATED]' : '');
   }
 
   /**
-   * Utility delay function
+   * Utility methods for logging
+   */
+  private logInfo(message: string, data?: any): void {
+    if (!this.config.enableLogging) return;
+    console.log(`[LLM-VERIFICATION-INFO] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+
+  private logWarning(message: string, data?: any): void {
+    if (!this.config.enableLogging) return;
+    console.warn(`[LLM-VERIFICATION-WARN] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+
+  private logError(message: string, data?: any): void {
+    if (!this.config.enableLogging) return;
+    console.error(`[LLM-VERIFICATION-ERROR] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+
+  /**
+   * Delay utility for exponential backoff
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
-   * Get verification statistics
+   * Health check method
    */
-  public getVerificationStats(): {
-    totalVerifications: number;
-    successRate: number;
-    averageScore: number;
-    averageProcessingTime: number;
-    issueBreakdown: Record<string, number>;
-  } {
-    const logs = this.auditLogs;
-    
-    if (logs.length === 0) {
-      return {
-        totalVerifications: 0,
-        successRate: 0,
-        averageScore: 0,
-        averageProcessingTime: 0,
-        issueBreakdown: {}
-      };
-    }
-
-    const successful = logs.filter(log => log.finalOutcome === 'approved').length;
-    const successRate = (successful / logs.length) * 100;
-    
-    const totalScore = logs.reduce((sum, log) => sum + log.verificationResult.overallScore, 0);
-    const averageScore = totalScore / logs.length;
-    
-    const totalTime = logs.reduce((sum, log) => sum + log.totalProcessingTime, 0);
-    const averageProcessingTime = totalTime / logs.length;
-    
-    const issueBreakdown: Record<string, number> = {};
-    logs.forEach(log => {
-      log.verificationResult.issues?.forEach(issue => {
-        issueBreakdown[issue.category] = (issueBreakdown[issue.category] || 0) + 1;
-      });
-    });
-
-    return {
-      totalVerifications: logs.length,
-      successRate,
-      averageScore,
-      averageProcessingTime,
-      issueBreakdown
-    };
-  }
-
-  /**
-   * Get recent audit logs with PII sanitization
-   */
-  public getAuditLogs(limit: number = 50): VerificationAuditLog[] {
-    const logs = this.auditLogs.slice(-limit);
-    return logs.map(log => ({
-      ...log,
-      // Sanitize sensitive data for security
-      originalPrompt: this.sanitizeForLogging(log.originalPrompt),
-      claudeResponse: this.sanitizeForLogging(log.claudeResponse)
-    }));
-  }
-
-  /**
-   * Enhanced performance monitoring with detailed metrics
-   */
-  public getDetailedMetrics(): {
-    performance: {
-      averageResponseTime: number;
-      p95ResponseTime: number;
-      p99ResponseTime: number;
-      throughput: number; // requests per minute
-    };
-    quality: {
-      averageConfidence: number;
-      averageScore: number;
-      verificationPassRate: number;
-    };
-    reliability: {
-      successRate: number;
-      errorRate: number;
-      retryRate: number;
-    };
-    security: {
-      piiDetectionRate: number;
-      safetyIssueRate: number;
-      rateLimitViolations: number;
-    };
-  } {
-    const logs = this.auditLogs;
-    
-    if (logs.length === 0) {
-      return {
-        performance: { averageResponseTime: 0, p95ResponseTime: 0, p99ResponseTime: 0, throughput: 0 },
-        quality: { averageConfidence: 0, averageScore: 0, verificationPassRate: 0 },
-        reliability: { successRate: 0, errorRate: 0, retryRate: 0 },
-        security: { piiDetectionRate: 0, safetyIssueRate: 0, rateLimitViolations: 0 }
-      };
-    }
-
-    // Performance metrics
-    const responseTimes = logs.map(log => log.totalProcessingTime).sort((a, b) => a - b);
-    const p95Index = Math.floor(responseTimes.length * 0.95);
-    const p99Index = Math.floor(responseTimes.length * 0.99);
-    
-    const now = Date.now();
-    const oneMinuteAgo = now - 60000;
-    const recentRequests = logs.filter(log => log.timestamp.getTime() > oneMinuteAgo);
-    
-    // Quality metrics
-    const avgConfidence = logs.reduce((sum, log) => sum + log.verificationResult.confidence, 0) / logs.length;
-    const avgScore = logs.reduce((sum, log) => sum + log.verificationResult.overallScore, 0) / logs.length;
-    const passedVerifications = logs.filter(log => log.finalOutcome === 'approved').length;
-    
-    // Reliability metrics
-    const successfulRequests = logs.filter(log => log.finalOutcome !== 'rejected').length;
-    const requestsWithRetries = logs.filter(log => log.retryAttempts.length > 0).length;
-    
-    // Security metrics
-    const piiIssues = logs.filter(log => 
-      log.verificationResult.issues?.some(issue => issue.description.toLowerCase().includes('pii'))
-    ).length;
-    const safetyIssues = logs.filter(log => 
-      log.verificationResult.issues?.some(issue => issue.category === 'safety')
-    ).length;
-    
-    return {
-      performance: {
-        averageResponseTime: responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
-        p95ResponseTime: responseTimes[p95Index] || 0,
-        p99ResponseTime: responseTimes[p99Index] || 0,
-        throughput: recentRequests.length
-      },
-      quality: {
-        averageConfidence: avgConfidence,
-        averageScore: avgScore,
-        verificationPassRate: (passedVerifications / logs.length) * 100
-      },
-      reliability: {
-        successRate: (successfulRequests / logs.length) * 100,
-        errorRate: ((logs.length - successfulRequests) / logs.length) * 100,
-        retryRate: (requestsWithRetries / logs.length) * 100
-      },
-      security: {
-        piiDetectionRate: (piiIssues / logs.length) * 100,
-        safetyIssueRate: (safetyIssues / logs.length) * 100,
-        rateLimitViolations: this.getRateLimitViolationCount()
-      }
-    };
-  }
-
-  /**
-   * Health check for the verification service
-   */
-  public async healthCheck(): Promise<{
-    healthy: boolean;
-    status: 'healthy' | 'degraded' | 'unhealthy';
-    checks: {
-      name: string;
-      status: 'pass' | 'fail' | 'warn';
-      message: string;
-      responseTime?: number;
-    }[];
-    timestamp: Date;
-  }> {
-    const checks: {
-      name: string;
-      status: 'pass' | 'fail' | 'warn';
-      message: string;
-      responseTime?: number;
-    }[] = [];
-
-    // Check OpenAI API connectivity
+  async healthCheck(): Promise<{ status: string; details: any }> {
     try {
       const startTime = Date.now();
-      await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
-        messages: [{ role: 'user', content: 'Health check test - respond with OK' }],
-        max_tokens: 5,
-        temperature: 0
+
+      // Test OpenAI connectivity
+      const openaiTest = await this.openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'Health check - respond with OK' }],
+        max_tokens: 10,
+        timeout: 5000
       });
+
+      // Test Anthropic connectivity  
+      const anthropicTest = await this.anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Health check - respond with OK' }],
+        timeout: 5000
+      });
+
       const responseTime = Date.now() - startTime;
-      
-      checks.push({
-        name: 'openai_connectivity',
-        status: responseTime < 5000 ? 'pass' : 'warn',
-        message: responseTime < 5000 ? 'OpenAI API responding normally' : 'OpenAI API slow response',
-        responseTime
-      });
+
+      return {
+        status: 'healthy',
+        details: {
+          responseTimeMs: responseTime,
+          openaiStatus: 'connected',
+          anthropicStatus: 'connected',
+          config: {
+            maxRetries: this.config.maxRetries,
+            confidenceThreshold: this.config.confidenceThreshold,
+            qualityThreshold: this.config.qualityThreshold
+          }
+        }
+      };
     } catch (error) {
-      checks.push({
-        name: 'openai_connectivity',
-        status: 'fail',
-        message: `OpenAI API error: ${error instanceof Error ? error.message : String(error)}`
-      });
+      return {
+        status: 'unhealthy',
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          config: {
+            maxRetries: this.config.maxRetries,
+            confidenceThreshold: this.config.confidenceThreshold,
+            qualityThreshold: this.config.qualityThreshold
+          }
+        }
+      };
     }
-
-    // Check memory usage
-    const memoryUsage = process.memoryUsage();
-    const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
-    
-    checks.push({
-      name: 'memory_usage',
-      status: memoryMB < 256 ? 'pass' : memoryMB < 512 ? 'warn' : 'fail',
-      message: `Memory usage: ${memoryMB.toFixed(2)} MB`
-    });
-
-    // Check recent performance
-    const metrics = this.getDetailedMetrics();
-    checks.push({
-      name: 'performance',
-      status: metrics.performance.averageResponseTime < 30000 ? 'pass' : 'warn',
-      message: `Average response time: ${metrics.performance.averageResponseTime.toFixed(0)}ms`
-    });
-
-    // Check success rate
-    checks.push({
-      name: 'reliability',
-      status: metrics.reliability.successRate > 95 ? 'pass' : metrics.reliability.successRate > 90 ? 'warn' : 'fail',
-      message: `Success rate: ${metrics.reliability.successRate.toFixed(1)}%`
-    });
-
-    // Determine overall health
-    const failedChecks = checks.filter(c => c.status === 'fail');
-    const warningChecks = checks.filter(c => c.status === 'warn');
-    
-    let status: 'healthy' | 'degraded' | 'unhealthy';
-    if (failedChecks.length > 0) {
-      status = 'unhealthy';
-    } else if (warningChecks.length > 0) {
-      status = 'degraded';
-    } else {
-      status = 'healthy';
-    }
-
-    return {
-      healthy: status === 'healthy',
-      status,
-      checks,
-      timestamp: new Date()
-    };
   }
-
-  /**
-   * Get service information and statistics
-   */
-  public getServiceInfo(): {
-    version: string;
-    config: typeof DEFAULT_CONFIG;
-    uptime: number;
-    totalRequests: number;
-    cacheSize: number;
-  } {
-    return {
-      version: '1.0.0',
-      config: this.config,
-      uptime: Date.now() - this.serviceStartTime,
-      totalRequests: this.auditLogs.length,
-      cacheSize: this.rateLimitCounter.size
-    };
-  }
-
-  /**
-   * Get rate limit violation count
-   */
-  private getRateLimitViolationCount(): number {
-    // This would be implemented with proper tracking
-    // For now, return 0 as placeholder
-    return 0;
-  }
-
-  private serviceStartTime = Date.now();
 }
-
-// Export singleton instance
-export const llmVerificationService = new LLMVerificationService();
