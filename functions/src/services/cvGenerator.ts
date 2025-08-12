@@ -379,13 +379,10 @@ export class CVGenerator {
 
     // Social Media Links
     if (features.includes('social-media-links')) {
-      const linkedinUrl = cv.personalInfo.linkedin || 'https://linkedin.com/in/gil-klainert';
-      const githubUrl = cv.personalInfo.github || 'https://github.com/gil-klainert';
-      
       socialLinks = `
         <div class="social-links">
-          ${linkedinUrl ? `<a href="${linkedinUrl}" target="_blank" class="social-link linkedin">LinkedIn</a>` : ''}
-          ${githubUrl ? `<a href="${githubUrl}" target="_blank" class="social-link github">GitHub</a>` : ''}
+          ${cv.personalInfo.linkedin ? `<a href="${cv.personalInfo.linkedin}" target="_blank" class="social-link linkedin">LinkedIn</a>` : ''}
+          ${cv.personalInfo.github ? `<a href="${cv.personalInfo.github}" target="_blank" class="social-link github">GitHub</a>` : ''}
           ${cv.personalInfo.email ? `<a href="mailto:${cv.personalInfo.email}" class="social-link email">Email</a>` : ''}
         </div>`;
       
@@ -577,7 +574,7 @@ export class CVGenerator {
 
     // Language Proficiency
     if (features.includes('language-proficiency')) {
-      const languages = cv.skills?.languages || ['English', 'Hebrew']; // Default languages if none provided
+      const languages = cv.skills?.languages || [];
       if (languages.length > 0) {
         languageProficiency = `
           <div class="language-section">
@@ -715,15 +712,11 @@ export class CVGenerator {
     // Certification Badges
     if (features.includes('certification-badges')) {
       const certifications = cv.education?.filter(edu => edu.institution?.toLowerCase().includes('certification') || edu.degree?.toLowerCase().includes('certification')) || [];
-      const defaultCertifications = [
-        { name: 'AWS Certified Solutions Architect', issuer: 'Amazon Web Services', year: '2023' },
-        { name: 'Microsoft Azure Fundamentals', issuer: 'Microsoft', year: '2022' },
-        { name: 'Google Cloud Platform', issuer: 'Google', year: '2023' }
-      ];
       
-      const displayCertifications = certifications.length > 0 ? certifications : defaultCertifications;
+      const displayCertifications = certifications;
       
-      certificationBadges = `
+      if (displayCertifications.length > 0) {
+        certificationBadges = `
         <div class="certification-section">
           <h2 class="section-title">Certifications</h2>
           <div class="certification-grid">
@@ -794,6 +787,7 @@ export class CVGenerator {
             transform: none !important;
           }
         }`;
+      }
     }
 
     // Video Introduction
