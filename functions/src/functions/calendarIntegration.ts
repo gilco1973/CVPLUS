@@ -60,7 +60,7 @@ export const generateCalendarEvents = onCall(
 export const syncToGoogleCalendar = onCall(
   {
     timeoutSeconds: 120,
-    secrets: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
+    // secrets: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], // Temporarily disabled
     ...corsOptions
   },
   async (request) => {
@@ -120,7 +120,7 @@ export const syncToGoogleCalendar = onCall(
 export const syncToOutlook = onCall(
   {
     timeoutSeconds: 120,
-    secrets: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
+    // secrets: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'], // Temporarily disabled
     ...corsOptions
   },
   async (request) => {
@@ -237,7 +237,7 @@ export const downloadICalFile = onCall(
 
 export const handleCalendarCallback = onCall(
   {
-    secrets: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
+    // secrets: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'], // Temporarily disabled
     ...corsOptions
   },
   async (request) => {

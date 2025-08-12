@@ -6,7 +6,7 @@ export const analyzeCV = onCall(
     timeoutSeconds: 120,
     memory: '512MiB',
     ...corsOptions,
-    secrets: ['ANTHROPIC_API_KEY']
+    // secrets: ['ANTHROPIC_API_KEY'] // Temporarily disabled
   },
   async (request) => {
     if (!request.auth) {

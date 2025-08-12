@@ -2,17 +2,19 @@ import * as admin from 'firebase-admin';
 import { config } from '../config/environment';
 import { ParsedCV } from './cvParser';
 import { PDFDocument, PDFForm, PDFButton, PDFCheckBox, rgb, StandardFonts, PDFPage, PDFDict, PDFName, PDFString } from 'pdf-lib';
+import { AchievementsAnalysisService } from './achievements-analysis.service';
+import { SkillsProficiencyService } from './skills-proficiency.service';
 
 export class CVGenerator {
   async generateHTML(parsedCV: ParsedCV, template: string, features?: string[], jobId?: string): Promise<string> {
-    const templates: Record<string, (cv: ParsedCV, jobId: string, features?: string[]) => string> = {
+    const templates: Record<string, (cv: ParsedCV, jobId: string, features?: string[]) => Promise<string>> = {
       modern: this.modernTemplate.bind(this),
       classic: this.classicTemplate.bind(this),
       creative: this.creativeTemplate.bind(this),
     };
 
     const templateFn = templates[template] || templates.modern;
-    let html = templateFn(parsedCV, jobId || '', features);
+    let html = await templateFn(parsedCV, jobId || '', features);
     
     // Replace jobId placeholder if podcast feature is enabled
     if (features?.includes('generate-podcast') && jobId) {
@@ -22,7 +24,7 @@ export class CVGenerator {
     return html;
   }
 
-  private generateInteractiveFeatures(cv: ParsedCV, jobId: string, features?: string[]): {
+  private async generateInteractiveFeatures(cv: ParsedCV, jobId: string, features?: string[]): Promise<{
     qrCode?: string;
     podcastPlayer?: string;
     timeline?: string;
@@ -39,7 +41,7 @@ export class CVGenerator {
     testimonialsCarousel?: string;
     additionalStyles?: string;
     additionalScripts?: string;
-  } {
+  }> {
     if (!features || features.length === 0) return {};
 
     let qrCode = '';
@@ -312,28 +314,18 @@ export class CVGenerator {
         }`;
     }
 
-    // Skills Chart
+    // Real Skills Visualization
     if (features.includes('skills-chart')) {
-      const technicalSkills = cv.skills?.technical || [];
-      skillsChart = `
-        <div class="skills-chart-section">
-          <h2 class="section-title">Skills Visualization</h2>
-          <div class="skills-chart">
-            ${technicalSkills.slice(0, 8).map(skill => {
-              const level = Math.floor(Math.random() * 30) + 70; // Random level 70-100
-              return `
-                <div class="skill-bar">
-                  <span class="skill-name">${skill}</span>
-                  <div class="skill-progress">
-                    <div class="skill-level" style="width: ${level}%">
-                      <span class="skill-percent">${level}%</span>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>`;
+      try {
+        const skillsService = new SkillsProficiencyService();
+        const skillsAnalysis = await skillsService.analyzeSkillsProficiency(cv);
+        skillsChart = skillsService.generateSkillsVisualizationHTML(skillsAnalysis);
+      } catch (error) {
+        console.error('Error generating skills analysis:', error);
+        // Fallback to basic display
+        const technicalSkills = cv.skills?.technical || [];
+        skillsChart = `<div class="skills-fallback"><h3>Technical Skills</h3><ul>${technicalSkills.map(skill => `<li>${skill}</li>`).join('')}</ul></div>`;
+      }
       
       additionalStyles += `
         .skills-chart {
@@ -642,29 +634,25 @@ export class CVGenerator {
       }
     }
 
-    // Achievements Showcase
+    // Real Achievements Analysis
     if (features.includes('achievements-showcase')) {
-      const achievements: { text: string; company: string }[] = [];
-      cv.experience?.forEach(exp => {
-        if (exp.achievements) {
-          achievements.push(...exp.achievements.map(ach => ({ text: ach, company: exp.company })));
+      try {
+        const achievementsService = new AchievementsAnalysisService();
+        const achievements = await achievementsService.extractKeyAchievements(cv);
+        achievementsShowcase = achievementsService.generateAchievementsHTML(achievements);
+      } catch (error) {
+        console.error('Error generating achievements analysis:', error);
+        // Fallback to basic display
+        const fallbackAchievements: { text: string; company: string }[] = [];
+        cv.experience?.forEach(exp => {
+          if (exp.achievements) {
+            fallbackAchievements.push(...exp.achievements.map(ach => ({ text: ach, company: exp.company })));
+          }
+        });
+        
+        if (fallbackAchievements.length > 0) {
+          achievementsShowcase = `<div class="achievements-fallback"><h3>Key Achievements</h3><ul>${fallbackAchievements.slice(0, 5).map(ach => `<li><strong>${ach.company}:</strong> ${ach.text}</li>`).join('')}</ul></div>`;
         }
-      });
-      
-      if (achievements.length > 0) {
-        achievementsShowcase = `
-          <div class="achievements-section">
-            <h2 class="section-title">Key Achievements</h2>
-            <div class="achievements-grid">
-              ${achievements.slice(0, 6).map((ach, index) => `
-                <div class="achievement-card" style="animation-delay: ${index * 0.1}s">
-                  <div class="achievement-icon">🏆</div>
-                  <div class="achievement-text">${ach.text}</div>
-                  <div class="achievement-company">${ach.company}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>`;
         
         additionalStyles += `
           .achievements-grid {
@@ -1395,8 +1383,8 @@ export class CVGenerator {
     };
   }
 
-  private modernTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
-    const interactiveFeatures = this.generateInteractiveFeatures(cv, jobId, features);
+  private async modernTemplate(cv: ParsedCV, jobId: string, features?: string[]): Promise<string> {
+    const interactiveFeatures = await this.generateInteractiveFeatures(cv, jobId, features);
     
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1775,7 +1763,7 @@ export class CVGenerator {
 </html>`;
   }
 
-  private classicTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
+  private async classicTemplate(cv: ParsedCV, jobId: string, features?: string[]): Promise<string> {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2057,7 +2045,7 @@ export class CVGenerator {
 </html>`;
   }
 
-  private creativeTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
+  private async creativeTemplate(cv: ParsedCV, jobId: string, features?: string[]): Promise<string> {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>

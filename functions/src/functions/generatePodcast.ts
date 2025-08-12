@@ -7,7 +7,7 @@ export const generatePodcast = onCall(
   {
     timeoutSeconds: 540,
     memory: '2GiB',
-    secrets: ['ELEVENLABS_API_KEY', 'ELEVENLABS_HOST1_VOICE_ID', 'ELEVENLABS_HOST2_VOICE_ID', 'OPENAI_API_KEY'],
+    // secrets: ['ELEVENLABS_API_KEY', 'ELEVENLABS_HOST1_VOICE_ID', 'ELEVENLABS_HOST2_VOICE_ID', 'OPENAI_API_KEY'], // Temporarily disabled
     ...corsOptions
   },
   async (request) => {

@@ -9,7 +9,7 @@ export const processCV = onCall(
     timeoutSeconds: 300,
     memory: '2GiB',
     ...corsOptions,
-    secrets: ['ANTHROPIC_API_KEY']
+    // secrets: ['ANTHROPIC_API_KEY'] // Temporarily disabled
   },
   async (request) => {
     // Check authentication

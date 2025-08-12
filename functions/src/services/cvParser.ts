@@ -90,6 +90,10 @@ export class CVParser {
       case 'text/csv':
         text = await this.extractFromCSV(fileBuffer);
         break;
+      case 'text/plain':
+      case 'text/txt':
+        text = fileBuffer.toString('utf-8');
+        break;
       default:
         throw new Error(`Unsupported file type: ${mimeType}`);
     }

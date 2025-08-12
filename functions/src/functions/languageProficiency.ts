@@ -6,7 +6,7 @@ import { languageProficiencyService } from '../services/language-proficiency.ser
 export const generateLanguageVisualization = onCall(
   {
     timeoutSeconds: 60,
-    secrets: ['OPENAI_API_KEY'],
+    // secrets: ['OPENAI_API_KEY'] // Temporarily disabled,
     ...corsOptions
   },
   async (request) => {
