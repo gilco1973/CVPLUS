@@ -69,7 +69,7 @@ export class IntegrationsService {
     from?: string;
   }): Promise<void> {
     const mailOptions = {
-      from: options.from || config.email?.from || 'CVisionery <noreply@cvisionery.com>',
+      from: options.from || config.email?.from || 'CVPlus <noreply@cvplus.com>',
       to: options.to,
       subject: options.subject,
       html: options.html
@@ -149,8 +149,8 @@ export class IntegrationsService {
           </div>
           
           <div class="footer">
-            <p>This message was sent via your CVisionery public profile.</p>
-            <p>To manage your CV settings, visit <a href="https://cvisionery.com">cvisionery.com</a></p>
+            <p>This message was sent via your CVPlus public profile.</p>
+            <p>To manage your CV settings, visit <a href="https://cvplus.com">cvplus.com</a></p>
           </div>
         </div>
       </body>
@@ -159,21 +159,25 @@ export class IntegrationsService {
   }
 
   /**
-   * Initialize calendar integration (placeholder for now)
+   * Initialize calendar integration using the dedicated calendar service
    */
   async initializeCalendarIntegration(userId: string, provider: 'google' | 'calendly'): Promise<any> {
-    // TODO: Implement calendar integration
-    // For Google Calendar: Use Google Calendar API
-    // For Calendly: Use Calendly API
+    // Import the calendar integration service
+    const { CalendarIntegrationService } = await import('./calendar-integration.service');
+    const calendarService = new CalendarIntegrationService();
     
     switch (provider) {
       case 'google':
-        // Initialize Google Calendar
-        return { calendarId: `cal_${userId}` };
+        // Use the actual Google Calendar OAuth flow
+        return await calendarService.initializeGoogleAuth(userId);
       
       case 'calendly':
-        // Initialize Calendly webhook
-        return { webhookUrl: `https://api.cvisionery.com/calendly/${userId}` };
+        // Note: Calendly integration would require webhooks setup
+        // For now, return configuration needed for Calendly
+        return { 
+          webhookUrl: `https://cvplus.com/api/calendly/${userId}`,
+          integrationGuide: 'Please configure your Calendly webhook to point to this URL'
+        };
       
       default:
         throw new Error('Unsupported calendar provider');
@@ -181,31 +185,41 @@ export class IntegrationsService {
   }
 
   /**
-   * Generate video thumbnail (placeholder)
+   * Generate video thumbnail using video generation service
    */
   async generateVideoThumbnail(videoUrl: string): Promise<string> {
-    // TODO: Implement video thumbnail generation
-    // Options:
-    // 1. Use ffmpeg in Cloud Function
-    // 2. Use a service like Cloudinary
-    // 3. Use client-side generation and upload
-    
-    // For now, return a placeholder
-    return 'https://via.placeholder.com/640x360?text=Video+Thumbnail';
+    try {
+      // Import the video generation service
+      const { VideoGenerationService } = await import('./video-generation.service');
+      const videoService = new VideoGenerationService();
+      
+      // Use the video service to generate thumbnail
+      return await videoService.generateThumbnail(videoUrl);
+    } catch (error) {
+      console.warn('Video thumbnail generation failed, using fallback:', error);
+      
+      // Fallback: generate a better placeholder with video metadata
+      const videoName = videoUrl.split('/').pop()?.split('.')[0] || 'video';
+      return `https://via.placeholder.com/640x360/6366f1/ffffff?text=${encodeURIComponent(videoName)}`;
+    }
   }
 
   /**
-   * Text to speech for podcast generation (placeholder)
+   * Generate podcast audio using the dedicated podcast service
    */
   async generatePodcastAudio(script: string, voice?: string): Promise<Buffer> {
-    // TODO: Implement text-to-speech
-    // Options:
-    // 1. Google Cloud Text-to-Speech
-    // 2. Amazon Polly
-    // 3. Azure Speech Service
-    
-    // For now, throw not implemented
-    throw new Error('Podcast generation not yet implemented');
+    try {
+      // Import the podcast generation service
+      const { PodcastGenerationService } = await import('./podcast-generation.service');
+      const podcastService = new PodcastGenerationService();
+      
+      // Use the podcast service for text-to-speech
+      const audioBuffer = await podcastService.generateAudio(script, voice || 'host1');
+      return audioBuffer;
+    } catch (error) {
+      console.error('Podcast audio generation failed:', error);
+      throw new Error(`Failed to generate podcast audio: ${error.message}`);
+    }
   }
 }
 

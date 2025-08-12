@@ -59,7 +59,7 @@ export const AboutPage = () => {
       <section className="relative py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6">
-            About CVisionery
+            About CVPlus
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
             An open-source project dedicated to transforming how professionals present themselves
@@ -82,7 +82,7 @@ export const AboutPage = () => {
             <div className="space-y-4 text-gray-300">
               <p className="text-lg leading-relaxed">
                 Hi! I'm Gil Klainert, a Software Engineering Leader and AI Expert passionate about leveraging 
-                technology to solve real-world problems. I created CVisionery as an open-source gift to 
+                technology to solve real-world problems. I created CVPlus as an open-source gift to 
                 the community, believing that everyone deserves access to powerful tools that can help 
                 them advance their careers.
               </p>
@@ -104,7 +104,7 @@ export const AboutPage = () => {
                   <ExternalLink className="w-4 h-4" />
                 </a>
                 <a 
-                  href="https://github.com/gilco1973/CVisionary" 
+                  href="https://github.com/gilco1973/cvplus" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
@@ -127,7 +127,7 @@ export const AboutPage = () => {
             </div>
             
             <p className="text-lg text-gray-300 leading-relaxed">
-              CVisionery was born from a simple belief: your professional story deserves to be told 
+              CVPlus was born from a simple belief: your professional story deserves to be told 
               in the most compelling way possible. We're here to democratize access to AI-powered 
               career tools, making them free and accessible to everyone, regardless of their 
               background or financial situation.
@@ -144,7 +144,7 @@ export const AboutPage = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-100 mb-2">Open Source</h3>
                   <p className="text-gray-400">
-                    Released under the MIT License, CVisionery is free to use, modify, and distribute. 
+                    Released under the MIT License, CVPlus is free to use, modify, and distribute. 
                     We believe in the power of community-driven development.
                   </p>
                 </div>
@@ -207,14 +207,14 @@ export const AboutPage = () => {
             </div>
             
             <p className="text-lg text-gray-300 leading-relaxed mb-6">
-              CVisionery is open to contributions! Whether you're a developer, designer, or just 
+              CVPlus is open to contributions! Whether you're a developer, designer, or just 
               someone with great ideas, we'd love to have you join our mission to revolutionize 
               how people present their professional stories.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a 
-                href="https://github.com/gilco1973/CVisionary" 
+                href="https://github.com/gilco1973/cvplus" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors font-medium"
@@ -224,7 +224,7 @@ export const AboutPage = () => {
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a 
-                href="https://github.com/gilco1973/CVisionary/issues" 
+                href="https://github.com/gilco1973/cvplus/issues" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
@@ -283,7 +283,7 @@ export const AboutPage = () => {
       <footer className="bg-gray-800 border-t border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-400">
-            <p>&copy; 2025 CVisionery. Released under MIT License.</p>
+            <p>&copy; 2025 CVPlus. Released under MIT License.</p>
             <p className="mt-2">
               Created with ❤️ by <a href="https://klainert.com" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">Gil Klainert</a>
             </p>

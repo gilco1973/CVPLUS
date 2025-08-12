@@ -447,7 +447,7 @@ Keep it exactly ${targetWords} words.`;
     
     // This would be replaced with actual thumbnail generation
     // For demo, we'll reference a default thumbnail
-    const defaultThumbnail = 'https://storage.googleapis.com/cvisionery-assets/video-thumbnail-default.jpg';
+    const defaultThumbnail = 'https://storage.googleapis.com/cvplus-assets/video-thumbnail-default.jpg';
     
     return defaultThumbnail;
   }

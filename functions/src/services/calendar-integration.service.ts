@@ -42,7 +42,7 @@ export class CalendarIntegrationService {
       this.oauth2Client = new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URL || 'https://cvisionery.com/auth/google/callback'
+        process.env.GOOGLE_REDIRECT_URL || 'https://cvplus.com/auth/google/callback'
       );
     }
   }
@@ -222,7 +222,7 @@ export class CalendarIntegrationService {
         // Create a new calendar for career milestones
         const calendarResponse = await calendar.calendars.insert({
           requestBody: {
-            summary: 'Career Milestones - CVisionery',
+            summary: 'Career Milestones - CVPlus',
             description: 'Your professional journey milestones and reminders',
             timeZone: 'America/Los_Angeles'
           }
@@ -308,11 +308,11 @@ export class CalendarIntegrationService {
    */
   async createICalFile(events: CalendarEvent[], cvData: ParsedCV, jobId: string): Promise<CalendarIntegration> {
     const cal = ical({
-      name: 'Career Milestones - CVisionery',
+      name: 'Career Milestones - CVPlus',
       description: `Professional journey for ${cvData.personalInfo?.name || 'User'}`,
       timezone: 'America/Los_Angeles',
       prodId: {
-        company: 'CVisionery',
+        company: 'CVPlus',
         product: 'Career Calendar'
       }
     });
@@ -396,7 +396,7 @@ export class CalendarIntegrationService {
         const response = await axios.post(
           'https://graph.microsoft.com/v1.0/me/calendars',
           {
-            name: 'Career Milestones - CVisionery',
+            name: 'Career Milestones - CVPlus',
             color: 'auto'
           },
           {
@@ -476,7 +476,7 @@ export class CalendarIntegrationService {
     } else {
       // Generate OAuth URL for Outlook
       const clientId = process.env.MICROSOFT_CLIENT_ID || '';
-      const redirectUri = process.env.MICROSOFT_REDIRECT_URL || 'https://cvisionery.com/auth/outlook/callback';
+      const redirectUri = process.env.MICROSOFT_REDIRECT_URL || 'https://cvplus.com/auth/outlook/callback';
       const scope = 'Calendars.ReadWrite offline_access';
       
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +

@@ -70,7 +70,7 @@ export class IntegrationsService {
     from?: string;
   }): Promise<void> {
     const mailOptions = {
-      from: options.from || config.email?.from || 'CVisionery <noreply@cvisionery.com>',
+      from: options.from || config.email?.from || 'CVPlus <noreply@cvplus.com>',
       to: options.to,
       subject: options.subject,
       html: options.html
@@ -150,8 +150,8 @@ export class IntegrationsService {
           </div>
           
           <div class="footer">
-            <p>This message was sent via your CVisionery public profile.</p>
-            <p>To manage your CV settings, visit <a href="https://cvisionery.com">cvisionery.com</a></p>
+            <p>This message was sent via your CVPlus public profile.</p>
+            <p>To manage your CV settings, visit <a href="https://cvplus.com">cvplus.com</a></p>
           </div>
         </div>
       </body>
@@ -174,7 +174,7 @@ export class IntegrationsService {
       
       case 'calendly':
         // Initialize Calendly webhook
-        return { webhookUrl: `https://api.cvisionery.com/calendly/${userId}` };
+        return { webhookUrl: `https://api.cvplus.com/calendly/${userId}` };
       
       default:
         throw new Error('Unsupported calendar provider');

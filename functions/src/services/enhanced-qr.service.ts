@@ -269,14 +269,14 @@ export class EnhancedQRService {
       phone: jobData?.parsedData?.personalInfo?.phone,
       website: jobData?.parsedData?.personalInfo?.website,
       linkedin: jobData?.parsedData?.personalInfo?.linkedin,
-      profileUrl: `https://getmycv-ai.web.app/profile/${jobId}`
+      profileUrl: `https://cvplus.web.app/profile/${jobId}`
     };
   }
 
   private generateDefaultData(type: string, profileData: any): string {
     switch (type) {
       case 'profile':
-        return profileData.profileUrl || `https://getmycv-ai.web.app/profile/${profileData.jobId}`;
+        return profileData.profileUrl || `https://cvplus.web.app/profile/${profileData.jobId}`;
       
       case 'contact':
         const vCard = [
@@ -300,7 +300,7 @@ export class EnhancedQRService {
         return profileData.linkedin || `https://linkedin.com/in/${profileData.name?.toLowerCase().replace(' ', '-') || 'professional'}`;
       
       default:
-        return profileData.profileUrl || 'https://getmycv-ai.web.app';
+        return profileData.profileUrl || 'https://cvplus.web.app';
     }
   }
 

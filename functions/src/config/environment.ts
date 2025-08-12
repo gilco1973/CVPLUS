@@ -4,12 +4,12 @@
 
 export const config = {
   storage: {
-    bucketName: process.env.STORAGE_BUCKET || 'cvisionery-storage'
+    bucketName: process.env.STORAGE_BUCKET || 'cvplus-storage'
   },
   email: {
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
-    from: process.env.EMAIL_FROM || 'CVisionery <noreply@cvisionery.com>'
+    from: process.env.EMAIL_FROM || 'CVPlus <noreply@cvplus.com>'
   },
   rag: {
     openaiApiKey: process.env.OPENAI_API_KEY,
@@ -45,7 +45,7 @@ export const config = {
   },
   features: {
     publicProfiles: {
-      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://cvisionery.com/cv'
+      baseUrl: process.env.PUBLIC_PROFILES_BASE_URL || 'https://cvplus.com/cv'
     }
   }
 };

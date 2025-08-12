@@ -24,7 +24,7 @@
     <circle cx="60" cy="-12" r="6" fill="#00bcd4"/>
   </g>
   
-  <!-- CVisionery Text -->
+  <!-- CVPlus Text -->
   <g transform="translate(185, 80)">
     <text font-family="Arial, sans-serif" font-size="56" fill="#2d3748">
       <tspan font-weight="800">CV</tspan><tspan font-weight="300">Plus </tspan>

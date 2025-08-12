@@ -28,7 +28,7 @@
   
   <!-- Text -->
   <g transform="translate(380, 260)">
-    <!-- CVisionery -->
+    <!-- CVPlus -->
     <text x="0" y="0" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white">CV</text>
     <text x="130" y="0" font-family="Arial, sans-serif" font-size="80" font-weight="300" fill="white">isionary</text>
     

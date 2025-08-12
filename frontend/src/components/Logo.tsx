@@ -23,11 +23,11 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`flex items-center gap-3 ${className}`}>
       <img 
         src="/images/2.png"
-        alt="CVisionery Logo"
+        alt="CVPlus Logo"
         className={`${height} w-auto object-contain`}
       />
       <div className="flex flex-col">
-        <span className={`font-bold text-gray-100 ${textSize}`}>CVisionery</span>
+        <span className={`font-bold text-gray-100 ${textSize}`}>CVPlus</span>
         {showSlogan && (
           <span className="text-xs text-gray-400">From Paper to Powerful: Your CV, Reinvented</span>
         )}

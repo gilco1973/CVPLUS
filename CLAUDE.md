@@ -1,40 +1,53 @@
-# Project: CVisionery
+# Project: CVPlus
 
 ## Overview
-CVisionery is an AI-powered CV transformation platform that takes traditional CVs "From Paper to Powerful", reinventing them into interactive, multimedia-rich professional profiles. The system uses Anthropic's Claude API for intelligent CV analysis and provides personalized recommendations with cutting-edge interactive features.
+CVPlus is an AI-powered CV transformation platform that takes traditional CVs "From Paper to Powerful", reinventing them into interactive, multimedia-rich professional profiles. The system uses Anthropic's Claude API for intelligent CV analysis and provides personalized recommendations with cutting-edge interactive features.
 Use sub agents from ~/.local/share/claude-007-agents/.claude/agents in everything you do.
 
 ## Project Structure
 ```
-/Users/gklainert/Documents/getmycv/
+/Users/gklainert/Documents/cvplus/
 ├── .claude/
 │   └── settings.local.json    # Claude Code permissions configuration
 └── CLAUDE.md                  # This file - AI assistant documentation
 ```
 
 ## Technology Stack
-**Status**: Not yet determined. The project is empty and awaiting initial setup.
-
-Based on the project name "getmycv", this is an AI-powered CV creation application with technology stack detailed in the initialization script.
+**Frontend**: React.js with TypeScript, Vite, Tailwind CSS
+**Backend**: Firebase Functions (Node.js), Firebase Firestore, Firebase Storage
+**Authentication**: Firebase Auth
+**AI Integration**: Anthropic Claude API
+**Additional Services**: Google APIs, Calendly integration, multimedia processing
 
 ## Development Environment
 
 ### Prerequisites
-To be determined based on chosen technology stack.
+- Node.js 20+
+- Firebase CLI
+- Git
 
 ### Setup Instructions
-1. Choose and set up the appropriate technology stack
-2. Initialize version control with `git init`
-3. Create necessary project structure and configuration files
-4. Install dependencies as needed
+1. Clone the repository
+2. Install frontend dependencies: `cd frontend && npm install`
+3. Install backend dependencies: `cd functions && npm install`
+4. Configure Firebase: `firebase login` and `firebase init`
+5. Set up environment variables in `functions/.env`
 
 ## Key Commands
-Currently, no build or development commands are configured as the project has not been initialized with a specific framework or technology.
+**Frontend (from frontend/ directory):**
+- `npm install` - Install dependencies
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run type-check` - Run TypeScript checks
 
-Common commands will be added once the project type is determined:
-- For Node.js projects: `npm install`, `npm start`, `npm test`
-- For Python projects: `pip install -r requirements.txt`, `python main.py`
-- For other stacks: appropriate package management and run commands
+**Backend (from functions/ directory):**
+- `npm install` - Install dependencies
+- `npm run build` - Build functions
+- `firebase functions:log` - View function logs
+- `firebase deploy --only functions` - Deploy functions only
+
+**Full Deployment:**
+- `firebase deploy` - Deploy entire project
 
 ## Project Conventions
 To be established as the project develops. Consider:
@@ -45,19 +58,23 @@ To be established as the project develops. Consider:
 - Testing approach
 
 ## Important Notes
-1. This is a new, empty project awaiting initial setup
-2. No version control has been initialized yet
-3. Technology stack needs to be chosen based on project requirements
-4. Consider creating a README.md file to document the project purpose and setup instructions
+1. CVPlus is a fully functional AI-powered CV transformation platform
+2. Uses Firebase for backend services and hosting
+3. Integrates with Anthropic Claude API for CV analysis and enhancement
+4. Features include multimedia CV generation, podcast creation, video introductions, and portfolio galleries
+5. Remote repository name changed from 'origin' to 'cvplus'
 
 ## Claude Code Configuration
 The project has basic Claude Code permissions configured in `.claude/settings.local.json`:
 - Allowed: `ls:*` and `find:*` commands
 - Additional permissions should be added as needed during development
 
-## Next Steps
-1. Define the project requirements and choose appropriate technology stack
-2. Initialize version control with Git
-3. Set up the basic project structure
-4. Create initial configuration files
-5. Update this CLAUDE.md file with specific project details once established
+## Current Development Status
+CVPlus is actively being developed with the following key features implemented:
+- Interactive CV generation with AI analysis
+- Multimedia integration (audio, video, podcasts)
+- Portfolio gallery management
+- Calendar integration
+- Certification badge system
+- Public profile sharing
+- Real-time processing status tracking

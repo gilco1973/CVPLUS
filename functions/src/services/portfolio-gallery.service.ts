@@ -736,7 +736,7 @@ Return empty array if no specific projects found.`;
   ): Promise<{ url: string; embedCode: string }> {
     // Generate unique portfolio URL
     const portfolioId = `portfolio-${jobId}`;
-    const baseUrl = customDomain || 'https://cvisionery.com/portfolio';
+    const baseUrl = customDomain || 'https://cvplus.com/portfolio';
     const url = `${baseUrl}/${portfolioId}`;
     
     // Generate embed code for websites

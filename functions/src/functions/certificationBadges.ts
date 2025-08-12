@@ -323,7 +323,7 @@ export const generateBadgeShareLink = onCall(
 
     try {
       // Generate shareable link for a specific badge
-      const shareableUrl = `https://cvisionery.com/verify/${jobId}/${badgeId}`;
+      const shareableUrl = `https://cvplus.com/verify/${jobId}/${badgeId}`;
       
       // Create verification QR code data
       const qrData = {

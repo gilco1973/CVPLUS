@@ -96,7 +96,7 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
       const publicSlug = `cv-${jobId.substring(0, 8)}-${Date.now()}`;
       
       // Generate QR code for the public profile
-      const publicUrl = `${process.env.PUBLIC_URL || 'https://cvisionary.ai'}/public/${publicSlug}`;
+      const publicUrl = `${process.env.PUBLIC_URL || 'https://cvplus.ai'}/public/${publicSlug}`;
       const qrCodeBuffer = await integrationsService.generateQRCode(publicUrl);
       
       // Upload QR code to storage
@@ -271,7 +271,7 @@ export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
         }
 
         updates.slug = settings.customSlug;
-        updates.publicUrl = `${process.env.PUBLIC_URL || 'https://cvisionary.ai'}/public/${settings.customSlug}`;
+        updates.publicUrl = `${process.env.PUBLIC_URL || 'https://cvplus.ai'}/public/${settings.customSlug}`;
       }
 
       await profileDoc.ref.update(updates);
@@ -377,7 +377,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
             <p><strong>Message:</strong></p>
             <p>${message.replace(/\n/g, '<br>')}</p>
             <hr>
-            <p><small>This message was sent through your public CV profile on CVisionery.</small></p>
+            <p><small>This message was sent through your public CV profile on CVPlus.</small></p>
           `
         }).catch(error => {
           console.error('Failed to send email notification:', error);

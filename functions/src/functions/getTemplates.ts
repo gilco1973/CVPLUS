@@ -7,7 +7,7 @@ const templates: CVTemplate[] = [
     id: 'modern-tech',
     name: 'Modern Tech',
     description: 'Clean and modern design perfect for tech professionals',
-    thumbnail: 'https://storage.googleapis.com/getmycv/templates/modern-tech.png',
+    thumbnail: 'https://storage.googleapis.com/cvplus/templates/modern-tech.png',
     category: 'modern',
     isPremium: false,
     config: {
@@ -29,7 +29,7 @@ const templates: CVTemplate[] = [
     id: 'executive-classic',
     name: 'Executive Classic',
     description: 'Traditional and professional design for senior positions',
-    thumbnail: 'https://storage.googleapis.com/getmycv/templates/executive-classic.png',
+    thumbnail: 'https://storage.googleapis.com/cvplus/templates/executive-classic.png',
     category: 'classic',
     isPremium: true,
     config: {
@@ -51,7 +51,7 @@ const templates: CVTemplate[] = [
     id: 'creative-designer',
     name: 'Creative Designer',
     description: 'Bold and creative layout for designers and artists',
-    thumbnail: 'https://storage.googleapis.com/getmycv/templates/creative-designer.png',
+    thumbnail: 'https://storage.googleapis.com/cvplus/templates/creative-designer.png',
     category: 'creative',
     isPremium: true,
     config: {

@@ -1,7 +1,7 @@
 # CVPlus - From Paper to Powerful: Your CV, Reinvented
 
 <div align="center">
-  <img src="frontend/public/images/CVPlus-logo-with-slogan-full.svg" alt="CVisionary Logo" width="400"/>
+  <img src="frontend/public/images/CVPlus-logo-with-slogan-full.svg" alt="CVPlus Logo" width="400"/>
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
@@ -162,7 +162,7 @@ npm run build
 ## 📁 Project Structure
 
 ```
-CVisionary/
+cvplus/
 ├── frontend/               # React application
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
@@ -200,7 +200,7 @@ CVisionary/
 
 ## 🤝 Contributing
 
-We welcome contributions! CVisionary is built for the community, by the community.
+We welcome contributions! CVPlus is built for the community, by the community.
 
 ### How to contribute:
 1. Fork the repository

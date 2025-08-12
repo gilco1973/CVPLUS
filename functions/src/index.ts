@@ -14,6 +14,7 @@ export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
 export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';
 export { podcastStatus } from './functions/podcastStatus';
+export { podcastStatusPublic } from './functions/podcastStatusPublic';
 
 // Export video generation functions
 export { 

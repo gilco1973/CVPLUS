@@ -132,7 +132,7 @@ export class CVParser {
     try {
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; GetMyCVBot/1.0)'
+          'User-Agent': 'Mozilla/5.0 (compatible; CVPlusBot/1.0)'
         }
       });
 

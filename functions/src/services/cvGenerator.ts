@@ -60,7 +60,7 @@ export class CVGenerator {
 
     // QR Code
     if (features.includes('embed-qr-code')) {
-      const cvUrl = `https://cvisionary.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
+      const cvUrl = `https://cvplus.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
       qrCode = `
         <div class="qr-code">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(cvUrl)}" 
@@ -475,9 +475,9 @@ export class CVGenerator {
                 functionsScript.onload = () => {
                   firebase.initializeApp({
                     apiKey: "AIzaSyDLdwFKEOEb4uUiR1MJNZczZdVdnqfZBW8",
-                    authDomain: "cvisionery.firebaseapp.com",
-                    projectId: "cvisionery",
-                    storageBucket: "cvisionery.appspot.com",
+                    authDomain: "cvplus.firebaseapp.com",
+                    projectId: "cvplus",
+                    storageBucket: "cvplus.appspot.com",
                     messagingSenderId: "123456789",
                     appId: "1:123456789:web:abcdef123456"
                   });
@@ -1646,9 +1646,9 @@ export class CVGenerator {
       // Initialize Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyAgANn5E7V3jcdHOU3M0A9Du_ZjF_3Xmcs",
-        authDomain: "getmycv-ai.firebaseapp.com",
-        projectId: "getmycv-ai",
-        storageBucket: "getmycv-ai.firebasestorage.app",
+        authDomain: "cvplus.firebaseapp.com",
+        projectId: "cvplus",
+        storageBucket: "cvplus.firebasestorage.app",
         messagingSenderId: "515594461216",
         appId: "1:515594461216:web:99452fce1dff7557dc9c45"
       };
@@ -1767,7 +1767,7 @@ export class CVGenerator {
         ${interactiveFeatures.contactForm || ''}
         
         <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
-            <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+            <p>Generated with CVPlus - From Paper to Powerful: Your CV, Reinvented</p>
         </footer>
     </div>
 </body>
@@ -2049,7 +2049,7 @@ export class CVGenerator {
         ` : ''}
         
         <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
-            <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+            <p>Generated with CVPlus - From Paper to Powerful: Your CV, Reinvented</p>
         </footer>
     </div>
 </body>
@@ -2440,7 +2440,7 @@ export class CVGenerator {
             ` : ''}
             
             <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
-                <p>Generated with CVisionery - From Paper to Powerful: Your CV, Reinvented</p>
+                <p>Generated with CVPlus - From Paper to Powerful: Your CV, Reinvented</p>
             </footer>
         </div>
     </div>
@@ -2552,7 +2552,7 @@ export class CVGenerator {
          <h3>🎙️ AI Career Podcast</h3>
          <p>📱 Scan QR code or visit online version to listen</p>
          <div class="qr-placeholder">
-           <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://getmycv-ai.web.app" 
+           <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://cvplus.web.app" 
                 alt="QR Code" style="width: 80px; height: 80px; border: 1px solid #ccc;"/>
          </div>
        </div>`
@@ -2652,7 +2652,7 @@ export class CVGenerator {
       <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 12px; margin: 20px 0; font-size: 14px;">
         <strong>📄 PDF Version Notice:</strong> 
         This PDF contains static content. For interactive features (podcast, forms, animations), 
-        visit: <strong>https://getmycv-ai.web.app</strong>
+        visit: <strong>https://cvplus.web.app</strong>
       </div>
     `;
     
@@ -2853,7 +2853,7 @@ export class CVGenerator {
     
     // Add JavaScript action to open podcast URL
     if (jobId) {
-      const podcastUrl = `https://getmycv-ai.web.app/podcast/${jobId}`;
+      const podcastUrl = `https://cvplus.web.app/podcast/${jobId}`;
       
       // Create JavaScript action to open URL
       const jsAction = `app.launchURL("${podcastUrl}", true);`;
@@ -3070,7 +3070,7 @@ export class CVGenerator {
     const qrY = height! - qrSize - 30;
     
     // Generate QR code URL
-    const cvUrl = `https://getmycv-ai.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
+    const cvUrl = `https://cvplus.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
     
     try {
       // In a production environment, you would fetch and embed the actual QR code image

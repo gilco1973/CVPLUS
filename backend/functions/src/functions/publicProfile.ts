@@ -53,7 +53,7 @@ export const createPublicProfile = functions.https.onCall(async (data, context) 
     const profile = await enhancedDbService.createPublicProfile(jobId, context.auth.uid);
 
     // Generate QR code for the public URL
-    const publicUrl = `https://cvisionery.com/cv/${profile.slug}`;
+    const publicUrl = `https://cvplus.com/cv/${profile.slug}`;
     const qrCodeBuffer = await integrationsService.generateQRCode(publicUrl);
     const qrCodeUrl = await integrationsService.uploadQRCode(qrCodeBuffer, jobId);
 
@@ -225,7 +225,7 @@ export const submitContactForm = functions.https.onCall(async (data) => {
     // Get public profile URL
     const profileDoc = await firestore.collection('publicProfiles').doc(jobId).get();
     const profile = profileDoc.data() as PublicCVProfile;
-    const cvUrl = profile ? `https://cvisionery.com/cv/${profile.slug}` : 'https://cvisionery.com';
+    const cvUrl = profile ? `https://cvplus.com/cv/${profile.slug}` : 'https://cvplus.com';
 
     // Send email
     try {

@@ -59,7 +59,7 @@ export class EnhancedDatabaseService {
       allowContactForm: true,
       showAnalytics: true,
       qrCodeUrl: '',
-      publicUrl: `https://cvisionary.ai/public/${slug}`,
+      publicUrl: `https://cvplus.ai/public/${slug}`,
       createdAt: new Date(),
       updatedAt: new Date(),
       analytics: {

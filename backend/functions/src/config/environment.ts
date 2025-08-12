@@ -40,13 +40,13 @@ export interface Config {
 
 export const config: Config = {
   storage: {
-    bucketName: process.env.STORAGE_BUCKET || 'getmycv-ai.appspot.com'
+    bucketName: process.env.STORAGE_BUCKET || 'cvplus.appspot.com'
   },
   email: {
     service: process.env.EMAIL_SERVICE || 'gmail',
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
-    from: process.env.EMAIL_FROM || 'CVisionery <noreply@cvisionery.com>'
+    from: process.env.EMAIL_FROM || 'CVPlus <noreply@cvplus.com>'
   },
   vectorDb: {
     provider: (process.env.VECTOR_DB_PROVIDER as any) || 'pinecone',

@@ -399,6 +399,12 @@ export const regeneratePodcast = async (jobId: string, style?: 'professional' | 
   return result.data;
 };
 
+export const getPodcastStatus = async (jobId: string) => {
+  const statusFunction = httpsCallable(functions, 'podcastStatus');
+  const result = await statusFunction({ jobId });
+  return result.data;
+};
+
 export const generateAudioFromText = async (jobId: string, text: string, type: string, voice?: string, speed?: number) => {
   const audioFunction = httpsCallable(functions, 'generateAudioFromText');
   const result = await audioFunction({
