@@ -684,11 +684,227 @@ Please provide a corrected response that addresses all the issues above while ma
   }
 
   /**
-   * Get recent audit logs
+   * Get recent audit logs with PII sanitization
    */
   public getAuditLogs(limit: number = 50): VerificationAuditLog[] {
-    return this.auditLogs.slice(-limit);
+    const logs = this.auditLogs.slice(-limit);
+    return logs.map(log => ({
+      ...log,
+      // Sanitize sensitive data for security
+      originalPrompt: this.sanitizeForLogging(log.originalPrompt),
+      claudeResponse: this.sanitizeForLogging(log.claudeResponse)
+    }));
   }
+
+  /**
+   * Enhanced performance monitoring with detailed metrics
+   */
+  public getDetailedMetrics(): {
+    performance: {
+      averageResponseTime: number;
+      p95ResponseTime: number;
+      p99ResponseTime: number;
+      throughput: number; // requests per minute
+    };
+    quality: {
+      averageConfidence: number;
+      averageScore: number;
+      verificationPassRate: number;
+    };
+    reliability: {
+      successRate: number;
+      errorRate: number;
+      retryRate: number;
+    };
+    security: {
+      piiDetectionRate: number;
+      safetyIssueRate: number;
+      rateLimitViolations: number;
+    };
+  } {
+    const logs = this.auditLogs;
+    
+    if (logs.length === 0) {
+      return {
+        performance: { averageResponseTime: 0, p95ResponseTime: 0, p99ResponseTime: 0, throughput: 0 },
+        quality: { averageConfidence: 0, averageScore: 0, verificationPassRate: 0 },
+        reliability: { successRate: 0, errorRate: 0, retryRate: 0 },
+        security: { piiDetectionRate: 0, safetyIssueRate: 0, rateLimitViolations: 0 }
+      };
+    }
+
+    // Performance metrics
+    const responseTimes = logs.map(log => log.totalProcessingTime).sort((a, b) => a - b);
+    const p95Index = Math.floor(responseTimes.length * 0.95);
+    const p99Index = Math.floor(responseTimes.length * 0.99);
+    
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+    const recentRequests = logs.filter(log => log.timestamp.getTime() > oneMinuteAgo);
+    
+    // Quality metrics
+    const avgConfidence = logs.reduce((sum, log) => sum + log.verificationResult.confidence, 0) / logs.length;
+    const avgScore = logs.reduce((sum, log) => sum + log.verificationResult.overallScore, 0) / logs.length;
+    const passedVerifications = logs.filter(log => log.finalOutcome === 'approved').length;
+    
+    // Reliability metrics
+    const successfulRequests = logs.filter(log => log.finalOutcome !== 'rejected').length;
+    const requestsWithRetries = logs.filter(log => log.retryAttempts.length > 0).length;
+    
+    // Security metrics
+    const piiIssues = logs.filter(log => 
+      log.verificationResult.issues?.some(issue => issue.description.toLowerCase().includes('pii'))
+    ).length;
+    const safetyIssues = logs.filter(log => 
+      log.verificationResult.issues?.some(issue => issue.category === 'safety')
+    ).length;
+    
+    return {
+      performance: {
+        averageResponseTime: responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
+        p95ResponseTime: responseTimes[p95Index] || 0,
+        p99ResponseTime: responseTimes[p99Index] || 0,
+        throughput: recentRequests.length
+      },
+      quality: {
+        averageConfidence: avgConfidence,
+        averageScore: avgScore,
+        verificationPassRate: (passedVerifications / logs.length) * 100
+      },
+      reliability: {
+        successRate: (successfulRequests / logs.length) * 100,
+        errorRate: ((logs.length - successfulRequests) / logs.length) * 100,
+        retryRate: (requestsWithRetries / logs.length) * 100
+      },
+      security: {
+        piiDetectionRate: (piiIssues / logs.length) * 100,
+        safetyIssueRate: (safetyIssues / logs.length) * 100,
+        rateLimitViolations: this.getRateLimitViolationCount()
+      }
+    };
+  }
+
+  /**
+   * Health check for the verification service
+   */
+  public async healthCheck(): Promise<{
+    healthy: boolean;
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    checks: {
+      name: string;
+      status: 'pass' | 'fail' | 'warn';
+      message: string;
+      responseTime?: number;
+    }[];
+    timestamp: Date;
+  }> {
+    const checks: {
+      name: string;
+      status: 'pass' | 'fail' | 'warn';
+      message: string;
+      responseTime?: number;
+    }[] = [];
+
+    // Check OpenAI API connectivity
+    try {
+      const startTime = Date.now();
+      await this.openai.chat.completions.create({
+        model: 'gpt-4-turbo-preview',
+        messages: [{ role: 'user', content: 'Health check test - respond with OK' }],
+        max_tokens: 5,
+        temperature: 0
+      });
+      const responseTime = Date.now() - startTime;
+      
+      checks.push({
+        name: 'openai_connectivity',
+        status: responseTime < 5000 ? 'pass' : 'warn',
+        message: responseTime < 5000 ? 'OpenAI API responding normally' : 'OpenAI API slow response',
+        responseTime
+      });
+    } catch (error) {
+      checks.push({
+        name: 'openai_connectivity',
+        status: 'fail',
+        message: `OpenAI API error: ${error instanceof Error ? error.message : String(error)}`
+      });
+    }
+
+    // Check memory usage
+    const memoryUsage = process.memoryUsage();
+    const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
+    
+    checks.push({
+      name: 'memory_usage',
+      status: memoryMB < 256 ? 'pass' : memoryMB < 512 ? 'warn' : 'fail',
+      message: `Memory usage: ${memoryMB.toFixed(2)} MB`
+    });
+
+    // Check recent performance
+    const metrics = this.getDetailedMetrics();
+    checks.push({
+      name: 'performance',
+      status: metrics.performance.averageResponseTime < 30000 ? 'pass' : 'warn',
+      message: `Average response time: ${metrics.performance.averageResponseTime.toFixed(0)}ms`
+    });
+
+    // Check success rate
+    checks.push({
+      name: 'reliability',
+      status: metrics.reliability.successRate > 95 ? 'pass' : metrics.reliability.successRate > 90 ? 'warn' : 'fail',
+      message: `Success rate: ${metrics.reliability.successRate.toFixed(1)}%`
+    });
+
+    // Determine overall health
+    const failedChecks = checks.filter(c => c.status === 'fail');
+    const warningChecks = checks.filter(c => c.status === 'warn');
+    
+    let status: 'healthy' | 'degraded' | 'unhealthy';
+    if (failedChecks.length > 0) {
+      status = 'unhealthy';
+    } else if (warningChecks.length > 0) {
+      status = 'degraded';
+    } else {
+      status = 'healthy';
+    }
+
+    return {
+      healthy: status === 'healthy',
+      status,
+      checks,
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Get service information and statistics
+   */
+  public getServiceInfo(): {
+    version: string;
+    config: typeof DEFAULT_CONFIG;
+    uptime: number;
+    totalRequests: number;
+    cacheSize: number;
+  } {
+    return {
+      version: '1.0.0',
+      config: this.config,
+      uptime: Date.now() - this.serviceStartTime,
+      totalRequests: this.auditLogs.length,
+      cacheSize: this.rateLimitCounter.size
+    };
+  }
+
+  /**
+   * Get rate limit violation count
+   */
+  private getRateLimitViolationCount(): number {
+    // This would be implemented with proper tracking
+    // For now, return 0 as placeholder
+    return 0;
+  }
+
+  private serviceStartTime = Date.now();
 }
 
 // Export singleton instance
