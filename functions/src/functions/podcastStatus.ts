@@ -5,6 +5,7 @@ import { corsOptions } from '../config/cors';
 export const podcastStatus = onCall(
   {
     timeoutSeconds: 30,
+    memory: '512MiB',
     ...corsOptions
   },
   async (request) => {
