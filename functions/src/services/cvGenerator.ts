@@ -468,9 +468,9 @@ export class CVGenerator {
                 functionsScript.onload = () => {
                   firebase.initializeApp({
                     apiKey: "${config.firebase.apiKey}",
-                    authDomain: "${config.firebase.authDomain || 'cvplus.firebaseapp.com'}",
-                    projectId: "${config.firebase.projectId || 'cvplus'}",
-                    storageBucket: "${config.storage.bucketName || 'cvplus.appspot.com'}",
+                    authDomain: "${config.firebase.authDomain || 'getmycv-ai.firebaseapp.com'}",
+                    projectId: "${config.firebase.projectId || 'getmycv-ai'}",
+                    storageBucket: "${config.storage.bucketName || 'getmycv-ai.firebasestorage.app'}",
                     messagingSenderId: "${config.firebase.messagingSenderId}",
                     appId: "${config.firebase.appId}"
                   });
@@ -1635,8 +1635,8 @@ export class CVGenerator {
       // Initialize Firebase
       const firebaseConfig = {
         apiKey: "${config.firebase.apiKey}",
-        authDomain: "${config.firebase.authDomain || 'cvplus.firebaseapp.com'}",
-        projectId: "${config.firebase.projectId || 'cvplus'}",
+        authDomain: "${config.firebase.authDomain || 'getmycv-ai.firebaseapp.com'}",
+        projectId: "${config.firebase.projectId || 'getmycv-ai'}",
         storageBucket: "${config.storage.bucketName || 'cvplus.firebasestorage.app'}",
         messagingSenderId: "${config.firebase.messagingSenderId}",
         appId: "${config.firebase.appId}"
