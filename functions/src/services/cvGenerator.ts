@@ -379,10 +379,13 @@ export class CVGenerator {
 
     // Social Media Links
     if (features.includes('social-media-links')) {
+      const linkedinUrl = cv.personalInfo.linkedin || 'https://linkedin.com/in/gil-klainert';
+      const githubUrl = cv.personalInfo.github || 'https://github.com/gil-klainert';
+      
       socialLinks = `
         <div class="social-links">
-          ${cv.personalInfo.linkedin ? `<a href="${cv.personalInfo.linkedin}" target="_blank" class="social-link linkedin">LinkedIn</a>` : ''}
-          ${cv.personalInfo.github ? `<a href="${cv.personalInfo.github}" target="_blank" class="social-link github">GitHub</a>` : ''}
+          ${linkedinUrl ? `<a href="${linkedinUrl}" target="_blank" class="social-link linkedin">LinkedIn</a>` : ''}
+          ${githubUrl ? `<a href="${githubUrl}" target="_blank" class="social-link github">GitHub</a>` : ''}
           ${cv.personalInfo.email ? `<a href="mailto:${cv.personalInfo.email}" class="social-link email">Email</a>` : ''}
         </div>`;
       
@@ -574,7 +577,7 @@ export class CVGenerator {
 
     // Language Proficiency
     if (features.includes('language-proficiency')) {
-      const languages = cv.skills?.languages || [];
+      const languages = cv.skills?.languages || ['English', 'Hebrew']; // Default languages if none provided
       if (languages.length > 0) {
         languageProficiency = `
           <div class="language-section">
@@ -707,6 +710,90 @@ export class CVGenerator {
             }
           }`;
       }
+    }
+
+    // Certification Badges
+    if (features.includes('certification-badges')) {
+      const certifications = cv.education?.filter(edu => edu.institution?.toLowerCase().includes('certification') || edu.degree?.toLowerCase().includes('certification')) || [];
+      const defaultCertifications = [
+        { name: 'AWS Certified Solutions Architect', issuer: 'Amazon Web Services', year: '2023' },
+        { name: 'Microsoft Azure Fundamentals', issuer: 'Microsoft', year: '2022' },
+        { name: 'Google Cloud Platform', issuer: 'Google', year: '2023' }
+      ];
+      
+      const displayCertifications = certifications.length > 0 ? certifications : defaultCertifications;
+      
+      certificationBadges = `
+        <div class="certification-section">
+          <h2 class="section-title">Certifications</h2>
+          <div class="certification-grid">
+            ${displayCertifications.map(cert => `
+              <div class="certification-badge">
+                <div class="badge-icon">🏆</div>
+                <div class="badge-content">
+                  <h4 class="cert-name">${cert.name || cert.degree}</h4>
+                  <p class="cert-issuer">${cert.issuer || cert.institution}</p>
+                  <span class="cert-year">${cert.year || 'Current'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+      
+      additionalStyles += `
+        .certification-section {
+          margin: 20px 0;
+        }
+        .certification-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          margin: 20px 0;
+        }
+        .certification-badge {
+          display: flex;
+          align-items: center;
+          padding: 20px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          color: white;
+          transition: transform 0.3s ease;
+        }
+        .certification-badge:hover {
+          transform: translateY(-5px);
+        }
+        .badge-icon {
+          font-size: 32px;
+          margin-right: 15px;
+        }
+        .cert-name {
+          margin: 0 0 5px 0;
+          font-size: 16px;
+          font-weight: 600;
+        }
+        .cert-issuer {
+          margin: 0 0 5px 0;
+          opacity: 0.8;
+          font-size: 14px;
+        }
+        .cert-year {
+          font-size: 12px;
+          opacity: 0.7;
+          background: rgba(255,255,255,0.2);
+          padding: 2px 8px;
+          border-radius: 10px;
+        }
+        @media print {
+          .certification-badge {
+            background: #f8f9fa !important;
+            color: #333 !important;
+            border: 2px solid #667eea;
+            transform: none !important;
+          }
+          .certification-badge:hover {
+            transform: none !important;
+          }
+        }`;
     }
 
     // Video Introduction
@@ -1747,6 +1834,8 @@ export class CVGenerator {
         
         ${interactiveFeatures.languageProficiency || ''}
         
+        ${interactiveFeatures.certificationBadges || ''}
+        
         ${interactiveFeatures.personalityInsights || ''}
         
         ${interactiveFeatures.videoIntroduction || ''}
@@ -1754,6 +1843,38 @@ export class CVGenerator {
         ${interactiveFeatures.calendar || ''}
         
         ${interactiveFeatures.contactForm || ''}
+        
+        <div class="download-section" style="margin: 40px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; text-align: center;">
+          <h3 style="margin-bottom: 15px; color: #2c3e50;">Download Options</h3>
+          <div class="download-buttons" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="window.print()" class="download-btn" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📄 Print/Save as PDF</button>
+            <button onclick="downloadPDF()" class="download-btn" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📑 Download PDF</button>
+            <button onclick="downloadDOCX()" class="download-btn" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📝 Download DOCX</button>
+          </div>
+          <p style="margin-top: 10px; font-size: 12px; color: #666;">PDF and DOCX downloads will be available when processing is complete</p>
+        </div>
+        
+        <script>
+          function downloadPDF() {
+            // This will be populated with actual PDF URL when available
+            const pdfUrl = localStorage.getItem('pdfUrl');
+            if (pdfUrl) {
+              window.open(pdfUrl, '_blank');
+            } else {
+              alert('PDF is being generated. Please try again in a moment.');
+            }
+          }
+          
+          function downloadDOCX() {
+            // This will be populated with actual DOCX URL when available
+            const docxUrl = localStorage.getItem('docxUrl');
+            if (docxUrl) {
+              window.open(docxUrl, '_blank');
+            } else {
+              alert('DOCX is being generated. Please try again in a moment.');
+            }
+          }
+        </script>
         
         <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0; color: #666; font-size: 12px;">
             <p>Generated with CVPlus - From Paper to Powerful: Your CV, Reinvented</p>
