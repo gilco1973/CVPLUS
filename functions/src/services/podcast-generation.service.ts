@@ -395,7 +395,7 @@ Focus: ${options.focus || 'balanced'}`;
         .duration(durationSeconds)
         .output(outputPath)
         .on('end', () => resolve())
-        .on('error', (err) => reject(err))
+        .on('error', (err: any) => reject(err))
         .run();
     });
   }

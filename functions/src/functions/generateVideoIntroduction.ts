@@ -199,7 +199,7 @@ export const regenerateVideoIntroduction = onCall(
       } else {
         // Regenerate with new parameters
         const videoResult = await videoGenerationService.generateVideoIntroduction(
-          jobData.parsedData,
+          jobData!.parsedData,
           jobId,
           {
             duration: duration || jobData?.video?.duration || 'medium',

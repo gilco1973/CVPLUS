@@ -6,6 +6,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import * as admin from 'firebase-admin';
 import { skillsVisualizationService } from '../services/skills-visualization.service';
 import { EnhancedJob, ParsedCV } from '../types/enhanced-models';
+import { corsOptions } from '../config/cors';
 
 interface GenerateVisualizationRequest {
   jobId: string;
@@ -50,7 +51,7 @@ interface EndorseSkillRequest {
 export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
   {
     timeoutSeconds: 120,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<GenerateVisualizationRequest>) => {
     // Check authentication
@@ -119,7 +120,7 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
 export const updateSkillsData = onCall<UpdateSkillsRequest>(
   {
     timeoutSeconds: 90,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<UpdateSkillsRequest>) => {
     // Check authentication
@@ -186,7 +187,7 @@ export const updateSkillsData = onCall<UpdateSkillsRequest>(
 export const getSkillsInsights = onCall<GetInsightsRequest>(
   {
     timeoutSeconds: 90,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<GetInsightsRequest>) => {
     // Check authentication
@@ -234,7 +235,7 @@ export const getSkillsInsights = onCall<GetInsightsRequest>(
 export const exportSkillsData = onCall<ExportDataRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<ExportDataRequest>) => {
     // Check authentication
@@ -297,7 +298,7 @@ export const exportSkillsData = onCall<ExportDataRequest>(
 export const endorseSkill = onCall<EndorseSkillRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<EndorseSkillRequest>) => {
     // Check authentication

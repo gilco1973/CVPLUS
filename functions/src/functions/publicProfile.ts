@@ -7,6 +7,7 @@ import { integrationsService } from '../services/integrations.service';
 import * as admin from 'firebase-admin';
 import { EnhancedJob, PublicCVProfile, PrivacySettings } from '../types/enhanced-models';
 import { maskPII } from '../utils/privacy';
+import { corsOptions } from '../config/cors';
 
 interface CreatePublicProfileRequest {
   jobId: string;
@@ -49,7 +50,7 @@ interface TrackQRScanRequest {
 export const createPublicProfile = onCall<CreatePublicProfileRequest>(
   {
     timeoutSeconds: 120,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<CreatePublicProfileRequest>) => {
     // Check authentication
@@ -169,7 +170,7 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
 export const getPublicProfile = onCall<GetPublicProfileRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<GetPublicProfileRequest>) => {
     const { slug } = request.data;
@@ -221,7 +222,7 @@ export const getPublicProfile = onCall<GetPublicProfileRequest>(
 export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<UpdateProfileSettingsRequest>) => {
     // Check authentication
@@ -293,7 +294,7 @@ export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
 export const submitContactForm = onCall<SubmitContactFormRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<SubmitContactFormRequest>) => {
     const { jobId, senderName, senderEmail, senderPhone, company, message } = request.data;
@@ -403,7 +404,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 export const trackQRScan = onCall<TrackQRScanRequest>(
   {
     timeoutSeconds: 30,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<TrackQRScanRequest>) => {
     const { jobId, metadata } = request.data;

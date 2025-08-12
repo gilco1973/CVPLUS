@@ -2,14 +2,15 @@ import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https
 import { SocialMediaService } from '../services/social-media.service';
 import { CVParsingService } from '../services/cvParsing.service';
 import { logger } from 'firebase-functions';
+import { corsOptions } from '../config/cors';
 
 const socialMediaService = new SocialMediaService();
 const cvParsingService = new CVParsingService();
 
 export const generateSocialMediaIntegration = onCall(
   { 
-    cors: true,
-    timeoutSeconds: 60
+    timeoutSeconds: 60,
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     try {
@@ -53,7 +54,7 @@ export const generateSocialMediaIntegration = onCall(
 );
 
 export const addSocialProfile = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -86,7 +87,7 @@ export const addSocialProfile = onCall(
 );
 
 export const updateSocialProfile = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -119,7 +120,7 @@ export const updateSocialProfile = onCall(
 );
 
 export const removeSocialProfile = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -152,7 +153,7 @@ export const removeSocialProfile = onCall(
 );
 
 export const trackSocialClick = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       const { jobId, platform, metadata } = request.data;
@@ -181,7 +182,7 @@ export const trackSocialClick = onCall(
 );
 
 export const getSocialAnalytics = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -213,7 +214,7 @@ export const getSocialAnalytics = onCall(
 );
 
 export const updateSocialDisplaySettings = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {

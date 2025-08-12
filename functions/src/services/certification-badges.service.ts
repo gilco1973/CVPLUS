@@ -216,7 +216,6 @@ export class CertificationBadgesService {
     
     // Check if expired
     const expiryDate = cert.expiryDate ? new Date(cert.expiryDate) : undefined;
-    const isExpired = expiryDate ? expiryDate < new Date() : false;
     
     return {
       id: `cert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -254,8 +253,8 @@ export class CertificationBadgesService {
     - Any mentions of "certified", "certification", "credential"
     
     Experience: ${JSON.stringify(cv.experience?.slice(0, 5) || [])}
-    Summary: ${cv.summary || ''}
-    Achievements: ${JSON.stringify(cv.achievements || [])}
+    Summary: ${cv.personalInfo?.summary || ''}
+    Achievements: []
     
     Return as JSON array with: name, issuer, date, credentialId (if found)`;
 
@@ -340,10 +339,9 @@ export class CertificationBadgesService {
    */
   private determineCategory(
     certName: string, 
-    issuer: string
+    _issuer: string
   ): CertificationBadge['category'] {
     const name = certName.toLowerCase();
-    const issuerLower = issuer.toLowerCase();
     
     // Technical certifications
     if (name.includes('cloud') || name.includes('aws') || name.includes('azure') ||
@@ -373,7 +371,7 @@ export class CertificationBadgesService {
     }
     
     // Check by issuer
-    const provider = this.certificationProviders[issuer];
+    const provider = this.certificationProviders[_issuer];
     if (provider?.category) {
       return provider.category;
     }

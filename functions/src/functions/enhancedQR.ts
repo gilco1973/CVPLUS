@@ -1,13 +1,14 @@
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import { EnhancedQRService } from '../services/enhanced-qr.service';
 import { logger } from 'firebase-functions';
+import { corsOptions } from '../config/cors';
 
 const qrService = new EnhancedQRService();
 
 export const generateQRCode = onCall(
   { 
-    cors: true,
-    timeoutSeconds: 60
+    timeoutSeconds: 60,
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     try {
@@ -45,8 +46,8 @@ export const generateQRCode = onCall(
 
 export const trackQRCodeScan = onCall(
   { 
-    cors: true,
-    timeoutSeconds: 30
+    timeoutSeconds: 30,
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     try {
@@ -85,7 +86,7 @@ export const trackQRCodeScan = onCall(
 );
 
 export const getQRCodes = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -117,7 +118,7 @@ export const getQRCodes = onCall(
 );
 
 export const updateQRCode = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -150,7 +151,7 @@ export const updateQRCode = onCall(
 );
 
 export const deleteQRCode = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -183,7 +184,7 @@ export const deleteQRCode = onCall(
 );
 
 export const getQRAnalytics = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -215,7 +216,7 @@ export const getQRAnalytics = onCall(
 );
 
 export const getQRTemplates = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       const templates = qrService.getDefaultTemplates();

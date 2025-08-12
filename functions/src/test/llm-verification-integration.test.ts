@@ -1,5 +1,5 @@
 import { EnhancedCVParsingService } from '../services/cvParsing.service.enhanced';
-import { VerifiedCVParserService } from '../services/verified-cv-parser.service';
+// import { VerifiedCVParsingService } from '../services/verified-cv-parser.service'; // Commented out unused import
 import { llmVerificationConfig } from '../config/llm-verification.config';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -225,7 +225,6 @@ interface ComparisonResults {
 
 class LLMVerificationIntegrationTest {
   private enhancedParser: EnhancedCVParsingService;
-  private verifiedParser: VerifiedCVParserService;
   private testResults: TestResults[] = [];
 
   constructor() {
@@ -242,7 +241,7 @@ class LLMVerificationIntegrationTest {
       throw new Error('ANTHROPIC_API_KEY environment variable is required for testing');
     }
     
-    this.verifiedParser = new VerifiedCVParserService(apiKey);
+    // this.verifiedParser = new VerifiedCVParsingService();
   }
 
   /**

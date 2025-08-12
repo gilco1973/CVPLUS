@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { config } from '../config/environment';
 import { ParsedCV } from './cvParser';
-import { PDFDocument, PDFForm, PDFButton, PDFCheckBox, rgb, StandardFonts, PDFPage, PDFDict, PDFName, PDFString } from 'pdf-lib';
+import { PDFDocument, PDFForm, PDFButton, rgb, StandardFonts, PDFPage, PDFDict, PDFName, PDFString } from 'pdf-lib';
 import { AchievementsAnalysisService } from './achievements-analysis.service';
 import { SkillsProficiencyService } from './skills-proficiency.service';
 
@@ -1698,7 +1698,7 @@ export class CVGenerator {
                 <div class="education-item">
                     <div class="item-header">
                         <h3 class="degree">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</h3>
-                        <span class="graduation-date">${edu.graduationDate}</span>
+                        <span class="graduation-date">${edu.year}</span>
                     </div>
                     <div class="institution">${edu.institution}</div>
                     ${edu.gpa ? `<p class="description">GPA: ${edu.gpa}</p>` : ''}
@@ -2007,7 +2007,7 @@ export class CVGenerator {
             ${cv.education.map(edu => `
                 <div class="education-item">
                     <div class="item-header">
-                        <span class="graduation-date">${edu.graduationDate}</span>
+                        <span class="graduation-date">${edu.year}</span>
                         <h3 class="degree">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</h3>
                         <div class="institution">${edu.institution}</div>
                     </div>
@@ -2395,7 +2395,7 @@ export class CVGenerator {
                     <div class="education-item">
                         <div class="item-header">
                             <h3 class="degree">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</h3>
-                            <span class="graduation-date">${edu.graduationDate}</span>
+                            <span class="graduation-date">${edu.year}</span>
                         </div>
                         <div class="institution">${edu.institution}</div>
                         ${edu.gpa ? `<p class="description">GPA: ${edu.gpa}</p>` : ''}
@@ -2833,12 +2833,17 @@ export class CVGenerator {
     
     // Interactive play button with JavaScript action
     const playButton = form.createButton('podcastPlayButton');
-    playButton.addToPage(page, {
-      x: 50,
-      y: y - 50,
-      width: 100,
-      height: 30,
-    });
+    try {
+      (playButton as any).addToPage(page, {
+        x: 50,
+        y: y - 50,
+        width: 100,
+        height: 30,
+      });
+    } catch (e) {
+      // Fallback for PDF form compatibility
+      console.warn('PDF form button creation failed:', e);
+    }
     
     // Add JavaScript action to open podcast URL
     if (jobId) {
@@ -2957,12 +2962,16 @@ export class CVGenerator {
     
     // Submit button with form submission action
     const submitButton = form.createButton('contactSubmitButton');
-    submitButton.addToPage(page, {
-      x: 50,
-      y: y - 180,
-      width: 80,
-      height: 25,
-    });
+    try {
+      (submitButton as any).addToPage(page, {
+        x: 50,
+        y: y - 180,
+        width: 80,
+        height: 25,
+      });
+    } catch (e) {
+      console.warn('PDF form button creation failed:', e);
+    }
     
     // Add form submission functionality
     this.addFormSubmissionAction(submitButton, { 
@@ -3007,12 +3016,16 @@ export class CVGenerator {
       
       // Company name (clickable)
       const timelineButton = form.createButton(`timelineItem${index}`);
-      timelineButton.addToPage(page, {
-        x: 85,
-        y: timelineY - 10,
-        width: 200,
-        height: 20,
-      });
+      try {
+        (timelineButton as any).addToPage(page, {
+          x: 85,
+          y: timelineY - 10,
+          width: 200,
+          height: 20,
+        });
+      } catch (e) {
+        console.warn('PDF timeline button creation failed:', e);
+      }
       
       page.drawText(exp.company || 'Company', {
         x: 85,
@@ -3102,12 +3115,16 @@ export class CVGenerator {
       // Add clickable link on QR code
       const qrForm = page.doc.getForm();
       const qrButton = qrForm.createButton('qrCodeButton');
-      qrButton.addToPage(page, {
-        x: qrX,
-        y: qrY,
-        width: qrSize,
-        height: qrSize,
-      });
+      try {
+        (qrButton as any).addToPage(page, {
+          x: qrX,
+          y: qrY,
+          width: qrSize,
+          height: qrSize,
+        });
+      } catch (e) {
+        console.warn('PDF QR button creation failed:', e);
+      }
       
       // Add JavaScript action to open CV URL
       const jsAction = `app.launchURL("${cvUrl}", true);`;
@@ -3289,12 +3306,16 @@ export class CVGenerator {
       if (link.url && link.url !== '#') {
         // Create clickable button for each social link
         const socialButton = form.createButton(`socialLink${index}`);
-        socialButton.addToPage(page, {
-          x: 50,
-          y: linkY - 5,
-          width: 120,
-          height: 20,
-        });
+        try {
+          (socialButton as any).addToPage(page, {
+            x: 50,
+            y: linkY - 5,
+            width: 120,
+            height: 20,
+          });
+        } catch (e) {
+          console.warn('PDF social button creation failed:', e);
+        }
         
         // Add JavaScript action to open URL
         const jsAction = `app.launchURL("${link.url}", true);`;

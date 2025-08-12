@@ -36,6 +36,7 @@ interface QRCodeConfig {
   type: 'profile' | 'contact' | 'portfolio' | 'resume-download' | 'linkedin' | 'custom';
   data: string;
   template: QRCodeTemplate;
+  qrImageUrl?: string;
   analytics: {
     totalScans: number;
     uniqueScans: number;
@@ -252,7 +253,7 @@ export class EnhancedQRService {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      return { ...qrConfig, qrImageUrl } as any;
+      return { ...qrConfig, qrImageUrl };
     } catch (error) {
       logger.error('Error generating QR code:', error);
       throw new Error('Failed to generate QR code');
@@ -474,7 +475,7 @@ export class EnhancedQRService {
       
       const updatedConfig = { ...currentData, ...updates };
       const newImageUrl = await this.createQRImage(updatedConfig);
-      updates.qrImageUrl = newImageUrl as any;
+      updates.qrImageUrl = newImageUrl;
     }
 
     await qrRef.update({
@@ -528,10 +529,10 @@ export class EnhancedQRService {
       const aggregatedAnalytics = {
         totalScans: 0,
         uniqueScans: 0,
-        scansByDate: {},
-        scansByLocation: {},
-        scansByDevice: {},
-        scansBySource: {},
+        scansByDate: {} as Record<string, number>,
+        scansByLocation: {} as Record<string, number>,
+        scansByDevice: {} as Record<string, number>,
+        scansBySource: {} as Record<string, number>,
         totalQRCodes: qrCodesSnapshot.size,
         activeQRCodes: 0
       };

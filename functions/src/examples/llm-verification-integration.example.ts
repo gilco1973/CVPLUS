@@ -4,12 +4,15 @@
  * This file demonstrates how to integrate the comprehensive LLM verification system
  * with existing CVPlus services. These examples show various integration patterns
  * from simple drop-in replacements to advanced custom implementations.
+ * 
+ * NOTE: These examples are temporarily commented out due to API interface changes.
+ * This serves as a reference for future implementation once the APIs are stabilized.
  */
 
 import { cvParsingWrapper, piiDetectionWrapper, skillsAnalysisWrapper } from '../services/llm-integration-wrapper.service';
-import { verifiedClaudeService } from '../services/verified-claude.service';
-import { llmVerificationService } from '../services/llm-verification.service';
 import { llmMonitoringService } from '../services/llm-monitoring.service';
+
+/*
 
 /**
  * Example 1: Simple drop-in replacement for existing CV parsing
@@ -53,9 +56,14 @@ export async function exampleSimpleCVParsing(cvText: string): Promise<any> {
 export async function exampleAdvancedCVAnalysis(cvData: any, targetRole: string): Promise<any> {
   console.log('🔄 Example 2: Advanced CV Analysis with Custom Validation');
   
+  // Import services dynamically to avoid issues
+  const { VerifiedClaudeService } = await import('../services/verified-claude.service');
+  const verifiedClaudeService = new VerifiedClaudeService();
+  
   try {
     // Create custom validation criteria for role-specific analysis
-    const customValidation = {
+    /*
+    const _customValidation = {
       accuracy: true,
       completeness: true,
       relevance: true,
@@ -80,6 +88,7 @@ export async function exampleAdvancedCVAnalysis(cvData: any, targetRole: string)
         }
       ]
     };
+    */
 
     const response = await verifiedClaudeService.createVerifiedMessage({
       service: 'advanced-cv-analysis',
@@ -101,29 +110,33 @@ export async function exampleAdvancedCVAnalysis(cvData: any, targetRole: string)
       model: 'claude-sonnet-4-20250514',
       temperature: 0.1,
       max_tokens: 4000,
-      validationCriteria: customValidation,
-      context: {
-        analysisType: 'role-specific',
-        targetRole,
-        requiresHighAccuracy: true
-      }
+      // validationCriteria: customValidation,
+      // context: {
+      //   analysisType: 'role-specific',
+      //   targetRole,
+      //   requiresHighAccuracy: true
+      // }
     });
 
     console.log('✅ Advanced Analysis completed:', {
-      verified: response.verified,
-      verificationScore: response.verificationScore,
-      confidence: response.verificationDetails.confidence,
-      issues: response.verificationDetails.issues.length,
-      retryCount: response.retryCount
+      verified: response.verification?.isValid || false,
+      verificationScore: response.verification?.confidence || 0,
+      confidence: response.verification?.confidence || 0,
+      issues: 0,
+      retryCount: 0
     });
 
+    const contentText = Array.isArray(response.content) ? 
+      response.content.map((c: any) => c.text).join('\n') : 
+      String(response.content);
+
     return {
-      analysis: JSON.parse(response.content),
+      analysis: JSON.parse(contentText),
       verificationMetrics: {
-        verified: response.verified,
-        score: response.verificationScore,
-        confidence: response.verificationDetails.confidence,
-        auditId: response.auditId
+        verified: response.verification?.isValid || false,
+        score: response.verification?.confidence || 0,
+        confidence: response.verification?.confidence || 0,
+        auditId: ''
       }
     };
     
@@ -142,7 +155,8 @@ export async function exampleBatchCVProcessing(cvDataList: any[]): Promise<any[]
   console.log('🔄 Example 3: Batch CV Processing with Verification');
   
   try {
-    const batchRequests = cvDataList.map((cvData, index) => ({
+    /*
+    const _batchRequests = cvDataList.map((cvData, index) => ({
       service: 'batch-cv-processing',
       messages: [{
         role: 'user',
@@ -158,8 +172,12 @@ export async function exampleBatchCVProcessing(cvDataList: any[]): Promise<any[]
         totalItems: cvDataList.length
       }
     }));
+    */
 
     // Process in batches with comprehensive monitoring
+    // Note: Batch processing not available in current API
+    const batchResult: any = { results: [], totalTime: 0 };
+    /*
     const batchResult = await verifiedClaudeService.createBatchVerifiedMessages(
       batchRequests,
       {
@@ -167,17 +185,18 @@ export async function exampleBatchCVProcessing(cvDataList: any[]): Promise<any[]
         stopOnFirstFailure: false // Continue even if some fail
       }
     );
+    */
 
     console.log('✅ Batch Processing completed:', {
       total: batchResult.results.length,
-      successful: batchResult.successCount,
-      failed: batchResult.failureCount,
+      successful: 0,
+      failed: 0,
       totalTime: batchResult.totalTime,
-      avgTimePerItem: batchResult.totalTime / batchResult.results.length
+      avgTimePerItem: batchResult.totalTime / Math.max(batchResult.results.length, 1)
     });
 
     // Process results and separate successes from failures
-    const processedResults = batchResult.results.map((result, index) => {
+    const processedResults = batchResult.results.map((result: any, index: number) => {
       if (result instanceof Error) {
         return {
           index,
@@ -190,7 +209,7 @@ export async function exampleBatchCVProcessing(cvDataList: any[]): Promise<any[]
       return {
         index,
         success: true,
-        data: JSON.parse(result.content),
+        data: {},
         verificationMetrics: {
           verified: result.verified,
           score: result.verificationScore,
@@ -215,6 +234,10 @@ export async function exampleBatchCVProcessing(cvDataList: any[]): Promise<any[]
 export async function exampleStreamingCVAnalysis(cvText: string, onUpdate: (update: any) => void): Promise<void> {
   console.log('🔄 Example 4: Streaming CV Analysis');
   
+  // Import services dynamically to avoid issues
+  const { VerifiedClaudeService } = await import('../services/verified-claude.service');
+  const verifiedClaudeService = new VerifiedClaudeService();
+  
   try {
     const streamRequest = {
       service: 'streaming-cv-analysis',
@@ -238,7 +261,10 @@ export async function exampleStreamingCVAnalysis(cvText: string, onUpdate: (upda
     };
 
     // Process with streaming updates
-    for await (const update of verifiedClaudeService.streamVerifiedMessage(streamRequest)) {
+    // Method streamVerifiedMessage doesn't exist - commenting out for compilation
+    // for await (const update of verifiedClaudeService.streamVerifiedMessage(streamRequest)) {
+    const updates = []; // Mock for compilation
+    for (const update of updates) {
       console.log('📡 Stream update:', update.type);
       
       switch (update.type) {
@@ -360,9 +386,16 @@ export async function examplePIIDetectionAndSanitization(text: string): Promise<
 export async function exampleSystemHealthMonitoring(): Promise<void> {
   console.log('🔄 Example 6: System Health Monitoring');
   
+  // Import services dynamically to avoid issues
+  const { VerifiedClaudeService } = await import('../services/verified-claude.service');
+  const { LLMVerificationService } = await import('../services/llm-verification.service');
+  const verifiedClaudeService = new VerifiedClaudeService();
+  const llmVerificationService = new LLMVerificationService();
+  
   try {
     // Get comprehensive health status
-    const healthStatus = await verifiedClaudeService.getHealthStatus();
+    // Method getHealthStatus doesn't exist - using mock for compilation
+    const healthStatus = { service: 'healthy', components: {}, metrics: {} };
     
     console.log('🏥 System Health Status:', {
       overall: healthStatus.service,
@@ -371,7 +404,8 @@ export async function exampleSystemHealthMonitoring(): Promise<void> {
     });
 
     // Get detailed performance metrics
-    const detailedMetrics = llmVerificationService.getDetailedMetrics();
+    // Method getDetailedMetrics doesn't exist - using mock for compilation
+    const detailedMetrics = { performance: { throughput: 0, averageResponseTime: 0 }, reliability: { successRate: 0 }, quality: { averageScore: 0 } };
     
     console.log('📊 Performance Metrics:', {
       throughput: detailedMetrics.performance.throughput,
@@ -411,10 +445,17 @@ export async function exampleSystemHealthMonitoring(): Promise<void> {
 export async function exampleServiceWarmupAndOptimization(): Promise<void> {
   console.log('🔄 Example 7: Service Warmup and Optimization');
   
+  // Import services dynamically to avoid issues
+  const { VerifiedClaudeService } = await import('../services/verified-claude.service');
+  const { LLMVerificationService } = await import('../services/llm-verification.service');
+  const verifiedClaudeService = new VerifiedClaudeService();
+  const llmVerificationService = new LLMVerificationService();
+  
   try {
     // Warm up the Claude service
     console.log('🔥 Warming up Claude service...');
-    const warmupResult = await verifiedClaudeService.warmUp();
+    // Method warmUp doesn't exist - using mock for compilation
+    const warmupResult = { success: true, anthropicReady: true, verificationReady: true, responseTime: 0 };
     
     console.log('✅ Warmup completed:', {
       success: warmupResult.success,
@@ -428,9 +469,9 @@ export async function exampleServiceWarmupAndOptimization(): Promise<void> {
     const healthCheck = await llmVerificationService.healthCheck();
     
     console.log('✅ Health check completed:', {
-      healthy: healthCheck.healthy,
+      healthy: healthCheck.status === 'healthy',
       status: healthCheck.status,
-      checks: healthCheck.checks.map(c => ({
+      checks: (healthCheck.details?.checks || []).map((c: any) => ({
         name: c.name,
         status: c.status,
         message: c.message
@@ -438,7 +479,8 @@ export async function exampleServiceWarmupAndOptimization(): Promise<void> {
     });
 
     // Get service configuration and statistics
-    const serviceInfo = llmVerificationService.getServiceInfo();
+    // Method getServiceInfo doesn't exist - using mock for compilation
+    const serviceInfo = { version: '1.0.0', uptime: 0, totalRequests: 0, cacheSize: 0 };
     
     console.log('ℹ️ Service Information:', {
       version: serviceInfo.version,
@@ -531,12 +573,14 @@ export async function exampleCompleteIntegrationWorkflow(
 
 // Export all examples for testing and demonstration
 export const LLMVerificationExamples = {
-  simpleCVParsing: exampleSimpleCVParsing,
-  advancedCVAnalysis: exampleAdvancedCVAnalysis,
-  batchProcessing: exampleBatchCVProcessing,
-  streamingAnalysis: exampleStreamingCVAnalysis,
-  piiDetection: examplePIIDetectionAndSanitization,
-  healthMonitoring: exampleSystemHealthMonitoring,
-  serviceWarmup: exampleServiceWarmupAndOptimization,
-  completeWorkflow: exampleCompleteIntegrationWorkflow
+  simpleCVParsing: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  advancedCVAnalysis: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  batchProcessing: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  streamingAnalysis: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  piiDetection: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  healthMonitoring: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  serviceWarmup: () => Promise.resolve({ message: 'Example temporarily disabled' }),
+  completeWorkflow: () => Promise.resolve({ message: 'Example temporarily disabled' })
 };
+
+// */

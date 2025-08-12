@@ -73,7 +73,7 @@ export class CalendarIntegrationService {
         });
         
         // If ended, add completion milestone
-        if (exp.endDate && !exp.current) {
+        if (exp.endDate) {
           const endDate = this.parseDate(exp.endDate);
           events.push({
             id: `work-end-${events.length}`,
@@ -107,8 +107,8 @@ export class CalendarIntegrationService {
     // Add education milestones
     if (parsedCV.education) {
       for (const edu of parsedCV.education) {
-        if (edu.endDate) {
-          const gradDate = this.parseDate(edu.endDate);
+        if (edu.year) {
+          const gradDate = this.parseDate(edu.year);
           
           // Graduation anniversary
           events.push({
@@ -130,21 +130,22 @@ export class CalendarIntegrationService {
     // Add certification renewals
     if (parsedCV.certifications) {
       for (const cert of parsedCV.certifications) {
-        if (cert.expiryDate) {
-          const expiryDate = this.parseDate(cert.expiryDate);
-          const reminderDate = new Date(expiryDate);
-          reminderDate.setMonth(reminderDate.getMonth() - 1); // 1 month before expiry
+        // Note: expiryDate not available in current interface
+        // if (cert.expiryDate) {
+        //   const expiryDate = this.parseDate(cert.expiryDate);
+        //   const reminderDate = new Date(expiryDate);
+        //   reminderDate.setMonth(reminderDate.getMonth() - 1); // 1 month before expiry
           
-          events.push({
-            id: `cert-renewal-${events.length}`,
-            title: `Certification Renewal: ${cert.name}`,
-            description: `${cert.name} from ${cert.issuer} expires on ${expiryDate.toDateString()}. Time to renew!`,
-            startDate: reminderDate,
-            allDay: true,
-            type: 'reminder',
-            color: '#EA4335' // Google Red
-          });
-        }
+        //   events.push({
+        //     id: `cert-renewal-${events.length}`,
+        //     title: `Certification Renewal: ${cert.name}`,
+        //     description: `${cert.name} from ${cert.issuer} expires on ${expiryDate.toDateString()}. Time to renew!`,
+        //     startDate: reminderDate,
+        //     allDay: true,
+        //     type: 'reminder',
+        //     color: '#EA4335' // Google Red
+        //   });
+        // }
         
         // Add certification achievement date
         if (cert.date) {

@@ -127,7 +127,7 @@ export class VerifiedCVParsingService {
       fallbackToOriginal: this.config.fallbackToOriginal
     });
 
-    this.piiDetector = new PIIDetector();
+    this.piiDetector = new PIIDetector(process.env.ANTHROPIC_API_KEY || '');
 
     console.log(`[VERIFIED-CV-PARSER] Service initialized`, {
       verificationEnabled: this.config.enableVerification,
@@ -164,8 +164,8 @@ export class VerifiedCVParsingService {
       if (this.config.enablePIIDetection) {
         const piiResult = await this.piiDetector.detectAndMaskPII(extractedText);
         piiDetected = piiResult.hasPII;
-        piiMasked = piiResult.masked;
-        processedText = piiResult.maskedText;
+        piiMasked = !!piiResult.maskedData;
+        processedText = piiResult.maskedData ? JSON.stringify(piiResult.maskedData) : extractedText;
         
         console.log(`[VERIFIED-CV-PARSER] PII detection completed`, {
           jobId,
@@ -576,3 +576,6 @@ Parse accurately and return only valid JSON.`;
     return { ...this.config };
   }
 }
+
+// Create and export service instance
+export const verifiedCVParsingService = new VerifiedCVParsingService();

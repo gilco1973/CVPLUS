@@ -1,4 +1,17 @@
-import { ValidationCriteria } from '../services/llm-verification.service';
+// Inline ValidationCriteria interface to avoid circular dependency
+interface ValidationCriteria {
+  accuracy: boolean;
+  completeness: boolean;
+  relevance: boolean;
+  consistency: boolean;
+  safety: boolean;
+  format: boolean;
+  customCriteria?: {
+    name: string;
+    description: string;
+    weight: number;
+  }[];
+}
 
 /**
  * LLM Verification System Configuration

@@ -109,8 +109,8 @@ export class TestimonialsService {
   private async extractPotentialTestimonials(parsedCV: ParsedCV): Promise<Testimonial[]> {
     const testimonials: Testimonial[] = [];
     
-    // Look for references, recommendations, or testimonials sections
-    const sections = parsedCV.sections || {};
+    // Look for references, recommendations, or testimonials sections  
+    const sections = (parsedCV as any).sections || {};
     
     for (const [sectionName, content] of Object.entries(sections)) {
       if (this.isTestimonialSection(sectionName)) {
@@ -183,7 +183,7 @@ export class TestimonialsService {
 
   private async generateTestimonialsFromWorkHistory(parsedCV: ParsedCV): Promise<Testimonial[]> {
     const testimonials: Testimonial[] = [];
-    const workExperience = parsedCV.workExperience || [];
+    const workExperience = parsedCV.experience || [];
     
     for (const job of workExperience.slice(0, 3)) { // Generate for last 3 jobs
       const testimonial = await this.generateTestimonialForJob(job, parsedCV);
@@ -198,7 +198,7 @@ export class TestimonialsService {
   private async generateTestimonialForJob(job: any, parsedCV: ParsedCV): Promise<Testimonial | null> {
     try {
       // Generate realistic testimonial based on job details
-      const skills = parsedCV.skills?.slice(0, 3) || ['leadership', 'teamwork', 'problem-solving'];
+      const skills = parsedCV.skills?.technical?.slice(0, 3) || ['leadership', 'teamwork', 'problem-solving'];
       const accomplishments = job.accomplishments || job.description || [];
       
       const testimonialTemplates = [

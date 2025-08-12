@@ -442,8 +442,8 @@ Keep it exactly ${targetWords} words.`;
     // In production, use FFmpeg or a video processing service to extract frame
     // For now, generate a branded thumbnail
     
-    const bucket = admin.storage().bucket();
-    const fileName = `videos/${jobId}/thumbnail.jpg`;
+    // const bucket = admin.storage().bucket(); // Unused for now
+    // const fileName = `videos/${jobId}/thumbnail.jpg`; // Unused for now
     
     // This would be replaced with actual thumbnail generation
     // For demo, we'll reference a default thumbnail

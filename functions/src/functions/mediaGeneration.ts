@@ -6,6 +6,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import * as admin from 'firebase-admin';
 import { mediaGenerationService } from '../services/media-generation.service';
 import { EnhancedJob } from '../types/enhanced-models';
+import { corsOptions } from '../config/cors';
 
 /**
  * Generate video introduction script
@@ -13,7 +14,7 @@ import { EnhancedJob } from '../types/enhanced-models';
 export const generateVideoIntro = onCall(
   { 
     timeoutSeconds: 120,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -81,7 +82,7 @@ export const generateVideoIntro = onCall(
 export const generatePodcast = onCall(
   { 
     timeoutSeconds: 180,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -150,7 +151,7 @@ export const generateAudioFromText = onCall(
   { 
     timeoutSeconds: 240,
     memory: '1GiB',
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -196,7 +197,7 @@ export const generateAudioFromText = onCall(
 export const regenerateMedia = onCall(
   { 
     timeoutSeconds: 180,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -264,7 +265,7 @@ export const regenerateMedia = onCall(
 export const getMediaStatus = onCall(
   { 
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -322,7 +323,7 @@ export const getMediaStatus = onCall(
 export const downloadMediaContent = onCall(
   { 
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;

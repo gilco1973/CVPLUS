@@ -261,7 +261,7 @@ export class SocialMediaService {
     // Extract from explicit social media fields
     const socialFields = ['linkedin', 'twitter', 'github', 'website', 'portfolio'];
     socialFields.forEach(field => {
-      const value = personalInfo[field];
+      const value = (personalInfo as any)[field];
       if (value && typeof value === 'string') {
         for (const [platform, pattern] of Object.entries(urlPatterns)) {
           const matches = value.match(pattern);
@@ -382,7 +382,7 @@ export class SocialMediaService {
     const industries = this.extractIndustries(parsedCV);
     
     const suggestions = [
-      ...skills.slice(0, 5).map(skill => `#${skill.replace(/\s+/g, '')}`),
+      ...(skills.technical?.slice(0, 5) || []).map((skill: any) => `#${skill.replace(/\s+/g, '')}`),
       ...industries.map(industry => `#${industry.replace(/\s+/g, '')}`),
       '#Professional', '#Career', '#Networking', '#Growth', '#Innovation'
     ];
@@ -391,10 +391,10 @@ export class SocialMediaService {
   }
 
   private extractIndustries(parsedCV: ParsedCV): string[] {
-    const workExperience = parsedCV.workExperience || [];
+    const workExperience = parsedCV.experience || [];
     const industries = new Set<string>();
     
-    workExperience.forEach(job => {
+    workExperience.forEach((job: any) => {
       if (job.industry) {
         industries.add(job.industry);
       }

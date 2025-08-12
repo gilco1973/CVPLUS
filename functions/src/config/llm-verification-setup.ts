@@ -1,5 +1,4 @@
 import { llmVerificationConfig, validateLLMConfig, performConfigHealthCheck } from './llm-verification.config';
-import * as admin from 'firebase-admin';
 
 /**
  * LLM Verification Setup and Configuration Manager

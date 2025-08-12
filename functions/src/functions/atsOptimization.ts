@@ -6,6 +6,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import * as admin from 'firebase-admin';
 import { atsOptimizationService } from '../services/ats-optimization.service';
 import { EnhancedJob } from '../types/enhanced-models';
+import { corsOptions } from '../config/cors';
 
 /**
  * Analyze CV for ATS compatibility
@@ -13,7 +14,7 @@ import { EnhancedJob } from '../types/enhanced-models';
 export const analyzeATSCompatibility = onCall(
   { 
     timeoutSeconds: 120,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -87,7 +88,7 @@ export const analyzeATSCompatibility = onCall(
 export const applyATSOptimizations = onCall(
   { 
     timeoutSeconds: 180,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -145,7 +146,7 @@ export const applyATSOptimizations = onCall(
 export const getATSTemplates = onCall(
   { 
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data } = request;
@@ -171,7 +172,7 @@ export const getATSTemplates = onCall(
 export const generateATSKeywords = onCall(
   { 
     timeoutSeconds: 90,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;
@@ -247,7 +248,7 @@ export const batchATSAnalysis = onCall(
   { 
     timeoutSeconds: 300,
     memory: '1GiB',
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     const { data, auth } = request;

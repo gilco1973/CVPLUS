@@ -6,7 +6,7 @@
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
 import OpenAI from 'openai';
-import axios from 'axios';
+// import axios from 'axios'; // Commented out unused import
 import { config } from '../config/environment';
 
 interface PortfolioItem {
@@ -111,9 +111,9 @@ export class PortfolioGalleryService {
           category: 'Certifications',
           tags: this.extractTagsFromCertification(cert),
           date: cert.date ? new Date(cert.date) : undefined,
-          links: cert.url ? [{
+          links: (cert as any).url ? [{
             type: 'other',
-            url: cert.url,
+            url: (cert as any).url,
             label: 'View Certificate'
           }] : [],
           visibility: 'public'

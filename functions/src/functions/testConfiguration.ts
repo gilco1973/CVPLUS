@@ -3,10 +3,11 @@ import { config } from '../config/environment';
 import { WebSearchService } from '../services/web-search.service';
 import { PodcastGenerationService } from '../services/podcast-generation.service';
 import { VideoGenerationService } from '../services/video-generation.service';
+import { corsOptions } from '../config/cors';
 
 export const testConfiguration = onRequest(
   {
-    cors: true
+    ...corsOptions
   },
   async (req, res) => {
     if (req.method !== 'POST') {
@@ -90,14 +91,14 @@ export const testConfiguration = onRequest(
     }
 
     try {
-      const podcastService = new PodcastGenerationService();
+      new PodcastGenerationService();
       serviceStatus.podcast.available = true;
     } catch (error: any) {
       serviceStatus.podcast.error = error.message;
     }
 
     try {
-      const videoService = new VideoGenerationService();
+      new VideoGenerationService();
       serviceStatus.video.available = true;
     } catch (error: any) {
       serviceStatus.video.error = error.message;

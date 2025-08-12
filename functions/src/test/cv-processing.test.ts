@@ -31,7 +31,9 @@ EDUCATION: EMBA Northwestern/Tel Aviv (2019), M.A. Organizational Development (2
 `;
 
 // Expected parsed structure for validation
-const EXPECTED_PARSED_STRUCTURE = {
+// Expected parsed structure for validation (commented out as unused)
+/*
+const _EXPECTED_PARSED_STRUCTURE = {
   personalInfo: {
     name: 'Gil Klainert',
     email: 'Gil.klainert@gmail.com',
@@ -80,6 +82,7 @@ const EXPECTED_PARSED_STRUCTURE = {
     })
   ])
 };
+*/
 
 describe('CVPlus CV Processing Integration Tests', () => {
   let cvParser: CVParser;
@@ -127,7 +130,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
       
       await batch.commit();
     } catch (error) {
-      console.log('Cleanup error (non-critical):', error.message);
+      console.log('Cleanup error (non-critical):', error instanceof Error ? error.message : error);
     }
   });
 
@@ -183,7 +186,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
       try {
         await cvParser.parseCV(mockPdfBuffer, 'application/pdf');
       } catch (error) {
-        expect(error.message).toContain('Parse');
+        expect(error instanceof Error ? error.message : String(error)).toContain('Parse');
         console.log('✅ PDF parsing error handling works correctly');
       }
     });
@@ -217,9 +220,9 @@ describe('CVPlus CV Processing Integration Tests', () => {
       const updatedJob = await jobRef.get();
       const jobData = updatedJob.data();
 
-      expect(jobData.status).toBe('analyzed');
-      expect(jobData.parsedData).toBeDefined();
-      expect(jobData.parsedData.personalInfo.name).toBe('Gil Klainert');
+      expect(jobData?.status).toBe('analyzed');
+      expect(jobData?.parsedData).toBeDefined();
+      expect(jobData?.parsedData?.personalInfo?.name).toBe('Gil Klainert');
 
       console.log('✅ Firebase function flow test passed');
     }, 30000);
@@ -250,7 +253,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
     test('should generate achievements analysis', async () => {
       const achievements = await achievementsService.extractKeyAchievements(parsedCV);
 
-      expect(achievements).toHaveLength(expect.any(Number));
+      expect(typeof achievements.length).toBe('number');
       expect(achievements.length).toBeGreaterThan(0);
 
       // Validate achievement structure
@@ -388,7 +391,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
       expect(parsedCV.experience[0].position).toContain('Group Manager');
       expect(parsedCV.experience[parsedCV.experience.length - 1].position).toContain('Senior');
 
-      const managerialRoles = parsedCV.experience.filter(exp => 
+      const managerialRoles = parsedCV.experience.filter((exp: any) => 
         exp.position.toLowerCase().includes('manager') ||
         exp.position.toLowerCase().includes('lead')
       );
@@ -445,7 +448,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
         const cvBuffer = Buffer.from(GIL_KLAINERT_CV_TEXT, 'utf-8');
         await invalidParser.parseCV(cvBuffer, 'text/plain');
       } catch (error) {
-        expect(error.message).toContain('Failed to parse CV');
+        expect(error instanceof Error ? error.message : String(error)).toContain('Failed to parse CV');
         console.log('✅ API failure handling test passed');
       }
     });

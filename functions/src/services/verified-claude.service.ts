@@ -19,7 +19,7 @@ export interface VerifiedMessageOptions {
   model?: string;
   max_tokens?: number;
   temperature?: number;
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
   timeout?: number;
   system?: string;
   service?: string;
@@ -31,7 +31,7 @@ export interface VerifiedMessageOptions {
 export interface VerifiedResponse {
   content: Array<{ type: 'text'; text: string }>;
   model: string;
-  role: string;
+  role: "user" | "assistant";
   stop_reason?: string | null;
   stop_sequence?: string | null;
   type: string;
@@ -90,7 +90,7 @@ export class VerifiedClaudeService {
         max_tokens: options.max_tokens || 4000,
         temperature: options.temperature || 0.3,
         messages: options.messages,
-        timeout: options.timeout || 30000,
+        // timeout removed - not supported in this API version
         ...(options.system && { system: options.system })
       });
 
@@ -145,7 +145,7 @@ export class VerifiedClaudeService {
             max_tokens: options.max_tokens || 4000,
             temperature: options.temperature || 0.3,
             messages: options.messages,
-            timeout: options.timeout || 30000,
+            // timeout removed - not supported in this API version
             ...(options.system && { system: options.system })
           });
           
@@ -199,7 +199,7 @@ export class VerifiedClaudeService {
    */
   async batchVerified(
     prompts: Array<{
-      messages: Array<{ role: string; content: string }>;
+      messages: Array<{ role: "user" | "assistant"; content: string }>;
       service?: string;
       context?: string;
     }>,
@@ -248,11 +248,11 @@ export class VerifiedClaudeService {
       const startTime = Date.now();
 
       // Test basic Claude connectivity
-      const claudeTest = await this.anthropic.messages.create({
+      await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 10,
         messages: [{ role: 'user', content: 'Health check' }],
-        timeout: 5000
+        // timeout removed - not supported in this API version
       });
 
       // Test verification service if enabled
@@ -370,3 +370,6 @@ export class VerifiedClaudeService {
     return baseResponse;
   }
 }
+
+// Create and export service instance
+export const verifiedClaudeService = new VerifiedClaudeService();

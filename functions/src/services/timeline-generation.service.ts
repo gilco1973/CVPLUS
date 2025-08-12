@@ -60,11 +60,11 @@ export class TimelineGenerationService {
           organization: exp.company,
           startDate: this.parseDate(exp.startDate),
           endDate: exp.endDate ? this.parseDate(exp.endDate) : undefined,
-          current: exp.current || (!exp.endDate && this.isRecent(exp.startDate)),
+          current: (exp as any).current || (!exp.endDate && this.isRecent(exp.startDate)),
           description: exp.description,
           achievements: exp.achievements,
           skills: exp.technologies || [],
-          location: exp.location,
+          location: (exp as any).location,
           impact: this.extractImpactMetrics(exp.achievements || [])
         };
         events.push(workEvent);
@@ -79,10 +79,10 @@ export class TimelineGenerationService {
           type: 'education',
           title: `${edu.degree} in ${edu.field}`,
           organization: edu.institution,
-          startDate: edu.startDate ? this.parseDate(edu.startDate) : this.estimateEducationStartDate(edu),
-          endDate: edu.endDate ? this.parseDate(edu.endDate) : undefined,
-          location: edu.location,
-          achievements: edu.achievements || [],
+          startDate: (edu as any).startDate ? this.parseDate((edu as any).startDate) : this.estimateEducationStartDate(edu),
+          endDate: (edu as any).endDate ? this.parseDate((edu as any).endDate) : undefined,
+          location: (edu as any).location,
+          achievements: (edu as any).achievements || [],
           description: edu.gpa ? `GPA: ${edu.gpa}` : undefined
         };
         events.push(eduEvent);
@@ -98,7 +98,7 @@ export class TimelineGenerationService {
           title: cert.name,
           organization: cert.issuer,
           startDate: cert.date ? this.parseDate(cert.date) : new Date(),
-          endDate: cert.expiryDate ? this.parseDate(cert.expiryDate) : undefined,
+          endDate: (cert as any).expiryDate ? this.parseDate((cert as any).expiryDate) : undefined,
           description: cert.credentialId ? `Credential ID: ${cert.credentialId}` : undefined
         };
         events.push(certEvent);

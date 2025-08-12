@@ -4,7 +4,7 @@
 
 import OpenAI from 'openai';
 import * as admin from 'firebase-admin';
-import * as ffmpeg from 'fluent-ffmpeg';
+import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -469,7 +469,7 @@ Style: Concise, impactful, third-person narrative.`;
       parts.push(`Current: ${cv.experience[0].position} at ${cv.experience[0].company}`);
     }
     if (cv.skills?.technical) {
-      parts.push(`Skills: ${cv.skills.technical.slice(0, 5).join(', ')}`);
+      parts.push(`Skills: ${cv.skills?.technical?.slice(0, 5).join(', ') || 'Various skills'}`);
     }
     if (cv.achievements && cv.achievements.length > 0) {
       parts.push(`Achievement: ${cv.achievements[0]}`);

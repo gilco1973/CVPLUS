@@ -9,15 +9,16 @@ import { chatService } from '../services/chat.service';
 import { enhancedDbService } from '../services/enhanced-db.service';
 import { EnhancedJob, UserRAGProfile } from '../types/enhanced-models';
 import { nanoid } from 'nanoid';
+import { corsOptions } from '../config/cors';
 
 /**
  * Initialize RAG for a CV
  */
 export const initializeRAG = onCall(
   {
-    cors: true,
     timeoutSeconds: 540,
-    memory: '2GiB'
+    memory: '2GiB',
+    ...corsOptions
   },
   async (request: CallableRequest<{ jobId: string; systemPrompt?: string; personality?: string }>) => {
     // Check authentication
@@ -133,7 +134,7 @@ export const initializeRAG = onCall(
  * Start a new chat session
  */
 export const startChatSession = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest<{ jobId: string; visitorId?: string; metadata?: any }>) => {
     const { jobId, visitorId, metadata } = request.data;
 
@@ -203,8 +204,8 @@ export const startChatSession = onCall(
  */
 export const sendChatMessage = onCall(
   {
-    cors: true,
-    timeoutSeconds: 60
+    timeoutSeconds: 60,
+    ...corsOptions
   },
   async (request: CallableRequest<{ sessionId: string; message: string }>) => {
     const { sessionId, message } = request.data;
@@ -293,7 +294,7 @@ export const sendChatMessage = onCall(
  * End chat session and collect feedback
  */
 export const endChatSession = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest<{ sessionId: string; rating?: number; feedback?: string }>) => {
     const { sessionId, rating, feedback } = request.data;
 
@@ -327,9 +328,9 @@ export const endChatSession = onCall(
  */
 export const updateRAGEmbeddings = onCall(
   {
-    cors: true,
     timeoutSeconds: 540,
-    memory: '2GiB'
+    memory: '2GiB',
+    ...corsOptions
   },
   async (request: CallableRequest<{ jobId: string }>) => {
     if (!request.auth) {
@@ -401,7 +402,7 @@ export const updateRAGEmbeddings = onCall(
  * Get chat analytics
  */
 export const getChatAnalytics = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest<{ jobId: string }>) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'User must be authenticated');

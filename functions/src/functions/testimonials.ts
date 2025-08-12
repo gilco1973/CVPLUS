@@ -2,14 +2,15 @@ import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https
 import { TestimonialsService } from '../services/testimonials.service';
 import { CVParsingService } from '../services/cvParsing.service';
 import { logger } from 'firebase-functions';
+import { corsOptions } from '../config/cors';
 
 const testimonialsService = new TestimonialsService();
 const cvParsingService = new CVParsingService();
 
 export const generateTestimonialsCarousel = onCall(
   { 
-    cors: true,
-    secrets: ['OPENAI_API_KEY']
+    secrets: ['OPENAI_API_KEY'],
+    ...corsOptions
   },
   async (request: CallableRequest) => {
     try {
@@ -53,7 +54,7 @@ export const generateTestimonialsCarousel = onCall(
 );
 
 export const addTestimonial = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -87,7 +88,7 @@ export const addTestimonial = onCall(
 );
 
 export const updateTestimonial = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -120,7 +121,7 @@ export const updateTestimonial = onCall(
 );
 
 export const removeTestimonial = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {
@@ -153,7 +154,7 @@ export const removeTestimonial = onCall(
 );
 
 export const updateCarouselLayout = onCall(
-  { cors: true },
+  { ...corsOptions },
   async (request: CallableRequest) => {
     try {
       if (!request.auth?.uid) {

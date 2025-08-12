@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { LLMIntegrationWrapperService, LLMIntegrationConfig } from './llm-integration-wrapper.service';
 import { llmVerificationConfig } from '../config/llm-verification.config';
-import { VerifiedCVParserService, VerifiedParsingResult } from './verified-cv-parser.service';
+import { VerifiedCVParsingService, VerifiedParsingResult } from './verified-cv-parser.service';
 
 // Performance tracking interface
 export interface CVParsingMetrics {
@@ -93,7 +93,7 @@ export interface ParsedCV {
  */
 export class EnhancedCVParsingService {
   private db = admin.firestore();
-  private verifiedParser?: VerifiedCVParserService;
+  private verifiedParser?: VerifiedCVParsingService;
   private llmWrapper?: LLMIntegrationWrapperService;
   private config: LLMIntegrationConfig;
   
@@ -112,7 +112,7 @@ export class EnhancedCVParsingService {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (this.config.enableVerification && apiKey) {
       try {
-        this.verifiedParser = new VerifiedCVParserService(apiKey);
+        this.verifiedParser = new VerifiedCVParsingService();
         this.llmWrapper = new LLMIntegrationWrapperService(this.config);
         console.log('✅ LLM verification initialized for CV parsing');
       } catch (error) {
@@ -211,9 +211,9 @@ export class EnhancedCVParsingService {
   ): Promise<void> {
     try {
       const updateData: any = {
-        parsedData: result.parsedCV,
+        parsedData: result,
         verificationDetails: result.verificationDetails,
-        auditInfo: result.auditInfo,
+        auditInfo: result.verificationDetails,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
       
@@ -221,20 +221,22 @@ export class EnhancedCVParsingService {
         updateData.parsingMetrics = metrics;
       }
       
-      if (result.fallbackUsed) {
-        updateData.fallbackUsed = result.fallbackUsed;
+      // Check if fallback was used based on parsing method
+      const fallbackUsed = result.metadata?.parsingMethod === 'fallback';
+      if (fallbackUsed) {
+        updateData.fallbackUsed = fallbackUsed;
       }
       
-      if (result.warnings && result.warnings.length > 0) {
-        updateData.warnings = result.warnings;
+      // Use issues from verificationDetails as warnings
+      if (result.verificationDetails?.issues && result.verificationDetails.issues.length > 0) {
+        updateData.warnings = result.verificationDetails.issues;
       }
       
       await this.db.collection('jobs').doc(jobId).update(updateData);
       
       console.log(`✅ Updated job ${jobId} with verification results:`, {
-        verified: result.verificationDetails.verified,
-        score: result.verificationDetails.score,
-        auditId: result.auditInfo.auditId,
+        verified: result.verificationDetails.isValid,
+        score: result.verificationDetails.qualityScore,
         processingTime: metrics?.totalTime
       });
     } catch (error) {
@@ -293,25 +295,25 @@ export class EnhancedCVParsingService {
       // If verification is enabled and we have the verified parser
       if (this.verifiedParser && originalText) {
         try {
-          const verificationResult = await this.verifiedParser.validateExtractedData(
-            originalText,
-            parsedData
-          );
+          // Use parseText for verification instead of validateExtractedData
+          const verificationResult = await this.verifiedParser.parseText(originalText);
           
-          if (!verificationResult.verificationDetails.verified) {
+          if (verificationResult.verification && !verificationResult.verification.isValid) {
             issues.push('LLM verification failed');
-            issues.push(...verificationResult.verificationDetails.issues.map(i => i.description));
+            if (verificationResult.verification.issues) {
+              issues.push(...verificationResult.verification.issues);
+            }
           }
           
-          if (verificationResult.warnings) {
-            recommendations.push(...verificationResult.warnings);
+          if (verificationResult.verification?.warnings) {
+            recommendations.push(...verificationResult.verification.warnings);
           }
           
           console.log(`🔍 CV validation completed in ${Date.now() - startTime}ms with verification`);
           
           return {
-            isValid: verificationResult.verificationDetails.verified,
-            verificationScore: verificationResult.verificationDetails.score,
+            isValid: verificationResult.verification?.isValid || false,
+            verificationScore: verificationResult.verification?.qualityScore || 0,
             issues,
             recommendations
           };
@@ -365,7 +367,11 @@ export class EnhancedCVParsingService {
         
         while (retryCount <= maxRetries) {
           try {
-            const result = await this.verifiedParser.parseCV(fileBuffer, mimeType, userInstructions);
+            const result = await this.verifiedParser.parseCV(
+              { buffer: fileBuffer, originalname: 'cv-file.pdf' },
+              mimeType,
+              userInstructions
+            );
             const endTime = Date.now();
             
             const metrics: CVParsingMetrics = {
@@ -374,22 +380,40 @@ export class EnhancedCVParsingService {
               totalTime: endTime - startTime,
               retryCount,
               verificationUsed: true,
-              fallbackUsed: !!result.fallbackUsed
+              fallbackUsed: result.metadata?.parsingMethod === 'fallback'
             };
             
             console.log('✅ CV parsing with verification completed:', {
-              verified: result.verificationDetails.verified,
-              score: result.verificationDetails.score,
+              verified: result.verificationDetails.isValid,
+              score: result.verificationDetails.qualityScore,
               metrics
             });
             
+            // Convert VerifiedParsingResult to ParsedCV format
+            const parsedCV: ParsedCV = {
+              personalInfo: result.personalInfo,
+              experience: result.experience,
+              education: result.education,
+              skills: result.skills,
+              achievements: (result as any).achievements,
+              certifications: result.certifications,
+              projects: result.projects?.map(project => ({
+                name: project.name,
+                description: project.description,
+                technologies: project.technologies || [],
+                url: project.url
+              })),
+              publications: (result as any).publications,
+              interests: (result as any).interests
+            };
+            
             return {
-              parsedCV: result.parsedCV,
+              parsedCV,
               metrics,
               verificationDetails: result.verificationDetails,
-              auditInfo: result.auditInfo,
-              fallbackUsed: result.fallbackUsed,
-              warnings: result.warnings
+              auditInfo: { processingTime: result.verificationDetails.processingTimeMs },
+              fallbackUsed: result.metadata?.parsingMethod === 'fallback',
+              warnings: result.verificationDetails?.issues
             };
           } catch (error) {
             retryCount++;
@@ -420,6 +444,7 @@ export class EnhancedCVParsingService {
       };
       
       console.error('❌ CV parsing failed:', error);
+      console.log('📊 Final metrics:', metrics);
       throw error;
     }
   }
@@ -439,7 +464,7 @@ export class EnhancedCVParsingService {
   } {
     return {
       verificationEnabled: this.config.enableVerification,
-      verificationAvailable: !!(this.verifiedParser && this.llmWrapper),
+      verificationAvailable: Boolean(this.verifiedParser && this.llmWrapper),
       configuration: this.config,
       healthCheck: {
         timestamp: new Date(),

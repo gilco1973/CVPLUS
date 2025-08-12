@@ -9,6 +9,22 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config/environment';
 
+export interface CustomCriterion {
+  name: string;
+  description: string;
+  weight: number;
+}
+
+export interface ValidationCriteria {
+  accuracy: boolean;
+  completeness: boolean;
+  relevance: boolean;
+  consistency: boolean;
+  safety: boolean;
+  format: boolean;
+  customCriteria?: CustomCriterion[];
+}
+
 export interface VerificationRequest {
   anthropicResponse: string;
   originalPrompt: string;
@@ -204,7 +220,7 @@ export class LLMVerificationService {
       messages: [{ role: 'user', content: validationPrompt }],
       temperature: 0.1,
       max_tokens: 1000,
-      timeout: this.config.timeoutMs
+      // timeout: this.config.timeoutMs // Not supported
     });
 
     const validationResult = response.choices[0].message.content;
@@ -230,7 +246,7 @@ export class LLMVerificationService {
       max_tokens: 4000,
       temperature: 0.3,
       messages: [{ role: 'user', content: improvedPrompt }],
-      timeout: this.config.timeoutMs
+      // timeout: this.config.timeoutMs // Not supported
     });
 
     const content = response.content[0];
@@ -447,3 +463,6 @@ Ensure your response is accurate, complete, relevant, properly formatted, and sa
     }
   }
 }
+
+// Create and export service instance
+export const llmVerificationService = new LLMVerificationService();

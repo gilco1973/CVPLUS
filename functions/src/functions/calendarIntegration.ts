@@ -1,7 +1,7 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
-import { calendarIntegrationService } from '../services/calendar-integration.service';
+import { calendarIntegrationService, CalendarIntegrationService } from '../services/calendar-integration.service';
 
 export const generateCalendarEvents = onCall(
   {
@@ -312,17 +312,14 @@ export const handleCalendarCallback = onCall(
       
       // Now sync the calendar with the access token
       if (provider === 'google') {
-        const syncResult = await syncToGoogleCalendar.run({
-          auth: request.auth,
-          data: { jobId, accessToken }
-        });
-        return syncResult;
+        // For Google Calendar sync, we'll call the internal function directly
+        // since we can't call Firebase functions from within other Firebase functions
+        const calendarService = new CalendarIntegrationService();
+        return await calendarService.createGoogleCalendarIntegration(jobId, accessToken);
       } else {
-        const syncResult = await syncToOutlook.run({
-          auth: request.auth,
-          data: { jobId, accessToken }
-        });
-        return syncResult;
+        // For Outlook sync, we'll call the internal function directly
+        const calendarService = new CalendarIntegrationService();
+        return await calendarService.createOutlookIntegration(jobId, accessToken);
       }
     } catch (error: any) {
       console.error('Error handling calendar callback:', error);

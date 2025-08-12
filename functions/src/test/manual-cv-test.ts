@@ -40,8 +40,10 @@ async function runManualTest() {
     process.exit(failedCount > 0 ? 1 : 0);
     
   } catch (error) {
-    console.error('💥 Test execution failed:', error.message);
-    console.error(error.stack);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('💥 Test execution failed:', errorMessage);
+    console.error(errorStack);
     process.exit(1);
   }
 }

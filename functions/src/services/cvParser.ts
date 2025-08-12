@@ -20,16 +20,20 @@ export interface ParsedCV {
     company: string;
     position: string;
     duration: string;
+    startDate: string;
+    endDate?: string;
     location: string;
-    description: string;
-    achievements: string[];
+    description?: string;
+    achievements?: string[];
+    technologies?: string[];
   }>;
   education: Array<{
     institution: string;
     degree: string;
     field: string;
-    graduationDate: string;
+    year: string;
     gpa?: string;
+    honors?: string[];
   }>;
   skills: {
     technical: string[];

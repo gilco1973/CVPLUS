@@ -6,6 +6,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import * as admin from 'firebase-admin';
 import { personalityInsightsService } from '../services/personality-insights.service';
 import { EnhancedJob } from '../types/enhanced-models';
+import { corsOptions } from '../config/cors';
 
 interface PersonalityInsightsRequest {
   jobId: string;
@@ -43,7 +44,7 @@ interface UpdateSettingsRequest {
 export const generatePersonalityInsights = onCall<PersonalityInsightsRequest>(
   {
     timeoutSeconds: 120,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<PersonalityInsightsRequest>) => {
     // Check authentication
@@ -112,7 +113,7 @@ export const generatePersonalityInsights = onCall<PersonalityInsightsRequest>(
 export const comparePersonalities = onCall<ComparePersonalitiesRequest>(
   {
     timeoutSeconds: 90,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<ComparePersonalitiesRequest>) => {
     // Check authentication
@@ -171,7 +172,7 @@ export const comparePersonalities = onCall<ComparePersonalitiesRequest>(
 export const getPersonalityInsightsSummary = onCall<GetInsightsSummaryRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<GetInsightsSummaryRequest>) => {
     // Check authentication
@@ -221,7 +222,7 @@ export const getPersonalityInsightsSummary = onCall<GetInsightsSummaryRequest>(
 export const updatePersonalitySettings = onCall<UpdateSettingsRequest>(
   {
     timeoutSeconds: 60,
-    cors: true
+    ...corsOptions
   },
   async (request: CallableRequest<UpdateSettingsRequest>) => {
     // Check authentication

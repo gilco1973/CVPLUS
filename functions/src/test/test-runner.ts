@@ -173,16 +173,17 @@ class CVProcessingTestRunner {
     } catch (error) {
       const duration = Date.now() - startTime;
       
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.results.push({
         testName,
         status: 'FAIL',
         duration,
         details: null,
-        errors: [error.message]
+        errors: [errorMessage]
       });
 
       console.log(`❌ ${testName} - FAILED (${duration}ms)`);
-      console.log(`Error: ${error.message}\n`);
+      console.log(`Error: ${errorMessage}\n`);
     }
   }
 
@@ -255,7 +256,8 @@ async function main() {
     const runner = new CVProcessingTestRunner(anthropicApiKey);
     await runner.runAllTests();
   } catch (error) {
-    console.error('❌ Test runner failed:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Test runner failed:', errorMessage);
     process.exit(1);
   }
 }
