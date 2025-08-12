@@ -144,3 +144,8 @@ export {
   getSocialAnalytics,
   updateSocialDisplaySettings
 } from './functions/socialMedia';
+
+// Export LLM verification monitoring functions
+export { 
+  llmVerificationStatus 
+} from './functions/llmVerificationStatus';
