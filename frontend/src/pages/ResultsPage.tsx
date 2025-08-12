@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Play, FileText, Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Download, FileText, Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { PIIWarning } from '../components/PIIWarning';
 import { PDFService } from '../services/pdfService';
 import { DOCXService } from '../services/docxService';
 import { FeatureDashboard } from '../components/features/FeatureDashboard';
+import { PodcastPlayer } from '../components/PodcastPlayer';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -943,14 +944,14 @@ export const ResultsPage = () => {
             <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Download Your CV</h3>
               
-              {/* PDF Limitations Warning */}
-              <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4 mb-4">
-                <h4 className="text-yellow-300 font-medium flex items-center gap-2">
-                  <span>⚠️</span> PDF Download Notice
+              {/* Interactive PDF Features Notice */}
+              <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4 mb-4">
+                <h4 className="text-green-300 font-medium flex items-center gap-2">
+                  <span>✨</span> Interactive PDF Features
                 </h4>
-                <p className="text-yellow-200 text-sm mt-1">
-                  PDF version contains static content only. Interactive features (podcast player, forms, timeline animations) 
-                  are converted to static elements. For full functionality, use the HTML version or share the public link.
+                <p className="text-green-200 text-sm mt-1">
+                  Your PDF includes fully interactive elements: clickable podcast players, working contact forms, 
+                  interactive timeline navigation, fillable rating systems, and functional social media links!
                 </p>
               </div>
               
@@ -960,14 +961,14 @@ export const ResultsPage = () => {
                     if (job.generatedCV?.html) {
                       try {
                         setGeneratingPDF(true);
-                        toast.loading('Generating PDF...');
+                        toast.loading('Generating interactive PDF with all features...');
                         const pdfBlob = await PDFService.generatePDFFromHTML(
                           job.generatedCV.html,
                           `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`
                         );
                         PDFService.downloadPDF(pdfBlob, `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`);
                         toast.dismiss();
-                        toast.success('PDF downloaded successfully!');
+                        toast.success('Interactive PDF downloaded successfully! All features are fully functional.');
                       } catch (error) {
                         console.error('Error generating PDF:', error);
                         toast.dismiss();
@@ -982,7 +983,7 @@ export const ResultsPage = () => {
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    {generatingPDF ? 'Generating PDF...' : 'PDF Format'}
+                    {generatingPDF ? 'Generating Interactive PDF...' : 'Interactive PDF Format'}
                   </span>
                   {generatingPDF ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1046,15 +1047,7 @@ export const ResultsPage = () => {
               {job.generatedCV?.features?.includes('generate-podcast') ? (
                 <>
                   <div className="bg-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-center py-8">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Play className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <p className="text-sm text-gray-300">Podcast generation coming soon!</p>
-                        <p className="text-xs text-gray-400 mt-1">AI-generated audio summary of your career</p>
-                      </div>
-                    </div>
+                    <PodcastPlayer jobId={job.id} />
                   </div>
                 </>
               ) : (

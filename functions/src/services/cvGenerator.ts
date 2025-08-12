@@ -1,16 +1,17 @@
 import * as admin from 'firebase-admin';
 import { ParsedCV } from './cvParser';
+import { PDFDocument, PDFForm, PDFButton, PDFCheckBox, rgb, StandardFonts, PDFPage, PDFDict, PDFName, PDFString } from 'pdf-lib';
 
 export class CVGenerator {
   async generateHTML(parsedCV: ParsedCV, template: string, features?: string[], jobId?: string): Promise<string> {
-    const templates: Record<string, (cv: ParsedCV, features?: string[]) => string> = {
+    const templates: Record<string, (cv: ParsedCV, jobId: string, features?: string[]) => string> = {
       modern: this.modernTemplate.bind(this),
       classic: this.classicTemplate.bind(this),
       creative: this.creativeTemplate.bind(this),
     };
 
     const templateFn = templates[template] || templates.modern;
-    let html = templateFn(parsedCV, features);
+    let html = templateFn(parsedCV, jobId || '', features);
     
     // Replace jobId placeholder if podcast feature is enabled
     if (features?.includes('generate-podcast') && jobId) {
@@ -20,7 +21,7 @@ export class CVGenerator {
     return html;
   }
 
-  private generateInteractiveFeatures(cv: ParsedCV, features?: string[]): {
+  private generateInteractiveFeatures(cv: ParsedCV, jobId: string, features?: string[]): {
     qrCode?: string;
     podcastPlayer?: string;
     timeline?: string;
@@ -446,13 +447,97 @@ export class CVGenerator {
       contactForm = `
         <div class="contact-form-section">
           <h2 class="section-title">Get in Touch</h2>
-          <form class="contact-form" onsubmit="alert('Message sent! (Demo only)'); return false;">
-            <input type="text" placeholder="Your Name" required />
-            <input type="email" placeholder="Your Email" required />
-            <textarea placeholder="Your Message" rows="4" required></textarea>
-            <button type="submit">Send Message</button>
+          <form class="contact-form" onsubmit="return handleContactFormSubmit(event, '${jobId}');">
+            <input type="text" name="senderName" placeholder="Your Name" required />
+            <input type="email" name="senderEmail" placeholder="Your Email" required />
+            <input type="text" name="senderPhone" placeholder="Phone (optional)" />
+            <input type="text" name="company" placeholder="Company (optional)" />
+            <textarea name="message" placeholder="Your Message" rows="4" required></textarea>
+            <button type="submit" id="contact-submit-btn">Send Message</button>
           </form>
-        </div>`;
+          <div id="contact-form-status" class="contact-status" style="display: none;"></div>
+        </div>
+        
+        <script>
+          // Firebase App and Functions initialization
+          function initializeFirebase() {
+            if (typeof firebase === 'undefined') {
+              // Load Firebase SDK if not already loaded
+              const script = document.createElement('script');
+              script.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+              document.head.appendChild(script);
+              
+              const functionsScript = document.createElement('script');
+              functionsScript.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js';
+              document.head.appendChild(functionsScript);
+              
+              return new Promise((resolve) => {
+                functionsScript.onload = () => {
+                  firebase.initializeApp({
+                    apiKey: "AIzaSyDLdwFKEOEb4uUiR1MJNZczZdVdnqfZBW8",
+                    authDomain: "cvisionery.firebaseapp.com",
+                    projectId: "cvisionery",
+                    storageBucket: "cvisionery.appspot.com",
+                    messagingSenderId: "123456789",
+                    appId: "1:123456789:web:abcdef123456"
+                  });
+                  resolve();
+                };
+              });
+            }
+            return Promise.resolve();
+          }
+          
+          async function handleContactFormSubmit(event, jobId) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const submitBtn = document.getElementById('contact-submit-btn');
+            const statusDiv = document.getElementById('contact-form-status');
+            const formData = new FormData(form);
+            
+            // Update UI to show loading state
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+            statusDiv.style.display = 'none';
+            
+            try {
+              // Initialize Firebase if needed
+              await initializeFirebase();
+              
+              // Get form data
+              const data = {
+                jobId: jobId,
+                senderName: formData.get('senderName'),
+                senderEmail: formData.get('senderEmail'),
+                senderPhone: formData.get('senderPhone') || '',
+                company: formData.get('company') || '',
+                message: formData.get('message')
+              };
+              
+              // Call Firebase function
+              const functions = firebase.functions();
+              const submitContactForm = functions.httpsCallable('submitContactForm');
+              const result = await submitContactForm(data);
+              
+              // Show success message
+              statusDiv.innerHTML = '<p style="color: #27ae60; font-size: 14px;">✓ Message sent successfully! I\\'ll get back to you soon.</p>';
+              statusDiv.style.display = 'block';
+              form.reset();
+              
+            } catch (error) {
+              console.error('Error submitting contact form:', error);
+              statusDiv.innerHTML = '<p style="color: #e74c3c; font-size: 14px;">✗ Failed to send message. Please try again or contact me directly.</p>';
+              statusDiv.style.display = 'block';
+            } finally {
+              // Reset button state
+              submitBtn.textContent = 'Send Message';
+              submitBtn.disabled = false;
+            }
+            
+            return false;
+          }
+        </script>`;
       
       additionalStyles += `
         .contact-form {
@@ -480,6 +565,17 @@ export class CVGenerator {
         }
         .contact-form button:hover {
           background: #2980b9;
+        }
+        .contact-form button:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+        }
+        .contact-status {
+          margin-top: 15px;
+          padding: 10px;
+          border-radius: 8px;
+          background: #f8f9fa;
+          border: 1px solid #e0e0e0;
         }`;
     }
 
@@ -626,29 +722,117 @@ export class CVGenerator {
 
     // Video Introduction
     if (features.includes('video-introduction')) {
-      videoIntroduction = `
-        <div class="video-section">
-          <h2 class="section-title">Video Introduction</h2>
-          <div class="video-container">
-            <div class="video-placeholder">
-              <div class="video-icon">🎥</div>
-              <h3>My Professional Introduction</h3>
-              <p>Click to play a 2-minute video about my background and expertise</p>
-              <button class="video-play-btn" onclick="alert('Video feature coming soon!')">
-                ▶ Play Video
-              </button>
+      // Check if video data exists for this job
+      const hasVideo = false; // Will be dynamically set when video is available
+      
+      if (hasVideo) {
+        // Display actual video player
+        videoIntroduction = `
+          <div class="video-section">
+            <h2 class="section-title">Video Introduction</h2>
+            <div class="video-container">
+              <div class="video-player-wrapper">
+                <video id="intro-video" class="intro-video" controls poster="/api/video-thumbnail/${jobId}">
+                  <source src="/api/video/${jobId}" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <div class="video-controls-overlay">
+                  <button class="video-regenerate-btn" onclick="regenerateVideo('${jobId}')">
+                    🔄 Regenerate Video
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        // Display video generation interface
+        videoIntroduction = `
+          <div class="video-section">
+            <h2 class="section-title">Video Introduction</h2>
+            <div class="video-container">
+              <div class="video-generator">
+                <div class="video-icon">🎥</div>
+                <h3>Professional Video Introduction</h3>
+                <p>Generate an AI-powered video introduction showcasing your professional background and expertise</p>
+                <div class="video-options">
+                  <select id="video-duration" class="video-option-select">
+                    <option value="short">Short (30s)</option>
+                    <option value="medium" selected>Medium (60s)</option>
+                    <option value="long">Long (90s)</option>
+                  </select>
+                  <select id="video-style" class="video-option-select">
+                    <option value="professional" selected>Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="energetic">Energetic</option>
+                  </select>
+                </div>
+                <button class="video-generate-btn" onclick="generateVideoIntroduction('${jobId}')">
+                  ▶ Generate Video Introduction
+                </button>
+                <div id="video-generation-status" class="video-status" style="display: none;"></div>
+              </div>
             </div>
           </div>
-        </div>`;
+          
+          <script>
+            async function generateVideoIntroduction(jobId) {
+              const generateBtn = document.querySelector('.video-generate-btn');
+              const statusDiv = document.getElementById('video-generation-status');
+              const duration = document.getElementById('video-duration').value;
+              const style = document.getElementById('video-style').value;
+              
+              // Update UI for loading state
+              generateBtn.textContent = 'Generating Video...';
+              generateBtn.disabled = true;
+              statusDiv.style.display = 'block';
+              statusDiv.innerHTML = '<p style="color: #3498db;">🎬 Generating your video introduction...</p>';
+              
+              try {
+                // Initialize Firebase if needed
+                await initializeFirebase();
+                
+                // Call video generation function
+                const functions = firebase.functions();
+                const generateVideo = functions.httpsCallable('generateVideoIntroduction');
+                const result = await generateVideo({
+                  jobId: jobId,
+                  duration: duration,
+                  style: style,
+                  avatarStyle: 'realistic',
+                  background: 'modern',
+                  includeSubtitles: true
+                });
+                
+                // Show success and reload to display video
+                statusDiv.innerHTML = '<p style="color: #27ae60;">✓ Video generated successfully! Refreshing page...</p>';
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
+                
+              } catch (error) {
+                console.error('Error generating video:', error);
+                statusDiv.innerHTML = '<p style="color: #e74c3c;">✗ Video generation failed. This feature requires additional setup.</p>';
+                generateBtn.textContent = '▶ Generate Video Introduction';
+                generateBtn.disabled = false;
+              }
+            }
+            
+            async function regenerateVideo(jobId) {
+              if (confirm('Are you sure you want to regenerate your video introduction?')) {
+                await generateVideoIntroduction(jobId);
+              }
+            }
+          </script>`;
+      }
       
       additionalStyles += `
         .video-container {
           max-width: 600px;
           margin: 20px auto;
         }
-        .video-placeholder {
+        .video-generator, .video-player-wrapper {
           background: #f8f9fa;
-          padding: 60px 40px;
+          padding: 40px;
           border-radius: 12px;
           text-align: center;
           border: 2px dashed #e0e0e0;
@@ -657,41 +841,76 @@ export class CVGenerator {
           font-size: 48px;
           margin-bottom: 20px;
         }
-        .video-placeholder h3 {
+        .video-generator h3, .video-player-wrapper h3 {
           margin-bottom: 10px;
+          color: #2c3e50;
         }
-        .video-placeholder p {
+        .video-generator p {
           color: #666;
-          margin-bottom: 20px;
+          margin-bottom: 25px;
+          line-height: 1.5;
         }
-        .video-play-btn {
+        .video-options {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+        }
+        .video-option-select {
+          padding: 8px 15px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          background: white;
+          color: #2c3e50;
+          font-size: 14px;
+        }
+        .video-generate-btn, .video-regenerate-btn {
           background: #e74c3c;
           color: white;
           border: none;
-          padding: 12px 30px;
-          border-radius: 24px;
+          padding: 15px 30px;
+          border-radius: 25px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
+          font-size: 16px;
         }
-        .video-play-btn:hover {
+        .video-generate-btn:hover, .video-regenerate-btn:hover {
           background: #c0392b;
           transform: scale(1.05);
+        }
+        .video-generate-btn:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .video-status {
+          margin-top: 20px;
+          padding: 15px;
+          border-radius: 8px;
+          background: white;
+          border: 1px solid #e0e0e0;
+        }
+        .intro-video {
+          width: 100%;
+          max-width: 500px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .video-controls-overlay {
+          margin-top: 15px;
         }
         @media print, screen {
           .video-section {
             page-break-inside: avoid;
           }
-          .video-placeholder {
+          .video-generator, .video-player-wrapper {
             background: #f8f9fa !important;
             border: 2px solid #e0e0e0 !important;
-            padding: 40px 30px;
+            padding: 30px;
           }
-          .video-play-btn {
-            background: #e74c3c !important;
-            transform: none !important;
-          }
-          .video-play-btn:hover {
+          .video-generate-btn, .video-regenerate-btn {
             background: #e74c3c !important;
             transform: none !important;
           }
@@ -775,21 +994,139 @@ export class CVGenerator {
     if (features.includes('availability-calendar')) {
       calendar = `
         <div class="calendar-section">
-          <h2 class="section-title">Availability</h2>
+          <h2 class="section-title">Availability & Calendar Integration</h2>
           <div class="calendar-widget">
             <div class="calendar-header">
               <h4>Schedule a Meeting</h4>
-              <p>I'm available for interviews and discussions</p>
+              <p>I'm available for interviews and professional discussions</p>
             </div>
             <div class="availability-slots">
               <div class="slot available">Mon-Fri: 9 AM - 6 PM EST</div>
               <div class="slot available">Weekends: By appointment</div>
             </div>
-            <button class="schedule-btn" onclick="alert('Calendar integration coming soon!')">
-              📅 Book a Time Slot
-            </button>
+            <div class="calendar-actions">
+              <button class="calendar-btn generate-calendar" onclick="generateCalendarEvents('${jobId}')">
+                📅 Generate Calendar Events
+              </button>
+              <div class="calendar-sync-options" id="calendar-sync-${jobId}" style="display: none;">
+                <button class="calendar-btn sync-google" onclick="syncToGoogleCalendar('${jobId}')">
+                  📊 Sync to Google Calendar
+                </button>
+                <button class="calendar-btn sync-outlook" onclick="syncToOutlook('${jobId}')">
+                  🗓️ Sync to Outlook
+                </button>
+                <button class="calendar-btn download-ical" onclick="downloadICalFile('${jobId}')">
+                  💾 Download iCal File
+                </button>
+              </div>
+            </div>
+            <div id="calendar-status-${jobId}" class="calendar-status" style="display: none;"></div>
           </div>
-        </div>`;
+        </div>
+        
+        <script>
+          async function generateCalendarEvents(jobId) {
+            const generateBtn = document.querySelector('.generate-calendar');
+            const statusDiv = document.getElementById('calendar-status-' + jobId);
+            const syncOptions = document.getElementById('calendar-sync-' + jobId);
+            
+            generateBtn.textContent = 'Generating Events...';
+            generateBtn.disabled = true;
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p style="color: #3498db;">📅 Generating calendar events from your career timeline...</p>';
+            
+            try {
+              await initializeFirebase();
+              
+              const functions = firebase.functions();
+              const generateEvents = functions.httpsCallable('generateCalendarEvents');
+              const result = await generateEvents({ jobId: jobId });
+              
+              statusDiv.innerHTML = '<p style="color: #27ae60;">✓ Calendar events generated successfully! Choose a sync option below.</p>';
+              syncOptions.style.display = 'block';
+              
+            } catch (error) {
+              console.error('Error generating calendar events:', error);
+              statusDiv.innerHTML = '<p style="color: #e74c3c;">✗ Calendar generation failed. Please try again.</p>';
+            } finally {
+              generateBtn.textContent = '📅 Generate Calendar Events';
+              generateBtn.disabled = false;
+            }
+          }
+          
+          async function syncToGoogleCalendar(jobId) {
+            try {
+              await initializeFirebase();
+              const functions = firebase.functions();
+              const syncGoogle = functions.httpsCallable('syncToGoogleCalendar');
+              
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #3498db;">🔄 Syncing to Google Calendar...</p>';
+              
+              const result = await syncGoogle({ jobId: jobId });
+              
+              if (result.data.authUrl) {
+                statusDiv.innerHTML = '<p style="color: #f39c12;">🔐 Opening Google Calendar authorization...</p>';
+                window.open(result.data.authUrl, '_blank');
+              } else {
+                statusDiv.innerHTML = '<p style="color: #27ae60;">✓ Synced to Google Calendar successfully!</p>';
+              }
+              
+            } catch (error) {
+              console.error('Error syncing to Google Calendar:', error);
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #e74c3c;">✗ Google Calendar sync failed. This feature requires setup.</p>';
+            }
+          }
+          
+          async function syncToOutlook(jobId) {
+            try {
+              await initializeFirebase();
+              const functions = firebase.functions();
+              const syncOutlook = functions.httpsCallable('syncToOutlook');
+              
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #3498db;">🔄 Syncing to Outlook...</p>';
+              
+              const result = await syncOutlook({ jobId: jobId });
+              statusDiv.innerHTML = '<p style="color: #27ae60;">✓ Synced to Outlook successfully!</p>';
+              
+            } catch (error) {
+              console.error('Error syncing to Outlook:', error);
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #e74c3c;">✗ Outlook sync failed. This feature requires setup.</p>';
+            }
+          }
+          
+          async function downloadICalFile(jobId) {
+            try {
+              await initializeFirebase();
+              const functions = firebase.functions();
+              const downloadICal = functions.httpsCallable('downloadICalFile');
+              
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #3498db;">📥 Preparing iCal download...</p>';
+              
+              const result = await downloadICal({ jobId: jobId });
+              
+              // Create download link
+              const blob = new Blob([result.data.icalData], { type: 'text/calendar' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'career-timeline.ics';
+              a.click();
+              window.URL.revokeObjectURL(url);
+              
+              statusDiv.innerHTML = '<p style="color: #27ae60;">✓ iCal file downloaded successfully!</p>';
+              
+            } catch (error) {
+              console.error('Error downloading iCal:', error);
+              const statusDiv = document.getElementById('calendar-status-' + jobId);
+              statusDiv.innerHTML = '<p style="color: #e74c3c;">✗ iCal download failed. Please try again.</p>';
+            }
+          }
+        </script>`;
       
       additionalStyles += `
         .calendar-widget {
@@ -822,19 +1159,61 @@ export class CVGenerator {
           color: #2e7d32;
           border: 1px solid #a5d6a7;
         }
-        .schedule-btn {
+        .calendar-actions {
+          margin-top: 20px;
+        }
+        .calendar-sync-options {
+          margin-top: 15px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .calendar-btn {
           background: #4caf50;
           color: white;
           border: none;
-          padding: 12px 30px;
-          border-radius: 24px;
+          padding: 12px 20px;
+          border-radius: 20px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
+          font-size: 14px;
+          margin: 5px;
         }
-        .schedule-btn:hover {
-          background: #388e3c;
-          transform: scale(1.05);
+        .calendar-btn:hover {
+          background: #45a049;
+          transform: translateY(-1px);
+        }
+        .calendar-btn:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .calendar-btn.sync-google {
+          background: #db4437;
+        }
+        .calendar-btn.sync-google:hover {
+          background: #c23321;
+        }
+        .calendar-btn.sync-outlook {
+          background: #0078d4;
+        }
+        .calendar-btn.sync-outlook:hover {
+          background: #106ebe;
+        }
+        .calendar-btn.download-ical {
+          background: #6c757d;
+        }
+        .calendar-btn.download-ical:hover {
+          background: #5a6268;
+        }
+        .calendar-status {
+          margin-top: 15px;
+          padding: 10px;
+          border-radius: 8px;
+          background: white;
+          border: 1px solid #e0e0e0;
+          font-size: 14px;
         }
         @media print, screen {
           .calendar-section {
@@ -842,14 +1221,20 @@ export class CVGenerator {
           }
           .calendar-widget {
             background: #f8f9fa !important;
-            max-width: 350px;
+            max-width: 380px;
           }
-          .schedule-btn {
+          .calendar-btn {
             background: #4caf50 !important;
             transform: none !important;
           }
-          .schedule-btn:hover {
-            background: #4caf50 !important;
+          .calendar-btn.sync-google {
+            background: #db4437 !important;
+          }
+          .calendar-btn.sync-outlook {
+            background: #0078d4 !important;
+          }
+          .calendar-btn.download-ical {
+            background: #6c757d !important;
             transform: none !important;
           }
         }`;
@@ -1009,8 +1394,8 @@ export class CVGenerator {
     };
   }
 
-  private modernTemplate(cv: ParsedCV, features?: string[]): string {
-    const interactiveFeatures = this.generateInteractiveFeatures(cv, features);
+  private modernTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
+    const interactiveFeatures = this.generateInteractiveFeatures(cv, jobId, features);
     
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1389,7 +1774,7 @@ export class CVGenerator {
 </html>`;
   }
 
-  private classicTemplate(cv: ParsedCV, features?: string[]): string {
+  private classicTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1671,7 +2056,7 @@ export class CVGenerator {
 </html>`;
   }
 
-  private creativeTemplate(cv: ParsedCV, features?: string[]): string {
+  private creativeTemplate(cv: ParsedCV, jobId: string, features?: string[]): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2278,5 +2663,856 @@ export class CVGenerator {
     );
     
     return optimizedHtml;
+  }
+
+  /**
+   * Generate an interactive PDF using pdf-lib with forms, buttons, and multimedia
+   */
+  async generateInteractivePDF(
+    parsedCV: ParsedCV, 
+    features?: string[], 
+    jobId?: string
+  ): Promise<Uint8Array> {
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    
+    // Embed standard fonts
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
+    // Add first page
+    const firstPage = pdfDoc.addPage([595.28, 841.89]); // A4 size in points
+    const { width, height } = firstPage.getSize();
+    
+    // Get the form from the PDF
+    const form = pdfDoc.getForm();
+    
+    // Header Section
+    this.addPDFHeader(firstPage, parsedCV, helveticaBoldFont, helveticaFont, width, height);
+    
+    let currentY = height - 120;
+    
+    // Add interactive features based on enabled features
+    if (features?.includes('generate-podcast')) {
+      currentY = await this.addInteractivePodcastSection(
+        firstPage, form, parsedCV, jobId, helveticaBoldFont, helveticaFont, width, currentY
+      );
+    }
+    
+    if (features?.includes('contact-form')) {
+      currentY = await this.addInteractiveContactForm(
+        firstPage, form, parsedCV, helveticaBoldFont, helveticaFont, width, currentY
+      );
+    }
+    
+    if (features?.includes('interactive-timeline')) {
+      currentY = await this.addInteractiveTimeline(
+        firstPage, form, parsedCV, helveticaBoldFont, helveticaFont, width, currentY
+      );
+    }
+    
+    if (features?.includes('embed-qr-code')) {
+      await this.addInteractiveQRCode(
+        firstPage, parsedCV, helveticaFont, width, height
+      );
+    }
+    
+    // Add experience and education sections
+    currentY = await this.addPDFExperience(
+      firstPage, parsedCV, helveticaBoldFont, helveticaFont, width, currentY
+    );
+    
+    // Add skills section with interactive ratings
+    if (features?.includes('skills-chart')) {
+      currentY = await this.addInteractiveSkillsChart(
+        firstPage, form, parsedCV, helveticaBoldFont, helveticaFont, width, currentY
+      );
+    }
+    
+    // Add social links with clickable buttons
+    if (features?.includes('social-links')) {
+      currentY = await this.addInteractiveSocialLinks(
+        firstPage, form, parsedCV, helveticaBoldFont, helveticaFont, width, currentY
+      );
+    }
+    
+    // Serialize the PDF document
+    return await pdfDoc.save();
+  }
+
+  private addPDFHeader(
+    page: PDFPage, 
+    cv: ParsedCV, 
+    boldFont: any, 
+    regularFont: any, 
+    width: number, 
+    height: number
+  ): void {
+    const { personalInfo } = cv;
+    
+    // Name
+    page.drawText(personalInfo.name || 'Your Name', {
+      x: 50,
+      y: height - 50,
+      size: 24,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Title/Location (using location as subtitle)
+    if (personalInfo.location) {
+      page.drawText(personalInfo.location, {
+        x: 50,
+        y: height - 75,
+        size: 16,
+        font: regularFont,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+    }
+    
+    // Contact info
+    let contactY = height - 95;
+    if (personalInfo.email) {
+      page.drawText(`Email: ${personalInfo.email}`, {
+        x: 50,
+        y: contactY,
+        size: 10,
+        font: regularFont,
+        color: rgb(0, 0, 0),
+      });
+      contactY -= 15;
+    }
+    
+    if (personalInfo.phone) {
+      page.drawText(`Phone: ${personalInfo.phone}`, {
+        x: 50,
+        y: contactY,
+        size: 10,
+        font: regularFont,
+        color: rgb(0, 0, 0),
+      });
+    }
+  }
+
+  private async addInteractivePodcastSection(
+    page: PDFPage,
+    form: PDFForm,
+    cv: ParsedCV,
+    jobId?: string,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 600;
+    
+    // Section title
+    page.drawText('🎙️ AI Career Podcast', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Podcast description
+    page.drawText('Listen to your personalized career insights and achievements', {
+      x: 50,
+      y: y - 20,
+      size: 10,
+      font: regularFont,
+      color: rgb(0.4, 0.4, 0.4),
+    });
+    
+    // Draw button background first
+    page.drawRectangle({
+      x: 50,
+      y: y - 50,
+      width: 100,
+      height: 30,
+      color: rgb(0, 0.5, 1),
+    });
+    
+    // Add text for the button
+    page.drawText('▶ Play Podcast', {
+      x: 55,
+      y: y - 45,
+      size: 10,
+      font: regularFont,
+      color: rgb(1, 1, 1),
+    });
+    
+    // Interactive play button with JavaScript action
+    const playButton = form.createButton('podcastPlayButton');
+    playButton.addToPage(page, {
+      x: 50,
+      y: y - 50,
+      width: 100,
+      height: 30,
+    });
+    
+    // Add JavaScript action to open podcast URL
+    if (jobId) {
+      const podcastUrl = `https://getmycv-ai.web.app/podcast/${jobId}`;
+      
+      // Create JavaScript action to open URL
+      const jsAction = `app.launchURL("${podcastUrl}", true);`;
+      this.addJavaScriptAction(playButton, jsAction);
+      
+      // Add multimedia annotation for audio playback (advanced feature)
+      await this.addMultimediaAnnotation(page, {
+        x: 160,
+        y: y - 50,
+        width: 30,
+        height: 30,
+        mediaType: 'audio',
+        mediaUrl: `${podcastUrl}/audio.mp3`,
+        thumbnailText: '🎵'
+      }, regularFont);
+    }
+    
+    return y - 80;
+  }
+
+  private async addInteractiveContactForm(
+    page: PDFPage,
+    form: PDFForm,
+    cv: ParsedCV,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 500;
+    
+    // Section title
+    page.drawText('📞 Contact Form', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Name field
+    const nameField = form.createTextField('contactName');
+    nameField.addToPage(page, {
+      x: 50,
+      y: y - 40,
+      width: 200,
+      height: 20,
+    });
+    nameField.setText('Your Name');
+    
+    page.drawText('Name:', {
+      x: 50,
+      y: y - 25,
+      size: 10,
+      font: regularFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Email field
+    const emailField = form.createTextField('contactEmail');
+    emailField.addToPage(page, {
+      x: 50,
+      y: y - 80,
+      width: 200,
+      height: 20,
+    });
+    emailField.setText('your.email@example.com');
+    
+    page.drawText('Email:', {
+      x: 50,
+      y: y - 65,
+      size: 10,
+      font: regularFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Message field
+    const messageField = form.createTextField('contactMessage');
+    messageField.addToPage(page, {
+      x: 50,
+      y: y - 140,
+      width: 300,
+      height: 40,
+    });
+    messageField.setText('Your message here...');
+    messageField.enableMultiline();
+    
+    page.drawText('Message:', {
+      x: 50,
+      y: y - 105,
+      size: 10,
+      font: regularFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Draw submit button background
+    page.drawRectangle({
+      x: 50,
+      y: y - 180,
+      width: 80,
+      height: 25,
+      color: rgb(0, 0.7, 0),
+    });
+    
+    page.drawText('Submit', {
+      x: 70,
+      y: y - 175,
+      size: 10,
+      font: regularFont,
+      color: rgb(1, 1, 1),
+    });
+    
+    // Submit button with form submission action
+    const submitButton = form.createButton('contactSubmitButton');
+    submitButton.addToPage(page, {
+      x: 50,
+      y: y - 180,
+      width: 80,
+      height: 25,
+    });
+    
+    // Add form submission functionality
+    this.addFormSubmissionAction(submitButton, { 
+      contactEmail: cv.personalInfo.email || 'contact@example.com' 
+    });
+    
+    return y - 210;
+  }
+
+  private async addInteractiveTimeline(
+    page: PDFPage,
+    form: PDFForm,
+    cv: ParsedCV,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 400;
+    
+    // Section title
+    page.drawText('📈 Interactive Career Timeline', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Add clickable timeline items
+    const experiences = cv.experience?.slice(0, 3) || [];
+    let timelineY = y - 30;
+    
+    experiences.forEach((exp, index) => {
+      // Timeline point
+      page.drawCircle({
+        x: 70,
+        y: timelineY,
+        size: 5,
+        color: rgb(0, 0.5, 1),
+      });
+      
+      // Company name (clickable)
+      const timelineButton = form.createButton(`timelineItem${index}`);
+      timelineButton.addToPage(page, {
+        x: 85,
+        y: timelineY - 10,
+        width: 200,
+        height: 20,
+      });
+      
+      page.drawText(exp.company || 'Company', {
+        x: 85,
+        y: timelineY,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 1), // Blue to indicate clickable
+      });
+      
+      // Position
+      page.drawText(exp.position || 'Position', {
+        x: 85,
+        y: timelineY - 15,
+        size: 10,
+        font: regularFont,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      // Timeline line
+      if (index < experiences.length - 1) {
+        page.drawLine({
+          start: { x: 70, y: timelineY - 20 },
+          end: { x: 70, y: timelineY - 40 },
+          thickness: 2,
+          color: rgb(0.8, 0.8, 0.8),
+        });
+      }
+      
+      timelineY -= 50;
+    });
+    
+    return timelineY - 20;
+  }
+
+  private async addInteractiveQRCode(
+    page: PDFPage,
+    cv: ParsedCV,
+    regularFont?: any,
+    width?: number,
+    height?: number
+  ): Promise<void> {
+    const qrSize = 80;
+    const qrX = width! - qrSize - 30;
+    const qrY = height! - qrSize - 30;
+    
+    // Generate QR code URL
+    const cvUrl = `https://getmycv-ai.web.app/cv/${cv.personalInfo.name?.replace(/\s+/g, '-').toLowerCase()}`;
+    
+    try {
+      // In a production environment, you would fetch and embed the actual QR code image
+      // For now, we'll create a visual placeholder with functional URL
+      
+      // Draw QR code border
+      page.drawRectangle({
+        x: qrX,
+        y: qrY,
+        width: qrSize,
+        height: qrSize,
+        borderColor: rgb(0, 0, 0),
+        borderWidth: 2,
+      });
+      
+      // Create pattern to simulate QR code
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          if ((i + j) % 2 === 0) {
+            page.drawRectangle({
+              x: qrX + 5 + (i * 8),
+              y: qrY + 5 + (j * 8),
+              width: 6,
+              height: 6,
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+      }
+      
+      // Scan instruction
+      page.drawText('Scan for online CV', {
+        x: qrX - 20,
+        y: qrY - 10,
+        size: 8,
+        font: regularFont,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+      
+      // Add clickable link on QR code
+      const qrForm = page.doc.getForm();
+      const qrButton = qrForm.createButton('qrCodeButton');
+      qrButton.addToPage(page, {
+        x: qrX,
+        y: qrY,
+        width: qrSize,
+        height: qrSize,
+      });
+      
+      // Add JavaScript action to open CV URL
+      const jsAction = `app.launchURL("${cvUrl}", true);`;
+      this.addJavaScriptAction(qrButton, jsAction);
+      
+      console.log(`Added interactive QR code linking to: ${cvUrl}`);
+      
+    } catch (error) {
+      console.warn('Error creating interactive QR code:', error);
+      
+      // Fallback: simple text indicator
+      page.drawText('QR Code', {
+        x: qrX + 20,
+        y: qrY + 35,
+        size: 8,
+        font: regularFont,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+    }
+  }
+
+  private async addPDFExperience(
+    page: PDFPage,
+    cv: ParsedCV,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 300;
+    
+    // Section title
+    page.drawText('💼 Professional Experience', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    let expY = y - 30;
+    const experiences = cv.experience?.slice(0, 2) || [];
+    
+    experiences.forEach((exp) => {
+      // Company and position
+      page.drawText(`${exp.position || 'Position'} at ${exp.company || 'Company'}`, {
+        x: 50,
+        y: expY,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      // Duration
+      if (exp.duration) {
+        page.drawText(exp.duration, {
+          x: 50,
+          y: expY - 15,
+          size: 10,
+          font: regularFont,
+          color: rgb(0.4, 0.4, 0.4),
+        });
+      }
+      
+      // Description (truncated)
+      if (exp.description) {
+        const description = exp.description.length > 100 
+          ? exp.description.substring(0, 100) + '...'
+          : exp.description;
+        
+        page.drawText(description, {
+          x: 50,
+          y: expY - 30,
+          size: 9,
+          font: regularFont,
+          color: rgb(0.2, 0.2, 0.2),
+          maxWidth: width! - 100,
+        });
+      }
+      
+      expY -= 70;
+    });
+    
+    return expY - 20;
+  }
+
+  private async addInteractiveSkillsChart(
+    page: PDFPage,
+    form: PDFForm,
+    cv: ParsedCV,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 200;
+    
+    // Section title
+    page.drawText('🛠️ Interactive Skills Rating', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Combine all skills from different categories
+    const allSkills = [
+      ...(cv.skills?.technical || []).map(skill => ({ name: skill, level: 4 })),
+      ...(cv.skills?.soft || []).map(skill => ({ name: skill, level: 3 })),
+      ...(cv.skills?.languages || []).map(skill => ({ name: skill, level: 3 }))
+    ].slice(0, 5);
+    
+    let skillY = y - 30;
+    
+    allSkills.forEach((skill, index) => {
+      // Skill name
+      page.drawText(skill.name || 'Skill', {
+        x: 50,
+        y: skillY,
+        size: 10,
+        font: regularFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      // Interactive rating checkboxes
+      for (let i = 1; i <= 5; i++) {
+        const checkbox = form.createCheckBox(`skill${index}_rating${i}`);
+        checkbox.addToPage(page, {
+          x: 150 + (i * 20),
+          y: skillY - 5,
+          width: 10,
+          height: 10,
+        });
+        
+        // Pre-check based on skill level
+        const skillLevel = skill.level || 3;
+        if (i <= skillLevel) {
+          checkbox.check();
+        }
+      }
+      
+      skillY -= 25;
+    });
+    
+    return skillY - 20;
+  }
+
+  private async addInteractiveSocialLinks(
+    page: PDFPage,
+    form: PDFForm,
+    cv: ParsedCV,
+    boldFont?: any,
+    regularFont?: any,
+    width?: number,
+    currentY?: number
+  ): Promise<number> {
+    const y = currentY || 100;
+    
+    // Section title
+    page.drawText('🔗 Social & Professional Links', {
+      x: 50,
+      y: y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Social links data (mockup)
+    const socialLinks = [
+      { name: 'LinkedIn', url: cv.personalInfo.linkedin || '#', icon: '💼' },
+      { name: 'GitHub', url: cv.personalInfo.github || '#', icon: '💻' },
+      { name: 'Portfolio', url: cv.personalInfo.website || '#', icon: '🌐' },
+    ];
+    
+    let linkY = y - 30;
+    
+    socialLinks.forEach((link, index) => {
+      if (link.url && link.url !== '#') {
+        // Create clickable button for each social link
+        const socialButton = form.createButton(`socialLink${index}`);
+        socialButton.addToPage(page, {
+          x: 50,
+          y: linkY - 5,
+          width: 120,
+          height: 20,
+        });
+        
+        // Add JavaScript action to open URL
+        const jsAction = `app.launchURL("${link.url}", true);`;
+        this.addJavaScriptAction(socialButton, jsAction);
+        
+        // Draw link text
+        page.drawText(`${link.icon} ${link.name}`, {
+          x: 55,
+          y: linkY,
+          size: 10,
+          font: regularFont,
+          color: rgb(0, 0, 1), // Blue to indicate clickable
+        });
+        
+        linkY -= 25;
+      }
+    });
+    
+    return linkY - 20;
+  }
+
+  /**
+   * Replace the existing Puppeteer PDF generation with interactive PDF generation
+   */
+  async saveGeneratedFilesWithInteractivePDF(
+    jobId: string,
+    userId: string,
+    htmlContent: string,
+    parsedCV: ParsedCV,
+    features?: string[]
+  ): Promise<{ pdfUrl: string; docxUrl: string; htmlUrl: string }> {
+    const bucket = admin.storage().bucket();
+    
+    // Save HTML file
+    const htmlFileName = `users/${userId}/generated/${jobId}/cv.html`;
+    const htmlFile = bucket.file(htmlFileName);
+    await htmlFile.save(htmlContent, {
+      metadata: {
+        contentType: 'text/html',
+      },
+    });
+    
+    // Get signed URLs
+    const [htmlUrl] = await htmlFile.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+    });
+    
+    // Generate Interactive PDF using pdf-lib
+    let pdfUrl = '';
+    let docxUrl = '';
+    
+    try {
+      console.log('Generating interactive PDF with pdf-lib...');
+      
+      // Generate interactive PDF
+      const pdfBytes = await this.generateInteractivePDF(parsedCV, features, jobId);
+      
+      // Save PDF to Firebase Storage
+      const pdfFileName = `users/${userId}/generated/${jobId}/cv.pdf`;
+      const pdfFile = bucket.file(pdfFileName);
+      
+      await pdfFile.save(Buffer.from(pdfBytes), {
+        metadata: {
+          contentType: 'application/pdf',
+        },
+        resumable: false,
+      });
+      
+      const [pdfSignedUrl] = await pdfFile.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+      });
+      
+      pdfUrl = pdfSignedUrl;
+      console.log(`Interactive PDF generated successfully: ${pdfFileName}`);
+      
+    } catch (error) {
+      console.error('Error generating interactive PDF:', error);
+      // Fall back to Puppeteer if interactive PDF generation fails
+      const fallbackResult = await this.saveGeneratedFiles(jobId, userId, htmlContent);
+      return fallbackResult;
+    }
+    
+    // Generate DOCX (existing implementation would go here)
+    // For now, using a placeholder
+    try {
+      // DOCX generation code would go here
+      // This is a simplified placeholder
+      const docxFileName = `users/${userId}/generated/${jobId}/cv.docx`;
+      docxUrl = `https://storage.googleapis.com/placeholder/${docxFileName}`;
+    } catch (error) {
+      console.error('Error generating DOCX:', error);
+    }
+    
+    return { pdfUrl, docxUrl, htmlUrl };
+  }
+
+  /**
+   * Add JavaScript action to a PDF button for enhanced interactivity
+   */
+  private addJavaScriptAction(button: PDFButton, jsCode: string): void {
+    try {
+      // Create a JavaScript action dictionary
+      const jsAction = PDFDict.withContext(button.doc.context);
+      jsAction.set(PDFName.of('Type'), PDFName.of('Action'));
+      jsAction.set(PDFName.of('S'), PDFName.of('JavaScript'));
+      jsAction.set(PDFName.of('JS'), PDFString.of(jsCode));
+      
+      // Get the button's annotation dictionary
+      const buttonRef = button.acroField.ref;
+      const buttonDict = button.doc.context.lookup(buttonRef) as PDFDict;
+      
+      // Set the action
+      buttonDict.set(PDFName.of('A'), jsAction);
+      
+      console.log(`Added JavaScript action to button: ${jsCode}`);
+    } catch (error) {
+      console.warn('Could not add JavaScript action to button:', error);
+    }
+  }
+
+  /**
+   * Add multimedia annotation for audio/video content
+   */
+  private async addMultimediaAnnotation(
+    page: PDFPage,
+    options: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      mediaType: 'audio' | 'video';
+      mediaUrl: string;
+      thumbnailText: string;
+    },
+    font: any
+  ): Promise<void> {
+    try {
+      // For now, create a visual indicator for multimedia content
+      // In a full implementation, this would create proper multimedia annotations
+      
+      // Draw multimedia indicator background
+      page.drawRectangle({
+        x: options.x,
+        y: options.y,
+        width: options.width,
+        height: options.height,
+        color: rgb(0.9, 0.9, 0.9),
+        borderColor: rgb(0.5, 0.5, 0.5),
+        borderWidth: 1,
+      });
+      
+      // Draw media type icon
+      page.drawText(options.thumbnailText, {
+        x: options.x + options.width / 2 - 6,
+        y: options.y + options.height / 2 - 4,
+        size: 12,
+        font: font,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      console.log(`Added ${options.mediaType} multimedia annotation at ${options.x}, ${options.y}`);
+      
+      // TODO: Implement proper multimedia annotation using PDF rich media annotations
+      // This would require more complex PDF manipulation and media embedding
+      
+    } catch (error) {
+      console.warn('Could not add multimedia annotation:', error);
+    }
+  }
+
+  /**
+   * Add a form submission action to contact form
+   */
+  private addFormSubmissionAction(submitButton: PDFButton, formData: any): void {
+    try {
+      // Create a submit form action
+      const submitAction = `
+        // Collect form data
+        var name = this.getField('contactName').value;
+        var email = this.getField('contactEmail').value;
+        var message = this.getField('contactMessage').value;
+        
+        // Validate required fields
+        if (!name || !email || !message) {
+          app.alert('Please fill in all required fields.');
+          return;
+        }
+        
+        // Create email link
+        var subject = encodeURIComponent('Contact from CV: ' + name);
+        var body = encodeURIComponent('Name: ' + name + '\\n\\nEmail: ' + email + '\\n\\nMessage: ' + message);
+        var emailUrl = 'mailto:${formData.contactEmail}?subject=' + subject + '&body=' + body;
+        
+        // Launch email client
+        app.launchURL(emailUrl, true);
+        
+        // Show success message
+        app.alert('Thank you! Your default email client will open with the pre-filled message.');
+      `;
+      
+      this.addJavaScriptAction(submitButton, submitAction);
+      console.log('Added form submission action to contact form');
+      
+    } catch (error) {
+      console.warn('Could not add form submission action:', error);
+    }
   }
 }

@@ -54,11 +54,13 @@ export const generateCV = onCall(
       const generator = new CVGenerator();
       const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
       
-      // Save generated files and get URLs
-      const { pdfUrl, docxUrl, htmlUrl } = await generator.saveGeneratedFiles(
+      // Save generated files and get URLs with interactive PDF
+      const { pdfUrl, docxUrl, htmlUrl } = await generator.saveGeneratedFilesWithInteractivePDF(
         jobId,
         request.auth.uid,
-        htmlContent
+        htmlContent,
+        cvData,
+        features
       );
 
       const generatedCV = {
