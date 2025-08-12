@@ -17,7 +17,7 @@ console.log('');
 const gilCVData = `Gil Klainert
 R&D Group Manager at INTUIT (2021-Present)
 Phone: (201) 397-9142
-Email: Gil.klainert@gmail.com
+Email: test@example.com
 Address: 185 Madison, Cresskill, NJ 07626
 
 PROFILE:

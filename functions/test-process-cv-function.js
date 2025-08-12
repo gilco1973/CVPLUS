@@ -10,7 +10,7 @@ const admin = require('firebase-admin');
 // Gil's CV content
 const GIL_CV_TEXT = `
 Gil Klainert
-CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, Gil.klainert@gmail.com
+CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, test@example.com
 
 EXPERTISE: GenAI & Advanced AI Software Solution Development, Front End & Full Stack Management, Group & Team Leadership, Business-Oriented Decision Making, Technical Project Management, Technologies: Angular 9, JavaScript, C#, HTML5, CSS, TypeScript, NodeJS, .Net, ES6
 
@@ -138,7 +138,7 @@ async function testProcessCVFunction() {
       console.log('=====================');
       const validations = {
         nameCorrect: jobData.parsedData?.personalInfo?.name === 'Gil Klainert',
-        emailCorrect: jobData.parsedData?.personalInfo?.email === 'Gil.klainert@gmail.com',
+        emailCorrect: jobData.parsedData?.personalInfo?.email === 'test@example.com',
         phoneCorrect: jobData.parsedData?.personalInfo?.phone === '(201) 397-9142',
         hasIntuitExperience: jobData.parsedData?.experience?.some(exp => exp.company === 'INTUIT'),
         hasMicrosoftExperience: jobData.parsedData?.experience?.some(exp => exp.company === 'Microsoft'),

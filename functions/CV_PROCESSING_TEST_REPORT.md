@@ -8,7 +8,7 @@ This report documents comprehensive testing of the CVPlus CV processing flow usi
 **Gil Klainert CV Content:**
 ```
 Gil Klainert
-CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, Gil.klainert@gmail.com
+CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, test@example.com
 
 EXPERTISE: GenAI & Advanced AI Software Solution Development, Front End & Full Stack Management, Group & Team Leadership, Business-Oriented Decision Making, Technical Project Management, Technologies: Angular 9, JavaScript, C#, HTML5, CSS, TypeScript, NodeJS, .Net, ES6
 
@@ -43,7 +43,7 @@ EDUCATION: EMBA Northwestern/Tel Aviv (2019), M.A. Organizational Development (2
 
 **Expected Results for Gil's CV:**
 - Name: "Gil Klainert"
-- Email: "Gil.klainert@gmail.com"
+- Email: "test@example.com"
 - Phone: "(201) 397-9142"
 - Location: "185 Madison, Cresskill, NJ 07626"
 - Experience: 6 positions (2007-Present)

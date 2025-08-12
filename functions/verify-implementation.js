@@ -156,7 +156,7 @@ console.log('-----------------------------');
 try {
   const testScript = fs.readFileSync('test-gil-cv.js', 'utf8');
   console.log(`✅ Gil Klainert CV content included: ${testScript.includes('Gil Klainert') ? 'Yes' : 'No'}`);
-  console.log(`✅ Contact information: ${testScript.includes('Gil.klainert@gmail.com') ? 'Yes' : 'No'}`);
+  console.log(`✅ Contact information: ${testScript.includes('test@example.com') ? 'Yes' : 'No'}`);
   console.log(`✅ INTUIT experience: ${testScript.includes('INTUIT') ? 'Yes' : 'No'}`);
   console.log(`✅ Microsoft experience: ${testScript.includes('Microsoft') ? 'Yes' : 'No'}`);
   console.log(`✅ GenAI expertise: ${testScript.includes('GenAI') ? 'Yes' : 'No'}`);

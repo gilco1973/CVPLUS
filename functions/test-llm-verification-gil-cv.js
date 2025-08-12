@@ -15,7 +15,7 @@ const gilCVData = `Gil Klainert
 CONTACT
 Address: 185 Madison, Cresskill, NJ 07626
 Phone: (201) 397-9142
-Email: Gil.klainert@gmail.com
+Email: test@example.com
 
 EXPERTISE
 • GenAI & Advanced AI Software Solution Development

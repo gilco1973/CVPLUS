@@ -88,7 +88,7 @@ npm test
 
 **Personal Information:**
 - ✅ Name: "Gil Klainert"
-- ✅ Email: "Gil.klainert@gmail.com"  
+- ✅ Email: "test@example.com"  
 - ✅ Phone: "(201) 397-9142"
 - ✅ Location: "185 Madison, Cresskill, NJ 07626"
 

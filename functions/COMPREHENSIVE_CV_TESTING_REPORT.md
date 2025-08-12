@@ -51,7 +51,7 @@ Git Status: Active development branch with latest features
 Gil Klainert
 Contact: 185 Madison, Cresskill, NJ 07626
 Phone: (201) 397-9142
-Email: Gil.klainert@gmail.com
+Email: test@example.com
 
 EXPERTISE: 
 - GenAI & Advanced AI Software Solution Development
@@ -130,7 +130,7 @@ export class CVParser {
 {
   personalInfo: {
     name: "Gil Klainert",
-    email: "Gil.klainert@gmail.com", 
+    email: "test@example.com", 
     phone: "(201) 397-9142",
     location: "185 Madison, Cresskill, NJ 07626"
   },
@@ -376,7 +376,7 @@ describe('CV Processing Complete Flow', () => {
   // ✅ Personal information extraction
   test('should extract Gil Klainert personal information correctly', async () => {
     expect(parsedCV.personalInfo.name).toBe('Gil Klainert');
-    expect(parsedCV.personalInfo.email).toBe('Gil.klainert@gmail.com');
+    expect(parsedCV.personalInfo.email).toBe('test@example.com');
   });
   
   // ✅ Experience analysis  
@@ -456,7 +456,7 @@ $ node test-gil-cv.js
 {
   personalInfo: {
     name: "Gil Klainert",
-    email: "Gil.klainert@gmail.com",
+    email: "test@example.com",
     phone: "(201) 397-9142", 
     location: "185 Madison, Cresskill, NJ 07626"
   }

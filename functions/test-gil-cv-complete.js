@@ -21,7 +21,7 @@ console.log('');
 const gilCV = {
   personalInfo: {
     name: "Gil Klainert",
-    email: "Gil.klainert@gmail.com",
+    email: "test@example.com",
     phone: "(201) 397-9142",
     address: "185 Madison, Cresskill, NJ 07626",
     summary: "A highly skilled group leader with 25 years of experience blending deep technical, managerial, and business acumen. Expert in leveraging Generative AI (GenAI) to develop impactful software solutions."

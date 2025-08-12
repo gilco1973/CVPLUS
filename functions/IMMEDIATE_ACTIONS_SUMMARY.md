@@ -68,7 +68,7 @@ node lib/test/test-runner.js  # Comprehensive tests
 ### Personal Information
 ```
 ✅ Name: Gil Klainert
-✅ Email: Gil.klainert@gmail.com  
+✅ Email: test@example.com  
 ✅ Phone: (201) 397-9142
 ✅ Location: Cresskill, NJ
 ```

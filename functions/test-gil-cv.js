@@ -14,7 +14,7 @@ const { PIIDetector } = require('./lib/services/piiDetector');
 // Gil Klainert's CV content
 const GIL_KLAINERT_CV_TEXT = `
 Gil Klainert
-CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, Gil.klainert@gmail.com
+CONTACT: 185 Madison, Cresskill, NJ 07626, (201) 397-9142, test@example.com
 
 EXPERTISE: GenAI & Advanced AI Software Solution Development, Front End & Full Stack Management, Group & Team Leadership, Business-Oriented Decision Making, Technical Project Management, Technologies: Angular 9, JavaScript, C#, HTML5, CSS, TypeScript, NodeJS, .Net, ES6
 
