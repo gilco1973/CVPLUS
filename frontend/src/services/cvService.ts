@@ -193,6 +193,50 @@ export const applyATSOptimizations = async (jobId: string, optimizations: any) =
   return result.data;
 };
 
+// CV Improvement Functions
+export const getRecommendations = async (jobId: string, targetRole?: string, industryKeywords?: string[], forceRegenerate?: boolean) => {
+  const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
+  const result = await getRecommendationsFunction({
+    jobId,
+    targetRole,
+    industryKeywords,
+    forceRegenerate
+  });
+  return result.data;
+};
+
+export const applyImprovements = async (jobId: string, selectedRecommendationIds: string[], targetRole?: string, industryKeywords?: string[]) => {
+  const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
+  const result = await applyImprovementsFunction({
+    jobId,
+    selectedRecommendationIds,
+    targetRole,
+    industryKeywords
+  });
+  return result.data;
+};
+
+export const previewImprovement = async (jobId: string, recommendationId: string) => {
+  const previewImprovementFunction = httpsCallable(functions, 'previewImprovement');
+  const result = await previewImprovementFunction({
+    jobId,
+    recommendationId
+  });
+  return result.data;
+};
+
+export const enhancedAnalyzeCV = async (parsedCV: any, targetRole?: string, jobDescription?: string, industryKeywords?: string[], jobId?: string) => {
+  const enhancedAnalyzeCVFunction = httpsCallable(functions, 'enhancedAnalyzeCV');
+  const result = await enhancedAnalyzeCVFunction({
+    parsedCV,
+    targetRole,
+    jobDescription,
+    industryKeywords,
+    jobId
+  });
+  return result.data;
+};
+
 export const generateATSKeywords = async (jobDescription: string, industry?: string, role?: string) => {
   const generateKeywordsFunction = httpsCallable(functions, 'generateATSKeywords');
   const result = await generateKeywordsFunction({

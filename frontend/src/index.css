@@ -294,6 +294,9 @@
 .animation-delay-800 {
   animation-delay: 800ms;
 }
+.animation-delay-1000 {
+  animation-delay: 1000ms;
+}
 
 /* Hover Animations */
 .hover-lift {

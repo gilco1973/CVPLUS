@@ -76,10 +76,10 @@ export const ProcessingPage = () => {
         }
       }
 
-      // Navigate to results when analyzed or completed
+      // Navigate to analysis results when analyzed or completed
       if (updatedJob.status === 'analyzed' || updatedJob.status === 'completed') {
         setTimeout(() => {
-          navigate(`/results/${jobId}`);
+          navigate(`/analysis/${jobId}`);
         }, 1500);
       }
     });

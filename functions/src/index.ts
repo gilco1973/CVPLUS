@@ -156,3 +156,13 @@ export {
 export { 
   llmVerificationStatus 
 } from './functions/llmVerificationStatus';
+
+// Export CV improvement functions
+export { 
+  applyImprovements, 
+  getRecommendations, 
+  previewImprovement 
+} from './functions/applyImprovements';
+
+// Export enhanced CV analysis function  
+export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';

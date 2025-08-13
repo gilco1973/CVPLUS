@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Edit3, Save, X, Eye, EyeOff } from 'lucide-react';
 import type { Job } from '../services/cvService';
-import { analyzeATSCompatibility, analyzeAchievements } from '../services/cvService';
+import { analyzeAchievements } from '../services/cvService';
 import { SectionEditor } from './SectionEditor';
 import { QRCodeEditor } from './QRCodeEditor';
 
@@ -32,10 +32,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
-  const [atsLoading, setAtsLoading] = useState(false);
-  const [atsError, setAtsError] = useState<string | null>(null);
-  const atsAnalysisInitiatedRef = useRef<string | null>(null);
+  // ATS analysis is now handled in CVAnalysisResults component
   
   // Achievement highlighting state
   const [achievementAnalysis, setAchievementAnalysis] = useState<any>(null);
@@ -206,101 +203,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     }
   };
 
-  // Generate ATS Analysis HTML based on current state
-  const generateATSAnalysisHTML = () => {
-    if (!selectedFeatures.atsOptimization) {
-      return '';
-    }
-
-    const isCollapsed = collapsedSections['ats-optimization'];
-
-    return `
-      <div class="feature-preview" data-feature="ats-optimization">
-        <div class="feature-preview-banner">
-          <span>🤖 Automatic ATS analysis running on your CV</span>
-        </div>
-        <h3 class="section-title" onclick="toggleSection('ats-optimization')">
-          🎯 ATS Analysis
-          <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
-        </h3>
-        <div class="section-content ${isCollapsed ? 'collapsed' : ''}" style="background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">
-          ${!atsAnalysis && !atsLoading ? `
-            <div style="text-align: center; padding: 20px;">
-              <div style="margin-bottom: 15px;">
-                <div style="width: 50px; height: 50px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
-                  🤖
-                </div>
-                <p style="color: #666; margin: 0; font-size: 14px;">ATS analysis will run automatically</p>
-              </div>
-            </div>
-          ` : ''}
-          
-          ${atsLoading ? `
-            <div style="text-align: center; padding: 20px;">
-              <div style="width: 40px; height: 40px; border: 3px solid #4caf50; border-radius: 50%; border-top-color: transparent; margin: 0 auto 10px; animation: spin 1s linear infinite;"></div>
-              <p style="color: #666; margin: 0;">Analyzing your CV for ATS compatibility...</p>
-              <p style="color: #999; margin: 5px 0 0 0; font-size: 12px;">This may take a few seconds</p>
-            </div>
-          ` : ''}
-          
-          ${atsError ? `
-            <div style="text-align: center; padding: 20px; color: #f44336;">
-              <div style="margin-bottom: 15px;">
-                <div style="width: 50px; height: 50px; background: #f44336; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
-                  ⚠️
-                </div>
-                <p style="margin: 0; font-weight: 600;">Analysis Failed</p>
-                <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">${atsError || 'Unknown error occurred'}</p>
-              </div>
-              <div onclick="window.handleATSAnalysis && window.handleATSAnalysis()" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-block;">
-                🔄 Retry Analysis
-              </div>
-            </div>
-          ` : ''}
-          
-          ${atsAnalysis ? `
-            <div>
-              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                <div style="width: 70px; height: 70px; background: ${atsAnalysis.overall >= 80 ? '#4caf50' : atsAnalysis.overall >= 60 ? '#ff9800' : '#f44336'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">
-                  ${atsAnalysis.overall}%
-                </div>
-                <div>
-                  <h4 style="margin: 0; color: #2e7d32; font-size: 20px;">ATS Score: ${atsAnalysis.overall}%</h4>
-                  <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
-                    ${atsAnalysis.passes ? '✅ Your CV passes ATS scanning' : '❌ Needs improvement for ATS compatibility'}
-                  </p>
-                </div>
-              </div>
-              
-              ${atsAnalysis.issues && atsAnalysis.issues.length > 0 ? `
-                <div style="margin-bottom: 15px;">
-                  <h5 style="color: #f44336; margin-bottom: 8px; font-size: 14px;">⚠️ Issues Found:</h5>
-                  <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px;">
-                    ${atsAnalysis.issues.slice(0, 3).map((issue: any) => `<li>${issue.message || issue}</li>`).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-              
-              ${atsAnalysis.suggestions && atsAnalysis.suggestions.length > 0 ? `
-                <div style="margin-bottom: 15px;">
-                  <h5 style="color: #ff9800; margin-bottom: 8px; font-size: 14px;">💡 Suggestions:</h5>
-                  <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px;">
-                    ${atsAnalysis.suggestions.slice(0, 3).map((suggestion: any) => `<li>${suggestion.reason || suggestion}</li>`).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-              
-              <div style="text-align: center; margin-top: 15px;">
-                <div onclick="window.handleATSAnalysis && window.handleATSAnalysis()" style="background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; display: inline-block;">
-                  🔄 Re-analyze
-                </div>
-              </div>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  };
+  // ATS Analysis is now handled in CVAnalysisResults component
+  // This preview will show the CV with improvements already applied
 
   // Generate preview HTML with selected features
   const generatePreviewHTML = () => {
@@ -1204,8 +1108,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           </div>
         ` : ''}
         
-        <!-- ATS Optimization Preview -->
-        ${generateATSAnalysisHTML()}
+        <!-- ATS Analysis moved to CVAnalysisResults component -->
         
         <!-- Keyword Enhancement Preview -->
         ${selectedFeatures.keywordEnhancement ? `
@@ -1459,7 +1362,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         preview.classList.add('animate-fade-in-up');
       });
     }
-  }, [previewData, selectedTemplate, selectedFeatures, showFeaturePreviews, collapsedSections, atsLoading, atsAnalysis, atsError, achievementLoading, achievementAnalysis, achievementError]);
+  }, [previewData, selectedTemplate, selectedFeatures, showFeaturePreviews, collapsedSections, achievementLoading, achievementAnalysis, achievementError]);
 
   // Real-time feature updates
   useEffect(() => {
@@ -1638,36 +1541,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     }
   };
 
-  // Handle ATS analysis
-  const handleATSAnalysis = async () => {
-    if (atsLoading || atsAnalysisInitiatedRef.current === job.id) {
-      console.log('ATS analysis already in progress or completed for job:', job.id);
-      return;
-    }
-    
-    atsAnalysisInitiatedRef.current = job.id;
-    setAtsLoading(true);
-    setAtsError(null);
-    
-    try {
-      console.log('Starting ATS analysis for job:', job.id);
-      const result = await analyzeATSCompatibility(job.id);
-      console.log('ATS analysis raw result:', result);
-      
-      const atsScore = (result as any).result?.atsScore || (result as any).atsScore;
-      console.log('Extracted atsScore:', atsScore);
-      
-      setAtsAnalysis(atsScore);
-      console.log('ATS analysis set successfully', { atsScore });
-    } catch (error: any) {
-      setAtsError(error.message || 'Failed to analyze ATS compatibility');
-      console.error('ATS analysis failed:', error);
-      atsAnalysisInitiatedRef.current = null; // Reset on error to allow retry
-    } finally {
-      setAtsLoading(false);
-      console.log('ATS loading set to false');
-    }
-  };
+  // ATS analysis functionality moved to CVAnalysisResults component
 
   // Handle Achievement analysis
   const handleAchievementAnalysis = async () => {
@@ -1687,33 +1561,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     }
   };
 
-  // Debug ATS state changes
-  useEffect(() => {
-    console.log('ATS State:', { 
-      atsLoading, 
-      atsAnalysis: !!atsAnalysis, 
-      atsError, 
-      selectedATS: selectedFeatures.atsOptimization,
-      jobId: job?.id 
-    });
-  }, [atsLoading, atsAnalysis, atsError, selectedFeatures.atsOptimization, job?.id]);
+  // ATS state debugging removed
 
-  // Reset ATS analysis state when job changes
-  useEffect(() => {
-    if (job?.id && atsAnalysisInitiatedRef.current !== job.id) {
-      setAtsAnalysis(null);
-      setAtsError(null);
-      atsAnalysisInitiatedRef.current = null;
-    }
-  }, [job?.id]);
+  // ATS analysis state management removed
 
-  // Auto-trigger ATS analysis when ATS feature is selected
-  useEffect(() => {
-    if (selectedFeatures.atsOptimization && job?.id && !atsAnalysis && !atsLoading) {
-      console.log('Triggering ATS analysis from useEffect');
-      handleATSAnalysis();
-    }
-  }, [selectedFeatures.atsOptimization, job?.id]);
+  // ATS analysis auto-triggering removed
 
   // Auto-trigger achievement analysis when achievement highlighting feature is selected
   useEffect(() => {
@@ -1724,14 +1576,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
 
   // Expose analysis functions to window for inline HTML calls
   useEffect(() => {
-    (window as any).handleATSAnalysis = handleATSAnalysis;
     (window as any).handleAchievementAnalysis = handleAchievementAnalysis;
     
     return () => {
-      delete (window as any).handleATSAnalysis;
       delete (window as any).handleAchievementAnalysis;
     };
-  }, [handleATSAnalysis, handleAchievementAnalysis]);
+  }, [handleAchievementAnalysis]);
 
   return (
     <div className={`cv-preview-wrapper ${className}`}>

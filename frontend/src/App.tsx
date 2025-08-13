@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HomePage } from './pages/HomePage';
 import { ProcessingPage } from './pages/ProcessingPage';
+import { CVAnalysisPage } from './pages/CVAnalysisPage';
+import { CVPreviewPage } from './pages/CVPreviewPage';
 import { ResultsPage } from './pages/ResultsPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { CVFeaturesPage } from './pages/CVFeaturesPage';
@@ -25,6 +27,14 @@ const router = createBrowserRouter([
   {
     path: '/process/:jobId',
     element: <ProcessingPage />,
+  },
+  {
+    path: '/analysis/:jobId',
+    element: <CVAnalysisPage />,
+  },
+  {
+    path: '/preview/:jobId',
+    element: <CVPreviewPage />,
   },
   {
     path: '/results/:jobId',
