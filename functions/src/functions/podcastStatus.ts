@@ -9,25 +9,9 @@ export const podcastStatus = onCall(
     ...corsOptions
   },
   async (request) => {
-    // Debug: Log incoming request
-    console.log('=== PODCAST STATUS DEBUG ===');
-    console.log('Request data:', JSON.stringify(request.data, null, 2));
-    console.log('Request auth:', JSON.stringify(request.auth, null, 2));
-    console.log('Request auth exists:', !!request.auth);
-    console.log('Request object keys:', Object.keys(request));
-    console.log('Full request:', JSON.stringify(request, null, 2));
-
     // Check authentication
     if (!request.auth) {
-      console.log('Authentication failed - no auth object');
-      console.log('Returning test response instead of throwing error');
-      return {
-        status: 'debug',
-        message: 'Authentication debugging - no auth object found',
-        requestKeys: Object.keys(request),
-        hasAuth: !!request.auth,
-        timestamp: Date.now()
-      };
+      throw new Error('User must be authenticated');
     }
 
     const userId = request.auth.uid;

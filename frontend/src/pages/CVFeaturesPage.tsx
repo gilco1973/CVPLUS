@@ -52,19 +52,6 @@ const features: Feature[] = [
     ]
   },
   {
-    id: 'personality-insights',
-    title: 'Personality Analysis',
-    description: 'AI-powered personality insights show your work style and culture fit based on your career history.',
-    icon: <Brain className="w-6 h-6" />,
-    category: 'ai',
-    benefits: [
-      'Leadership potential',
-      'Team compatibility',
-      'Work style analysis',
-      'Culture fit assessment'
-    ]
-  },
-  {
     id: 'ats-optimization',
     title: 'ATS Optimization',
     description: 'Ensure your CV passes through Applicant Tracking Systems with our intelligent keyword optimization and formatting.',

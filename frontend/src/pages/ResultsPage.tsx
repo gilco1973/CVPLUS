@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, FileText, Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { PIIWarning } from '../components/PIIWarning';
-import { PDFService } from '../services/pdfService';
-import { DOCXService } from '../services/docxService';
-import { FeatureDashboard } from '../components/features/FeatureDashboard';
 import { PodcastPlayer } from '../components/PodcastPlayer';
 import { CVPreview } from '../components/CVPreview';
+import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -36,7 +34,6 @@ export const ResultsPage = () => {
     availabilityCalendar: false,
     languageProficiency: true,
     certificationBadges: true,
-    personalityInsights: false,
     achievementsShowcase: true,
   });
   const [selectedFormats, setSelectedFormats] = useState({
@@ -44,9 +41,150 @@ export const ResultsPage = () => {
     docx: true,
     html: true,
   });
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [generatingDOCX, setGeneratingDOCX] = useState(false);
-  const [showEnhancedFeatures, setShowEnhancedFeatures] = useState(false);
+
+  // Feature validation - check what data is available for features
+  const getFeatureAvailability = () => {
+    if (!job?.parsedData) return {};
+    
+    const data = job.parsedData;
+    return {
+      languageProficiency: {
+        available: !!(data.languages && Array.isArray(data.languages) && data.languages.length > 0),
+        reason: !data.languages || !Array.isArray(data.languages) || data.languages.length === 0 
+          ? "No languages found in your CV" 
+          : null
+      },
+      certificationBadges: {
+        available: !!(data.certifications && Array.isArray(data.certifications) && data.certifications.length > 0),
+        reason: !data.certifications || !Array.isArray(data.certifications) || data.certifications.length === 0
+          ? "No certifications found in your CV"
+          : null
+      },
+      achievementsShowcase: {
+        available: !!(data.achievements && Array.isArray(data.achievements) && data.achievements.length > 0) ||
+                  !!(data.experience && Array.isArray(data.experience) && data.experience.some((exp: any) => exp.achievements && exp.achievements.length > 0)),
+        reason: (!data.achievements || !Array.isArray(data.achievements) || data.achievements.length === 0) &&
+                (!data.experience || !Array.isArray(data.experience) || !data.experience.some((exp: any) => exp.achievements && exp.achievements.length > 0))
+          ? "No achievements found in your CV"
+          : null
+      },
+      skillsChart: {
+        available: !!(data.skills && ((Array.isArray(data.skills) && data.skills.length > 0) || 
+                     (typeof data.skills === 'object' && Object.keys(data.skills).length > 0))),
+        reason: !data.skills || (Array.isArray(data.skills) && data.skills.length === 0) || 
+                (typeof data.skills === 'object' && Object.keys(data.skills).length === 0)
+          ? "No skills found in your CV"
+          : null
+      },
+      portfolioGallery: {
+        available: !!(data.projects && Array.isArray(data.projects) && data.projects.length > 0) ||
+                  !!(data.portfolio && Array.isArray(data.portfolio) && data.portfolio.length > 0),
+        reason: (!data.projects || !Array.isArray(data.projects) || data.projects.length === 0) &&
+                (!data.portfolio || !Array.isArray(data.portfolio) || data.portfolio.length === 0)
+          ? "No projects or portfolio items found in your CV"
+          : null
+      },
+      interactiveTimeline: {
+        available: !!(data.experience && Array.isArray(data.experience) && data.experience.length > 0) ||
+                  !!(data.education && Array.isArray(data.education) && data.education.length > 0),
+        reason: (!data.experience || !Array.isArray(data.experience) || data.experience.length === 0) &&
+                (!data.education || !Array.isArray(data.education) || data.education.length === 0)
+          ? "No experience or education timeline found in your CV"
+          : null
+      }
+    };
+  };
+
+  const featureAvailability = getFeatureAvailability();
+
+  // Auto-disable features that are not available
+  useEffect(() => {
+    if (job?.parsedData) {
+      const availability = getFeatureAvailability();
+      const updatedFeatures = { ...selectedFeatures };
+      let hasChanges = false;
+
+      // Disable features that don't have required data
+      Object.keys(availability).forEach(feature => {
+        const isAvailable = availability[feature as keyof typeof availability]?.available;
+        if (!isAvailable && updatedFeatures[feature as keyof typeof selectedFeatures]) {
+          updatedFeatures[feature as keyof typeof selectedFeatures] = false;
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        setSelectedFeatures(updatedFeatures);
+      }
+    }
+  }, [job?.parsedData]);
+
+  // Component for feature checkbox with validation
+  const FeatureCheckbox = ({ 
+    feature, 
+    checked, 
+    onChange, 
+    label, 
+    description,
+    className = ""
+  }: {
+    feature: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    label: string;
+    description?: string;
+    className?: string;
+  }) => {
+    const availability = featureAvailability[feature as keyof typeof featureAvailability];
+    const isDisabled = availability && !availability.available;
+    
+    return (
+      <div className={`relative ${className}`}>
+        <label className={`flex items-start gap-3 p-3 rounded-lg transition-all cursor-pointer group border ${
+          isDisabled 
+            ? 'bg-gray-800/50 border-gray-700/50 opacity-60 cursor-not-allowed' 
+            : 'bg-gray-700/30 hover:bg-gray-700/50 border-gray-700/30'
+        }`}>
+          <input 
+            type="checkbox" 
+            className={`mt-1 h-4 w-4 rounded focus:ring-cyan-500 ${
+              isDisabled 
+                ? 'text-gray-500 cursor-not-allowed' 
+                : 'text-cyan-500'
+            }`}
+            checked={checked}
+            disabled={isDisabled}
+            onChange={(e) => !isDisabled && onChange(e.target.checked)}
+          />
+          <div className="flex-1">
+            <span className={`font-medium transition-colors ${
+              isDisabled 
+                ? 'text-gray-500' 
+                : 'text-gray-200 group-hover:text-cyan-400'
+            }`}>
+              {label}
+            </span>
+            {description && (
+              <span className="block text-xs text-gray-400 mt-0.5">{description}</span>
+            )}
+          </div>
+          {isDisabled && (
+            <div className="ml-2">
+              <div className="group/tooltip relative">
+                <div className="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-xs text-gray-400 cursor-help">
+                  ?
+                </div>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-gray-200 text-xs rounded-lg shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-gray-700">
+                  {availability?.reason}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </label>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const loadJob = async () => {
@@ -434,18 +572,6 @@ export const ResultsPage = () => {
                               <span className="block text-xs text-gray-400 mt-0.5">Auto-generated audio summary of your career</span>
                             </div>
                           </label>
-                          <label className="flex items-start gap-3 p-3 bg-purple-900/20 rounded-lg hover:bg-purple-900/30 transition-all cursor-pointer group border border-purple-700/30">
-                            <input 
-                              type="checkbox" 
-                              className="mt-1 h-4 w-4 text-purple-500 rounded focus:ring-purple-500" 
-                              checked={selectedFeatures.personalityInsights}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, personalityInsights: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="font-medium text-gray-200 group-hover:text-purple-400 transition-colors">🧠 Personality Insights</span>
-                              <span className="block text-xs text-gray-400 mt-0.5">AI-powered work style analysis</span>
-                            </div>
-                          </label>
                         </div>
                       </div>
 
@@ -467,17 +593,13 @@ export const ResultsPage = () => {
                               <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">📦 QR Code</span>
                             </div>
                           </label>
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.interactiveTimeline}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, interactiveTimeline: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">📈 Timeline</span>
-                            </div>
-                          </label>
+                          <FeatureCheckbox
+                            feature="interactiveTimeline"
+                            checked={selectedFeatures.interactiveTimeline}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, interactiveTimeline: checked})}
+                            label="📈 Timeline"
+                            className="flex items-center gap-2"
+                          />
                           <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
                             <input 
                               type="checkbox" 
@@ -510,50 +632,34 @@ export const ResultsPage = () => {
                           Visual Enhancements
                         </h5>
                         <div className="grid grid-cols-2 gap-3 ml-3">
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.skillsChart}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, skillsChart: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">📊 Charts</span>
-                            </div>
-                          </label>
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.achievementsShowcase}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, achievementsShowcase: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">🏆 Awards</span>
-                            </div>
-                          </label>
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.languageProficiency}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, languageProficiency: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">🌍 Languages</span>
-                            </div>
-                          </label>
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.certificationBadges}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, certificationBadges: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">🎓 Badges</span>
-                            </div>
-                          </label>
+                          <FeatureCheckbox
+                            feature="skillsChart"
+                            checked={selectedFeatures.skillsChart}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, skillsChart: checked})}
+                            label="📊 Charts"
+                            className="flex items-center gap-2"
+                          />
+                          <FeatureCheckbox
+                            feature="achievementsShowcase"
+                            checked={selectedFeatures.achievementsShowcase}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, achievementsShowcase: checked})}
+                            label="🏆 Awards"
+                            className="flex items-center gap-2"
+                          />
+                          <FeatureCheckbox
+                            feature="languageProficiency"
+                            checked={selectedFeatures.languageProficiency}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, languageProficiency: checked})}
+                            label="🌍 Languages"
+                            className="flex items-center gap-2"
+                          />
+                          <FeatureCheckbox
+                            feature="certificationBadges"
+                            checked={selectedFeatures.certificationBadges}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, certificationBadges: checked})}
+                            label="🎓 Badges"
+                            className="flex items-center gap-2"
+                          />
                         </div>
                       </div>
 
@@ -575,17 +681,13 @@ export const ResultsPage = () => {
                               <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">🎥 Video</span>
                             </div>
                           </label>
-                          <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
-                            <input 
-                              type="checkbox" 
-                              className="h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
-                              checked={selectedFeatures.portfolioGallery}
-                              onChange={(e) => setSelectedFeatures({...selectedFeatures, portfolioGallery: e.target.checked})}
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium text-gray-200 group-hover:text-cyan-400">🎨 Portfolio</span>
-                            </div>
-                          </label>
+                          <FeatureCheckbox
+                            feature="portfolioGallery"
+                            checked={selectedFeatures.portfolioGallery}
+                            onChange={(checked) => setSelectedFeatures({...selectedFeatures, portfolioGallery: checked})}
+                            label="🎨 Portfolio"
+                            className="flex items-center gap-2"
+                          />
                           <label className="flex items-center gap-2 p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group">
                             <input 
                               type="checkbox" 
@@ -637,7 +739,6 @@ export const ResultsPage = () => {
                           if (selectedFeatures.availabilityCalendar) features.push('availability-calendar');
                           if (selectedFeatures.languageProficiency) features.push('language-proficiency');
                           if (selectedFeatures.certificationBadges) features.push('certification-badges');
-                          if (selectedFeatures.personalityInsights) features.push('personality-insights');
                           if (selectedFeatures.achievementsShowcase) features.push('achievements-showcase');
                           
                           // Add format features
@@ -694,7 +795,6 @@ export const ResultsPage = () => {
                         'achievement-highlighting',
                         'skills-visualization',
                         'generate-podcast',
-                        'personality-insights',
                         'public-profile',
                         'rag-chat',
                         'video-introduction',
@@ -836,113 +936,43 @@ export const ResultsPage = () => {
           </div>
         )}
 
-        {/* Feature Activation Banner */}
-        {!showEnhancedFeatures && (
-          <div className="mb-8 bg-gradient-to-r from-purple-900/30 to-cyan-900/30 border border-purple-700/50 rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-300">
-                    🎉 Your CV is ready! Now unlock AI-powered features
-                  </h3>
-                  <p className="text-sm text-purple-400 mt-1">
-                    Transform your CV with ATS optimization, personality insights, public profiles, and more
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowEnhancedFeatures(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-medium rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center gap-2"
-              >
-                <Wand2 className="w-5 h-5" />
-                Explore AI Features
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Toggle between Results and Enhanced Features */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gray-800 rounded-lg p-1 inline-flex">
-            <button
-              onClick={() => setShowEnhancedFeatures(false)}
-              className={`px-6 py-2 rounded-md font-medium transition-all ${
-                !showEnhancedFeatures 
-                  ? 'bg-cyan-600 text-white' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              CV Results
-            </button>
-            <button
-              onClick={() => setShowEnhancedFeatures(true)}
-              className={`px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 ${
-                showEnhancedFeatures 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              AI Features
-            </button>
-          </div>
-        </div>
-
-        {/* Conditional rendering based on toggle */}
-        {showEnhancedFeatures ? (
-          <FeatureDashboard 
-            job={job} 
-            onJobUpdate={(updatedJob) => setJob(updatedJob)}
-          />
-        ) : (
+        {/* CV Results */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* CV Preview with Editing */}
+          {/* Generated CV Display */}
           <div className="lg:col-span-2">
-            <CVPreview
+            <GeneratedCVDisplay
               job={job}
-              selectedTemplate={selectedTemplate}
-              selectedFeatures={{
-                atsOptimization: job.generatedCV?.features?.includes('ats-optimization') || false,
-                keywordEnhancement: job.generatedCV?.features?.includes('keyword-enhancement') || false,
-                achievementHighlighting: job.generatedCV?.features?.includes('achievement-highlighting') || false,
-                skillsVisualization: job.generatedCV?.features?.includes('skills-visualization') || false,
-                generatePodcast: job.generatedCV?.features?.includes('generate-podcast') || false,
-                privacyMode: job.generatedCV?.features?.includes('privacy-mode') || false,
-                embedQRCode: job.generatedCV?.features?.includes('embed-qr-code') || false,
-                interactiveTimeline: job.generatedCV?.features?.includes('interactive-timeline') || false,
-                skillsChart: job.generatedCV?.features?.includes('skills-chart') || false,
-                videoIntroduction: job.generatedCV?.features?.includes('video-introduction') || false,
-                portfolioGallery: job.generatedCV?.features?.includes('portfolio-gallery') || false,
-                testimonialsCarousel: job.generatedCV?.features?.includes('testimonials-carousel') || false,
-                contactForm: job.generatedCV?.features?.includes('contact-form') || false,
-                socialMediaLinks: job.generatedCV?.features?.includes('social-media-links') || false,
-                availabilityCalendar: job.generatedCV?.features?.includes('availability-calendar') || false,
-                languageProficiency: job.generatedCV?.features?.includes('language-proficiency') || false,
-                certificationBadges: job.generatedCV?.features?.includes('certification-badges') || false,
-                personalityInsights: job.generatedCV?.features?.includes('personality-insights') || false,
-                achievementsShowcase: job.generatedCV?.features?.includes('achievements-showcase') || false,
-              }}
-              onUpdate={(updates) => {
-                // Update the job's parsed data with the changes
-                setJob(prev => prev ? {
-                  ...prev,
-                  parsedData: {
-                    ...prev.parsedData,
-                    ...updates
+              onDownloadPDF={async () => {
+                try {
+                  if (job.generatedCV?.pdfUrl) {
+                    const link = document.createElement('a');
+                    link.href = job.generatedCV.pdfUrl;
+                    link.download = `${job.parsedData?.personalInfo?.name || 'CV'}.pdf`;
+                    link.click();
+                    toast.success('PDF downloaded successfully!');
+                  } else {
+                    toast.error('PDF not available');
                   }
-                } : null);
-                toast.success('CV updated! Changes will be reflected in your next generation.');
+                } catch (error) {
+                  console.error('Error downloading PDF:', error);
+                  toast.error('Failed to download PDF');
+                }
               }}
-              onFeatureToggle={(feature, enabled) => {
-                // Update selected features in real-time
-                setSelectedFeatures(prev => ({
-                  ...prev,
-                  [feature]: enabled
-                }));
-                toast.success(`${enabled ? 'Enabled' : 'Disabled'} ${feature.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+              onDownloadDOCX={async () => {
+                try {
+                  if (job.generatedCV?.docxUrl) {
+                    const link = document.createElement('a');
+                    link.href = job.generatedCV.docxUrl;
+                    link.download = `${job.parsedData?.personalInfo?.name || 'CV'}.docx`;
+                    link.click();
+                    toast.success('DOCX downloaded successfully!');
+                  } else {
+                    toast.error('DOCX not available');
+                  }
+                } catch (error) {
+                  console.error('Error downloading DOCX:', error);
+                  toast.error('Failed to download DOCX');
+                }
               }}
               className="bg-gray-800 rounded-lg shadow-lg border border-gray-700"
             />
@@ -950,104 +980,45 @@ export const ResultsPage = () => {
 
           {/* Actions Sidebar */}
           <div className="space-y-6">
-            {/* Download Options */}
+            {/* CV Information */}
             <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold mb-4 text-gray-100">Download Your CV</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-100">Generated CV Info</h3>
               
-              {/* Interactive PDF Features Notice */}
-              <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4 mb-4">
-                <h4 className="text-green-300 font-medium flex items-center gap-2">
-                  <span>✨</span> Interactive PDF Features
-                </h4>
-                <p className="text-green-200 text-sm mt-1">
-                  Your PDF includes fully interactive elements: clickable podcast players, working contact forms, 
-                  interactive timeline navigation, fillable rating systems, and functional social media links!
-                </p>
+              {/* Generation Summary */}
+              <div className="space-y-4">
+                {job.generatedCV?.template && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Template:</span>
+                    <span className="text-gray-200 capitalize">{job.generatedCV.template}</span>
+                  </div>
+                )}
+                
+                {job.generatedCV?.features && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Features Applied:</span>
+                    <span className="text-gray-200">{job.generatedCV.features.length}</span>
+                  </div>
+                )}
+                
+                {job.updatedAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Generated:</span>
+                    <span className="text-gray-200 text-sm">
+                      {new Date(job.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
               </div>
               
-              <div className="space-y-3">
-                <button 
-                  onClick={async () => {
-                    if (job.generatedCV?.html) {
-                      try {
-                        setGeneratingPDF(true);
-                        toast.loading('Generating interactive PDF with all features...');
-                        const pdfBlob = await PDFService.generatePDFFromHTML(
-                          job.generatedCV.html,
-                          `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`
-                        );
-                        PDFService.downloadPDF(pdfBlob, `${job.parsedData?.personalInfo?.name || 'cv'}.pdf`);
-                        toast.dismiss();
-                        toast.success('Interactive PDF downloaded successfully! All features are fully functional.');
-                      } catch (error) {
-                        console.error('Error generating PDF:', error);
-                        toast.dismiss();
-                        toast.error('Failed to generate PDF');
-                      } finally {
-                        setGeneratingPDF(false);
-                      }
-                    }
-                  }}
-                  disabled={generatingPDF || !job.generatedCV?.html}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-cyan-900/30 text-cyan-400 rounded-lg hover:bg-cyan-900/50 transition disabled:opacity-50 disabled:cursor-not-allowed border border-cyan-700/50 hover-lift"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    {generatingPDF ? 'Generating Interactive PDF...' : 'Interactive PDF Format'}
-                  </span>
-                  {generatingPDF ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                </button>
-                
-                <button 
-                  onClick={async () => {
-                    if (job) {
-                      try {
-                        setGeneratingDOCX(true);
-                        toast.loading('Generating DOCX...');
-                        const docxBlob = await DOCXService.generateDOCXFromJob(job);
-                        DOCXService.downloadDOCX(docxBlob, `${job.parsedData?.personalInfo?.name || 'cv'}.docx`);
-                        toast.dismiss();
-                        toast.success('DOCX downloaded successfully!');
-                      } catch (error) {
-                        console.error('Error generating DOCX:', error);
-                        toast.dismiss();
-                        toast.error('Failed to generate DOCX');
-                      } finally {
-                        setGeneratingDOCX(false);
-                      }
-                    }
-                  }}
-                  disabled={generatingDOCX || !job.parsedData}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-green-900/30 text-green-400 rounded-lg hover:bg-green-900/50 transition disabled:opacity-50 disabled:cursor-not-allowed border border-green-700/50 hover-lift"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    {generatingDOCX ? 'Generating DOCX...' : 'DOCX Format'}
-                  </span>
-                  {generatingDOCX ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                </button>
-                
-                {job.generatedCV?.htmlUrl && (
-                  <a 
-                    href={job.generatedCV.htmlUrl}
-                    download="cv.html"
-                    className="w-full flex items-center justify-between px-4 py-3 bg-purple-900/30 text-purple-400 rounded-lg hover:bg-purple-900/50 transition border border-purple-700/50 hover-lift"
-                  >
-                    <span className="flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      HTML Format
-                    </span>
-                    <Download className="w-4 h-4" />
-                  </a>
-                )}
+              {/* Interactive Features Notice */}
+              <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4 mt-4">
+                <h4 className="text-green-300 font-medium flex items-center gap-2">
+                  <span>✨</span> Interactive Features
+                </h4>
+                <p className="text-green-200 text-sm mt-1">
+                  Your CV includes interactive elements: clickable links, functional contact forms, 
+                  multimedia content, and more. Use the download buttons above to save in your preferred format.
+                </p>
               </div>
             </div>
 
@@ -1107,7 +1078,6 @@ export const ResultsPage = () => {
             </button>
           </div>
         </div>
-        )}
       </main>
     </div>
   );

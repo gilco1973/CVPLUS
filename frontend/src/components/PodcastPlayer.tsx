@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Download, FileText, RefreshCw, Clock, RotateCcw } from 'lucide-react';
-import { getPodcastStatus, generatePodcast, regeneratePodcast } from '../services/cvService';
+import { getPodcastStatus, generateEnhancedPodcast, regeneratePodcast } from '../services/cvService';
 import toast from 'react-hot-toast';
 
 interface PodcastPlayerProps {
@@ -75,7 +75,7 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   const handleGeneratePodcast = async () => {
     setGenerating(true);
     try {
-      await generatePodcast(jobId, { format: 'professional', duration: 300 });
+      await generateEnhancedPodcast(jobId, 'professional');
       setPodcastStatus({ status: 'generating', message: 'Generating your podcast...' });
       startPolling();
       toast.success('Podcast generation started!');

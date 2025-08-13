@@ -34,7 +34,6 @@ export class CVGenerator {
     calendar?: string;
     languageProficiency?: string;
     certificationBadges?: string;
-    personalityInsights?: string;
     achievementsShowcase?: string;
     videoIntroduction?: string;
     portfolioGallery?: string;
@@ -53,7 +52,6 @@ export class CVGenerator {
     let calendar = '';
     let languageProficiency = '';
     let certificationBadges = '';
-    let personalityInsights = '';
     let achievementsShowcase = '';
     let videoIntroduction = '';
     let portfolioGallery = '';
@@ -578,17 +576,13 @@ export class CVGenerator {
       if (languages.length > 0) {
         languageProficiency = `
           <div class="language-section">
-            <h2 class="section-title">Language Proficiency</h2>
+            <h2 class="section-title">Languages</h2>
             <div class="language-grid">
               ${languages.map(lang => {
-                const proficiency = ['Native', 'Fluent', 'Professional', 'Intermediate'][Math.floor(Math.random() * 4)];
+                // Only show language name without fake proficiency levels
                 return `
                   <div class="language-item">
                     <div class="language-name">${lang}</div>
-                    <div class="language-level">${proficiency}</div>
-                    <div class="language-bar">
-                      <div class="language-fill ${proficiency.toLowerCase()}"></div>
-                    </div>
                   </div>
                 `;
               }).join('')}
@@ -597,40 +591,26 @@ export class CVGenerator {
         
         additionalStyles += `
           .language-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
             margin: 20px 0;
           }
           .language-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+          }
+          .language-item:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
           }
           .language-name {
-            font-weight: 600;
-            margin-bottom: 8px;
-          }
-          .language-level {
             font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-          }
-          .language-bar {
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-          }
-          .language-fill {
-            height: 100%;
-            transition: width 1s ease;
-          }
-          .language-fill.native { width: 100%; background: #2ecc71; }
-          .language-fill.fluent { width: 85%; background: #3498db; }
-          .language-fill.professional { width: 70%; background: #f39c12; }
-          .language-fill.intermediate { width: 50%; background: #e74c3c; }`;
+          }`;
       }
     }
 
@@ -987,78 +967,6 @@ export class CVGenerator {
         }`;
     }
 
-    // Personality Insights
-    if (features.includes('personality-insights')) {
-      const traits = ['Leadership', 'Creativity', 'Analytical', 'Communication', 'Teamwork'];
-      personalityInsights = `
-        <div class="personality-section">
-          <h2 class="section-title">AI Personality Insights</h2>
-          <div class="personality-chart">
-            <div class="radar-chart">
-              ${traits.map((trait, index) => {
-                const score = Math.floor(Math.random() * 30) + 70;
-                return `
-                  <div class="trait-item">
-                    <span class="trait-name">${trait}</span>
-                    <div class="trait-score">
-                      <div class="trait-bar" style="width: ${score}%"></div>
-                      <span class="trait-value">${score}%</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-            <p class="personality-note">*Based on AI analysis of career achievements and experience</p>
-          </div>
-        </div>`;
-      
-      additionalStyles += `
-        .personality-chart {
-          max-width: 600px;
-          margin: 20px auto;
-        }
-        .trait-item {
-          margin-bottom: 20px;
-        }
-        .trait-name {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #2c3e50;
-        }
-        .trait-score {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        }
-        .trait-bar {
-          height: 8px;
-          background: linear-gradient(90deg, #9b59b6, #8e44ad);
-          border-radius: 4px;
-          flex-grow: 1;
-        }
-        .trait-value {
-          font-size: 14px;
-          font-weight: 600;
-          color: #8e44ad;
-          min-width: 40px;
-        }
-        .personality-note {
-          text-align: center;
-          font-size: 12px;
-          color: #666;
-          font-style: italic;
-          margin-top: 20px;
-        }
-        @media print, screen {
-          .personality-section {
-            page-break-inside: avoid;
-          }
-          .trait-bar {
-            background: #9b59b6 !important;
-          }
-        }`;
-    }
 
     // Availability Calendar
     if (features.includes('availability-calendar')) {
@@ -1454,7 +1362,6 @@ export class CVGenerator {
       calendar,
       languageProficiency,
       certificationBadges,
-      personalityInsights,
       achievementsShowcase,
       videoIntroduction,
       portfolioGallery,
@@ -1829,8 +1736,6 @@ export class CVGenerator {
         ${interactiveFeatures.languageProficiency || ''}
         
         ${interactiveFeatures.certificationBadges || ''}
-        
-        ${interactiveFeatures.personalityInsights || ''}
         
         ${interactiveFeatures.videoIntroduction || ''}
         

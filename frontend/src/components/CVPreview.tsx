@@ -71,11 +71,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
         };
       case 'achievements-showcase':
+        // Use real achievements from experience data
+        const realAchievements = experience?.flatMap((exp: any) => 
+          exp.achievements?.map((achievement: string) => ({
+            title: achievement,
+            category: 'Professional',
+            impact: 'Real'
+          })) || []
+        ) || [];
+        
         return {
-          keyAchievements: [
-            { title: 'Led team to 40% productivity increase', category: 'Leadership', impact: 'High' },
-            { title: 'Implemented AI solution saving $2M annually', category: 'Innovation', impact: 'Critical' },
-            { title: 'Mentored 15+ junior developers', category: 'Team Development', impact: 'Medium' }
+          keyAchievements: realAchievements.length > 0 ? realAchievements.slice(0, 3) : [
+            { title: 'Real achievements will be extracted from your experience', category: 'Info', impact: 'Preview' }
           ]
         };
       default:
@@ -97,19 +104,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
               <span>📋 Preview: This feature will show when you have language skills in your CV</span>
             </div>
             <h3 class="section-title" onclick="toggleSection('${featureId}')">
-              🌐 Language Proficiency
+              🌐 Languages
               <div class="collapse-icon ${collapsedSections[featureId] ? 'collapsed' : ''}">▼</div>
             </h3>
             <div class="section-content ${collapsedSections[featureId] ? 'collapsed' : ''}">
-              <div class="language-grid">
+              <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 ${mockData.languages?.map((lang: any) => `
-                  <div class="language-item">
-                    <span class="language-name">${lang.name}</span>
-                    <span class="language-level">${lang.level}</span>
-                    <div class="language-bar">
-                      <div class="language-fill" style="width: ${lang.level === 'Native' ? '100%' : lang.level === 'Fluent' ? '90%' : '75%'}"></div>
-                    </div>
-                  </div>
+                  <span style="background: #3498db; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px;">${lang.name}</span>
                 `).join('')}
               </div>
             </div>
@@ -882,22 +883,16 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         ${selectedFeatures.skillsChart ? `
           <div class="feature-preview" data-feature="skills-chart">
             <div class="feature-preview-banner">
-              <span>📋 Preview: Skills will be visualized with proficiency levels</span>
+              <span>📋 Preview: Skills will be displayed as organized tags</span>
             </div>
             <h3 class="section-title" onclick="toggleSection('skills-chart')">
-              📊 Skills Proficiency
+              📊 Technical Skills
               <div class="collapse-icon ${collapsedSections['skills-chart'] ? 'collapsed' : ''}">▼</div>
             </h3>
             <div class="section-content ${collapsedSections['skills-chart'] ? 'collapsed' : ''}">
-              ${skills?.technical?.slice(0, 5).map((skill: string) => `
-                <div style="margin-bottom: 15px;">
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="font-weight: 600;">${skill}</span>
-                    <span style="color: #3498db; font-weight: 700;">${Math.floor(Math.random() * 40) + 60}%</span>
-                  </div>
-                  <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                    <div style="height: 100%; width: ${Math.floor(Math.random() * 40) + 60}%; background: linear-gradient(90deg, #3498db, #2980b9);"></div>
-                  </div>
+              ${skills?.technical?.slice(0, 8).map((skill: string) => `
+                <div style="margin-bottom: 12px;">
+                  <span style="display: inline-block; background: #3498db; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; margin-right: 8px; margin-bottom: 8px;">${skill}</span>
                 </div>
               `).join('') || ''}
             </div>
@@ -1110,8 +1105,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
                   ✓
                 </div>
                 <div>
-                  <h4 style="margin: 0; color: #2e7d32; font-size: 18px;">95% ATS Compatible</h4>
-                  <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Optimized formatting and keywords</p>
+                  <h4 style="margin: 0; color: #2e7d32; font-size: 18px;">ATS Optimized</h4>
+                  <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Formatting and keywords will be optimized for ATS systems</p>
                 </div>
               </div>
               <ul style="margin: 0; padding-left: 20px; color: #555;">
@@ -1161,11 +1156,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             <div class="section-content ${collapsedSections['achievement-highlighting'] ? 'collapsed' : ''}" style="background: #f3e5f5; padding: 20px; border-radius: 12px; border-left: 4px solid #9c27b0;">
               <div style="margin-bottom: 15px;">
                 <div style="background: #9c27b0; color: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">ACHIEVEMENT</div>
-                <p style="margin: 0; color: #333; font-weight: 600;">Increased team productivity by 40% through implementation of new workflow processes</p>
+                <p style="margin: 0; color: #333; font-weight: 600;">Key achievements will be highlighted with measurable impact metrics</p>
               </div>
               <div style="margin-bottom: 15px;">
                 <div style="background: #9c27b0; color: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">IMPACT</div>
-                <p style="margin: 0; color: #333; font-weight: 600;">Reduced project delivery time from 8 weeks to 5 weeks, saving $50K annually</p>
+                <p style="margin: 0; color: #333; font-weight: 600;">Quantified impact statements will be extracted from your experience</p>
               </div>
               <p style="margin: 0; color: #666; font-size: 12px; font-style: italic;">Quantified results and measurable outcomes highlighted throughout</p>
             </div>
@@ -1186,23 +1181,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div>
                   <h5 style="margin: 0 0 10px 0; color: #0277bd;">Technical Skills</h5>
-                  <div style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                      <span style="font-size: 12px;">JavaScript</span>
-                      <span style="font-size: 12px; color: #0277bd;">90%</span>
-                    </div>
-                    <div style="background: #e0e0e0; height: 6px; border-radius: 3px;">
-                      <div style="background: #03a9f4; height: 100%; width: 90%; border-radius: 3px;"></div>
-                    </div>
-                  </div>
-                  <div style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                      <span style="font-size: 12px;">React</span>
-                      <span style="font-size: 12px; color: #0277bd;">85%</span>
-                    </div>
-                    <div style="background: #e0e0e0; height: 6px; border-radius: 3px;">
-                      <div style="background: #03a9f4; height: 100%; width: 85%; border-radius: 3px;"></div>
-                    </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span style="background: #03a9f4; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">JavaScript</span>
+                    <span style="background: #03a9f4; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">React</span>
+                    <span style="background: #03a9f4; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">Node.js</span>
                   </div>
                 </div>
                 <div>
@@ -1245,39 +1227,6 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
                 <p style="margin: 0; color: #333;"><strong>Address:</strong> New York, NY</p>
               </div>
               <p style="margin: 15px 0 0 0; color: #666; font-size: 12px; font-style: italic;">Personal details masked while maintaining professional appeal</p>
-            </div>
-          </div>
-        ` : ''}
-        
-        <!-- Personality Insights Preview -->
-        ${selectedFeatures.personalityInsights ? `
-          <div class="feature-preview" data-feature="personality-insights">
-            <div class="feature-preview-banner">
-              <span>📋 Preview: AI analyzes your work style and personality traits</span>
-            </div>
-            <h3 class="section-title" onclick="toggleSection('personality-insights')">
-              🧠 Personality Insights
-              <div class="collapse-icon ${collapsedSections['personality-insights'] ? 'collapsed' : ''}">▼</div>
-            </h3>
-            <div class="section-content ${collapsedSections['personality-insights'] ? 'collapsed' : ''}" style="background: #f9fbe7; padding: 20px; border-radius: 12px; border-left: 4px solid #8bc34a;">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #dcedc8;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">🎯</div>
-                  <h5 style="margin: 0 0 5px 0; color: #689f38;">Results-Driven</h5>
-                  <p style="margin: 0; font-size: 12px; color: #666;">85% Match</p>
-                </div>
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #dcedc8;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">👥</div>
-                  <h5 style="margin: 0 0 5px 0; color: #689f38;">Collaborative</h5>
-                  <p style="margin: 0; font-size: 12px; color: #666;">92% Match</p>
-                </div>
-                <div style="text-align: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #dcedc8;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">💡</div>
-                  <h5 style="margin: 0 0 5px 0; color: #689f38;">Innovative</h5>
-                  <p style="margin: 0; font-size: 12px; color: #666;">78% Match</p>
-                </div>
-              </div>
-              <p style="margin: 0; color: #666; font-size: 12px; font-style: italic;">Analysis based on career history and achievements</p>
             </div>
           </div>
         ` : ''}
@@ -1447,8 +1396,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       'keyword-enhancement',
       'achievement-highlighting',
       'skills-visualization',
-      'privacy-mode',
-      'personality-insights'
+      'privacy-mode'
     ];
     const collapsed: Record<string, boolean> = {};
     allSections.forEach(section => {
