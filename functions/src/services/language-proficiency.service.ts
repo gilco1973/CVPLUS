@@ -170,7 +170,7 @@ export class LanguageProficiencyService {
     - Education in foreign languages
     - Certifications (TOEFL, DELE, DELF, etc.)
     
-    CV Summary: ${cv.summary || ''}
+    CV Summary: ${cv.personalInfo?.summary || ''}
     Experience: ${JSON.stringify(cv.experience?.slice(0, 3) || [])}
     Education: ${JSON.stringify(cv.education || [])}
     Certifications: ${JSON.stringify(cv.certifications || [])}
@@ -654,7 +654,7 @@ export class LanguageProficiencyService {
    */
   private inferNativeLanguage(cv: ParsedCV): string | null {
     // Check for location clues
-    const location = cv.personalInfo?.location?.toLowerCase() || '';
+    const location = cv.personalInfo?.address?.toLowerCase() || '';
     
     // Simple location to language mapping
     if (location.includes('usa') || location.includes('united states') || 

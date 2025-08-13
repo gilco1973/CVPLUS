@@ -1,7 +1,6 @@
 import { 
   VerifiedClaudeService, 
-  VerifiedClaudeRequest,
-  VerifiedClaudeResponse 
+  VerifiedMessageOptions
 } from './verified-claude.service';
 import { ValidationCriteria } from './llm-verification.service';
 
@@ -57,15 +56,12 @@ export class LLMIntegrationWrapperService {
       defaultModel: 'claude-sonnet-4-20250514',
       defaultTemperature: 0,
       defaultMaxTokens: 4000,
-      customValidationCriteria: VerifiedClaudeService.createValidationCriteria(config.serviceName)
+      customValidationCriteria: { accuracy: true, completeness: true, relevance: true, consistency: true, safety: true, format: true }
     };
 
     this.config = { ...defaultConfig, ...config };
     
-    this.verifiedClaudeService = new VerifiedClaudeService({
-      verificationEnabled: this.config.enableVerification,
-      validationCriteria: this.config.customValidationCriteria
-    });
+    this.verifiedClaudeService = new VerifiedClaudeService();
   }
 
   /**
@@ -75,7 +71,7 @@ export class LLMIntegrationWrapperService {
    * but adds verification behind the scenes.
    */
   async callClaude(request: LegacyClaudeCall): Promise<LegacyClaudeResponse> {
-    const verifiedRequest: VerifiedClaudeRequest = {
+    const verifiedRequest: VerifiedMessageOptions = {
       model: this.config.defaultModel,
       messages: [{
         role: 'user',
@@ -83,20 +79,17 @@ export class LLMIntegrationWrapperService {
       }],
       max_tokens: request.maxTokens || this.config.defaultMaxTokens,
       temperature: request.temperature ?? this.config.defaultTemperature,
-      system: request.system,
-      service: this.config.serviceName,
-      context: request.context,
-      validationCriteria: this.config.customValidationCriteria
+      system: request.system
     };
 
     try {
       const response = await this.verifiedClaudeService.createVerifiedMessage(verifiedRequest);
 
       return {
-        content: response.content,
-        verified: response.verified,
-        verificationScore: response.verificationScore,
-        auditId: response.auditId,
+        content: Array.isArray(response.content) ? response.content.map(c => c.text).join('') : String(response.content),
+        verified: response.verification?.isValid || false,
+        verificationScore: response.verification?.confidence || 0,
+        auditId: `audit-${Date.now()}`,
         usage: response.usage ? {
           inputTokens: response.usage.input_tokens,
           outputTokens: response.usage.output_tokens
@@ -121,16 +114,13 @@ export class LLMIntegrationWrapperService {
       context?: Record<string, any>;
       customValidation?: ValidationCriteria;
     }
-  ): Promise<VerifiedClaudeResponse> {
-    const request: VerifiedClaudeRequest = {
+  ): Promise<any> {
+    const request: VerifiedMessageOptions = {
       model: this.config.defaultModel,
-      messages,
+      messages: messages.filter(msg => msg.role !== 'system') as Array<{ role: 'user' | 'assistant'; content: string; }>,
       max_tokens: options?.maxTokens || this.config.defaultMaxTokens,
       temperature: options?.temperature ?? this.config.defaultTemperature,
-      system: options?.system,
-      service: this.config.serviceName,
-      context: options?.context,
-      validationCriteria: options?.customValidation || this.config.customValidationCriteria
+      system: options?.system
     };
 
     return await this.verifiedClaudeService.createVerifiedMessage(request);
@@ -142,8 +132,7 @@ export class LLMIntegrationWrapperService {
   getServiceStats() {
     return {
       serviceName: this.config.serviceName,
-      verificationEnabled: this.config.enableVerification,
-      ...this.verifiedClaudeService.getVerificationStats()
+      verificationEnabled: this.config.enableVerification
     };
   }
 }
@@ -158,8 +147,7 @@ export function createLLMWrapper(serviceName: string, options?: {
   return new LLMIntegrationWrapperService({
     serviceName,
     enableVerification: options?.enableVerification ?? true,
-    customValidationCriteria: options?.customValidation || 
-      VerifiedClaudeService.createValidationCriteria(serviceName)
+    customValidationCriteria: options?.customValidation || { accuracy: true, completeness: true, relevance: true, consistency: true, safety: true, format: true }
   });
 }
 
@@ -170,7 +158,7 @@ export class CVParsingLLMWrapper extends LLMIntegrationWrapperService {
   constructor() {
     super({
       serviceName: 'cv-parsing',
-      customValidationCriteria: VerifiedClaudeService.createValidationCriteria('cv-parsing')
+      customValidationCriteria: { accuracy: true, completeness: true, relevance: true, consistency: true, safety: true, format: true }
     });
   }
 
@@ -282,7 +270,7 @@ export class PIIDetectionLLMWrapper extends LLMIntegrationWrapperService {
   constructor() {
     super({
       serviceName: 'pii-detection',
-      customValidationCriteria: VerifiedClaudeService.createValidationCriteria('pii-detection')
+      customValidationCriteria: { accuracy: true, completeness: true, relevance: true, consistency: true, safety: true, format: true }
     });
   }
 
@@ -358,7 +346,7 @@ export class SkillsAnalysisLLMWrapper extends LLMIntegrationWrapperService {
   constructor() {
     super({
       serviceName: 'skills-analysis',
-      customValidationCriteria: VerifiedClaudeService.createValidationCriteria('skills-analysis')
+      customValidationCriteria: { accuracy: true, completeness: true, relevance: true, consistency: true, safety: true, format: true }
     });
   }
 

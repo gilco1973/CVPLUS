@@ -17,7 +17,9 @@ const CRITICAL_FUNCTIONS = [
   'generateTestimonialsCarousel',
   'generateCertificationBadges',
   'generatePodcast',
-  'processCV-enhanced'
+  'processCV-enhanced',
+  'analyzeAchievements',
+  'generateAchievementShowcase'
 ];
 
 // Functions that were hitting quota limits

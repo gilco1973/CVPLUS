@@ -704,8 +704,8 @@ export class CVGenerator {
               <div class="certification-badge">
                 <div class="badge-icon">🏆</div>
                 <div class="badge-content">
-                  <h4 class="cert-name">${cert.name || cert.degree}</h4>
-                  <p class="cert-issuer">${cert.issuer || cert.institution}</p>
+                  <h4 class="cert-name">${cert.degree}</h4>
+                  <p class="cert-issuer">${cert.institution}</p>
                   <span class="cert-year">${cert.year || 'Current'}</span>
                 </div>
               </div>

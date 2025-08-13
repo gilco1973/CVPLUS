@@ -124,7 +124,7 @@ export class PodcastGenerationService {
       long: 1800
     };
     
-    const targetWords = durationWords[options.duration || 'medium'];
+    const targetWords = durationWords[options.duration as keyof typeof durationWords] || durationWords.medium;
     
     const prompt = `Create a natural, engaging podcast conversation between two hosts discussing this professional's career. The conversation should feel like a real podcast episode.
 
@@ -328,7 +328,7 @@ Focus: ${options.focus || 'balanced'}`;
       
       // Merge audio files using FFmpeg
       await new Promise<void>((resolve, reject) => {
-        ffmpeg()
+        (ffmpeg as any)()
           .input(listFilePath)
           .inputOptions(['-f', 'concat', '-safe', '0'])
           .audioCodec('mp3')
@@ -340,7 +340,7 @@ Focus: ${options.focus || 'balanced'}`;
             console.log('Audio merging completed');
             resolve();
           })
-          .on('error', (err) => {
+          .on('error', (err: any) => {
             console.error('FFmpeg error:', err);
             reject(new Error(`Audio merging failed: ${err.message}`));
           })
@@ -387,7 +387,7 @@ Focus: ${options.focus || 'balanced'}`;
     const durationSeconds = durationMs / 1000;
     
     return new Promise<void>((resolve, reject) => {
-      ffmpeg()
+      (ffmpeg as any)()
         .input('anullsrc=channel_layout=stereo:sample_rate=44100')
         .inputOptions(['-f', 'lavfi'])
         .audioCodec('mp3')

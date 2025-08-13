@@ -71,6 +71,14 @@ export interface ParsedCV {
     duration?: string;
     role?: string;
   }>;
+  achievements?: string[];
+  publications?: Array<{
+    title: string;
+    publication: string;
+    date: string;
+    url?: string;
+  }>;
+  interests?: string[];
   summary?: string;
 }
 
@@ -395,7 +403,6 @@ export class EnhancedCVParsingService {
               experience: result.experience,
               education: result.education,
               skills: result.skills,
-              achievements: (result as any).achievements,
               certifications: result.certifications,
               projects: result.projects?.map(project => ({
                 name: project.name,
@@ -403,8 +410,8 @@ export class EnhancedCVParsingService {
                 technologies: project.technologies || [],
                 url: project.url
               })),
-              publications: (result as any).publications,
-              interests: (result as any).interests
+              publications: Array.isArray((result as any).publications) ? (result as any).publications : undefined,
+              interests: Array.isArray((result as any).interests) ? (result as any).interests : undefined
             };
             
             return {
@@ -463,7 +470,7 @@ export class EnhancedCVParsingService {
     };
   } {
     return {
-      verificationEnabled: this.config.enableVerification,
+      verificationEnabled: Boolean(this.config.enableVerification),
       verificationAvailable: Boolean(this.verifiedParser && this.llmWrapper),
       configuration: this.config,
       healthCheck: {

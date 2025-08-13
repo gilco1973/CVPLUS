@@ -74,7 +74,7 @@ export class LLMVerificationService {
     });
     
     this.anthropic = new Anthropic({ 
-      apiKey: process.env.ANTHROPIC_API_KEY || config.anthropic?.apiKey || ''
+      apiKey: process.env.ANTHROPIC_API_KEY || ''
     });
 
     // Default configuration
@@ -372,7 +372,9 @@ Ensure your response is accurate, complete, relevant, properly formatted, and sa
 
   /**
    * Sanitize text by removing or masking PII
+   * @unused - Reserved for future logging implementation
    */
+  // @ts-ignore - Reserved for future logging implementation
   private sanitizeForLogging(text: string): string {
     if (!this.config.enableLogging) return '[LOGGING_DISABLED]';
     
@@ -418,20 +420,18 @@ Ensure your response is accurate, complete, relevant, properly formatted, and sa
       const startTime = Date.now();
 
       // Test OpenAI connectivity
-      const openaiTest = await this.openai.chat.completions.create({
+      await this.openai.chat.completions.create({
         model: 'gpt-4',
         messages: [{ role: 'user', content: 'Health check - respond with OK' }],
-        max_tokens: 10,
-        timeout: 5000
-      });
+        max_tokens: 10
+      }, { timeout: 5000 });
 
       // Test Anthropic connectivity  
-      const anthropicTest = await this.anthropic.messages.create({
+      await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 10,
-        messages: [{ role: 'user', content: 'Health check - respond with OK' }],
-        timeout: 5000
-      });
+        messages: [{ role: 'user', content: 'Health check - respond with OK' }]
+      }, { timeout: 5000 });
 
       const responseTime = Date.now() - startTime;
 

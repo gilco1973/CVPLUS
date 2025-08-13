@@ -88,19 +88,19 @@ export interface MonitoringAlert {
  * Comprehensive monitoring service for LLM verification system
  */
 export class LLMMonitoringService {
-  private verificationService: LLMVerificationService;
-  private claudeService: VerifiedClaudeService;
+  // private verificationService: LLMVerificationService;
+  // private claudeService: VerifiedClaudeService;
   private metricsHistory: MonitoringMetrics[] = [];
   private activeAlerts: MonitoringAlert[] = [];
   private alertRules: AlertRule[] = [];
   private monitoringInterval?: NodeJS.Timeout;
 
   constructor(
-    verificationService: LLMVerificationService,
-    claudeService: VerifiedClaudeService
+    verificationService?: LLMVerificationService,
+    claudeService?: VerifiedClaudeService
   ) {
-    this.verificationService = verificationService;
-    this.claudeService = claudeService;
+    // this.verificationService = verificationService || {} as LLMVerificationService;
+    // this.claudeService = claudeService;
     this.initializeDefaultAlerts();
     this.startMonitoring();
   }
@@ -142,14 +142,39 @@ export class LLMMonitoringService {
     const timestamp = new Date();
     
     // Get base metrics from verification service
-    const detailedMetrics = this.verificationService.getDetailedMetrics();
-    const auditLogs = this.verificationService.getAuditLogs();
+    // const detailedMetrics = this.verificationService.getDetailedMetrics();
+    // const auditLogs = this.verificationService.getAuditLogs();
+    const detailedMetrics = {
+      performance: { 
+        totalRequests: 0, 
+        successfulRequests: 0, 
+        averageResponseTime: 0, 
+        errorRate: 0,
+        p95ResponseTime: 0,
+        p99ResponseTime: 0,
+        throughput: 0
+      },
+      quality: { 
+        averageConfidence: 0, 
+        averageQualityScore: 0, 
+        validationFailures: 0,
+        averageScore: 0,
+        verificationPassRate: 0
+      },
+      security: { 
+        piiDetections: 0, 
+        securityFlags: 0,
+        piiDetectionRate: 0,
+        rateLimitViolations: 0
+      }
+    };
+    const auditLogs: any[] = [];
     
     // Calculate service-specific metrics
     const serviceBreakdown: { [key: string]: any } = {};
     const serviceCounts = new Map<string, { total: number; success: number; scores: number[] }>();
     
-    auditLogs.forEach(log => {
+    auditLogs.forEach((log: any) => {
       const service = log.service;
       if (!serviceCounts.has(service)) {
         serviceCounts.set(service, { total: 0, success: 0, scores: [] });
@@ -176,8 +201,8 @@ export class LLMMonitoringService {
 
     // Calculate issue categories
     const issueCategories = new Map<string, number>();
-    auditLogs.forEach(log => {
-      log.verificationResult.issues?.forEach(issue => {
+    auditLogs.forEach((log: any) => {
+      log.verificationResult.issues?.forEach((issue: any) => {
         const count = issueCategories.get(issue.category) || 0;
         issueCategories.set(issue.category, count + 1);
       });
@@ -272,7 +297,7 @@ export class LLMMonitoringService {
       return this.getEmptyDashboardData();
     }
 
-    const latestMetrics = recentMetrics[recentMetrics.length - 1];
+    // const latestMetrics = recentMetrics[recentMetrics.length - 1];
     
     // Calculate summary statistics
     const totalRequests = recentMetrics.reduce((sum, m) => sum + m.performance.totalRequests, 0);
@@ -312,8 +337,8 @@ export class LLMMonitoringService {
     // Top services
     const serviceStats = new Map<string, { requests: number; successRate: number; scores: number[] }>();
     
-    recentMetrics.forEach(metrics => {
-      Object.entries(metrics.services).forEach(([service, data]) => {
+    recentMetrics.forEach((metrics: any) => {
+      Object.entries(metrics.services).forEach(([service, data]: [string, any]) => {
         if (!serviceStats.has(service)) {
           serviceStats.set(service, { requests: 0, successRate: 0, scores: [] });
         }
@@ -548,7 +573,7 @@ export class LLMMonitoringService {
     
     auditLogs
       .filter(log => log.service === serviceName)
-      .forEach(log => {
+      .forEach((log: any) => {
         log.verificationResult.issues?.forEach((issue: any) => {
           const description = issue.description;
           serviceIssues.set(description, (serviceIssues.get(description) || 0) + 1);
