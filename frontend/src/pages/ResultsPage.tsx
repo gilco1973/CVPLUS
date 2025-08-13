@@ -465,6 +465,12 @@ export const ResultsPage = () => {
                         <div className="flex-1">
                           <span className="font-medium text-gray-200 group-hover:text-cyan-400 transition-colors">Keyword Enhancement</span>
                           <span className="block text-sm text-gray-400">Add industry-specific keywords automatically</span>
+                          <button
+                            onClick={() => navigate(`/keywords/${jobId}`)}
+                            className="mt-2 text-xs text-blue-400 hover:text-blue-300 underline transition-colors"
+                          >
+                            Advanced Keyword Optimization →
+                          </button>
                         </div>
                       </label>
                       <label className="flex items-start gap-3 p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all cursor-pointer group">

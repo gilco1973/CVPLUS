@@ -152,7 +152,7 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
     setLoading({ ...loading, ats: true });
     try {
       const result = await cvService.analyzeATSCompatibility(job.id) as any;
-      setFeatureData({ ...featureData, ats: result });
+      setFeatureData({ ...featureData, ats: result.result || result });
       toast.success('ATS analysis completed!');
     } catch (error) {
       toast.error('Failed to analyze ATS compatibility');

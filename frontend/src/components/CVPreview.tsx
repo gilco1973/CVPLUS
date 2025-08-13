@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Edit3, Save, X, Eye, EyeOff } from 'lucide-react';
 import type { Job } from '../services/cvService';
+import { analyzeATSCompatibility, analyzeAchievements } from '../services/cvService';
 import { SectionEditor } from './SectionEditor';
 import { QRCodeEditor } from './QRCodeEditor';
 
@@ -31,6 +32,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
+  const [atsLoading, setAtsLoading] = useState(false);
+  const [atsError, setAtsError] = useState<string | null>(null);
+  
+  // Achievement highlighting state
+  const [achievementAnalysis, setAchievementAnalysis] = useState<any>(null);
+  const [achievementLoading, setAchievementLoading] = useState(false);
+  const [achievementError, setAchievementError] = useState<string | null>(null);
   const [qrCodeSettings, setQrCodeSettings] = useState(() => {
     // Initialize from job data if available, otherwise use defaults
     const savedSettings = (job.parsedData as any)?.qrCodeSettings;
@@ -72,7 +81,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         };
       case 'achievements-showcase':
         // Use real achievements from experience data
-        const realAchievements = experience?.flatMap((exp: any) => 
+        const realAchievements = previewData?.experience?.flatMap((exp: any) => 
           exp.achievements?.map((achievement: string) => ({
             title: achievement,
             category: 'Professional',
@@ -1093,28 +1102,86 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         ${selectedFeatures.atsOptimization ? `
           <div class="feature-preview" data-feature="ats-optimization">
             <div class="feature-preview-banner">
-              <span>📋 Preview: CV format optimized for Applicant Tracking Systems</span>
+              <span>🤖 Automatic ATS analysis running on your CV</span>
             </div>
             <h3 class="section-title" onclick="toggleSection('ats-optimization')">
-              🤖 ATS Optimization
+              🎯 ATS Analysis
               <div class="collapse-icon ${collapsedSections['ats-optimization'] ? 'collapsed' : ''}">▼</div>
             </h3>
             <div class="section-content ${collapsedSections['ats-optimization'] ? 'collapsed' : ''}" style="background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">
-              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                <div style="width: 60px; height: 60px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
-                  ✓
+              ${!atsAnalysis && !atsLoading ? `
+                <div style="text-align: center; padding: 20px;">
+                  <div style="margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
+                      🤖
+                    </div>
+                    <p style="color: #666; margin: 0; font-size: 14px;">ATS analysis will run automatically</p>
+                  </div>
                 </div>
+              ` : ''}
+              
+              ${atsLoading ? `
+                <div style="text-align: center; padding: 20px;">
+                  <div style="width: 40px; height: 40px; border: 3px solid #4caf50; border-radius: 50%; border-top-color: transparent; margin: 0 auto 10px; animation: spin 1s linear infinite;"></div>
+                  <p style="color: #666; margin: 0;">Analyzing your CV for ATS compatibility...</p>
+                  <p style="color: #999; margin: 5px 0 0 0; font-size: 12px;">This may take a few seconds</p>
+                </div>
+              ` : ''}
+              
+              ${atsError ? `
+                <div style="text-align: center; padding: 20px; color: #f44336;">
+                  <div style="margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: #f44336; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
+                      ⚠️
+                    </div>
+                    <p style="margin: 0; font-weight: 600;">Analysis Failed</p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">${atsError}</p>
+                  </div>
+                  <div onclick="window.handleATSAnalysis && window.handleATSAnalysis()" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-block;">
+                    🔄 Retry Analysis
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${atsAnalysis ? `
                 <div>
-                  <h4 style="margin: 0; color: #2e7d32; font-size: 18px;">ATS Optimized</h4>
-                  <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Formatting and keywords will be optimized for ATS systems</p>
+                  <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <div style="width: 70px; height: 70px; background: ${atsAnalysis.overall >= 80 ? '#4caf50' : atsAnalysis.overall >= 60 ? '#ff9800' : '#f44336'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">
+                      ${atsAnalysis.overall}%
+                    </div>
+                    <div>
+                      <h4 style="margin: 0; color: #2e7d32; font-size: 20px;">ATS Score: ${atsAnalysis.overall}%</h4>
+                      <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+                        ${atsAnalysis.passes ? '✅ Your CV passes ATS scanning' : '❌ Needs improvement for ATS compatibility'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  ${atsAnalysis.issues && atsAnalysis.issues.length > 0 ? `
+                    <div style="margin-bottom: 15px;">
+                      <h5 style="color: #f44336; margin-bottom: 8px; font-size: 14px;">⚠️ Issues Found:</h5>
+                      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px;">
+                        ${atsAnalysis.issues.slice(0, 3).map((issue: any) => `<li>${issue.message || issue}</li>`).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
+                  
+                  ${atsAnalysis.suggestions && atsAnalysis.suggestions.length > 0 ? `
+                    <div style="margin-bottom: 15px;">
+                      <h5 style="color: #ff9800; margin-bottom: 8px; font-size: 14px;">💡 Suggestions:</h5>
+                      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px;">
+                        ${atsAnalysis.suggestions.slice(0, 3).map((suggestion: any) => `<li>${suggestion.reason || suggestion}</li>`).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
+                  
+                  <div style="text-align: center; margin-top: 15px;">
+                    <div onclick="window.handleATSAnalysis && window.handleATSAnalysis()" style="background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; display: inline-block;">
+                      🔄 Re-analyze
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <ul style="margin: 0; padding-left: 20px; color: #555;">
-                <li>Standard section headers recognized by ATS</li>
-                <li>Keyword optimization for your industry</li>
-                <li>Clean formatting without complex layouts</li>
-                <li>Proper date and contact information structure</li>
-              </ul>
+              ` : ''}
             </div>
           </div>
         ` : ''}
@@ -1123,22 +1190,35 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         ${selectedFeatures.keywordEnhancement ? `
           <div class="feature-preview" data-feature="keyword-enhancement">
             <div class="feature-preview-banner">
-              <span>📋 Preview: AI adds relevant industry keywords to boost visibility</span>
+              <span>🎯 Enhanced: Keyword optimization powered by job market analysis</span>
+              <button onclick="window.location.href='/keywords/${job.id}'" style="margin-left: 10px; padding: 2px 8px; background: #ff9800; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Advanced →</button>
             </div>
             <h3 class="section-title" onclick="toggleSection('keyword-enhancement')">
               🎯 Smart Keywords
               <div class="collapse-icon ${collapsedSections['keyword-enhancement'] ? 'collapsed' : ''}">▼</div>
             </h3>
             <div class="section-content ${collapsedSections['keyword-enhancement'] ? 'collapsed' : ''}" style="background: #fff3e0; padding: 20px; border-radius: 12px; border-left: 4px solid #ff9800;">
-              <p style="margin: 0 0 15px 0; color: #e65100; font-weight: 600;">Enhanced Keywords Added:</p>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                <span style="background: #ff9800; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Project Management</span>
-                <span style="background: #ff9800; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Agile Development</span>
-                <span style="background: #ff9800; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Team Leadership</span>
-                <span style="background: #ff9800; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Strategic Planning</span>
-                <span style="background: #ff9800; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Cross-functional</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                  <p style="margin: 0 0 8px 0; color: #e65100; font-weight: 600; font-size: 14px;">Industry Keywords:</p>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <span style="background: #4caf50; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">Software Development</span>
+                    <span style="background: #4caf50; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">Agile</span>
+                    <span style="background: #4caf50; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">API Design</span>
+                  </div>
+                </div>
+                <div>
+                  <p style="margin: 0 0 8px 0; color: #d32f2f; font-weight: 600; font-size: 14px;">Missing Keywords:</p>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <span style="background: #f44336; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">Machine Learning</span>
+                    <span style="background: #f44336; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">DevOps</span>
+                    <span style="background: #f44336; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">Cloud Architecture</span>
+                  </div>
+                </div>
               </div>
-              <p style="margin: 0; color: #666; font-size: 12px; font-style: italic;">Keywords naturally integrated throughout your CV content</p>
+              <div style="text-align: center; padding: 10px; background: rgba(255,152,0,0.1); border-radius: 8px;">
+                <p style="margin: 0; color: #e65100; font-size: 13px; font-weight: 600;">💡 Tip: Use Advanced Keyword Optimization to analyze specific job descriptions</p>
+              </div>
             </div>
           </div>
         ` : ''}
@@ -1147,22 +1227,100 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         ${selectedFeatures.achievementHighlighting ? `
           <div class="feature-preview" data-feature="achievement-highlighting">
             <div class="feature-preview-banner">
-              <span>📋 Preview: AI identifies and emphasizes your key achievements</span>
+              <span>🏆 Real achievement analysis extracting impact metrics from your CV</span>
             </div>
             <h3 class="section-title" onclick="toggleSection('achievement-highlighting')">
-              🏆 Achievement Focus
+              🏆 Achievement Analysis
               <div class="collapse-icon ${collapsedSections['achievement-highlighting'] ? 'collapsed' : ''}">▼</div>
             </h3>
             <div class="section-content ${collapsedSections['achievement-highlighting'] ? 'collapsed' : ''}" style="background: #f3e5f5; padding: 20px; border-radius: 12px; border-left: 4px solid #9c27b0;">
-              <div style="margin-bottom: 15px;">
-                <div style="background: #9c27b0; color: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">ACHIEVEMENT</div>
-                <p style="margin: 0; color: #333; font-weight: 600;">Key achievements will be highlighted with measurable impact metrics</p>
-              </div>
-              <div style="margin-bottom: 15px;">
-                <div style="background: #9c27b0; color: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">IMPACT</div>
-                <p style="margin: 0; color: #333; font-weight: 600;">Quantified impact statements will be extracted from your experience</p>
-              </div>
-              <p style="margin: 0; color: #666; font-size: 12px; font-style: italic;">Quantified results and measurable outcomes highlighted throughout</p>
+              ${!achievementAnalysis && !achievementLoading ? `
+                <div style="text-align: center; padding: 20px;">
+                  <div style="margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: #9c27b0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
+                      🏆
+                    </div>
+                    <p style="color: #666; margin: 0; font-size: 14px;">Achievement analysis will run automatically</p>
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${achievementLoading ? `
+                <div style="text-align: center; padding: 20px;">
+                  <div style="width: 40px; height: 40px; border: 3px solid #9c27b0; border-radius: 50%; border-top-color: transparent; margin: 0 auto 10px; animation: spin 1s linear infinite;"></div>
+                  <p style="color: #666; margin: 0;">Analyzing achievements and impact metrics...</p>
+                  <p style="color: #999; margin: 5px 0 0 0; font-size: 12px;">Extracting quantifiable results</p>
+                </div>
+              ` : ''}
+              
+              ${achievementError ? `
+                <div style="text-align: center; padding: 20px; color: #f44336;">
+                  <div style="margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: #f44336; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px;">
+                      ⚠️
+                    </div>
+                    <p style="margin: 0; font-weight: 600;">Analysis Failed</p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">${achievementError}</p>
+                  </div>
+                  <div onclick="window.handleAchievementAnalysis && window.handleAchievementAnalysis()" style="background: #9c27b0; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-block;">
+                    🔄 Retry Analysis
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${achievementAnalysis ? `
+                <div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center; padding: 15px; background: rgba(156,39,176,0.1); border-radius: 8px;">
+                      <div style="font-size: 24px; font-weight: bold; color: #9c27b0; margin-bottom: 5px;">${achievementAnalysis.stats?.total || 0}</div>
+                      <div style="font-size: 12px; color: #666;">Total Achievements</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: rgba(156,39,176,0.1); border-radius: 8px;">
+                      <div style="font-size: 24px; font-weight: bold; color: #9c27b0; margin-bottom: 5px;">${achievementAnalysis.stats?.withMetrics || 0}</div>
+                      <div style="font-size: 12px; color: #666;">With Metrics</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: rgba(156,39,176,0.1); border-radius: 8px;">
+                      <div style="font-size: 24px; font-weight: bold; color: #9c27b0; margin-bottom: 5px;">${achievementAnalysis.stats?.highImpact || 0}</div>
+                      <div style="font-size: 12px; color: #666;">High Impact</div>
+                    </div>
+                  </div>
+                  
+                  ${achievementAnalysis.achievements && achievementAnalysis.achievements.length > 0 ? `
+                    <div style="margin-bottom: 15px;">
+                      <h5 style="color: #9c27b0; margin-bottom: 10px; font-size: 14px;">🎯 Top Achievements:</h5>
+                      ${achievementAnalysis.achievements.slice(0, 3).map((achievement: any) => `
+                        <div style="margin-bottom: 12px; padding: 12px; background: rgba(255,255,255,0.5); border-radius: 6px; border-left: 3px solid #9c27b0;">
+                          <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${achievement.title}</div>
+                          <div style="font-size: 12px; color: #666; margin-bottom: 6px;">${achievement.company} • ${achievement.category}</div>
+                          <div style="font-size: 11px; color: #9c27b0;">Impact Score: ${achievement.significance}/10</div>
+                          ${achievement.metrics ? `
+                            <div style="margin-top: 6px;">
+                              ${achievement.metrics.slice(0, 2).map((metric: string) => `
+                                <span style="background: #9c27b0; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-right: 4px;">${metric}</span>
+                              `).join('')}
+                            </div>
+                          ` : ''}
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                  
+                  ${achievementAnalysis.recommendations && achievementAnalysis.recommendations.length > 0 ? `
+                    <div style="margin-bottom: 15px;">
+                      <h5 style="color: #f57c00; margin-bottom: 8px; font-size: 14px;">💡 Recommendations:</h5>
+                      <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px;">
+                        ${achievementAnalysis.recommendations.slice(0, 3).map((rec: string) => `<li style="margin-bottom: 4px;">${rec}</li>`).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
+                  
+                  <div style="text-align: center; margin-top: 15px;">
+                    <div onclick="window.handleAchievementAnalysis && window.handleAchievementAnalysis()" style="background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; display: inline-block;">
+                      🔄 Re-analyze
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
             </div>
           </div>
         ` : ''}
@@ -1458,6 +1616,67 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       setHasUnsavedChanges(false);
     }
   };
+
+  // Handle ATS analysis
+  const handleATSAnalysis = async () => {
+    if (atsLoading) return;
+    
+    setAtsLoading(true);
+    setAtsError(null);
+    
+    try {
+      const result = await analyzeATSCompatibility(job.id);
+      setAtsAnalysis((result as any).result?.atsScore || (result as any).atsScore);
+    } catch (error: any) {
+      setAtsError(error.message || 'Failed to analyze ATS compatibility');
+      console.error('ATS analysis failed:', error);
+    } finally {
+      setAtsLoading(false);
+    }
+  };
+
+  // Handle Achievement analysis
+  const handleAchievementAnalysis = async () => {
+    if (achievementLoading) return;
+    
+    setAchievementLoading(true);
+    setAchievementError(null);
+    
+    try {
+      const result = await analyzeAchievements(job.id);
+      setAchievementAnalysis(result);
+    } catch (error: any) {
+      setAchievementError(error.message || 'Failed to analyze achievements');
+      console.error('Achievement analysis failed:', error);
+    } finally {
+      setAchievementLoading(false);
+    }
+  };
+
+  // Auto-trigger ATS analysis when ATS feature is selected
+  useEffect(() => {
+    if (selectedFeatures.atsOptimization && !atsAnalysis && !atsLoading) {
+      handleATSAnalysis();
+    }
+  }, [selectedFeatures.atsOptimization, job.id]);
+
+  // Auto-trigger achievement analysis when achievement highlighting feature is selected
+  useEffect(() => {
+    if (selectedFeatures.achievementHighlighting && !achievementAnalysis && !achievementLoading) {
+      handleAchievementAnalysis();
+    }
+  }, [selectedFeatures.achievementHighlighting, job.id]);
+
+  // Expose analysis functions to window for inline HTML calls
+  useEffect(() => {
+    (window as any).handleATSAnalysis = handleATSAnalysis;
+    (window as any).handleAchievementAnalysis = handleAchievementAnalysis;
+    
+    return () => {
+      delete (window as any).handleATSAnalysis;
+      delete (window as any).handleAchievementAnalysis;
+    };
+  }, [handleATSAnalysis, handleAchievementAnalysis]);
 
   return (
     <div className={`cv-preview-wrapper ${className}`}>

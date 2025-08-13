@@ -6,6 +6,7 @@ import { ResultsPage } from './pages/ResultsPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { CVFeaturesPage } from './pages/CVFeaturesPage';
 import { AboutPage } from './pages/AboutPage';
+import { KeywordOptimization } from './pages/KeywordOptimization';
 import { AuthProvider } from './contexts/AuthContext';
 
 const router = createBrowserRouter([
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: '/templates/:jobId',
     element: <TemplatesPage />,
+  },
+  {
+    path: '/keywords/:id',
+    element: <KeywordOptimization />,
   },
 ]);
 

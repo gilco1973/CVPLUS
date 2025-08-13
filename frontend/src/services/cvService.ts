@@ -693,3 +693,16 @@ export const updateSocialDisplaySettings = async (jobId: string, displaySettings
   const result = await updateFunction({ jobId, displaySettings });
   return result.data;
 };
+
+// Achievement Highlighting functions
+export const analyzeAchievements = async (jobId: string) => {
+  const analyzeFunction = httpsCallable(functions, 'analyzeAchievements');
+  const result = await analyzeFunction({ jobId });
+  return result.data;
+};
+
+export const generateAchievementShowcase = async (jobId: string, maxAchievements: number = 6) => {
+  const showcaseFunction = httpsCallable(functions, 'generateAchievementShowcase');
+  const result = await showcaseFunction({ jobId, maxAchievements });
+  return result.data;
+};

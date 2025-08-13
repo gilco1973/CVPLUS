@@ -146,6 +146,12 @@ export {
   updateSocialDisplaySettings
 } from './functions/socialMedia';
 
+// Export achievement highlighting functions
+export {
+  analyzeAchievements,
+  generateAchievementShowcase
+} from './functions/achievementHighlighting';
+
 // Export LLM verification monitoring functions
 export { 
   llmVerificationStatus 
