@@ -278,11 +278,97 @@ export interface ChatMessage {
 }
 
 /**
- * ATS Optimization Results
+ * Advanced Multi-Factor ATS Scoring System - Phase 1
+ */
+export interface AdvancedATSScore {
+  overall: number; // 0-100 overall score
+  confidence: number; // 0-1 confidence level
+  breakdown: {
+    parsing: number;        // How well ATS can read the CV (40% weight)
+    keywords: number;       // Keyword match percentage (25% weight)
+    formatting: number;     // ATS-friendly formatting (20% weight)
+    content: number;        // Content quality and structure (10% weight)
+    specificity: number;    // Job-specific optimization (5% weight)
+  };
+  atsSystemScores: {
+    workday: number;
+    greenhouse: number;
+    lever: number;
+    bamboohr: number;
+    taleo: number;
+    generic: number;
+  };
+  recommendations: PrioritizedRecommendation[];
+  competitorBenchmark: CompetitorAnalysis;
+}
+
+export interface PrioritizedRecommendation {
+  id: string;
+  priority: 1 | 2 | 3 | 4 | 5; // 1 = highest priority
+  category: 'parsing' | 'keywords' | 'formatting' | 'content' | 'specificity';
+  title: string;
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+  estimatedScoreImprovement: number; // Points improvement expected
+  actionRequired: 'add' | 'modify' | 'remove' | 'restructure';
+  section: string;
+  currentContent?: string;
+  suggestedContent?: string;
+  keywords?: string[];
+  atsSystemsAffected: string[]; // Which ATS systems this affects
+}
+
+export interface CompetitorAnalysis {
+  benchmarkScore: number;
+  industryAverage: number;
+  topPercentile: number;
+  gapAnalysis: {
+    missingKeywords: string[];
+    weakAreas: string[];
+    strengthAreas: string[];
+  };
+}
+
+export interface SemanticKeywordAnalysis {
+  primaryKeywords: KeywordMatch[];
+  semanticMatches: KeywordMatch[];
+  contextualRelevance: number; // 0-1 score
+  densityOptimization: {
+    current: number;
+    recommended: number;
+    sections: { [section: string]: number };
+  };
+  synonymMapping: { [original: string]: string[] };
+  industrySpecificTerms: string[];
+}
+
+export interface KeywordMatch {
+  keyword: string;
+  variations: string[];
+  frequency: number;
+  context: string[];
+  relevanceScore: number; // 0-1
+  atsImportance: number; // 0-1
+  competitorUsage: number; // 0-1
+}
+
+export interface ATSSystemSimulation {
+  system: 'workday' | 'greenhouse' | 'lever' | 'bamboohr' | 'taleo' | 'generic';
+  parsingAccuracy: number; // 0-1
+  keywordMatching: number; // 0-1
+  formatCompatibility: number; // 0-1
+  overallScore: number; // 0-100
+  specificIssues: string[];
+  optimizationTips: string[];
+}
+
+/**
+ * Enhanced ATS Optimization Results (Backward Compatible)
  */
 export interface ATSOptimizationResult {
-  score: number; // 0-100
+  score: number; // 0-100 (maps to AdvancedATSScore.overall)
   overall: number; // Alias for score
+  confidence?: number; // New field, optional for backward compatibility
   passes: boolean;
   issues: ATSIssue[];
   suggestions: ATSSuggestion[];
@@ -293,6 +379,10 @@ export interface ATSOptimizationResult {
     missing: string[];
     recommended: string[];
   };
+  // New advanced fields (optional for backward compatibility)
+  advancedScore?: AdvancedATSScore;
+  semanticAnalysis?: SemanticKeywordAnalysis;
+  systemSimulations?: ATSSystemSimulation[];
 };
 
 export interface ATSIssue {

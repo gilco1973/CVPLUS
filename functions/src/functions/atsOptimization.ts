@@ -206,8 +206,17 @@ export const generateATSKeywords = onCall(
         targetRole
       );
 
-      // Extract current skills from parsed CV
-      const currentSkills = job.parsedData!.skills?.technical?.map((s: any) => s.name || s) || [];
+      // Extract current skills from parsed CV with proper type handling
+      const extractSkills = (skills: any): string[] => {
+        if (Array.isArray(skills)) {
+          return skills.map(s => typeof s === 'string' ? s : s.name || '').filter(Boolean);
+        } else if (skills && typeof skills === 'object' && skills.technical) {
+          return skills.technical.map((s: any) => typeof s === 'string' ? s : s.name || '').filter(Boolean);
+        }
+        return [];
+      };
+      
+      const currentSkills = extractSkills(job.parsedData!.skills);
       
       // Find missing keywords
       const missingKeywords = keywords.filter((keyword: string) => 
