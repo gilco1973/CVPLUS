@@ -151,10 +151,18 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
   const handleATSAnalysis = async () => {
     setLoading({ ...loading, ats: true });
     try {
+      console.log('FeatureDashboard: Starting ATS analysis for job:', job.id);
       const result = await cvService.analyzeATSCompatibility(job.id) as any;
-      setFeatureData({ ...featureData, ats: result.result || result });
+      console.log('FeatureDashboard: ATS analysis raw result:', result);
+      
+      const atsData = result.result || result;
+      console.log('FeatureDashboard: Extracted atsData:', atsData);
+      
+      setFeatureData({ ...featureData, ats: atsData });
+      console.log('FeatureDashboard: ATS data set successfully');
       toast.success('ATS analysis completed!');
     } catch (error) {
+      console.error('FeatureDashboard: ATS analysis failed:', error);
       toast.error('Failed to analyze ATS compatibility');
     } finally {
       setLoading({ ...loading, ats: false });

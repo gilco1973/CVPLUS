@@ -35,6 +35,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState<string | null>(null);
+  const atsAnalysisInitiatedRef = useRef<string | null>(null);
   
   // Achievement highlighting state
   const [achievementAnalysis, setAchievementAnalysis] = useState<any>(null);
@@ -1619,19 +1620,32 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
 
   // Handle ATS analysis
   const handleATSAnalysis = async () => {
-    if (atsLoading) return;
+    if (atsLoading || atsAnalysisInitiatedRef.current === job.id) {
+      console.log('ATS analysis already in progress or completed for job:', job.id);
+      return;
+    }
     
+    atsAnalysisInitiatedRef.current = job.id;
     setAtsLoading(true);
     setAtsError(null);
     
     try {
+      console.log('Starting ATS analysis for job:', job.id);
       const result = await analyzeATSCompatibility(job.id);
-      setAtsAnalysis((result as any).result?.atsScore || (result as any).atsScore);
+      console.log('ATS analysis raw result:', result);
+      
+      const atsScore = (result as any).result?.atsScore || (result as any).atsScore;
+      console.log('Extracted atsScore:', atsScore);
+      
+      setAtsAnalysis(atsScore);
+      console.log('ATS analysis set successfully', { atsScore });
     } catch (error: any) {
       setAtsError(error.message || 'Failed to analyze ATS compatibility');
       console.error('ATS analysis failed:', error);
+      atsAnalysisInitiatedRef.current = null; // Reset on error to allow retry
     } finally {
       setAtsLoading(false);
+      console.log('ATS loading set to false');
     }
   };
 
@@ -1653,12 +1667,33 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     }
   };
 
+  // Debug ATS state changes
+  useEffect(() => {
+    console.log('ATS State:', { 
+      atsLoading, 
+      atsAnalysis: !!atsAnalysis, 
+      atsError, 
+      selectedATS: selectedFeatures.atsOptimization,
+      jobId: job?.id 
+    });
+  }, [atsLoading, atsAnalysis, atsError, selectedFeatures.atsOptimization, job?.id]);
+
+  // Reset ATS analysis state when job changes
+  useEffect(() => {
+    if (job?.id && atsAnalysisInitiatedRef.current !== job.id) {
+      setAtsAnalysis(null);
+      setAtsError(null);
+      atsAnalysisInitiatedRef.current = null;
+    }
+  }, [job?.id]);
+
   // Auto-trigger ATS analysis when ATS feature is selected
   useEffect(() => {
-    if (selectedFeatures.atsOptimization && !atsAnalysis && !atsLoading) {
+    if (selectedFeatures.atsOptimization && job?.id && !atsAnalysis && !atsLoading) {
+      console.log('Triggering ATS analysis from useEffect');
       handleATSAnalysis();
     }
-  }, [selectedFeatures.atsOptimization, job.id]);
+  }, [selectedFeatures.atsOptimization, job?.id]);
 
   // Auto-trigger achievement analysis when achievement highlighting feature is selected
   useEffect(() => {
