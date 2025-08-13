@@ -9,6 +9,7 @@ interface CVPreviewProps {
   job: Job;
   selectedTemplate: string;
   selectedFeatures: Record<string, boolean>;
+  appliedImprovements?: any; // LLM-improved content from analysis step
   onUpdate?: (updates: Partial<Job['parsedData']>) => void;
   onFeatureToggle?: (feature: string, enabled: boolean) => void;
   className?: string;
@@ -19,6 +20,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   job,
   selectedTemplate,
   selectedFeatures,
+  appliedImprovements,
   onUpdate,
   onFeatureToggle,
   className = ''
@@ -27,7 +29,16 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   const [showFeaturePreviews, setShowFeaturePreviews] = useState(true);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isEditingQRCode, setIsEditingQRCode] = useState(false);
-  const [previewData, setPreviewData] = useState(job.parsedData);
+  const [showPreviewBanner, setShowPreviewBanner] = useState(true);
+  // Use improved content if available, otherwise fall back to original
+  const baseData = appliedImprovements || job.parsedData;
+  const [previewData, setPreviewData] = useState(baseData);
+  
+  // Update preview data when improvements change
+  useEffect(() => {
+    const newBaseData = appliedImprovements || job.parsedData;
+    setPreviewData(newBaseData);
+  }, [appliedImprovements, job.parsedData]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -117,7 +128,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             <div class="section-content ${collapsedSections[featureId] ? 'collapsed' : ''}">
               <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                 ${mockData.languages?.map((lang: any) => `
-                  <span style="background: #3498db; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px;">${lang.name}</span>
+                  <span style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);">${lang.name}</span>
                 `).join('')}
               </div>
             </div>
@@ -219,38 +230,69 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           .cv-preview-container {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: white;
+            color: #111827;
+            background: #ffffff;
             padding: 40px;
             margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
           }
           
           .feature-preview {
-            border: 2px dashed #3498db;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+            border: 2px solid #4299e1;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
             position: relative;
+            box-shadow: 0 2px 8px rgba(66, 153, 225, 0.1);
           }
           
           .feature-preview-banner {
-            background: #3498db;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 24px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
             display: inline-block;
             animation: pulse 2s infinite;
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
           }
           
           @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
+          }
+          
+          .cv-preview-container h1, .cv-preview-container h2, .cv-preview-container h3 {
+            color: #1f2937;
+            font-weight: 700;
+          }
+          
+          .cv-preview-container h1 {
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+          }
+          
+          .cv-preview-container h2 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 0.75rem 0;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 0.25rem;
+          }
+          
+          .cv-preview-container h3 {
+            font-size: 1.125rem;
+            margin: 1rem 0 0.5rem 0;
+          }
+          
+          .cv-preview-container p, .cv-preview-container li {
+            color: #374151;
+            font-size: 0.875rem;
+            line-height: 1.5;
           }
           
           @keyframes fadeInUp {
@@ -297,11 +339,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           
           .section-title {
             font-size: 24px;
-            font-weight: 600;
-            color: #2c3e50;
+            font-weight: 700;
+            color: #1a202c;
             margin-bottom: 20px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 8px;
+            border-bottom: 3px solid #4299e1;
+            padding-bottom: 10px;
             display: flex;
             align-items: center;
             cursor: pointer;
@@ -309,14 +351,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .section-title:hover {
-            color: #3498db;
+            color: #3182ce;
           }
           
           .section-title .collapse-icon {
             margin-left: auto;
             width: 20px;
             height: 20px;
-            color: #3498db;
+            color: #4299e1;
             transition: transform 0.3s ease;
           }
           
@@ -350,25 +392,26 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .editable-section:hover {
-            border-color: #3498db;
-            background: rgba(52, 152, 219, 0.05);
+            border-color: #4299e1;
+            background: rgba(66, 153, 225, 0.08);
           }
           
           .edit-overlay {
             position: absolute;
             top: -8px;
             right: -8px;
-            background: #3498db;
-            color: white;
+            background: #4299e1;
+            color: #ffffff;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             opacity: 0;
             transition: opacity 0.3s ease;
+            box-shadow: 0 2px 8px rgba(66, 153, 225, 0.4);
           }
           
           .editable-section:hover .edit-overlay {
@@ -378,53 +421,60 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           .header-section {
             text-align: center;
             margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 24px;
+            border-bottom: 3px solid #e2e8f0;
           }
           
           .name {
-            font-size: 36px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            font-size: 40px;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
           }
           
           .contact-info {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 24px;
             flex-wrap: wrap;
-            font-size: 14px;
-            color: #666;
+            font-size: 15px;
+            color: #4a5568;
+            font-weight: 500;
           }
           
           .experience-item, .education-item {
-            margin-bottom: 25px;
-            padding-left: 20px;
-            border-left: 2px solid #e0e0e0;
+            margin-bottom: 28px;
+            padding-left: 24px;
+            border-left: 4px solid #4299e1;
+            position: relative;
           }
           
           .position, .degree {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 6px;
           }
           
           .company, .institution {
-            font-size: 16px;
-            color: #3498db;
-            margin-bottom: 5px;
+            font-size: 17px;
+            color: #3182ce;
+            margin-bottom: 6px;
+            font-weight: 600;
           }
           
           .duration {
             font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
+            color: #718096;
+            margin-bottom: 12px;
+            font-weight: 500;
           }
           
           .description {
-            margin-bottom: 10px;
-            color: #555;
+            margin-bottom: 12px;
+            color: #2d3748;
+            line-height: 1.7;
           }
           
           .achievements {
@@ -433,17 +483,20 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .achievements li {
-            margin-bottom: 8px;
-            padding-left: 20px;
+            margin-bottom: 10px;
+            padding-left: 24px;
             position: relative;
-            color: #555;
+            color: #2d3748;
+            line-height: 1.6;
           }
           
           .achievements li::before {
             content: '▸';
             position: absolute;
             left: 0;
-            color: #3498db;
+            color: #4299e1;
+            font-weight: bold;
+            font-size: 16px;
           }
           
           .skills-section {
@@ -454,14 +507,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .skill-category {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+            background: #f7fafc;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           }
           
           .skill-category h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: #1a202c;
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 18px;
           }
           
           .skill-list {
@@ -470,8 +527,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .skill-list li {
-            margin-bottom: 5px;
-            color: #555;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 500;
           }
           
           /* Feature-specific styles */
@@ -482,10 +540,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .language-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
+            background: #ffffff;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           }
           
           .language-name {
@@ -495,21 +554,22 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           }
           
           .language-level {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 10px;
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 12px;
+            font-weight: 500;
           }
           
           .language-bar {
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
             overflow: hidden;
           }
           
           .language-fill {
             height: 100%;
-            background: linear-gradient(90deg, #3498db, #2980b9);
+            background: linear-gradient(90deg, #4299e1, #3182ce);
             transition: width 0.3s ease;
           }
           
@@ -522,10 +582,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           .certification-badge {
             display: flex;
             align-items: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            color: white;
+            padding: 24px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            border-radius: 16px;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
           }
           
           .badge-icon {
@@ -570,17 +631,17 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           
           .social-link.linkedin {
             background: #0077b5;
-            color: white;
+            color: #ffffff;
           }
           
           .social-link.github {
-            background: #333;
-            color: white;
+            background: #2d3748;
+            color: #ffffff;
           }
           
           .social-link.email {
             background: #ea4335;
-            color: white;
+            color: #ffffff;
           }
           
           .achievements-grid {
@@ -592,10 +653,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           .achievement-card {
             display: flex;
             align-items: flex-start;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border-left: 4px solid #3498db;
+            padding: 24px;
+            background: #f7fafc;
+            border-radius: 16px;
+            border-left: 5px solid #4299e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           }
           
           .achievement-icon {
@@ -768,7 +830,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           <div class="feature-preview" data-feature="qr-code">
             <div class="feature-preview-banner">
               <span>📋 Preview: QR Code will link to ${qrCodeSettings.url}</span>
-              <button onclick="editQRCode()" style="margin-left: 10px; padding: 2px 8px; background: #3498db; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">✏️ Edit URL</button>
+              <button onclick="editQRCode()" style="margin-left: 10px; padding: 4px 10px; background: #4299e1; color: #ffffff; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">✏️ Edit URL</button>
             </div>
             <h3 class="section-title" onclick="toggleSection('qr-code')">
               📱 QR Code
@@ -911,7 +973,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             <div class="section-content ${collapsedSections['skills-chart'] ? 'collapsed' : ''}">
               ${skills?.technical?.slice(0, 8).map((skill: string) => `
                 <div style="margin-bottom: 12px;">
-                  <span style="display: inline-block; background: #3498db; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; margin-right: 8px; margin-bottom: 8px;">${skill}</span>
+                  <span style="display: inline-block; background: #2563eb; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; margin-right: 8px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);">${skill}</span>
                 </div>
               `).join('') || ''}
             </div>
@@ -1115,7 +1177,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
           <div class="feature-preview" data-feature="keyword-enhancement">
             <div class="feature-preview-banner">
               <span>🎯 Enhanced: Keyword optimization powered by job market analysis</span>
-              <button onclick="window.location.href='/keywords/${job.id}'" style="margin-left: 10px; padding: 2px 8px; background: #ff9800; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Advanced →</button>
+              <button onclick="window.location.href='/keywords/${job.id}'" style="margin-left: 10px; padding: 4px 10px; background: #ed8936; color: #ffffff; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">Advanced →</button>
             </div>
             <h3 class="section-title" onclick="toggleSection('keyword-enhancement')">
               🎯 Smart Keywords
@@ -1585,11 +1647,40 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
 
   return (
     <div className={`cv-preview-wrapper ${className}`}>
+      {/* Improvements Applied Banner */}
+      {appliedImprovements && showPreviewBanner && (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-green-400 p-4 mb-6 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-lg">✨</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-green-900">
+                  AI Improvements Applied
+                </h3>
+                <p className="text-sm text-green-700">
+                  Your CV content has been enhanced with AI-powered improvements. The preview below shows your optimized CV.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPreviewBanner(false)}
+              className="text-green-400 hover:text-green-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Preview Controls */}
-      <div className="flex items-center justify-between mb-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+      <div className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
-            <Eye className="w-5 h-5" />
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <Eye className="w-5 h-5 text-blue-600" />
             Live Preview
             {hasUnsavedChanges && (
               <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full animate-pulse">
@@ -1602,7 +1693,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
               </span>
             )}
           </h3>
-          <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full">
+          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full border border-blue-200">
             {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} Template
           </span>
         </div>
@@ -1613,11 +1704,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${
               autoSaveEnabled
                 ? 'bg-green-600/20 text-green-400 border border-green-600/30'
-                : 'bg-gray-700 text-gray-400 border border-gray-600'
+                : 'bg-gray-100 text-gray-600 border border-gray-300'
             }`}
             title={autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled'}
           >
-            <div className={`w-2 h-2 rounded-full ${autoSaveEnabled ? 'bg-green-400' : 'bg-gray-400'}`} />
+            <div className={`w-2 h-2 rounded-full ${autoSaveEnabled ? 'bg-green-400' : 'bg-gray-500'}`} />
             Auto-save
           </button>
           
@@ -1643,7 +1734,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               showFeaturePreviews
                 ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/20'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
             {showFeaturePreviews ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1666,24 +1757,24 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       </div>
 
       {/* Feature Selection Summary */}
-      <div className="mb-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+      <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-gray-200">Selected Features:</h4>
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
+          <h4 className="text-sm font-semibold text-gray-800">Selected Features:</h4>
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
             {Object.values(selectedFeatures).filter(Boolean).length} active
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
           {Object.entries(selectedFeatures).length === 0 ? (
-            <span className="text-xs text-gray-500 italic">No features selected</span>
+            <span className="text-xs text-gray-600 italic">No features selected</span>
           ) : (
             Object.entries(selectedFeatures).map(([feature, enabled]) => (
               <span
                 key={feature}
                 className={`text-xs px-2 py-1 rounded-full transition-all duration-300 ${
                   enabled 
-                    ? 'bg-cyan-500/20 text-cyan-400 scale-100' 
-                    : 'bg-gray-700/50 text-gray-500 scale-95 opacity-60'
+                    ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 scale-100' 
+                    : 'bg-gray-100 text-gray-600 border border-gray-200 scale-95 opacity-60'
                 }`}
               >
                 {feature.replace(/([A-Z])/g, ' $1').toLowerCase()}
@@ -1693,7 +1784,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         </div>
         {Object.values(selectedFeatures).filter(Boolean).length > 0 && (
           <div className="mt-2 flex items-center justify-between">
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-600">
               💡 Preview shows what these features will look like in your generated CV
             </div>
             {onFeatureToggle && (

@@ -426,7 +426,7 @@ Generate specific recommendations that can be directly applied to transform this
       
       if (Array.isArray(cv.skills)) {
         const relevantKeywords = keywords.filter(kw => 
-          !cv.skills!.some(skill => 
+          !cv.skills!.some((skill: string) => 
             skill.toLowerCase().includes(kw.toLowerCase())
           )
         );
@@ -435,7 +435,7 @@ Generate specific recommendations that can be directly applied to transform this
         // Handle object-based skills
         if (!cv.skills.technical) cv.skills.technical = [];
         const relevantKeywords = keywords.filter(kw => 
-          !cv.skills!.technical?.some(skill => 
+          !cv.skills!.technical?.some((skill: string) => 
             skill.toLowerCase().includes(kw.toLowerCase())
           )
         );

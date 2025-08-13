@@ -105,11 +105,13 @@ export class EmbeddingService {
         metadata: {
           section: 'skills',
           importance: 8,
-          keywords: [
-            ...(parsedCV.skills.technical || []),
-            ...(parsedCV.skills.soft || []),
-            ...(parsedCV.skills.tools || [])
-          ]
+          keywords: Array.isArray(parsedCV.skills) 
+            ? parsedCV.skills 
+            : [
+                ...(parsedCV.skills.technical || []),
+                ...(parsedCV.skills.soft || []),
+                ...(parsedCV.skills.tools || [])
+              ]
         }
       };
       chunks.push(skillsChunk);

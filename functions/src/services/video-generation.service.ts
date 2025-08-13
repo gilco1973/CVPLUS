@@ -72,6 +72,14 @@ export class VideoGenerationService {
       }
     };
   }
+
+  /**
+   * Helper function to safely extract technical skills
+   */
+  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    return Array.isArray(skills) ? skills : (skills.technical || []);
+  }
   
   /**
    * Generate a complete video introduction
@@ -145,7 +153,7 @@ export class VideoGenerationService {
 Professional Details:
 Name: ${cv.personalInfo?.name || 'Professional'}
 Current Role: ${cv.experience?.[0]?.position || 'Experienced Professional'} at ${cv.experience?.[0]?.company || 'leading organization'}
-Key Skills: ${cv.skills?.technical?.slice(0, 5).join(', ') || 'Various technical skills'}
+Key Skills: ${this.getTechnicalSkills(cv.skills).slice(0, 5).join(', ') || 'Various technical skills'}
 Notable Achievement: ${cv.experience?.[0]?.achievements?.[0] || cv.achievements?.[0] || 'Multiple accomplishments'}
 
 Requirements:
@@ -544,7 +552,7 @@ Keep it exactly ${targetWords} words.`;
     const name = cv.personalInfo?.name || 'I';
     const role = cv.experience?.[0]?.position || 'professional';
     const company = cv.experience?.[0]?.company || 'my company';
-    const skills = cv.skills?.technical?.slice(0, 3).join(', ') || 'various technologies';
+    const skills = this.getTechnicalSkills(cv.skills).slice(0, 3).join(', ') || 'various technologies';
     const achievement = cv.experience?.[0]?.achievements?.[0] || cv.achievements?.[0] || 'driving meaningful results';
     
     const templates = {
@@ -552,7 +560,7 @@ Keep it exactly ${targetWords} words.`;
       
       150: `Hello! I'm ${name}, a ${role} at ${company}. With expertise in ${skills}, I've dedicated my career to excellence and innovation. One of my proudest achievements is ${achievement}. I thrive on solving complex challenges and collaborating with talented teams. My approach combines technical expertise with strategic thinking to deliver impactful results. I'm always excited to connect with fellow professionals and explore new opportunities. Feel free to reach out if you'd like to discuss potential collaborations or learn more about my work.`,
       
-      225: `Greetings! I'm ${name}, currently serving as ${role} at ${company}. Throughout my career, I've developed deep expertise in ${skills}, which has enabled me to tackle complex challenges and deliver innovative solutions. A highlight of my journey has been ${achievement}, which demonstrates my commitment to excellence and impact. I believe in the power of technology to transform businesses and improve lives. My approach combines technical proficiency with strategic vision, always focusing on creating value and driving results. I'm passionate about continuous learning and staying at the forefront of industry developments. Whether you're looking for expertise in ${skills.split(',')[0]}, seeking innovative solutions, or interested in collaboration, I'd love to connect. Let's explore how we can work together to achieve remarkable outcomes.`
+      225: `Greetings! I'm ${name}, currently serving as ${role} at ${company}. Throughout my career, I've developed deep expertise in ${skills}, which has enabled me to tackle complex challenges and deliver innovative solutions. A highlight of my journey has been ${achievement}, which demonstrates my commitment to excellence and impact. I believe in the power of technology to transform businesses and improve lives. My approach combines technical proficiency with strategic vision, always focusing on creating value and driving results. I'm passionate about continuous learning and staying at the forefront of industry developments. Whether you're looking for expertise in ${skills.split(',')[0] || 'technology solutions'}, seeking innovative solutions, or interested in collaboration, I'd love to connect. Let's explore how we can work together to achieve remarkable outcomes.`
     };
     
     // Return the template closest to target words

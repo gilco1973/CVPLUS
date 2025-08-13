@@ -40,7 +40,7 @@ Check functions that use secrets to ensure proper configuration:
 - ✅ `processCV` (currently disabled - needs enabling)
 
 ### 4. Quota Management Setup ✅
-- [x] Created batch deployment script (`deploy-batch.js`)
+- [x] Created batch deployment script (`scripts/deployment/deploy-batch.js`)
 - [x] Configured batch size: 10 functions per batch
 - [x] Configured delay: 30 seconds between batches
 - [x] Added retry logic: 3 attempts per batch
@@ -50,7 +50,7 @@ Check functions that use secrets to ensure proper configuration:
 ### Step 1: Pre-deployment Validation
 ```bash
 cd functions
-node deploy-batch.js --validate-only
+node ../scripts/deployment/deploy-batch.js --validate-only
 ```
 
 ### Step 2: Build and Test
@@ -62,9 +62,12 @@ npm test  # Optional but recommended
 ### Step 3: Batch Deployment
 ```bash
 # Option A: Use automated batch deployment
-node deploy-batch.js
+node ../scripts/deployment/deploy-batch.js
 
-# Option B: Manual deployment with specific batches
+# Option B: Use npm script (recommended)
+npm run deploy:batch
+
+# Option C: Manual deployment with specific batches
 firebase deploy --only functions:processCV,functions:analyzeCV,functions:generateCV
 # ... wait 30 seconds ...
 firebase deploy --only functions:generatePodcast,functions:generateVideoIntroduction

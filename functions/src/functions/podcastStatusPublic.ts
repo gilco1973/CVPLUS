@@ -1,22 +1,10 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { corsOptions } from '../config/cors';
 
 export const podcastStatusPublic = onRequest(
   {
-    cors: [
-      'https://cvplus.firebaseapp.com',
-      'https://cvplus.web.app',
-      'https://cvplus.ai',
-      'https://cvplus.ai',
-      'https://www.cvplus.ai',
-      'https://storage.googleapis.com',
-      'https://firebasestorage.googleapis.com',
-      /https:\/\/.*\.storage\.googleapis\.com$/,
-      /https:\/\/.*\.firebaseapp\.com$/,
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5000'
-    ]
+    ...corsOptions
   },
   async (req, res) => {
     // Handle preflight

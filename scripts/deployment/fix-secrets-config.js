@@ -15,7 +15,7 @@ const glob = require('glob');
 
 class SecretsConfigFixer {
   constructor() {
-    this.functionsDir = path.join(__dirname, 'src', 'functions');
+    this.functionsDir = path.join(__dirname, '..', '..', 'functions', 'src', 'functions');
     this.fixes = [];
   }
 
@@ -175,7 +175,7 @@ class SecretsConfigFixer {
       console.log('\n📝 Next steps:');
       console.log('1. Review the changes made to function files');
       console.log('2. Build functions: npm run build');
-      console.log('3. Deploy with batch script: node deploy-batch.js');
+      console.log('3. Deploy with batch script: npm run deploy:batch');
       console.log('4. Verify deployment: firebase functions:list');
     } else {
       console.log('\n✅ All functions are already properly configured');

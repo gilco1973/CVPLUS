@@ -4,12 +4,14 @@ interface LogoProps {
   className?: string;
   showSlogan?: boolean;
   size?: 'small' | 'medium' | 'large';
+  variant?: 'default' | 'white' | 'dark';
 }
 
 export const Logo: React.FC<LogoProps> = ({ 
   className = "", 
   showSlogan = false, 
-  size = 'medium'
+  size = 'medium',
+  variant = 'default'
 }) => {
   const sizeMap = {
     small: { height: 'h-10', textSize: 'text-xl' },
@@ -19,6 +21,28 @@ export const Logo: React.FC<LogoProps> = ({
   
   const { height, textSize } = sizeMap[size];
 
+  const getTextClasses = () => {
+    switch (variant) {
+      case 'white':
+        return {
+          main: 'text-white',
+          slogan: 'text-gray-200'
+        };
+      case 'dark':
+        return {
+          main: 'text-gray-900',
+          slogan: 'text-gray-600'
+        };
+      default:
+        return {
+          main: 'text-blue-600',
+          slogan: 'text-gray-500'
+        };
+    }
+  };
+
+  const textClasses = getTextClasses();
+
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img 
@@ -27,9 +51,9 @@ export const Logo: React.FC<LogoProps> = ({
         className={`${height} w-auto object-contain`}
       />
       <div className="flex flex-col">
-        <span className={`font-bold text-gray-100 ${textSize}`}>CVPlus</span>
+        <span className={`font-bold ${textClasses.main} ${textSize}`}>CVPlus</span>
         {showSlogan && (
-          <span className="text-xs text-gray-400">From Paper to Powerful: Your CV, Reinvented</span>
+          <span className={`text-xs ${textClasses.slogan}`}>From Paper to Powerful: Your CV, Reinvented</span>
         )}
       </div>
     </div>

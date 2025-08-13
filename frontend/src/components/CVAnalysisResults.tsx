@@ -254,14 +254,22 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         .filter(rec => rec.priority === 'high' || rec.priority === 'medium')
         .map(rec => rec.id);
       
-      // Apply improvements directly without preview
-      await applyImprovements(job.id, magicSelectedRecs);
+      // Apply improvements and get the enhanced content
+      const result = await applyImprovements(job.id, magicSelectedRecs);
+      
+      // Store the improved content for the preview page
+      if (result && (result as any).improvedContent) {
+        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+      }
+      
+      // Store selected recommendations
+      sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(magicSelectedRecs));
       
       // Show success message
-      toast.success('✨ Magic transformation complete! Your CV has been enhanced.');
+      toast.success('✨ Magic transformation complete! Review your enhanced CV.');
       
-      // Navigate directly to results page
-      navigate(`/results/${job.id}`);
+      // Navigate to preview page to show the improvements
+      navigate(`/preview/${job.id}`);
       
     } catch (error: any) {
       console.error('Magic transform error:', error);
@@ -304,15 +312,15 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">CV Analysis Complete</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-100 mb-2">CV Analysis Complete</h1>
+            <p className="text-gray-400">
               We've analyzed your CV and identified opportunities to enhance its impact and ATS compatibility.
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
             <CheckCircle className="w-4 h-4 text-green-500" />
             <span>Analysis Complete</span>
           </div>
@@ -320,23 +328,23 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       </div>
 
       {/* Magic Transform Button */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-md p-6 border border-purple-200">
+      <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg shadow-xl p-6 border border-purple-500/30">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg">
                 <Wand2 className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">1-Click Magic Transform</h2>
+              <h2 className="text-xl font-bold text-gray-100">1-Click Magic Transform</h2>
             </div>
-            <p className="text-gray-700 mb-3">
+            <p className="text-gray-300 mb-3">
               Let our AI instantly apply the most impactful improvements to your CV. 
-              <span className="font-semibold text-purple-700">
+              <span className="font-semibold text-purple-300">
                 Skip the preview and get your enhanced CV in seconds!
               </span>
             </p>
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-green-700">
+              <div className="flex items-center gap-2 text-green-400">
                 <CheckCircle className="w-4 h-4" />
                 <span>{magicSelectedRecs.length} premium improvements included</span>
               </div>
@@ -410,18 +418,18 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
 
       {/* Divider */}
       <div className="flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-200"></div>
-        <span className="text-sm text-gray-500 font-medium px-4">OR CUSTOMIZE MANUALLY</span>
-        <div className="flex-1 h-px bg-gray-200"></div>
+        <div className="flex-1 h-px bg-gray-600"></div>
+        <span className="text-sm text-gray-400 font-medium px-4">OR CUSTOMIZE MANUALLY</span>
+        <div className="flex-1 h-px bg-gray-600"></div>
       </div>
 
       {/* ATS Score Overview */}
       {atsAnalysis && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Current Score */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Current ATS Score</h3>
+              <h3 className="text-lg font-semibold text-gray-100">Current ATS Score</h3>
               <div className="flex items-center space-x-4">
                 <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
                   atsAnalysis.currentScore >= 80 ? 'bg-green-500' : 
@@ -430,7 +438,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   {atsAnalysis.currentScore}%
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-400">
                     {atsAnalysis.passes ? '✅ Passes ATS screening' : '❌ Needs improvement'}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -442,7 +450,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
 
             {/* Potential Score */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Potential After Improvements</h3>
+              <h3 className="text-lg font-semibold text-gray-100">Potential After Improvements</h3>
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white bg-green-500">
                   {newPredictedScore}%
@@ -450,7 +458,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                 <div>
                   <div className="flex items-center space-x-2">
                     <TrendingUp className="w-4 h-4 text-green-500" />
-                    <span className="text-green-600 font-semibold">
+                    <span className="text-green-400 font-semibold">
                       +{newPredictedScore - atsAnalysis.currentScore}% improvement
                     </span>
                   </div>
@@ -465,9 +473,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       )}
 
       {/* Recommendations Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Improvement Recommendations</h2>
+          <h2 className="text-xl font-semibold text-gray-100">Improvement Recommendations</h2>
           <div className="flex items-center space-x-3">
             <button
               onClick={() => applyAll(true)}
@@ -477,7 +485,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             </button>
             <button
               onClick={() => applyAll(false)}
-              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
             >
               Clear All
             </button>
@@ -516,7 +524,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                       e.stopPropagation();
                       applyAllPriority(priority, true);
                     }}
-                    className="px-3 py-1 text-xs bg-white bg-opacity-50 rounded hover:bg-opacity-75 transition-colors"
+                    className="px-3 py-1 text-xs bg-gray-600 bg-opacity-50 text-gray-300 rounded hover:bg-opacity-75 transition-colors"
                   >
                     Select All
                   </button>
@@ -527,31 +535,32 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               {/* Priority Recommendations */}
               {isExpanded && (
                 <div className="mt-3 space-y-3">
-                  {priorityRecs.map((rec) => (
+                  {priorityRecs.map((rec, index) => (
                     <div
                       key={rec.id}
-                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] animate-fade-in-up ${
                         rec.selected 
-                          ? 'border-blue-300 bg-blue-50' 
-                          : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                          ? 'border-blue-400 bg-blue-900/30 shadow-lg shadow-blue-500/20' 
+                          : 'border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/70'
                       }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                       onClick={() => toggleRecommendation(rec.id)}
                     >
                       <div className="flex items-start space-x-3">
                         <div className="flex-shrink-0 mt-0.5">
                           {rec.selected ? 
-                            <CheckCircle className="w-5 h-5 text-blue-600" /> :
-                            <Circle className="w-5 h-5 text-gray-400" />
+                            <CheckCircle className="w-5 h-5 text-blue-400" /> :
+                            <Circle className="w-5 h-5 text-gray-500" />
                           }
                         </div>
                         <div className="flex-grow">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-medium text-gray-900">{rec.title}</h4>
-                              <p className="text-sm text-gray-600 mt-1">{rec.description}</p>
+                              <h4 className="font-medium text-gray-100">{rec.title}</h4>
+                              <p className="text-sm text-gray-400 mt-1">{rec.description}</p>
                             </div>
                             <div className="flex-shrink-0 ml-4">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-500/30">
                                 +{rec.estimatedImprovement} pts
                               </span>
                             </div>
@@ -576,13 +585,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               {selectedRecs.length} improvements selected
               {potentialImprovement > 0 && (
-                <span className="ml-2 text-green-600 font-medium">
+                <span className="ml-2 text-green-400 font-medium">
                   (Potential +{potentialImprovement} ATS points)
                 </span>
               )}
@@ -592,16 +601,38 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             {onBack && (
               <button
                 onClick={onBack}
-                className="px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
               >
                 Back
               </button>
             )}
             <button
-              onClick={() => onContinue(selectedRecs.map(r => r.id))}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              onClick={async () => {
+                const selectedRecommendationIds = selectedRecs.map(r => r.id);
+                
+                // If recommendations are selected, apply them first
+                if (selectedRecommendationIds.length > 0) {
+                  try {
+                    const result = await applyImprovements(job.id, selectedRecommendationIds);
+                    
+                    // Store the improved content for the preview page
+                    if (result && (result as any).improvedContent) {
+                      sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+                    }
+                    
+                    toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
+                  } catch (error: any) {
+                    console.error('Apply improvements error:', error);
+                    toast.error('Failed to apply some improvements. Continuing to preview...');
+                  }
+                }
+                
+                // Continue to preview
+                onContinue(selectedRecommendationIds);
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg"
             >
-              <span>Continue to Preview</span>
+              <span>Apply & Preview</span>
               <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">
                 {selectedRecs.length}
               </span>

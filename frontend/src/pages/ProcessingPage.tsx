@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
 import { subscribeToJob, processCV } from '../services/cvService';
-import { Logo } from '../components/Logo';
-import { UserMenu } from '../components/UserMenu';
+import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import type { Job } from '../services/cvService';
 
@@ -92,7 +91,7 @@ export const ProcessingPage = () => {
       case 'completed':
         return <CheckCircle className="w-6 h-6 text-green-500" />;
       case 'active':
-        return <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />;
+        return <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />;
       default:
         return <Circle className="w-6 h-6 text-gray-600" />;
     }
@@ -106,14 +105,13 @@ export const ProcessingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50 animate-fade-in-down">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo size="small" />
-            {user && <UserMenu />}
-          </div>
-        </div>
-      </header>
+      <Header 
+        currentPage="processing" 
+        jobId={jobId}
+        title="Processing CV"
+        subtitle="Your CV is being analyzed and enhanced..."
+        variant="dark"
+      />
 
       {/* Processing Content */}
       <main className="flex-1 flex items-center justify-center p-4">
@@ -125,7 +123,7 @@ export const ProcessingPage = () => {
             <div className="mb-8 animate-fade-in animation-delay-200">
               <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full transition-all duration-500 ease-out animate-pulse-slow"
+                  className="bg-gradient-to-r from-blue-500 to-blue-500 h-full transition-all duration-500 ease-out animate-pulse-slow"
                   style={{ width: `${getProgressPercentage()}%` }}
                 />
               </div>
@@ -148,7 +146,7 @@ export const ProcessingPage = () => {
                   <div className="flex-1">
                     <p className={`font-medium transition-colors duration-300 ${
                       step.status === 'completed' ? 'text-gray-100' : 
-                      step.status === 'active' ? 'text-cyan-400' : 
+                      step.status === 'active' ? 'text-blue-400' : 
                       'text-gray-500'
                     }`}>
                       {step.label}

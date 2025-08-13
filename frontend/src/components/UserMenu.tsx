@@ -2,7 +2,11 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut } from 'lucide-react';
 
-export const UserMenu: React.FC = () => {
+interface UserMenuProps {
+  variant?: 'default' | 'white' | 'dark';
+}
+
+export const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -16,13 +20,36 @@ export const UserMenu: React.FC = () => {
     .toUpperCase()
     .slice(0, 2);
 
+  const getTextClasses = () => {
+    switch (variant) {
+      case 'white':
+        return 'text-white hover:text-blue-200';
+      case 'dark':
+        return 'text-gray-700 hover:text-blue-600';
+      default:
+        return 'text-gray-600 hover:text-blue-600';
+    }
+  };
+
+  const getDropdownClasses = () => {
+    switch (variant) {
+      case 'white':
+      case 'default':
+        return 'bg-white border-gray-200 text-gray-900';
+      case 'dark':
+        return 'bg-gray-800 border-gray-700 text-gray-100';
+      default:
+        return 'bg-white border-gray-200 text-gray-900';
+    }
+  };
+
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-gray-300 hover:text-cyan-400 transition font-medium"
+        className={`flex items-center space-x-2 transition font-medium ${getTextClasses()}`}
       >
-        <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
           {user.photoURL ? (
             <img src={user.photoURL} alt={displayName} className="w-8 h-8 rounded-full" />
           ) : (
@@ -38,11 +65,11 @@ export const UserMenu: React.FC = () => {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg py-1 z-20 border border-gray-700">
-            <div className="px-4 py-2 border-b border-gray-700">
-              <p className="text-sm font-medium text-gray-100">{displayName}</p>
+          <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 z-20 border ${getDropdownClasses()}`}>
+            <div className={`px-4 py-2 border-b ${variant === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+              <p className={`text-sm font-medium ${variant === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{displayName}</p>
               {user.email && (
-                <p className="text-xs text-gray-400">{user.email}</p>
+                <p className={`text-xs ${variant === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{user.email}</p>
               )}
             </div>
             <button
@@ -50,7 +77,11 @@ export const UserMenu: React.FC = () => {
                 await signOut();
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                variant === 'dark' 
+                  ? 'text-gray-300 hover:bg-gray-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
             >
               <LogOut className="w-4 h-4" />
               Sign Out

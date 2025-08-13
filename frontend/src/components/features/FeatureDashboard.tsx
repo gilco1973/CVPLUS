@@ -362,13 +362,28 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
       case 'ats':
         const atsData = featureData.ats || status.data;
         return atsData ? (
-          <ATSScore
-            score={atsData.analysis?.score || 0}
-            passes={atsData.analysis?.passes || false}
-            issues={atsData.analysis?.issues}
-            suggestions={atsData.analysis?.suggestions}
-            keywords={atsData.analysis?.keywords}
-          />
+          atsData.advancedScore ? (
+            // Use enhanced ATS component for advanced data
+            <ATSScore
+              result={atsData as any}
+              showAdvancedBreakdown={true}
+              showSystemScores={true}
+              showCompetitorAnalysis={true}
+              onApplyRecommendations={(recommendationIds) => {
+                console.log('Applying ATS recommendations:', recommendationIds);
+                toast.success(`Applied ${recommendationIds.length} ATS recommendations`);
+              }}
+            />
+          ) : (
+            // Fallback to legacy component for backwards compatibility
+            <ATSScore
+              score={atsData.analysis?.score || atsData.overall || atsData.score || 0}
+              passes={atsData.analysis?.passes || atsData.passes || false}
+              issues={atsData.analysis?.issues || atsData.issues}
+              suggestions={atsData.analysis?.suggestions || atsData.suggestions}
+              keywords={atsData.analysis?.keywords || atsData.keywords}
+            />
+          )
         ) : null;
 
       case 'personality':

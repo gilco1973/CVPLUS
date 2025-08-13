@@ -45,6 +45,28 @@ interface TimelineData {
 export class TimelineGenerationService {
   
   /**
+   * Helper function to safely extract skills array from various skill formats
+   */
+  private getSkillsArray(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    return Array.isArray(skills) ? skills : [
+      ...(skills.technical || []),
+      ...(skills.soft || []),
+      ...(skills.languages || []),
+      ...(skills.tools || [])
+    ];
+  }
+  
+  /**
+   * Helper function to safely extract technical skills from various skill formats
+   */
+  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills; // Assume all are technical if it's an array
+    return skills.technical || [];
+  }
+  
+  /**
    * Generate timeline data from parsed CV
    */
   async generateTimeline(parsedCV: ParsedCV, jobId: string): Promise<TimelineData> {
@@ -338,9 +360,10 @@ export class TimelineGenerationService {
       highlights.push(...cv.achievements.slice(0, 2));
     }
     
-    // Add key skills
-    if (cv.skills?.technical && cv.skills.technical.length > 0) {
-      highlights.push(`Expert in ${cv.skills.technical.slice(0, 3).join(', ')}`);
+    // Add key skills - Fixed to use helper function
+    const technicalSkills = this.getTechnicalSkills(cv.skills);
+    if (technicalSkills.length > 0) {
+      highlights.push(`Expert in ${technicalSkills.slice(0, 3).join(', ')}`);
     }
     
     return {
@@ -481,9 +504,10 @@ export class TimelineGenerationService {
       suggestions.push('Update certifications to stay current with industry standards');
     }
     
-    // Skills recommendations
-    if (cv.skills?.technical) {
-      const hasCloud = cv.skills.technical.some(s => 
+    // Skills recommendations - Fixed to use helper function
+    const technicalSkills = this.getTechnicalSkills(cv.skills);
+    if (technicalSkills.length > 0) {
+      const hasCloud = technicalSkills.some(s => 
         s.toLowerCase().includes('aws') || 
         s.toLowerCase().includes('azure') || 
         s.toLowerCase().includes('gcp')
@@ -493,7 +517,7 @@ export class TimelineGenerationService {
         suggestions.push('Add cloud platform expertise (AWS, Azure, or GCP)');
       }
       
-      const hasAI = cv.skills.technical.some(s => 
+      const hasAI = technicalSkills.some(s => 
         s.toLowerCase().includes('ai') || 
         s.toLowerCase().includes('machine learning') || 
         s.toLowerCase().includes('ml')

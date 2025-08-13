@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CVAnalysisResults } from '../components/CVAnalysisResults';
-import { Logo } from '../components/Logo';
-import { UserMenu } from '../components/UserMenu';
+import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
@@ -81,22 +80,22 @@ export const CVAnalysisPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Logo />
-              <UserMenu />
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen bg-gray-900">
+        <Header 
+          currentPage="analysis" 
+          jobId={jobId}
+          title="Analysis Results"
+          subtitle="Loading your CV analysis..."
+          variant="dark"
+          showBreadcrumbs={true}
+        />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Analysis Results</h2>
-              <p className="text-gray-600">Please wait while we prepare your CV analysis...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-100 mb-2">Loading Analysis Results</h2>
+              <p className="text-gray-400">Please wait while we prepare your CV analysis...</p>
             </div>
           </div>
         </div>
@@ -106,22 +105,22 @@ export const CVAnalysisPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Logo />
-              <UserMenu />
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen bg-gray-900">
+        <Header 
+          currentPage="analysis" 
+          jobId={jobId}
+          title="Analysis Results"
+          subtitle="Error loading analysis"
+          variant="dark"
+          showBreadcrumbs={true}
+        />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
             <div className="text-center">
-              <div className="text-red-600 text-xl mb-4">⚠️</div>
-              <h2 className="text-xl font-semibold text-red-900 mb-2">Error Loading Analysis</h2>
-              <p className="text-red-700 mb-6">{error}</p>
+              <div className="text-red-400 text-xl mb-4">⚠️</div>
+              <h2 className="text-xl font-semibold text-red-100 mb-2">Error Loading Analysis</h2>
+              <p className="text-red-300 mb-6">{error}</p>
               <button
                 onClick={handleBack}
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -138,20 +137,20 @@ export const CVAnalysisPage = () => {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Logo />
-              <UserMenu />
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen bg-gray-900">
+        <Header 
+          currentPage="analysis" 
+          jobId={jobId}
+          title="Analysis Results"
+          subtitle="Job not found"
+          variant="dark"
+          showBreadcrumbs={true}
+        />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Not Found</h2>
-            <p className="text-gray-600 mb-6">The requested CV analysis could not be found.</p>
+            <h2 className="text-xl font-semibold text-gray-100 mb-2">Job Not Found</h2>
+            <p className="text-gray-400 mb-6">The requested CV analysis could not be found.</p>
             <button
               onClick={() => navigate('/')}
               className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -166,35 +165,17 @@ export const CVAnalysisPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo />
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
-                <span>Step 2 of 4:</span>
-                <span className="font-medium text-blue-600">Review Analysis</span>
-              </div>
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-900">
+      <Header 
+        currentPage="analysis" 
+        jobId={jobId}
+        title="CV Analysis Complete"
+        subtitle="Review your results and select improvements"
+        variant="dark"
+        showBreadcrumbs={true}
+      />
       
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-          <button
-            onClick={handleBack}
-            className="hover:text-blue-600 transition-colors"
-          >
-            Processing
-          </button>
-          <span>/</span>
-          <span className="text-gray-900 font-medium">Analysis Results</span>
-        </nav>
-
         <CVAnalysisResults
           job={job}
           onContinue={handleContinueToPreview}

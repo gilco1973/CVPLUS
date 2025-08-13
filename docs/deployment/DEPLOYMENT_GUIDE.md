@@ -20,7 +20,7 @@
 **Root Cause**: Deploying 60+ functions simultaneously hits Google Cloud quotas
 
 **Solution**: ✅ **IMPLEMENTED**
-- Created batch deployment script (`deploy-batch.js`)
+- Created batch deployment script (`scripts/deployment/deploy-batch.js`)
 - Deploys functions in batches of 10 with 30-second delays
 - Includes retry logic and error handling
 
