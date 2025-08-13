@@ -8,6 +8,7 @@ import { PDFService } from '../services/pdfService';
 import { DOCXService } from '../services/docxService';
 import { FeatureDashboard } from '../components/features/FeatureDashboard';
 import { PodcastPlayer } from '../components/PodcastPlayer';
+import { CVPreview } from '../components/CVPreview';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -184,10 +185,10 @@ export const ResultsPage = () => {
             </div>
           </div>
 
-          {/* Generation Options */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Customization Panel */}
-            <div className="lg:col-span-2">
+          {/* Generation Options with Live Preview */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Left Column: Feature Selection */}
+            <div className="space-y-6">
               <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden animate-fade-in-left animation-delay-300">
                 {/* Section Header */}
                 <div className="bg-gradient-to-r from-cyan-600/20 to-purple-600/20 p-6 border-b border-gray-700/50">
@@ -196,6 +197,15 @@ export const ResultsPage = () => {
                     Customize Your CV Generation
                   </h3>
                   <p className="text-gray-400 mt-1">Select your preferred template and features</p>
+                  <div className="mt-4 flex items-center gap-2 p-3 bg-gradient-to-r from-cyan-900/30 to-purple-900/30 rounded-lg border border-cyan-500/30">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-cyan-300">Live Preview Active</span>
+                    </div>
+                    <div className="flex-1 text-center">
+                      <span className="text-xs text-gray-400">👉 Changes appear instantly in the preview panel</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="p-6 space-y-8">
@@ -265,18 +275,31 @@ export const ResultsPage = () => {
                       <span className="text-xs text-gray-500 bg-gray-700/50 px-3 py-1 rounded-full">Essential features</span>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
-                      <label className="flex items-start gap-3 p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all cursor-pointer group">
+                      <label className={`flex items-start gap-3 p-4 rounded-xl transition-all cursor-pointer group border-2 ${
+                        selectedFeatures.privacyMode 
+                          ? 'bg-cyan-900/30 border-cyan-500/50 shadow-lg shadow-cyan-500/10' 
+                          : 'bg-gray-700/30 border-transparent hover:bg-gray-700/50'
+                      }`}>
                         <input 
                           type="checkbox" 
                           className="mt-1 h-4 w-4 text-cyan-500 rounded focus:ring-cyan-500" 
                           checked={selectedFeatures.privacyMode}
-                          onChange={(e) => setSelectedFeatures({...selectedFeatures, privacyMode: e.target.checked})}
+                          onChange={(e) => {
+                            const newValue = e.target.checked;
+                            setSelectedFeatures({...selectedFeatures, privacyMode: newValue});
+                            toast.success(`${newValue ? 'Enabled' : 'Disabled'} Privacy Mode - see preview update!`);
+                          }}
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-200 group-hover:text-cyan-400 transition-colors">Privacy Mode</span>
+                            <span className={`font-medium transition-colors ${
+                              selectedFeatures.privacyMode ? 'text-cyan-300' : 'text-gray-200 group-hover:text-cyan-400'
+                            }`}>Privacy Mode</span>
                             {job.piiDetection?.hasPII && (
                               <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">Recommended</span>
+                            )}
+                            {selectedFeatures.privacyMode && (
+                              <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full animate-pulse">Active</span>
                             )}
                           </div>
                           <span className="text-sm text-gray-400">Smart PII masking for safe public sharing</span>
@@ -650,124 +673,96 @@ export const ResultsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Quick Generate Card */}
-            <div className="lg:col-span-1">
-              <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden sticky top-24 border border-purple-500/30 animate-fade-in-right animation-delay-400 hover-glow">
-                {/* Card Header */}
-                <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 p-6 text-center border-b border-purple-500/20">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-                    <Sparkles className="w-10 h-10 text-purple-300" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-100">Quick Magic ✨</h3>
-                  <p className="text-purple-200 mt-2 text-sm">
-                    Let AI handle everything for you
-                  </p>
+              
+              {/* Quick Generate Button */}
+              <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-md rounded-2xl shadow-2xl border border-purple-500/30 p-6">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-100 flex items-center justify-center gap-2">
+                    <Sparkles className="w-6 h-6 text-purple-300" />
+                    Quick Magic
+                  </h3>
+                  <p className="text-purple-200 text-sm mt-1">Let AI handle everything</p>
                 </div>
                 
-                {/* Card Body */}
-                <div className="p-6">
-                  <p className="text-gray-300 mb-6 text-center">
-                    Skip the customization and get a professional CV with all the bells and whistles.
-                  </p>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-3 p-3 bg-purple-900/20 rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-400 text-sm">✓</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-200">Best Template Selected</p>
-                        <p className="text-xs text-gray-400">Modern design optimized for ATS</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 p-3 bg-purple-900/20 rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-400 text-sm">✓</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-200">All AI Features</p>
-                        <p className="text-xs text-gray-400">Podcast, insights, chat & more</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 p-3 bg-purple-900/20 rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-400 text-sm">✓</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-200">Every Format</p>
-                        <p className="text-xs text-gray-400">PDF, DOCX, HTML & public link</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 p-3 bg-purple-900/20 rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-400 text-sm">✓</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-200">Interactive Elements</p>
-                        <p className="text-xs text-gray-400">Timeline, QR code, contact form</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={async () => {
-                      try {
-                        setLoading(true);
-                        await generateCV(jobId!, 'modern', [
-                          'ats-optimization',
-                          'keyword-enhancement',
-                          'achievement-highlighting',
-                          'skills-visualization',
-                          'generate-podcast',
-                          'personality-insights',
-                          'public-profile',
-                          'rag-chat',
-                          'video-introduction',
-                          'all-formats',
-                          'privacy-mode',
-                          'embed-qr-code',
-                          'interactive-timeline',
-                          'skills-chart',
-                          'contact-form',
-                          'social-media-links',
-                          'language-proficiency',
-                          'certification-badges',
-                          'achievements-showcase'
-                        ]);
-                        toast.success('Generating your enhanced CV with all features!');
-                        navigate(`/process/${jobId}`);
-                      } catch (error) {
-                        console.error('Error:', error);
-                        toast.error('Failed to generate CV');
-                      } finally {
-                        setLoading(false);
+                <button
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      await generateCV(jobId!, 'modern', [
+                        'ats-optimization',
+                        'keyword-enhancement', 
+                        'achievement-highlighting',
+                        'skills-visualization',
+                        'generate-podcast',
+                        'personality-insights',
+                        'public-profile',
+                        'rag-chat',
+                        'video-introduction',
+                        'all-formats',
+                        'privacy-mode',
+                        'embed-qr-code',
+                        'interactive-timeline', 
+                        'skills-chart',
+                        'contact-form',
+                        'social-media-links',
+                        'language-proficiency',
+                        'certification-badges',
+                        'achievements-showcase'
+                      ]);
+                      toast.success('Generating your enhanced CV with all features!');
+                      navigate(`/process/${jobId}`);
+                    } catch (error) {
+                      console.error('Error:', error);
+                      toast.error('Failed to generate CV');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="inline-block w-5 h-5 mr-2 animate-spin" />
+                      Working the Magic...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="inline-block w-5 h-5 mr-2" />
+                      Generate Everything Now
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Live CV Preview */}
+            <div className="sticky top-24 h-fit">
+              <div className="transform scale-90 origin-top">
+                <CVPreview
+                  job={job}
+                  selectedTemplate={selectedTemplate}
+                  selectedFeatures={selectedFeatures}
+                  onUpdate={(updates) => {
+                    // Update the job's parsed data with the changes
+                    setJob(prev => prev ? {
+                      ...prev,
+                      parsedData: {
+                        ...prev.parsedData,
+                        ...updates
                       }
-                    }}
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="inline-block w-5 h-5 mr-2 animate-spin" />
-                        Working the Magic...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="inline-block w-5 h-5 mr-2" />
-                        Generate Everything Now
-                      </>
-                    )}
-                  </button>
-                  
-                  <p className="text-center text-xs text-gray-500 mt-3">
-                    Ready in ~30 seconds
-                  </p>
-                </div>
+                    } : null);
+                    toast.success('CV updated! Preview shows your changes.');
+                  }}
+                  onFeatureToggle={(feature, enabled) => {
+                    // Update selected features in real-time
+                    setSelectedFeatures(prev => ({
+                      ...prev,
+                      [feature]: enabled
+                    }));
+                    toast.success(`${enabled ? 'Enabled' : 'Disabled'} ${feature.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -904,38 +899,53 @@ export const ResultsPage = () => {
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* CV Preview */}
+          {/* CV Preview with Editing */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-100">CV Preview</h2>
-                {job.generatedCV?.htmlUrl && (
-                  <a 
-                    href={job.generatedCV.htmlUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
-                  >
-                    Open in New Tab →
-                  </a>
-                )}
-              </div>
-              <div className="p-8">
-                {job.generatedCV?.html ? (
-                  <div className="aspect-[8.5/11] bg-white rounded-lg border overflow-auto">
-                    <iframe 
-                      srcDoc={job.generatedCV.html}
-                      className="w-full h-full"
-                      title="CV Preview"
-                    />
-                  </div>
-                ) : (
-                  <div className="aspect-[8.5/11] bg-gray-700 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-400">Generating CV preview...</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <CVPreview
+              job={job}
+              selectedTemplate={selectedTemplate}
+              selectedFeatures={{
+                atsOptimization: job.generatedCV?.features?.includes('ats-optimization') || false,
+                keywordEnhancement: job.generatedCV?.features?.includes('keyword-enhancement') || false,
+                achievementHighlighting: job.generatedCV?.features?.includes('achievement-highlighting') || false,
+                skillsVisualization: job.generatedCV?.features?.includes('skills-visualization') || false,
+                generatePodcast: job.generatedCV?.features?.includes('generate-podcast') || false,
+                privacyMode: job.generatedCV?.features?.includes('privacy-mode') || false,
+                embedQRCode: job.generatedCV?.features?.includes('embed-qr-code') || false,
+                interactiveTimeline: job.generatedCV?.features?.includes('interactive-timeline') || false,
+                skillsChart: job.generatedCV?.features?.includes('skills-chart') || false,
+                videoIntroduction: job.generatedCV?.features?.includes('video-introduction') || false,
+                portfolioGallery: job.generatedCV?.features?.includes('portfolio-gallery') || false,
+                testimonialsCarousel: job.generatedCV?.features?.includes('testimonials-carousel') || false,
+                contactForm: job.generatedCV?.features?.includes('contact-form') || false,
+                socialMediaLinks: job.generatedCV?.features?.includes('social-media-links') || false,
+                availabilityCalendar: job.generatedCV?.features?.includes('availability-calendar') || false,
+                languageProficiency: job.generatedCV?.features?.includes('language-proficiency') || false,
+                certificationBadges: job.generatedCV?.features?.includes('certification-badges') || false,
+                personalityInsights: job.generatedCV?.features?.includes('personality-insights') || false,
+                achievementsShowcase: job.generatedCV?.features?.includes('achievements-showcase') || false,
+              }}
+              onUpdate={(updates) => {
+                // Update the job's parsed data with the changes
+                setJob(prev => prev ? {
+                  ...prev,
+                  parsedData: {
+                    ...prev.parsedData,
+                    ...updates
+                  }
+                } : null);
+                toast.success('CV updated! Changes will be reflected in your next generation.');
+              }}
+              onFeatureToggle={(feature, enabled) => {
+                // Update selected features in real-time
+                setSelectedFeatures(prev => ({
+                  ...prev,
+                  [feature]: enabled
+                }));
+                toast.success(`${enabled ? 'Enabled' : 'Disabled'} ${feature.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+              }}
+              className="bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+            />
           </div>
 
           {/* Actions Sidebar */}
