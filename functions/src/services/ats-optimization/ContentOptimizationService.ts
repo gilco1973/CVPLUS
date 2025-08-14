@@ -9,7 +9,7 @@ import {
   ParsedCV, 
   ATSOptimizationResult,
   PrioritizedRecommendation 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { OptimizationContext } from './types';
 
 export class ContentOptimizationService {

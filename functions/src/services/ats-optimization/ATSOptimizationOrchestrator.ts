@@ -7,8 +7,11 @@
 
 import { 
   ParsedCV, 
-  ATSOptimizationResult 
-} from '../types/enhanced-models';
+  ATSOptimizationResult,
+  EnhancedJob,
+  AdvancedATSScore,
+  ATSSystemSimulation 
+} from '../../types/enhanced-models';
 import { KeywordAnalysisService } from './KeywordAnalysisService';
 import { ATSScoringService } from './ATSScoringService';
 import { ContentOptimizationService } from './ContentOptimizationService';
@@ -67,8 +70,7 @@ export class ATSOptimizationOrchestrator {
       const [
         semanticAnalysis,
         systemSimulations,
-        competitorBenchmark,
-        basicAnalysis
+        competitorBenchmark
       ] = await Promise.all([
         this.keywordService.performSemanticKeywordAnalysis({
           parsedCV,
@@ -77,8 +79,7 @@ export class ATSOptimizationOrchestrator {
           industry
         }),
         this.simulationService.simulateATSSystems(parsedCV),
-        this.competitorService.performCompetitorAnalysis(parsedCV, targetRole, industry),
-        this.contentService.performBasicAnalysis(parsedCV, targetRole, targetKeywords)
+        this.competitorService.performCompetitorAnalysis(parsedCV, targetRole, industry)
       ]);
 
       // Step 2: Calculate advanced multi-factor score
@@ -118,7 +119,7 @@ export class ATSOptimizationOrchestrator {
           content: advancedScore.breakdown.content
         },
         issues: [
-          ...systemSimulations.flatMap(sim => sim.identifiedIssues || []),
+          ...systemSimulations.flatMap((sim: ATSSystemSimulation) => sim.identifiedIssues || []),
           ...recommendations
             .filter(rec => rec.priority === 'critical' || rec.priority === 'high')
             .map(rec => ({ type: 'warning' as const, description: rec.issue, severity: rec.priority as any }))

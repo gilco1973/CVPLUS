@@ -9,9 +9,8 @@ import {
   ParsedCV, 
   AdvancedATSScore, 
   SemanticKeywordAnalysis, 
-  ATSSystemSimulation,
   CompetitorAnalysis 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { ScoringParams } from './types';
 
 export class ATSScoringService {
@@ -167,7 +166,7 @@ export class ATSScoringService {
     let totalDates = 0;
 
     if (parsedCV.experience) {
-      parsedCV.experience.forEach(exp => {
+      parsedCV.experience.forEach((exp: any) => {
         if (exp.startDate) {
           totalDates++;
           if (this.isValidDateFormat(exp.startDate)) dateScore++;
@@ -180,7 +179,7 @@ export class ATSScoringService {
     }
 
     if (parsedCV.education) {
-      parsedCV.education.forEach(edu => {
+      parsedCV.education.forEach((edu: any) => {
         if (edu.startDate) {
           totalDates++;
           if (this.isValidDateFormat(edu.startDate)) dateScore++;
@@ -264,7 +263,7 @@ export class ATSScoringService {
 
     // Keyword context quality
     if (semanticAnalysis.matchedKeywords) {
-      const contextScore = semanticAnalysis.matchedKeywords.reduce((sum, kw) => {
+      const contextScore = semanticAnalysis.matchedKeywords.reduce((sum: number, kw: any) => {
         const contextQuality = (kw.context?.length || 0) > 0 ? 0.8 : 0.3;
         return sum + contextQuality;
       }, 0) / semanticAnalysis.matchedKeywords.length;
@@ -387,7 +386,7 @@ export class ATSScoringService {
 
     let qualityScore = 0;
     
-    experiences.forEach(exp => {
+    experiences.forEach((exp: any) => {
       let expScore = 0;
       
       if (exp.role) expScore += 0.2;
@@ -451,7 +450,7 @@ export class ATSScoringService {
 
     // Check experience descriptions for numbers/metrics
     if (parsedCV.experience) {
-      parsedCV.experience.forEach(exp => {
+      parsedCV.experience.forEach((exp: any) => {
         if (exp.description) {
           totalDescriptions++;
           if (this.containsQuantifiableMetrics(exp.description)) {
@@ -463,7 +462,7 @@ export class ATSScoringService {
 
     // Check achievements section
     if (parsedCV.achievements) {
-      parsedCV.achievements.forEach(achievement => {
+      parsedCV.achievements.forEach((achievement: any) => {
         totalDescriptions++;
         const text = typeof achievement === 'string' ? achievement : achievement.description || '';
         if (this.containsQuantifiableMetrics(text)) {
@@ -534,7 +533,7 @@ export class ATSScoringService {
 
     // Check date consistency in experience
     if (parsedCV.experience) {
-      parsedCV.experience.forEach(exp => {
+      parsedCV.experience.forEach((exp: any) => {
         if (exp.startDate && exp.endDate && !exp.current) {
           // Basic date logic check (simplified)
           if (exp.startDate > exp.endDate) {
@@ -555,13 +554,13 @@ export class ATSScoringService {
 
   private extractSkillsArray(skills: any): string[] {
     if (Array.isArray(skills)) {
-      return skills.map(skill => typeof skill === 'string' ? skill : skill.name || skill.skill || '');
+      return skills.map((skill: any) => typeof skill === 'string' ? skill : skill.name || skill.skill || '');
     }
     if (typeof skills === 'string') {
       return skills.split(/[,;|\n]/).map(s => s.trim()).filter(s => s.length > 0);
     }
     if (typeof skills === 'object' && skills !== null) {
-      return Object.values(skills).flat().map(skill => 
+      return Object.values(skills).flat().map((skill: any) => 
         typeof skill === 'string' ? skill : skill?.name || skill?.skill || ''
       );
     }

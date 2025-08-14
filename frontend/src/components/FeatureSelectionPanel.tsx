@@ -128,13 +128,13 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
   const getCategoryColor = (category: 'core' | 'enhancement' | 'advanced') => {
     switch (category) {
       case 'core':
-        return 'text-blue-700 bg-blue-50 border-blue-200';
+        return 'text-blue-300 bg-blue-900/20 border-blue-500/30';
       case 'enhancement':
-        return 'text-green-700 bg-green-50 border-green-200';
+        return 'text-green-300 bg-green-900/20 border-green-500/30';
       case 'advanced':
-        return 'text-purple-700 bg-purple-50 border-purple-200';
+        return 'text-purple-300 bg-purple-900/20 border-purple-500/30';
       default:
-        return 'text-gray-700 bg-gray-50 border-gray-200';
+        return 'text-gray-300 bg-gray-700/50 border-gray-500/30';
     }
   };
 
@@ -159,7 +159,7 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
       <div className="space-y-4">
         {/* Quick Actions */}
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-400">
             {selectedCount} of {totalCount} features selected
           </div>
           <div className="flex items-center space-x-2">
@@ -174,7 +174,7 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
             {onSelectNone && (
               <button
                 onClick={onSelectNone}
-                className="px-3 py-1 text-xs bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                className="px-3 py-1 text-xs bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
               >
                 None
               </button>
@@ -190,11 +190,11 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
               onClick={() => onFeatureToggle(feature.id, !selectedFeatures[feature.id])}
               className={`flex items-center space-x-2 p-2 rounded-md text-sm transition-colors ${
                 selectedFeatures[feature.id]
-                  ? 'bg-blue-50 text-blue-800 border border-blue-200'
-                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                  ? 'bg-blue-900/20 text-blue-300 border border-blue-500/30'
+                  : 'bg-gray-700/50 text-gray-300 border border-gray-600 hover:bg-gray-600/50'
               }`}
             >
-              <span className="text-xs">{feature.icon}</span>
+              <span className="text-xs flex-shrink-0">{feature.icon}</span>
               <span className="truncate">{feature.name}</span>
             </button>
           ))}
@@ -208,8 +208,8 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">CV Features</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-lg font-semibold text-white">CV Features</h3>
+          <p className="text-sm text-gray-400">
             Select features to include in your CV. {selectedCount} of {totalCount} selected.
           </p>
         </div>
@@ -225,7 +225,7 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
           {onSelectNone && (
             <button
               onClick={onSelectNone}
-              className="px-4 py-2 text-sm bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
             >
               Clear All
             </button>
@@ -243,31 +243,31 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
               <h4 className="font-medium">{getCategoryTitle(category)}</h4>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               {categoryFeatures.map((feature) => (
                 <div
                   key={feature.id}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
                     selectedFeatures[feature.id]
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      ? 'border-blue-300 bg-blue-900/20'
+                      : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
                   }`}
                   onClick={() => onFeatureToggle(feature.id, !selectedFeatures[feature.id])}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-0.5">
                       {selectedFeatures[feature.id] ? (
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
+                        <CheckCircle className="w-5 h-5 text-blue-400" />
                       ) : (
                         <Circle className="w-5 h-5 text-gray-400" />
                       )}
                     </div>
-                    <div className="flex-grow">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{feature.icon}</span>
-                        <h5 className="font-medium text-gray-900">{feature.name}</h5>
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-start space-x-2 mb-2">
+                        <span className="text-lg flex-shrink-0">{feature.icon}</span>
+                        <h5 className="font-medium text-white leading-tight">{feature.name}</h5>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{feature.description}</p>
+                      <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
                     </div>
                   </div>
                 </div>

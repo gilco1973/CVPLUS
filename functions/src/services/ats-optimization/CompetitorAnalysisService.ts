@@ -8,7 +8,7 @@
 import { 
   ParsedCV, 
   CompetitorAnalysis 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { VerifiedClaudeService } from '../verified-claude.service';
 
 export class CompetitorAnalysisService {
@@ -252,7 +252,7 @@ Focus on actionable insights for improving ATS performance relative to market co
     industry?: string
   ): string[] {
     const improvements: string[] = [];
-    const benchmarkData = this.getIndustryBenchmark(industry);
+    // Industry benchmark data available via this.getIndustryBenchmark(industry)
     
     // Base improvements
     improvements.push('Add more quantified achievements to demonstrate impact');
@@ -308,14 +308,14 @@ Focus on actionable insights for improving ATS performance relative to market co
     // Add all CV sections to text
     if (cv.personalInfo?.summary) sections.push(cv.personalInfo.summary);
     if (cv.experience) {
-      cv.experience.forEach(exp => {
+      cv.experience.forEach((exp: any) => {
         sections.push(exp.role || '');
         sections.push(exp.company || '');
         sections.push(exp.description || '');
       });
     }
     if (cv.education) {
-      cv.education.forEach(edu => {
+      cv.education.forEach((edu: any) => {
         sections.push(edu.degree || '');
         sections.push(edu.institution || '');
         sections.push(edu.description || '');
@@ -334,13 +334,13 @@ Focus on actionable insights for improving ATS performance relative to market co
    */
   private extractSkillsArray(skills: any): string[] {
     if (Array.isArray(skills)) {
-      return skills.map(skill => typeof skill === 'string' ? skill : skill.name || skill.skill || '');
+      return skills.map((skill: any) => typeof skill === 'string' ? skill : skill.name || skill.skill || '');
     }
     if (typeof skills === 'string') {
       return skills.split(/[,;|\n]/).map(s => s.trim()).filter(s => s.length > 0);
     }
     if (typeof skills === 'object' && skills !== null) {
-      return Object.values(skills).flat().map(skill => 
+      return Object.values(skills).flat().map((skill: any) => 
         typeof skill === 'string' ? skill : skill?.name || skill?.skill || ''
       );
     }
