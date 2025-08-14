@@ -58,3 +58,6 @@ firestore.indexes.json
 
 # Build artifacts
 *.tsbuildinfo
+
+# Claude Code configuration backups
+claude-config-backup.zip
