@@ -7,8 +7,41 @@
 
 import React, { useState, useEffect } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions, auth } from '../config/firebase';
-import { UserOutcome, OutcomeEvent } from '../types/phase2-models';
+import { functions } from '../lib/firebase';
+
+// Define types locally since they're not available elsewhere
+interface UserOutcome {
+  id?: string;
+  outcomeId?: string;
+  applicationData: {
+    applicationDate: Date;
+    jobTitle: string;
+    company: string;
+    industry: string;
+    location: string;
+    applicationMethod: string;
+    currency: string;
+    jobDescription?: string;
+    salaryPosted?: {
+      min?: number;
+      max?: number;
+      currency: string;
+    };
+  };
+  finalResult?: {
+    status?: string;
+  };
+  cvData?: {
+    cvVersion?: string;
+    atsScore?: number;
+    optimizationsApplied?: string[];
+  };
+}
+
+interface OutcomeEvent {
+  eventType: string;
+  stage: string;
+}
 
 interface OutcomeTrackerProps {
   className?: string;
@@ -31,7 +64,7 @@ interface OutcomeUpdateData {
   eventType: OutcomeEvent['eventType'];
   stage: OutcomeEvent['stage'];
   details?: string;
-  finalStatus?: UserOutcome['finalResult']['status'];
+  finalStatus?: string;
   salaryOffered?: number;
   feedback?: string;
 }
@@ -81,9 +114,10 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
     try {
       const getUserStats = httpsCallable(functions, 'getUserOutcomeStats');
       const result = await getUserStats();
+      const data = result.data as any;
       
-      if (result.data.success) {
-        setStats(result.data.data);
+      if (data?.success) {
+        setStats(data.data);
       }
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -105,6 +139,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
           industry: applicationForm.industry,
           location: applicationForm.location,
           applicationMethod: applicationForm.applicationMethod,
+          currency: applicationForm.currency,
           jobDescription: applicationForm.jobDescription,
           salaryPosted: (applicationForm.salaryMin || applicationForm.salaryMax) ? {
             min: applicationForm.salaryMin,
@@ -124,7 +159,8 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
         sessionId: Date.now().toString()
       });
 
-      if (result.data.success) {
+      const data = result.data as any;
+      if (data?.success) {
         setApplicationForm({
           jobTitle: '',
           company: '',
@@ -135,7 +171,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
         });
         
         await loadUserOutcomes();
-        onOutcomeTracked?.(result.data.outcomeId);
+        onOutcomeTracked?.(data.outcomeId);
         
         showNotification('Application tracked successfully! We\'ll follow up to track your progress.', 'success');
       }
@@ -180,8 +216,9 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
       }
 
       const result = await updateOutcome(updateData);
+      const data = result.data as any;
 
-      if (result.data.success) {
+      if (data?.success) {
         setUpdateForm({
           eventType: 'application_viewed',
           stage: 'application'

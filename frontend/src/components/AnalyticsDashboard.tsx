@@ -367,7 +367,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {featureAdoptionData.map((entry, index) => (
+                      {featureAdoptionData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -449,7 +449,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {churnReasonsData.map((entry, index) => (
+                      {churnReasonsData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

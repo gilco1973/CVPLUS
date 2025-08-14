@@ -17,7 +17,7 @@ const PROCESSING_STEPS = [
 export const ProcessingPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { } = useAuth(); // Auth context needed but user not used directly
   const [job, setJob] = useState<Job | null>(null);
   const [steps, setSteps] = useState(PROCESSING_STEPS);
   const [error, setError] = useState<string | null>(null);
