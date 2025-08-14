@@ -210,7 +210,7 @@ export const MobileFeatureSelection: React.FC<MobileFeatureSelectionProps> = ({
   };
 
   const categories = ['core', 'enhancement', 'advanced'] as const;
-  const visibleCategories = showAllFeatures ? categories : ['core', 'enhancement'];
+  const visibleCategories = showAllFeatures ? categories : ['core', 'enhancement'] as const;
 
   return (
     <div className={`space-y-6 p-4 ${getBackgroundClasses()}`}>
@@ -279,7 +279,7 @@ export const MobileFeatureSelection: React.FC<MobileFeatureSelectionProps> = ({
       </div>
 
       {/* Feature Categories */}
-      {visibleCategories.map((category) => {
+      {visibleCategories.map((category: 'core' | 'enhancement' | 'advanced') => {
         const categoryFeatures = getCategoryFeatures(category);
         const isExpanded = expandedCategories.has(category);
         

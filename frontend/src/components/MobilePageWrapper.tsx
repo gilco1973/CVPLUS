@@ -82,7 +82,7 @@ export const MobilePageWrapper: React.FC<MobilePageWrapperProps> = ({
     },
     onTouchEnd: (e: React.TouchEvent) => {
       if (enableGestures) stepHandlers.onTouchEnd(e.nativeEvent);
-      if (enablePullToRefresh) refreshHandlers.onTouchEnd(e.nativeEvent);
+      if (enablePullToRefresh) refreshHandlers.onTouchEnd();
     }
   };
 

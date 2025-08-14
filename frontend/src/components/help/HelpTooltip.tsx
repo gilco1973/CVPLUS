@@ -39,7 +39,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const helpContent = getContextualHelp('global').find(content => content.id === helpId);
   const showHelp = shouldShowHelp(helpId) && !disabled && helpContent;
@@ -128,7 +128,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
   const showTooltip = () => {
     if (!showHelp) return;
     
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setIsVisible(true);
     actions.showHelp(helpId);
     
@@ -159,7 +159,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
       }
     };
   }, []);
@@ -235,7 +235,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
         left: tooltipPosition.left,
         transform: tooltipPosition.arrow.offset !== 0 ? `translateX(${tooltipPosition.arrow.offset}px)` : undefined
       }}
-      onMouseEnter={() => clearTimeout(timeoutRef.current)}
+      onMouseEnter={() => timeoutRef.current && clearTimeout(timeoutRef.current)}
       onMouseLeave={() => trigger === 'hover' && hideTooltip()}
       role="tooltip"
       aria-describedby={`help-${helpId}`}

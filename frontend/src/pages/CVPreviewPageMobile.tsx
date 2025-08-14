@@ -135,11 +135,10 @@ export const CVPreviewPageMobile = () => {
       setIsSaving(true);
       
       // Apply improvements with selected features
-      const improvements = await applyImprovements(jobId, {
-        template: selectedTemplate,
-        features: selectedFeatures,
-        recommendations: selectedRecommendations
-      });
+      const recommendations = Object.entries(selectedRecommendations)
+        .filter(([_, selected]) => selected)
+        .map(([id]) => id);
+      const improvements = await applyImprovements(jobId, recommendations);
       
       setAppliedImprovements(improvements);
       sessionStorage.setItem(`improvements-${jobId}`, JSON.stringify(improvements));
@@ -222,7 +221,6 @@ export const CVPreviewPageMobile = () => {
         jobId={jobId}
         isLoading={true}
         variant="default"
-        onRefresh={handleRefresh}
       >
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-4" />
@@ -276,12 +274,10 @@ export const CVPreviewPageMobile = () => {
           {activeTab === 'preview' && (
             <div className="space-y-4">
               <CVPreview
-                parsedData={job.parsedData}
-                analysis={job.analysis}
+                job={job}
                 appliedImprovements={appliedImprovements}
                 selectedFeatures={selectedFeatures}
                 selectedTemplate={selectedTemplate}
-                onTemplateChange={setSelectedTemplate}
               />
             </div>
           )}
@@ -301,12 +297,10 @@ export const CVPreviewPageMobile = () => {
         <div className="hidden md:grid md:grid-cols-3 md:gap-8">
           <div className="md:col-span-2">
             <CVPreview
-              parsedData={job.parsedData}
-              analysis={job.analysis}
+              job={job}
               appliedImprovements={appliedImprovements}
               selectedFeatures={selectedFeatures}
               selectedTemplate={selectedTemplate}
-              onTemplateChange={setSelectedTemplate}
             />
           </div>
           

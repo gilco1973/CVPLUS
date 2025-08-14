@@ -31,7 +31,7 @@ export const HelpOverlay: React.FC<HelpOverlayProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   const helpContent = getContextualHelp(currentContext || 'global').find(content => content.id === helpId);
   const showHelp = shouldShowHelp(helpId) && helpContent;
