@@ -104,7 +104,7 @@ For masking, use:
     try {
       const anthropic = await this.getAnthropicClient();
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 4000,
         temperature: 0,
         system: 'You are a privacy expert specializing in PII detection and data protection. You MUST only identify PII that actually exists in the provided data. Never add, assume, or make up any information. Your role is to accurately detect existing PII, not to enhance or add to the data.',

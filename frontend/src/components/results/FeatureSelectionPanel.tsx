@@ -1,0 +1,146 @@
+/**
+ * Feature Selection Panel Component
+ */
+
+import { FeatureCheckbox } from './FeatureCheckbox';
+import type { SelectedFeatures, FeatureAvailability } from '../../types/results';
+
+interface FeatureSelectionPanelProps {
+  selectedFeatures: SelectedFeatures;
+  setSelectedFeatures: (features: SelectedFeatures) => void;
+  featureAvailability: FeatureAvailability;
+}
+
+export const FeatureSelectionPanel = ({ 
+  selectedFeatures, 
+  setSelectedFeatures, 
+  featureAvailability 
+}: FeatureSelectionPanelProps) => {
+  const updateFeature = (feature: keyof SelectedFeatures, value: boolean) => {
+    setSelectedFeatures({ ...selectedFeatures, [feature]: value });
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+          <span className="text-2xl">✨</span>
+          Enhanced Features
+        </h4>
+        <span className="text-xs text-gray-500 bg-gray-700/50 px-3 py-1 rounded-full">
+          Select features to include
+        </span>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <FeatureCheckbox
+          feature="atsOptimization"
+          label="ATS Optimization"
+          description="Optimize your CV for Applicant Tracking Systems"
+          checked={selectedFeatures.atsOptimization}
+          onChange={(checked) => updateFeature('atsOptimization', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="keywordEnhancement"
+          label="Keyword Enhancement"
+          description="Enhance with job-relevant keywords"
+          checked={selectedFeatures.keywordEnhancement}
+          onChange={(checked) => updateFeature('keywordEnhancement', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="achievementHighlighting"
+          label="Achievement Highlighting"
+          description="Highlight your key achievements and impact"
+          checked={selectedFeatures.achievementHighlighting}
+          onChange={(checked) => updateFeature('achievementHighlighting', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="skillsVisualization"
+          label="Skills Visualization"
+          description="Add visual skill ratings and proficiency bars"
+          checked={selectedFeatures.skillsVisualization}
+          onChange={(checked) => updateFeature('skillsVisualization', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="generatePodcast"
+          label="Generate Podcast"
+          description="Create an AI-generated podcast about your career"
+          checked={selectedFeatures.generatePodcast}
+          onChange={(checked) => updateFeature('generatePodcast', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="embedQRCode"
+          label="Embed QR Code"
+          description="Add QR code linking to your digital profile"
+          checked={selectedFeatures.embedQRCode}
+          onChange={(checked) => updateFeature('embedQRCode', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="interactiveTimeline"
+          label="Interactive Timeline"
+          description="Create an interactive career timeline"
+          checked={selectedFeatures.interactiveTimeline}
+          onChange={(checked) => updateFeature('interactiveTimeline', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="skillsChart"
+          label="Skills Chart"
+          description="Visual representation of your skills"
+          checked={selectedFeatures.skillsChart}
+          onChange={(checked) => updateFeature('skillsChart', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="videoIntroduction"
+          label="Video Introduction"
+          description="Add a personal video introduction"
+          checked={selectedFeatures.videoIntroduction}
+          onChange={(checked) => updateFeature('videoIntroduction', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="portfolioGallery"
+          label="Portfolio Gallery"
+          description="Showcase your projects and work samples"
+          checked={selectedFeatures.portfolioGallery}
+          onChange={(checked) => updateFeature('portfolioGallery', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="languageProficiency"
+          label="Language Proficiency"
+          description="Visual language skills display"
+          checked={selectedFeatures.languageProficiency}
+          onChange={(checked) => updateFeature('languageProficiency', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="certificationBadges"
+          label="Certification Badges"
+          description="Display your certifications as badges"
+          checked={selectedFeatures.certificationBadges}
+          onChange={(checked) => updateFeature('certificationBadges', checked)}
+          featureAvailability={featureAvailability}
+        />
+      </div>
+    </div>
+  );
+};

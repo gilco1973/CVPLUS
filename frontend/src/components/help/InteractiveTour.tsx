@@ -251,17 +251,25 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
   }, [isActive]);
 
   if (!tour || !isActive || !currentStep) {
+    console.log('Tour not rendering:', { tour: !!tour, isActive, currentStep: !!currentStep });
     return null;
   }
+
+  console.log('Rendering interactive tour:', { tourId, isActive, currentStepIndex, currentStep: currentStep.title });
 
   const overlay = (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 bg-black bg-opacity-75"
+      className="fixed inset-0 bg-black bg-opacity-75"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="tour-title"
+      style={{ 
+        zIndex: 999999,
+        pointerEvents: 'auto',
+        cursor: 'default'
+      }}
     >
       {/* Spotlight */}
       {stepPosition && currentStep.spotlight && (
@@ -273,7 +281,8 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
             width: stepPosition.width,
             height: stepPosition.height,
             boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)',
-            zIndex: 51
+            zIndex: 999998,
+            pointerEvents: 'none'
           }}
         />
       )}
@@ -282,11 +291,14 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
       {tooltipPosition && (
         <div
           ref={tooltipRef}
-          className="absolute bg-white rounded-lg shadow-xl border border-gray-300 z-52"
+          className="absolute bg-white rounded-lg shadow-xl border border-gray-300"
           style={{
             top: tooltipPosition.top,
             left: tooltipPosition.left,
-            maxWidth: tooltipPosition.maxWidth
+            maxWidth: tooltipPosition.maxWidth,
+            zIndex: 999997,
+            pointerEvents: 'auto',
+            cursor: 'default'
           }}
         >
           <div className="p-6">
@@ -302,8 +314,9 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
               </div>
               <button
                 onClick={skipTour}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                 aria-label="Skip tour"
+                style={{ pointerEvents: 'auto' }}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -328,8 +341,9 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                 <button
                   onClick={previousStep}
                   disabled={currentStepIndex === 0}
-                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   aria-label="Previous step"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>{currentStep.prevLabel || 'Previous'}</span>
@@ -340,7 +354,8 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                 {currentStep.allowSkip !== false && (
                   <button
                     onClick={skipTour}
-                    className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                    style={{ pointerEvents: 'auto' }}
                   >
                     <SkipForward className="w-4 h-4" />
                     <span>Skip Tour</span>
@@ -348,7 +363,8 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                 )}
                 <button
                   onClick={nextStep}
-                  className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <span>
                     {currentStepIndex === tour.steps.length - 1 
