@@ -41,6 +41,27 @@ export interface ParsedCV {
     linkedin?: string;
     github?: string;
     website?: string;
+    photo?: string; // Photo property
+    age?: number; // Age property
+    maritalStatus?: string; // Marital status
+    gender?: string; // Gender property
+    nationality?: string; // Nationality property
+  };
+  // Alias for personalInfo for compatibility
+  personal?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    summary?: string;
+    linkedin?: string;
+    github?: string;
+    website?: string;
+    photo?: string;
+    age?: number;
+    maritalStatus?: string;
+    gender?: string;
+    nationality?: string;
   };
   experience?: Array<{
     company: string;
@@ -92,6 +113,21 @@ export interface ParsedCV {
   interests?: string[];
   summary?: string; // Top-level summary field
   customSections?: { [sectionName: string]: string }; // For custom sections
+  
+  // Additional properties for regional scoring
+  languages?: Array<{
+    language: string;
+    proficiency: string;
+  }>;
+  references?: Array<{
+    name: string;
+    title?: string; // Optional for compatibility
+    position?: string; // Alternative field name
+    company: string;
+    email?: string;
+    phone?: string;
+    contact?: string; // Alternative contact field
+  }>;
 }
 // CV Improvement Types
 export interface CVRecommendation {

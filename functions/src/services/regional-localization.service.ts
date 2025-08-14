@@ -57,6 +57,26 @@ export class RegionalLocalizationService {
   }
 
   /**
+   * Get countries for a given region
+   */
+  public getCountriesForRegion(region: string): string[] {
+    // Map regions to countries
+    const regionCountriesMap: Record<string, string[]> = {
+      'us': ['United States'],
+      'uk': ['United Kingdom', 'England', 'Scotland', 'Wales', 'Northern Ireland'],
+      'eu': ['Germany', 'France', 'Spain', 'Italy', 'Netherlands', 'Belgium', 'Austria', 'Portugal', 'Greece', 'Ireland', 'Poland', 'Czech Republic', 'Hungary', 'Finland', 'Sweden', 'Denmark', 'Norway'],
+      'canada': ['Canada'],
+      'australia': ['Australia', 'New Zealand'],
+      'asia': ['Japan', 'South Korea', 'Singapore', 'Hong Kong', 'Taiwan', 'Malaysia', 'Thailand', 'India', 'China'],
+      'middle_east': ['United Arab Emirates', 'Saudi Arabia', 'Israel', 'Qatar', 'Kuwait', 'Bahrain'],
+      'latin_america': ['Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'Venezuela'],
+      'africa': ['South Africa', 'Nigeria', 'Kenya', 'Ghana', 'Morocco', 'Egypt']
+    };
+
+    return regionCountriesMap[region.toLowerCase()] || [];
+  }
+
+  /**
    * Optimize CV for specific region
    */
   async optimizeForRegion(request: RegionalOptimizationRequest): Promise<RegionalOptimizationResult> {
@@ -206,7 +226,44 @@ export class RegionalLocalizationService {
 
   private createDefaultConfig(region: string): RegionalConfiguration {
     return {
-      region,
+      regionId: region,
+      regionName: region.toUpperCase(),
+      countryCode: region.toUpperCase(),
+      languageCode: 'en',
+      currency: region === 'us' ? 'USD' : 'EUR',
+      marketData: {
+        unemploymentRate: 5.0,
+        averageSalary: 50000,
+        costOfLiving: 100,
+        economicGrowth: 2.0,
+        inflationRate: 2.5
+      },
+      jobMarket: {
+        competitiveness: 0.7,
+        averageTimeToHire: 30,
+        topIndustries: [],
+        skillsInDemand: []
+      },
+      applicationPreferences: {
+        cvFormat: 'chronological',
+        preferredLength: region === 'us' ? 1 : 2,
+        photoRequired: region === 'eu',
+        personalInfoRequired: {
+          age: region !== 'us',
+          maritalStatus: region !== 'us',
+          nationality: region !== 'us',
+          photo: region === 'eu'
+        },
+        fileFormats: ['pdf', 'docx'],
+        coverLetterRequired: true,
+        portfolioExpected: false,
+        applicationMethods: ['email', 'online_form'],
+        followUpCulture: 'neutral',
+        responseTime: {
+          average: 14,
+          acceptable: 30
+        }
+      },
       formatPreferences: {
         photoRequired: region === 'eu',
         preferredLength: region === 'us' ? 1 : 2,
@@ -224,6 +281,56 @@ export class RegionalLocalizationService {
       legalRestrictions: {
         prohibitedInfo: region === 'us' ? ['age', 'marital_status', 'photo'] : [],
         photoRequired: false
+      },
+      culturalFactors: {
+        workCulture: 'mixed',
+        communicationStyle: 'direct',
+        businessFormality: 'formal',
+        interviewStyle: 'mixed',
+        dresscode: 'business_casual',
+        networkingImportance: 0.6,
+        referralImpact: 0.4
+      },
+      legalRequirements: {
+        workPermitRequired: false,
+        discriminationLaws: [],
+        mandatoryDisclosures: [],
+        dataPrivacyRegulations: [],
+        visaSponsorship: {
+          availability: 0.5,
+          commonVisaTypes: [],
+          processingTime: 90,
+          cost: 1000
+        }
+      },
+      localizationSettings: {
+        dateFormat: region === 'us' ? 'MM/DD/YYYY' : 'DD/MM/YYYY',
+        numberFormat: region === 'us' ? 'en-US' : 'en-GB',
+        addressFormat: 'standard',
+        phoneFormat: 'international',
+        businessLanguage: 'English',
+        alternateLanguages: [],
+        proficiencyExpectations: {}
+      },
+      seasonalPatterns: {
+        hiringSeasons: [],
+        holidayImpacts: []
+      },
+      economicIndicators: {
+        gdpPerCapita: 40000,
+        purchasingPower: 100,
+        businessEase: 50,
+        innovationIndex: 50,
+        digitalReadiness: 70
+      },
+      technologyLandscape: {
+        internetPenetration: 90,
+        mobilePenetration: 85,
+        digitalPaymentAdoption: 75,
+        remoteWorkAcceptance: 60,
+        jobBoards: ['LinkedIn', 'Indeed'],
+        professionalNetworks: ['LinkedIn'],
+        communicationTools: ['Email', 'Slack']
       }
     };
   }

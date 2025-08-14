@@ -66,6 +66,29 @@ export interface RegionalConfiguration {
       acceptable: number; // days
     };
   };
+
+  // Legacy compatibility properties for score calculator
+  formatPreferences?: {
+    photoRequired?: boolean;
+    preferredLength?: number;
+    dateFormat?: string;
+  };
+  
+  contentGuidelines?: {
+    requiredSections?: string[];
+    discouragedSections?: string[];
+  };
+  
+  languageGuidelines?: {
+    formalityLevel?: string;
+    preferredTerminology?: string[];
+    cvTerminology?: string;
+  };
+  
+  legalRestrictions?: {
+    prohibitedInfo?: string[];
+    photoRequired?: boolean;
+  };
   
   // Cultural considerations
   culturalFactors: {

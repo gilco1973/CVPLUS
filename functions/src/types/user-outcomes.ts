@@ -13,11 +13,12 @@ export interface UserOutcome {
   outcomeId: string;
   userId: string;
   jobId: string;
-  outcomeType: 'interview_scheduled' | 'interview_completed' | 'offer_received' | 'offer_accepted' | 'hired' | 'rejected';
+  outcomeType: 'interview_scheduled' | 'interview_completed' | 'offer_received' | 'offer_accepted' | 'hired' | 'rejected' | 'no_response';
   
   // Timeline
   dateOccurred: Date;
   daysSinceApplication?: number;
+  timeline?: OutcomeEvent[];
   
   // Context
   jobDetails: {
@@ -32,6 +33,47 @@ export interface UserOutcome {
   // Source tracking
   applicationSource: 'direct' | 'job_board' | 'referral' | 'recruiter' | 'social_media';
   cvVersion: string; // Which version of CV was used
+  
+  // Application and CV data
+  applicationData?: {
+    applicationMethod?: string;
+    applicationDate?: Date;
+    responseTime?: number;
+    applicationNotes?: string;
+    applicationSource?: string;
+    companySize?: string;
+    jobLevel?: string;
+    requirements?: string[];
+    company?: string;
+    jobTitle?: string;
+    industry?: string;
+    location?: string;
+    jobDescription?: string;
+    salaryPosted?: number;
+  };
+  
+  cvData?: {
+    skillsMatch?: number;
+    experienceMatch?: number;
+    educationMatch?: number;
+    locationMatch?: number;
+    industryExperience?: number;
+    keywordsMatch?: number;
+    cvVersion?: string;
+    atsScore?: number;
+    optimizationsApplied?: string[];
+    predictedSuccess?: number;
+  };
+  
+  // Final result tracking
+  finalResult?: {
+    outcome: 'hired' | 'rejected' | 'withdrawn' | 'no_response';
+    status?: 'hired' | 'rejected' | 'withdrawn' | 'no_response'; // Alternative field name
+    reason?: string;
+    feedback?: string;
+    salaryOffered?: number;
+    negotiatedSalary?: number;
+  };
   
   // User feedback
   userRating?: number; // 1-5 stars
@@ -53,6 +95,10 @@ export interface UserOutcome {
     negotiationRounds?: number;
     competitorsCount?: number;
   };
+  
+  // Timestamps
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export interface OutcomeEvent {
@@ -62,9 +108,12 @@ export interface OutcomeEvent {
   outcomeId: string;
   
   // Event details
-  eventType: 'application_sent' | 'response_received' | 'interview_scheduled' | 'feedback_received' | 'decision_made';
+  eventType: 'application_sent' | 'response_received' | 'interview_scheduled' | 'feedback_received' | 'decision_made' | 'no_response';
   eventData: Record<string, any>;
   timestamp: Date;
+  date: Date; // Additional date field for compatibility
+  stage?: string; // Event stage for compatibility
+  details?: string; // Event details for compatibility
   
   // Context
   source: 'user_input' | 'email_tracking' | 'calendar_integration' | 'manual_entry';

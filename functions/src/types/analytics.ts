@@ -16,7 +16,8 @@ export interface AnalyticsEvent {
   
   // Event classification
   eventType: 'cv_generated' | 'cv_downloaded' | 'cv_shared' | 'application_submitted' | 'outcome_reported' | 'feature_used';
-  eventCategory: 'engagement' | 'conversion' | 'outcome' | 'usage' | 'error';
+  eventCategory: 'engagement' | 'conversion' | 'outcome' | 'usage' | 'error' | 'user_action';
+  category?: 'engagement' | 'conversion' | 'outcome' | 'usage' | 'error' | 'user_action'; // Alternative field name for compatibility
   
   // Event data
   eventData: {
