@@ -90,6 +90,14 @@ export interface MLModelMetadata {
     preprocessingSteps: string[];
     featureEngineering: string[];
   };
+  
+  // Additional properties used by services
+  version?: string;
+  training?: {
+    completionDate?: Date;
+    duration?: number;
+    samples?: number;
+  };
 }
 
 export interface FeatureVector {
@@ -177,6 +185,38 @@ export interface FeatureVector {
     missingFeatures?: string[];
     featureSource?: Record<string, string>;
   };
+  
+  // Additional feature categories used by services
+  cvFeatures?: {
+    keywordMatch?: number;
+    skillsAlignment?: number;
+    experienceRelevance?: number;
+    educationMatch?: number;
+  };
+  
+  matchingFeatures?: {
+    roleMatch?: number;
+    industryMatch?: number;
+    skillsMatch?: number;
+    experienceMatch?: number;
+  };
+  
+  derivedFeatures?: {
+    careerTrajectory?: number;
+    skillGrowth?: number;
+    marketAlignment?: number;
+    competitiveness?: number;
+  };
+  
+  marketFeatures?: {
+    demandLevel?: number;
+    competitionLevel?: number;
+    salaryBenchmark?: number;
+    growthPotential?: number;
+  };
+  
+  // Backward compatibility
+  extractionDate?: Date;
 }
 
 // ===============================

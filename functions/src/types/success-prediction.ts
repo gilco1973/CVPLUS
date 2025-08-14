@@ -53,6 +53,12 @@ export interface SalaryPrediction {
     median: number;
     currency: string;
   };
+  // Alias for backward compatibility
+  predictedRange: {
+    min: number;
+    max: number;
+    median: number;
+  };
   confidenceInterval: {
     lower: number; // 5th percentile
     upper: number; // 95th percentile
@@ -71,6 +77,8 @@ export interface SalaryPrediction {
     impact: number; // -1 to 1
     description: string;
   }>;
+  // Additional properties used by services
+  negotiationPotential?: number;
 }
 
 export interface TimeToHirePrediction {

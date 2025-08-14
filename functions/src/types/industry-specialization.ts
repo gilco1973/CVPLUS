@@ -13,6 +13,8 @@ export interface IndustryModel {
   industryId: string;
   industryName: string;
   industryCategory: string;
+  // Alias for backward compatibility
+  industry?: string;
   
   // Market data
   marketSize: number;
@@ -79,6 +81,20 @@ export interface IndustryModel {
       timeframe: string;
     }>;
   };
+  
+  // Additional properties used by services
+  knowledgeBase?: {
+    keyTerms?: string[];
+    commonSkills?: string[];
+    industryStandards?: string[];
+    certifications?: string[];
+  };
+  
+  modelConfig?: {
+    algorithms?: string[];
+    parameters?: Record<string, any>;
+    weights?: Record<string, number>;
+  };
 }
 
 export interface SkillDefinition {
@@ -109,6 +125,10 @@ export interface SkillDefinition {
   // Industry relevance
   relevantIndustries: string[];
   relevantRoles: string[];
+  
+  // Additional properties used by services
+  name?: string;
+  alternativeNames?: string[];
 }
 
 export interface CareerPath {
