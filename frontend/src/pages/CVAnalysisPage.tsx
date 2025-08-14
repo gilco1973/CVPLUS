@@ -66,7 +66,7 @@ export const CVAnalysisPage = () => {
     // In a real app, you might want to save this to the job document
     sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
     
-    // Navigate to preview with recommendations
+    // Navigate to preview page for feature selection and customization
     navigate(`/preview/${jobId}`);
   };
 

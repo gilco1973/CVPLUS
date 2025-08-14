@@ -106,8 +106,9 @@ const getStepNumber = (currentPage: string): number => {
     case 'preview':
       return 3;
     case 'templates':
+      return 3; // Templates are part of customization step
     case 'results':
-      return 4;
+      return 4; // Results are step 4 in the complete flow
     default:
       return 1;
   }

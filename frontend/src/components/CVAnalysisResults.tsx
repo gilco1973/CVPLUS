@@ -268,7 +268,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       // Show success message
       toast.success('✨ Magic transformation complete! Review your enhanced CV.');
       
-      // Navigate to preview page to show the improvements
+      // Navigate to preview page for feature selection and customization
       navigate(`/preview/${job.id}`);
       
     } catch (error: any) {

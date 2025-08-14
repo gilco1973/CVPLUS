@@ -1,24 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Home, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../services/cvService';
-// import { Header } from '../components/Header';
 import { PIIWarning } from '../components/PIIWarning';
 import { PodcastPlayer } from '../components/PodcastPlayer';
 import { CVPreview } from '../components/CVPreview';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
-// Components will be used in future refactoring
-// import {
-//   ResultsPageHeader,
-//   CVDisplaySection,
-//   TemplateSelection,
-//   FeatureSelection,
-//   FormatSelection,
-//   AnalysisSummary,
-//   ActionsSection
-// } from '../components/results';
-// import type { SelectedFeatures, SelectedFormats, FeatureAvailability } from '../types/results';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -240,46 +228,73 @@ export const ResultsPage = () => {
     );
   }
 
-  // Show template selection for analyzed CVs
+  // ResultsPage should only show final results for completed jobs
+  // Analyzed jobs should go through the analysis and preview steps first
   if (job.status === 'analyzed') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        {/* Background decoration */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute top-20 -left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
+        <div className="text-center">
+          <Wand2 className="w-16 h-16 text-cyan-400 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold mb-4 text-gray-100">Analysis Complete!</h2>
+          <p className="text-gray-400 mb-6">
+            Your CV has been analyzed. Please review the recommendations and continue through the customization process.
+          </p>
+          <button
+            onClick={() => navigate(`/analysis/${jobId}`)}
+            className="bg-cyan-600 text-white px-8 py-3 rounded-lg hover:bg-cyan-700 transition"
+          >
+            Review Analysis Results
+          </button>
         </div>
+      </div>
+    );
+  }
 
-        <header className="relative z-10 bg-gray-900/50 backdrop-blur-md border-b border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-3 text-gray-300 hover:text-cyan-400 transition-all group"
-              >
-                <div className="p-2 bg-gray-800/50 rounded-lg group-hover:bg-gray-700/50 transition-colors">
-                  <div className="w-5 h-5">🏠</div>
-                </div>
-                <span className="font-medium">Home</span>
-              </button>
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-100">CV Analysis Complete</h1>
-                <p className="text-sm text-gray-400 mt-1">Customize your enhanced CV</p>
-              </div>
-              <div className="w-32"></div>
-            </div>
+  if (job.status !== 'completed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4 text-gray-100">Processing...</h2>
+          <p className="text-gray-400 mb-6">Your CV is still being processed.</p>
+          <button
+            onClick={() => navigate(`/process/${jobId}`)}
+            className="bg-cyan-600 text-white px-6 py-3 rounded-lg hover:bg-cyan-700 transition"
+          >
+            View Progress
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* Header */}
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-2 text-gray-300 hover:text-gray-100"
+            >
+              <Home className="w-5 h-5" />
+              <span>Home</span>
+            </button>
+            <h1 className="text-xl font-semibold text-gray-100">Your Enhanced CV is Ready!</h1>
+            <div className="w-20"></div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* PII Warning */}
-          {job.piiDetection && (
-            <PIIWarning
-              hasPII={job.piiDetection.hasPII}
-              detectedTypes={job.piiDetection.detectedTypes}
-              recommendations={job.piiDetection.recommendations}
-              onTogglePrivacyMode={() => setPrivacyMode(!privacyMode)}
-              privacyModeEnabled={privacyMode}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* PII Warning */}
+        {job.piiDetection && (
+          <PIIWarning
+            hasPII={job.piiDetection.hasPII}
+            detectedTypes={job.piiDetection.detectedTypes}
+            recommendations={job.piiDetection.recommendations}
+            onTogglePrivacyMode={() => setPrivacyMode(!privacyMode)}
+            privacyModeEnabled={privacyMode}
             />
           )}
 
@@ -907,6 +922,7 @@ export const ResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Header */}
       <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -914,13 +930,10 @@ export const ResultsPage = () => {
               onClick={() => navigate('/')}
               className="flex items-center space-x-2 text-gray-300 hover:text-gray-100"
             >
-              <div className="w-5 h-5">🏠</div>
+              <Home className="w-5 h-5" />
               <span>Home</span>
             </button>
-            <div className="text-center">
-              <h1 className="text-xl font-semibold text-gray-100">Your Enhanced CV is Ready!</h1>
-              <p className="text-sm text-gray-400 mt-1">Download, share, or continue customizing</p>
-            </div>
+            <h1 className="text-xl font-semibold text-gray-100">Your Enhanced CV is Ready!</h1>
             <div className="w-20"></div>
           </div>
         </div>
