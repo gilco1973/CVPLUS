@@ -275,7 +275,7 @@ check_prerequisites() {
     fi
     
     # Make sure we're logged into Firebase
-    if ! firebase whoami &> /dev/null; then
+    if ! firebase login:list &> /dev/null; then
         echo "❌ Not logged into Firebase"
         echo "Login with: firebase login"
         exit 1

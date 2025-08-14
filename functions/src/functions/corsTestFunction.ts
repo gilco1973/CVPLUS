@@ -1,25 +1,13 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import { corsOptions } from '../config/cors';
 
 export const testCors = onRequest(
   {
-    cors: [
-      'https://getmycv-ai.firebaseapp.com',
-      'https://getmycv-ai.web.app',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-    ]
+    ...corsOptions,
   },
   async (req, res) => {
-    // Set CORS headers explicitly
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
+    // CORS is handled by the function configuration above
+    // Remove manual CORS headers to avoid conflicts
     
     res.json({ 
       success: true, 

@@ -129,11 +129,16 @@ export class PersonalityInsightsService {
     
     // Extract skills
     if (cv.skills) {
-      if (cv.skills.technical && Array.isArray(cv.skills.technical)) {
-        content.skills.push(...cv.skills.technical);
-      }
-      if (cv.skills.soft && Array.isArray(cv.skills.soft)) {
-        content.skills.push(...cv.skills.soft);
+      if (Array.isArray(cv.skills)) {
+        content.skills.push(...cv.skills);
+      } else {
+        const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+        if (skillsObj.technical && Array.isArray(skillsObj.technical)) {
+          content.skills.push(...skillsObj.technical);
+        }
+        if (skillsObj.soft && Array.isArray(skillsObj.soft)) {
+          content.skills.push(...skillsObj.soft);
+        }
       }
     }
     

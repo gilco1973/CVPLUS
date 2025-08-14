@@ -2,23 +2,13 @@ import { onCall } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { CVTransformationService, CVRecommendation } from '../services/cv-transformation.service';
 import { ParsedCV } from '../types/job';
+import { corsOptions } from '../config/cors';
 
 export const applyImprovements = onCall(
   {
     timeoutSeconds: 180,
     memory: '1GiB',
-    cors: [
-      'https://getmycv-ai.firebaseapp.com',
-      'https://getmycv-ai.web.app',
-      'https://cvplus.firebaseapp.com',
-      'https://cvplus.web.app',
-      'https://cvplus.ai',
-      'https://www.cvplus.ai',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:5000',
-    ],
+    ...corsOptions,
   },
   async (request) => {
     if (!request.auth) {
@@ -145,18 +135,7 @@ export const getRecommendations = onCall(
   {
     timeoutSeconds: 120,
     memory: '512MiB',
-    cors: [
-      'https://getmycv-ai.firebaseapp.com',
-      'https://getmycv-ai.web.app',
-      'https://cvplus.firebaseapp.com',
-      'https://cvplus.web.app',
-      'https://cvplus.ai',
-      'https://www.cvplus.ai',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:5000',
-    ],
+    ...corsOptions,
   },
   async (request) => {
     if (!request.auth) {
@@ -246,18 +225,7 @@ export const previewImprovement = onCall(
   {
     timeoutSeconds: 60,
     memory: '512MiB',
-    cors: [
-      'https://getmycv-ai.firebaseapp.com',
-      'https://getmycv-ai.web.app',
-      'https://cvplus.firebaseapp.com',
-      'https://cvplus.web.app',
-      'https://cvplus.ai',
-      'https://www.cvplus.ai',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:5000',
-    ],
+    ...corsOptions,
   },
   async (request) => {
     if (!request.auth) {

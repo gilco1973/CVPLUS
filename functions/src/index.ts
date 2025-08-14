@@ -157,6 +157,11 @@ export {
   llmVerificationStatus 
 } from './functions/llmVerificationStatus';
 
+// Export CORS testing functions
+export {
+  testCors
+} from './functions/corsTestFunction';
+
 // Export CV improvement functions
 export { 
   applyImprovements, 

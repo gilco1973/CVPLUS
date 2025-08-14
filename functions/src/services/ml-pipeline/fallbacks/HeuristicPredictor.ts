@@ -91,7 +91,7 @@ export class HeuristicPredictor {
     }
     
     // Education alignment
-    const educationMatch = this.assessEducationMatch(request.cv.education, request.jobDescription);
+    const educationMatch = this.assessEducationMatch(request.cv.education || [], request.jobDescription);
     conversionRate += educationMatch * 0.05;
     
     return Math.max(0.01, Math.min(0.70, interviewProb * conversionRate));
@@ -300,12 +300,13 @@ export class HeuristicPredictor {
           experience: [{
             company: 'Test Corp',
             position: 'Software Engineer',
+            duration: '3 years',
             startDate: '2020-01',
             endDate: '2023-01',
             description: 'Developed applications'
           }],
           skills: ['JavaScript', 'React'],
-          education: [{ institution: 'University', degree: 'Bachelor', field: 'Computer Science' }]
+          education: [{ institution: 'University', degree: 'Bachelor', field: 'Computer Science', year: '2020' }]
         },
         jobDescription: 'Software Engineer position requiring React experience'
       };
@@ -629,7 +630,13 @@ export class HeuristicPredictor {
     return 'medium';
   }
 
-  private generateStageBreakdown(totalDays: number): Record<string, number> {
+  private generateStageBreakdown(totalDays: number): {
+    applicationReview: number;
+    initialScreening: number;
+    interviews: number;
+    decisionMaking: number;
+    offerNegotiation: number;
+  } {
     return {
       applicationReview: Math.round(totalDays * 0.15),
       initialScreening: Math.round(totalDays * 0.25),

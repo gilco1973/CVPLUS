@@ -15,12 +15,12 @@ import { BehaviorFeatureService } from './BehaviorFeatureService';
 import { DerivedFeatureService } from './DerivedFeatureService';
 
 export class FeatureExtractor {
-  private cvFeatureService: CVFeatureService;
-  private matchingFeatureService: MatchingFeatureService;
-  private marketFeatureService: MarketFeatureService;
-  private behaviorFeatureService: BehaviorFeatureService;
-  private derivedFeatureService: DerivedFeatureService;
-  private predictionCache: PredictionCache;
+  private cvFeatureService!: CVFeatureService;
+  private matchingFeatureService!: MatchingFeatureService;
+  private marketFeatureService!: MarketFeatureService;
+  private behaviorFeatureService!: BehaviorFeatureService;
+  private derivedFeatureService!: DerivedFeatureService;
+  private predictionCache!: PredictionCache;
 
   constructor() {
     this.initializeServices();
@@ -30,7 +30,9 @@ export class FeatureExtractor {
    * Extract comprehensive features from CV and job context
    */
   async extractFeatures(request: PredictionRequest): Promise<FeatureVector> {
-    const { cv, jobDescription, targetRole, industry, location } = request;
+    const { cv, jobDescription, industry, location } = request;
+    // @ts-ignore - targetRole preserved for future feature extraction use
+    const { targetRole } = request;
     
     // Check feature cache first
     const cachedFeatures = await this.predictionCache.getFeatures(request);

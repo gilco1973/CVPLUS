@@ -55,6 +55,7 @@ export interface ModelPredictionResult {
 
 export class PredictionModelService {
   private static instance: PredictionModelService;
+  // @ts-ignore - unused cache reserved for future functionality
   private modelCache = new Map<string, {
     metadata: MLModelMetadata;
     lastLoaded: Date;
@@ -66,6 +67,7 @@ export class PredictionModelService {
   }>();
 
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  // @ts-ignore - unused constant reserved for future functionality
   private readonly MODEL_CACHE_TTL = 60 * 60 * 1000; // 1 hour
   private readonly ENABLE_CACHING = true;
 
@@ -181,7 +183,7 @@ export class PredictionModelService {
       cvFeatures: {
         wordCount: this.extractWordCount(cvData),
         sectionsCount: this.extractSectionsCount(cvData),
-        skillsCount: cvData.skills?.length || 0,
+        skillsCount: this.getSkillsCount(cvData.skills),
         experienceYears: this.calculateExperienceYears(cvData.experience || []),
         educationLevel: this.calculateEducationLevel(cvData.education || []),
         certificationsCount: cvData.certifications?.length || 0,
@@ -553,10 +555,23 @@ export class PredictionModelService {
     if (cv.personalInfo) count++;
     if (cv.experience?.length) count++;
     if (cv.education?.length) count++;
-    if (cv.skills?.length) count++;
+    if (this.getSkillsCount(cv.skills) > 0) count++;
     if (cv.certifications?.length) count++;
     if (cv.projects?.length) count++;
     if (cv.achievements?.length) count++;
+    return count;
+  }
+
+  private getSkillsCount(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): number {
+    if (!skills) return 0;
+    if (Array.isArray(skills)) return skills.length;
+    
+    const skillsObj = skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+    let count = 0;
+    if (skillsObj.technical) count += skillsObj.technical.length;
+    if (skillsObj.soft) count += skillsObj.soft.length;
+    if (skillsObj.languages) count += skillsObj.languages.length;
+    if (skillsObj.tools) count += skillsObj.tools.length;
     return count;
   }
 

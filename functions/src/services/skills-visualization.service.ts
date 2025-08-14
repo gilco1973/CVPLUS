@@ -143,7 +143,9 @@ export class SkillsVisualizationService {
     // Extract all text is done in individual analysis methods
     
     // Extract explicitly mentioned soft skills
-    const explicitSkills = cv.skills?.soft || [];
+    const explicitSkills = cv.skills && !Array.isArray(cv.skills) 
+      ? (cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; }).soft || []
+      : [];
     
     // Infer soft skills from achievements and experience
     const inferredSkills = await this.inferSoftSkillsFromContent(cv);
@@ -187,11 +189,14 @@ export class SkillsVisualizationService {
     const languages: LanguageSkill[] = [];
     
     // Check explicit language skills
-    if (cv.skills?.languages) {
-      cv.skills.languages.forEach(lang => {
-        const parsed = this.parseLanguageSkill(lang);
-        languages.push(parsed);
-      });
+    if (cv.skills && !Array.isArray(cv.skills)) {
+      const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+      if (skillsObj.languages) {
+        skillsObj.languages.forEach((lang: string) => {
+          const parsed = this.parseLanguageSkill(lang);
+          languages.push(parsed);
+        });
+      }
     }
     
     // Infer from education or certifications
@@ -257,9 +262,14 @@ export class SkillsVisualizationService {
    * Extract skills from CV
    */
   private extractSkillsFromCV(cv: ParsedCV): { technical: string[]; soft: string[] } {
-    const technical = cv.skills?.technical || [];
-    const soft = cv.skills?.soft || [];
-    const tools = cv.skills?.tools || [];
+    if (!cv.skills || Array.isArray(cv.skills)) {
+      return { technical: Array.isArray(cv.skills) ? cv.skills : [], soft: [] };
+    }
+    
+    const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+    const technical = skillsObj.technical || [];
+    const soft = skillsObj.soft || [];
+    const tools = skillsObj.tools || [];
     
     return {
       technical: [...technical, ...tools],

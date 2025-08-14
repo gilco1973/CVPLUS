@@ -52,6 +52,7 @@ export class DerivedFeatureService {
           {
             company: 'Tech Corp',
             position: 'Senior Software Engineer',
+            duration: '3+ years',
             startDate: '2021-01',
             endDate: 'Present',
             description: 'Led team of 5 developers, implemented microservices architecture'
@@ -59,13 +60,14 @@ export class DerivedFeatureService {
           {
             company: 'StartupCorp',
             position: 'Software Engineer',
+            duration: '3 years',
             startDate: '2018-01',
             endDate: '2021-01',
             description: 'Developed web applications using React and Node.js'
           }
         ],
         skills: ['JavaScript', 'React', 'Node.js', 'Leadership'],
-        education: [{ institution: 'University', degree: 'Bachelor of Science', field: 'Computer Science' }]
+        education: [{ institution: 'University', degree: 'Bachelor of Science', field: 'Computer Science', year: '2018' }]
       };
       
       const testJobDescription = 'Senior Software Engineer position requiring 5+ years experience';

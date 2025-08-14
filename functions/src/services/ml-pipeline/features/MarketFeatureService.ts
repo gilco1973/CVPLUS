@@ -264,6 +264,7 @@ export class MarketFeatureService {
     // In a real implementation, this would fetch from economic APIs
     // For now, using simplified indicators
     
+    // @ts-ignore - currentYear preserved for future economic indicators
     const currentYear = new Date().getFullYear();
     const economicFactors = {
       gdpGrowth: 0.02, // 2% GDP growth

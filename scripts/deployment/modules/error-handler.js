@@ -433,9 +433,9 @@ class ErrorHandler {
     try {
       // This would typically refresh Firebase tokens
       // For now, check current auth status
-      const whoami = execSync('firebase whoami', { encoding: 'utf8' });
+      const loginList = execSync('firebase login:list', { encoding: 'utf8' });
       
-      if (whoami.includes('not logged in')) {
+      if (loginList.includes('No accounts')) {
         console.log('    ⚠️  Not logged in to Firebase. Please run: firebase login');
         return false;
       }

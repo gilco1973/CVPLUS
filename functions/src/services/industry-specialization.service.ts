@@ -699,7 +699,6 @@ export class IndustrySpecializationService {
 
   private calculateEducationRelevance(education: any, model: IndustryModel): number {
     const field = (education.field || '').toLowerCase();
-    const degree = (education.degree || '').toLowerCase();
     
     // Industry-specific education relevance logic
     if (model.industry === 'Technology') {

@@ -97,20 +97,22 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const getStepNumber = (currentPage: string): number => {
+const getStepNumber = (currentPage: string): string => {
   switch (currentPage) {
     case 'processing':
-      return 1;
+      return '1';
     case 'analysis':
-      return 2;
+      return '2';
     case 'preview':
-      return 3;
+      return '3';
     case 'templates':
-      return 3; // Templates are part of customization step
+      return '3a'; // Templates are sub-step of customization
+    case 'keywords':
+      return '3b'; // Keywords are sub-step of customization
     case 'results':
-      return 4; // Results are step 4 in the complete flow
+      return '4'; // Results are step 4 in the complete flow
     default:
-      return 1;
+      return '1';
   }
 };
 
@@ -124,6 +126,8 @@ const getStepLabel = (currentPage: string): string => {
       return 'Preview & Customize';
     case 'templates':
       return 'Template Selection';
+    case 'keywords':
+      return 'Keyword Optimization';
     case 'results':
       return 'Final Results';
     default:

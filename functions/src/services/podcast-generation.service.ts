@@ -110,6 +110,15 @@ export class PodcastGenerationService {
       throw new Error(`Podcast generation failed: ${error.message}`);
     }
   }
+
+  /**
+   * Get technical skills from skills union type
+   */
+  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills;
+    return skills.technical || [];
+  }
   
   /**
    * Generate a conversational script using GPT-4
@@ -134,7 +143,7 @@ Host 2 (Mike): Engaging co-host, adds color commentary and follow-up questions
 Professional Profile:
 Name: ${cv.personalInfo?.name || 'The candidate'}
 Current Role: ${cv.experience?.[0]?.position || 'Professional'} at ${cv.experience?.[0]?.company || 'their company'}
-Key Skills: ${cv.skills?.technical?.slice(0, 5).join(', ') || 'various skills'}
+Key Skills: ${this.getTechnicalSkills(cv.skills)?.slice(0, 5).join(', ') || 'various skills'}
 Notable Achievement: ${cv.experience?.[0]?.achievements?.[0] || cv.achievements?.[0] || 'significant accomplishments'}
 
 Create a ${targetWords}-word conversation that includes:
@@ -445,7 +454,7 @@ Focus: ${options.focus || 'balanced'}`;
       },
       {
         speaker: 'host2',
-        text: `What caught my attention immediately was their diverse skill set. They're proficient in ${cv.skills?.technical?.slice(0, 3).join(', ') || 'multiple technologies'}.`,
+        text: `What caught my attention immediately was their diverse skill set. They're proficient in ${this.getTechnicalSkills(cv.skills)?.slice(0, 3).join(', ') || 'multiple technologies'}.`,
         emotion: 'impressed'
       },
       {

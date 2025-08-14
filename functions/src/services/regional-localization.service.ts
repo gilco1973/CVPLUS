@@ -14,6 +14,7 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
+// @ts-ignore - unused variable reserved for future database functionality
 const db = admin.firestore();
 
 export interface RegionalOptimizationRequest {

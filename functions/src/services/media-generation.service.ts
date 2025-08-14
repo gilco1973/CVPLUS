@@ -130,7 +130,7 @@ Professional Details:
 Name: ${cv.personalInfo?.name || 'Professional'}
 Current Role: ${cv.experience?.[0]?.position || 'Experienced Professional'}
 Summary: ${cv.personalInfo?.summary || 'Skilled professional'}
-Key Skills: ${cv.skills?.technical?.slice(0, 5).join(', ') || 'Various technical skills'}
+Key Skills: ${this.getTechnicalSkills(cv.skills)?.slice(0, 5).join(', ') || 'Various technical skills'}
 Notable Achievement: ${cv.experience?.[0]?.achievements?.[0] || cv.achievements?.[0] || 'Multiple accomplishments'}
 
 Write in first person, as if the professional is speaking. Include:
@@ -258,7 +258,7 @@ Keep it exactly ${targetWords} words.`;
     
     // Introduction segment
     const introPrompt = `Create an interview introduction for a podcast. The host introduces:
-${cv.personalInfo?.name || 'our guest'}, ${cv.experience?.[0]?.position || 'professional'} with expertise in ${cv.skills?.technical?.slice(0, 3).join(', ')}.
+${cv.personalInfo?.name || 'our guest'}, ${cv.experience?.[0]?.position || 'professional'} with expertise in ${this.getTechnicalSkills(cv.skills)?.slice(0, 3).join(', ')}.
 Keep it to 50 words, conversational tone.`;
 
     const intro = await this.generateSegment(introPrompt, 50);
@@ -388,7 +388,7 @@ Use third person, storytelling style. Data: ${this.summarizeForPrompt(cv)}`;
       },
       {
         title: 'Top Skills',
-        content: cv.skills ? [...(cv.skills.technical || []), ...(cv.skills.soft || [])].join(', ') : '',
+        content: cv.skills ? [...this.getTechnicalSkills(cv.skills), ...this.getSoftSkills(cv.skills)].join(', ') : '',
         focus: 'key competencies and expertise'
       },
       {
@@ -468,8 +468,9 @@ Style: Concise, impactful, third-person narrative.`;
     if (cv.experience?.[0]) {
       parts.push(`Current: ${cv.experience[0].position} at ${cv.experience[0].company}`);
     }
-    if (cv.skills?.technical) {
-      parts.push(`Skills: ${cv.skills?.technical?.slice(0, 5).join(', ') || 'Various skills'}`);
+    const technicalSkills = this.getTechnicalSkills(cv.skills);
+    if (technicalSkills.length > 0) {
+      parts.push(`Skills: ${technicalSkills.slice(0, 5).join(', ') || 'Various skills'}`);
     }
     if (cv.achievements && cv.achievements.length > 0) {
       parts.push(`Achievement: ${cv.achievements[0]}`);
@@ -479,13 +480,30 @@ Style: Concise, impactful, third-person narrative.`;
   }
   
   /**
+   * Get technical skills from skills union type
+   */
+  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills;
+    return skills.technical || [];
+  }
+
+  /**
+   * Get soft skills from skills union type
+   */
+  private getSoftSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills || Array.isArray(skills)) return [];
+    return skills.soft || [];
+  }
+
+  /**
    * Generate default intro script
    */
   private generateDefaultIntroScript(cv: ParsedCV, targetWords: number): string {
     const name = cv.personalInfo?.name || 'I';
     const role = cv.experience?.[0]?.position || 'professional';
     const company = cv.experience?.[0]?.company || '';
-    const skills = cv.skills?.technical?.slice(0, 3).join(', ') || 'various technologies';
+    const skills = this.getTechnicalSkills(cv.skills)?.slice(0, 3).join(', ') || 'various technologies';
     
     return `Hello, I'm ${name}, a ${role}${company ? ` at ${company}` : ''}. With expertise in ${skills}, I've dedicated my career to delivering innovative solutions and driving meaningful results. Throughout my journey, I've had the opportunity to work on challenging projects that have shaped my professional growth. My passion lies in leveraging technology to solve complex problems and create value. I believe in continuous learning and collaboration, always seeking new ways to contribute to my field. Looking ahead, I'm excited about the evolving landscape of technology and the opportunities it presents to make a lasting impact.`;
   }
@@ -496,9 +514,9 @@ Style: Concise, impactful, third-person narrative.`;
   private generatePodcastMetadata(cv: ParsedCV, format: string): PodcastMetadata {
     return {
       title: `${cv.personalInfo?.name || 'Professional'} - Career ${format === 'interview' ? 'Interview' : format === 'narrative' ? 'Story' : 'Highlights'}`,
-      description: `An ${format} podcast featuring ${cv.personalInfo?.name || 'a professional'}, ${cv.experience?.[0]?.position || 'experienced professional'} with expertise in ${cv.skills?.technical?.slice(0, 3).join(', ') || 'various fields'}.`,
+      description: `An ${format} podcast featuring ${cv.personalInfo?.name || 'a professional'}, ${cv.experience?.[0]?.position || 'experienced professional'} with expertise in ${this.getTechnicalSkills(cv.skills)?.slice(0, 3).join(', ') || 'various fields'}.`,
       tags: [
-        ...(cv.skills?.technical?.slice(0, 5) || []),
+        ...this.getTechnicalSkills(cv.skills)?.slice(0, 5) || [],
         'career',
         'professional',
         format

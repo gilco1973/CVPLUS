@@ -163,6 +163,15 @@ export class PortfolioGalleryService {
     
     return gallery;
   }
+
+  /**
+   * Get technical skills from skills union type
+   */
+  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills;
+    return skills.technical || [];
+  }
   
   /**
    * Extract projects from work experience
@@ -455,7 +464,7 @@ Return empty array if no specific projects found.`;
   private async generateBranding(cv: ParsedCV): Promise<PortfolioGallery['branding']> {
     // Determine color scheme based on industry/role
     const role = cv.experience?.[0]?.position?.toLowerCase() || '';
-    const skills = cv.skills?.technical?.join(' ').toLowerCase() || '';
+    const skills = this.getTechnicalSkills(cv.skills)?.join(' ').toLowerCase() || '';
     
     let primaryColor = '#1E40AF'; // Default blue
     let accentColor = '#3B82F6';

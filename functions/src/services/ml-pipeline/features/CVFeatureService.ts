@@ -49,6 +49,7 @@ export class CVFeatureService {
         experience: [{
           company: 'Test Company',
           position: 'Test Position',
+          duration: '3 years',
           startDate: '2020-01',
           endDate: '2023-01',
           description: 'Test experience description'
@@ -58,7 +59,7 @@ export class CVFeatureService {
           institution: 'Test University',
           degree: 'Bachelor of Science',
           field: 'Computer Science',
-          graduationDate: '2020'
+          year: '2020'
         }]
       };
       
@@ -135,8 +136,8 @@ export class CVFeatureService {
     if (cv.education && cv.education.length > 0) sectionCount++;
     if (cv.projects && cv.projects.length > 0) sectionCount++;
     if (cv.certifications && cv.certifications.length > 0) sectionCount++;
-    if (cv.languages && cv.languages.length > 0) sectionCount++;
-    if (cv.awards && cv.awards.length > 0) sectionCount++;
+    if ((cv as any).languages && (cv as any).languages.length > 0) sectionCount++;
+    if ((cv as any).awards && (cv as any).awards.length > 0) sectionCount++;
     
     return sectionCount;
   }
@@ -147,7 +148,7 @@ export class CVFeatureService {
     } else if (skills && typeof skills === 'object') {
       return (skills.technical && skills.technical.length > 0) ||
              (skills.soft && skills.soft.length > 0) ||
-             (skills.languages && skills.languages.length > 0);
+             ((skills as any).languages && (skills as any).languages.length > 0);
     }
     return false;
   }
@@ -163,8 +164,8 @@ export class CVFeatureService {
       if (skills.soft && Array.isArray(skills.soft)) {
         count += skills.soft.length;
       }
-      if (skills.languages && Array.isArray(skills.languages)) {
-        count += skills.languages.length;
+      if ((skills as any).languages && Array.isArray((skills as any).languages)) {
+        count += (skills as any).languages.length;
       }
       return count;
     }
@@ -272,8 +273,8 @@ export class CVFeatureService {
     let achievementCount = 0;
     
     // Count explicit achievements/awards
-    if (cv.awards && Array.isArray(cv.awards)) {
-      achievementCount += cv.awards.length;
+    if ((cv as any).awards && Array.isArray((cv as any).awards)) {
+      achievementCount += (cv as any).awards.length;
     }
     
     // Count quantified achievements in experience descriptions
@@ -391,7 +392,7 @@ export class CVFeatureService {
       let contactScore = 0;
       if (cv.personalInfo.email) contactScore += 0.05;
       if (cv.personalInfo.phone) contactScore += 0.05;
-      if (cv.personalInfo.location || cv.personalInfo.address) contactScore += 0.05;
+      if ((cv.personalInfo as any).location || cv.personalInfo.address) contactScore += 0.05;
       score += contactScore;
     }
     

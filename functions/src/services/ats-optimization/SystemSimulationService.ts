@@ -280,8 +280,9 @@ export class SystemSimulationService {
 
   /**
    * Generate system-specific issues
-   * @unused Reserved for future system-specific issue generation
+   * Reserved for future system-specific issue generation
    */
+  // @ts-ignore - unused method reserved for future functionality
   private generateSystemSpecificIssues(parsedCV: ParsedCV, systemName: string): string[] {
     const issues: string[] = [];
     const config = this.atsSystemConfigs[systemName];
@@ -384,8 +385,9 @@ export class SystemSimulationService {
 
   /**
    * Identify system-specific strengths
-   * @unused Reserved for future system-specific strength identification
+   * Reserved for future system-specific strength identification
    */
+  // @ts-ignore - unused method reserved for future functionality
   private identifySystemStrengths(
     parsedCV: ParsedCV, 
     systemName: string, 
@@ -415,8 +417,9 @@ export class SystemSimulationService {
 
   /**
    * Identify system-specific weaknesses
-   * @unused Reserved for future system-specific weakness identification
+   * Reserved for future system-specific weakness identification
    */
+  // @ts-ignore - unused method reserved for future functionality
   private identifySystemWeaknesses(
     parsedCV: ParsedCV, 
     systemName: string, 
@@ -442,8 +445,9 @@ export class SystemSimulationService {
 
   /**
    * Generate system-specific recommendations
-   * @unused Reserved for future system-specific recommendations
+   * Reserved for future system-specific recommendations
    */
+  // @ts-ignore - unused method reserved for future functionality
   private generateSystemSpecificRecommendations(
     parsedCV: ParsedCV,
     systemName: string,

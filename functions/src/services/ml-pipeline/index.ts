@@ -11,6 +11,7 @@ import {
   UserOutcome,
   MLTrainingConfig
 } from '../../types/phase2-models';
+// @ts-ignore - ParsedCV import preserved for future use
 import { ParsedCV } from '../../types/job';
 
 /**

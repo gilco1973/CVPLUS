@@ -95,11 +95,14 @@ class PreDeploymentValidator {
     
     try {
       // Check Firebase authentication
-      const whoami = execSync('firebase whoami', { encoding: 'utf8' }).trim();
-      if (whoami.includes('not logged in')) {
+      const loginList = execSync('firebase login:list', { encoding: 'utf8' }).trim();
+      if (loginList.includes('No accounts')) {
         this.errors.push('Not logged into Firebase. Run: firebase login');
       } else {
-        this.info.push(`Firebase user: ${whoami} ✓`);
+        // Extract the email from the login list output
+        const emailMatch = loginList.match(/Logged in as (.+)/);
+        const user = emailMatch ? emailMatch[1] : 'authenticated user';
+        this.info.push(`Firebase user: ${user} ✓`);
       }
 
       // Check current project
@@ -315,40 +318,236 @@ class PreDeploymentValidator {
   async validateEnvironmentVariables() {
     console.log('  ✓ Validating environment variables...');
     
+    const requiredVars = [
+      'ANTHROPIC_API_KEY',
+      'OPENAI_API_KEY', 
+      'ELEVENLABS_API_KEY'
+    ];
+
+    // Check local .env file first
+    const localEnvResults = await this.checkLocalEnvironmentVariables(requiredVars);
+    
+    // Check Firebase Secret Manager
+    const firebaseSecretsResults = await this.checkFirebaseSecrets(requiredVars);
+    
+    // Combine results and generate final assessment
+    this.generateEnvironmentVariablesReport(localEnvResults, firebaseSecretsResults, requiredVars);
+  }
+
+  async checkLocalEnvironmentVariables(requiredVars) {
     const envFile = path.join(this.projectRoot, 'functions', '.env');
     
     try {
       await fs.access(envFile);
       const envContent = await fs.readFile(envFile, 'utf8');
       
-      const requiredVars = [
-        'ANTHROPIC_API_KEY',
-        'OPENAI_API_KEY',
-        'ELEVENLABS_API_KEY'
-      ];
+      const results = {
+        fileExists: true,
+        variables: {}
+      };
       
-      const missingVars = requiredVars.filter(varName => 
-        !envContent.includes(`${varName}=`)
-      );
-      
-      if (missingVars.length > 0) {
-        this.errors.push(`Missing environment variables: ${missingVars.join(', ')}`);
-      } else {
-        this.info.push('Environment variables: ✓');
+      for (const varName of requiredVars) {
+        const match = envContent.match(new RegExp(`${varName}=(.*)$`, 'm'));
+        if (match) {
+          const value = match[1].trim();
+          results.variables[varName] = {
+            exists: true,
+            isEmpty: !value || value === '""' || value === "''"
+          };
+        } else {
+          results.variables[varName] = {
+            exists: false,
+            isEmpty: true
+          };
+        }
       }
       
-      // Check for empty values
-      const emptyVars = requiredVars.filter(varName => {
-        const match = envContent.match(new RegExp(`${varName}=(.*)$`, 'm'));
-        return match && (!match[1] || match[1].trim() === '');
+      return results;
+    } catch (error) {
+      return {
+        fileExists: false,
+        error: error.message,
+        variables: {}
+      };
+    }
+  }
+
+  async checkFirebaseSecrets(requiredVars) {
+    try {
+      // Check if Firebase Secrets are configured
+      const secretsResult = execSync('firebase functions:secrets:access --help', { 
+        encoding: 'utf8',
+        stdio: 'pipe',
+        cwd: this.projectRoot
       });
       
-      if (emptyVars.length > 0) {
-        this.warnings.push(`Empty environment variables: ${emptyVars.join(', ')}`);
-      }
+      const secretsAvailable = !secretsResult.includes('command not found');
       
+      if (!secretsAvailable) {
+        return {
+          available: false,
+          reason: 'Firebase CLI secrets command not available'
+        };
+      }
+
+      // Try to list existing secrets
+      try {
+        const secretsList = execSync('firebase functions:secrets:access', { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: this.projectRoot,
+          timeout: 10000
+        });
+        
+        const results = {
+          available: true,
+          secrets: {}
+        };
+        
+        // Parse the secrets list to check for our required variables
+        for (const varName of requiredVars) {
+          const secretExists = secretsList.includes(varName) || 
+                             secretsList.toLowerCase().includes(varName.toLowerCase());
+          
+          results.secrets[varName] = {
+            exists: secretExists,
+            source: 'firebase-secrets'
+          };
+        }
+        
+        return results;
+      } catch (listError) {
+        // If listing fails, try individual secret checks
+        const results = {
+          available: true,
+          secrets: {},
+          listError: listError.message
+        };
+        
+        for (const varName of requiredVars) {
+          try {
+            // Try to access individual secret (this will fail silently if not exists)
+            execSync(`firebase functions:secrets:access ${varName}`, { 
+              encoding: 'utf8',
+              stdio: 'pipe',
+              cwd: this.projectRoot,
+              timeout: 5000
+            });
+            
+            results.secrets[varName] = {
+              exists: true,
+              source: 'firebase-secrets'
+            };
+          } catch (secretError) {
+            results.secrets[varName] = {
+              exists: false,
+              error: 'Secret not found or not accessible'
+            };
+          }
+        }
+        
+        return results;
+      }
     } catch (error) {
-      this.errors.push('Environment file (.env) not found in functions directory');
+      return {
+        available: false,
+        error: error.message,
+        reason: 'Firebase secrets check failed'
+      };
+    }
+  }
+
+  generateEnvironmentVariablesReport(localEnvResults, firebaseSecretsResults, requiredVars) {
+    const report = {
+      fullyConfigured: [],
+      partiallyConfigured: [],
+      missing: [],
+      warnings: []
+    };
+
+    for (const varName of requiredVars) {
+      const localVar = localEnvResults.variables[varName];
+      const firebaseSecret = firebaseSecretsResults.secrets?.[varName];
+      
+      // Check if variable is available in either location
+      const inLocalEnv = localVar?.exists && !localVar?.isEmpty;
+      const inFirebaseSecrets = firebaseSecret?.exists;
+      
+      if (inLocalEnv || inFirebaseSecrets) {
+        const sources = [];
+        if (inLocalEnv) sources.push('local .env');
+        if (inFirebaseSecrets) sources.push('Firebase Secrets');
+        
+        report.fullyConfigured.push({
+          name: varName,
+          sources: sources
+        });
+      } else if (localVar?.exists && localVar?.isEmpty) {
+        report.partiallyConfigured.push({
+          name: varName,
+          issue: 'Empty value in local .env',
+          suggestion: 'Set value in local .env or Firebase Secrets'
+        });
+      } else {
+        report.missing.push({
+          name: varName,
+          localChecked: localEnvResults.fileExists,
+          firebaseChecked: firebaseSecretsResults.available
+        });
+      }
+    }
+
+    // Generate validation messages
+    if (report.fullyConfigured.length === requiredVars.length) {
+      this.info.push(`Environment variables: ✓ (${report.fullyConfigured.length} configured)`);
+      
+      // Show sources for configured variables
+      report.fullyConfigured.forEach(config => {
+        this.info.push(`   ${config.name}: Available in ${config.sources.join(', ')}`);
+      });
+    }
+
+    if (report.partiallyConfigured.length > 0) {
+      this.warnings.push(`Environment variables with empty values: ${report.partiallyConfigured.map(p => p.name).join(', ')}`);
+      report.partiallyConfigured.forEach(partial => {
+        this.warnings.push(`   ${partial.name}: ${partial.issue} - ${partial.suggestion}`);
+      });
+    }
+
+    if (report.missing.length > 0) {
+      const missingVars = report.missing.map(m => m.name).join(', ');
+      
+      if (!localEnvResults.fileExists && !firebaseSecretsResults.available) {
+        this.errors.push(`Missing environment configuration: ${missingVars}`);
+        this.errors.push('No local .env file and Firebase Secrets not accessible');
+        this.errors.push('Create functions/.env file or configure Firebase Secret Manager');
+      } else if (!localEnvResults.fileExists) {
+        this.warnings.push(`Environment variables not in local .env: ${missingVars}`);
+        this.info.push('Checking Firebase Secrets for production deployment');
+        
+        if (!firebaseSecretsResults.available) {
+          this.warnings.push('Firebase Secrets not accessible - may cause deployment issues');
+        }
+      } else {
+        this.warnings.push(`Missing environment variables: ${missingVars}`);
+        this.info.push('Variables may be available in Firebase Secrets for production');
+      }
+    }
+
+    // Add informational messages about configuration strategy
+    if (localEnvResults.fileExists && firebaseSecretsResults.available) {
+      this.info.push('Environment strategy: Local .env for development, Firebase Secrets for production');
+    } else if (localEnvResults.fileExists) {
+      this.info.push('Environment strategy: Local .env file (Firebase Secrets not checked)');
+    } else if (firebaseSecretsResults.available) {
+      this.info.push('Environment strategy: Firebase Secrets only');
+    }
+
+    // Add Firebase Secrets status information
+    if (firebaseSecretsResults.available) {
+      this.info.push('Firebase Secret Manager: ✓ Available');
+    } else if (firebaseSecretsResults.reason) {
+      this.warnings.push(`Firebase Secret Manager: ${firebaseSecretsResults.reason}`);
     }
   }
 

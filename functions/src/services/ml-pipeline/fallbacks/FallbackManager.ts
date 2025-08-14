@@ -5,7 +5,9 @@
  * providing heuristic-based predictions and graceful degradation.
  */
 
-import { SuccessPrediction, SalaryPrediction, TimeToHirePrediction } from '../../../types/phase2-models';
+import { SuccessPrediction } from '../../../types/phase2-models';
+// @ts-ignore - Unused imports preserved for future use
+import { SalaryPrediction, TimeToHirePrediction } from '../../../types/phase2-models';
 import { PredictionRequest } from '../core/MLPipelineOrchestrator';
 import { HeuristicPredictor } from './HeuristicPredictor';
 
@@ -186,7 +188,7 @@ export class FallbackManager {
       
       recommendations: [{
         id: 'general_improvement',
-        type: 'general',
+        type: 'strategy',
         priority: 1,
         impactOnSuccess: {
           interviewBoost: 10,

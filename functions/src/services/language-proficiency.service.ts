@@ -153,11 +153,14 @@ export class LanguageProficiencyService {
     const languages: LanguageProficiency[] = [];
     
     // Check skills section for languages
-    if (cv.skills?.languages && Array.isArray(cv.skills.languages)) {
-      for (const lang of cv.skills.languages) {
-        const parsed = this.parseLanguageString(lang);
-        if (parsed) {
-          languages.push(parsed);
+    if (cv.skills && !Array.isArray(cv.skills)) {
+      const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+      if (skillsObj.languages && Array.isArray(skillsObj.languages)) {
+        for (const lang of skillsObj.languages) {
+          const parsed = this.parseLanguageString(lang);
+          if (parsed) {
+            languages.push(parsed);
+          }
         }
       }
     }
@@ -543,8 +546,11 @@ export class LanguageProficiencyService {
   private identifyDataSources(cv: ParsedCV): string[] {
     const sources: string[] = [];
     
-    if (cv.skills?.languages && cv.skills.languages.length > 0) {
-      sources.push('Skills section');
+    if (cv.skills && !Array.isArray(cv.skills)) {
+      const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+      if (skillsObj.languages && skillsObj.languages.length > 0) {
+        sources.push('Skills section');
+      }
     }
     
     if (cv.certifications?.some(c => this.isLanguageCertification(c.name))) {

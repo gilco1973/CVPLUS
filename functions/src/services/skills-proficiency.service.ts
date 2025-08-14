@@ -56,22 +56,34 @@ export class SkillsProficiencyService {
 
     // Extract from explicit skills section
     if (cv.skills) {
-      if (cv.skills.technical) {
-        cv.skills.technical.forEach(skill => {
+      if (!Array.isArray(cv.skills)) {
+        const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+        
+        if (skillsObj.technical) {
+          skillsObj.technical.forEach((skill: string) => {
+            if (!skillMentions.has(skill)) skillMentions.set(skill, []);
+            skillMentions.get(skill)!.push('Listed in technical skills');
+          });
+        }
+        
+        if (skillsObj.soft) {
+          skillsObj.soft.forEach((skill: string) => {
+            if (!skillMentions.has(skill)) skillMentions.set(skill, []);
+            skillMentions.get(skill)!.push('Listed in soft skills');
+          });
+        }
+        
+        if (skillsObj.languages) {
+          skillsObj.languages.forEach((skill: string) => {
+            if (!skillMentions.has(skill)) skillMentions.set(skill, []);
+            skillMentions.get(skill)!.push('Listed in languages');
+          });
+        }
+      } else {
+        // Handle array format
+        (cv.skills as string[]).forEach((skill: string) => {
           if (!skillMentions.has(skill)) skillMentions.set(skill, []);
-          skillMentions.get(skill)!.push('Listed in technical skills');
-        });
-      }
-      if (cv.skills.soft) {
-        cv.skills.soft.forEach(skill => {
-          if (!skillMentions.has(skill)) skillMentions.set(skill, []);
-          skillMentions.get(skill)!.push('Listed in soft skills');
-        });
-      }
-      if (cv.skills.languages) {
-        cv.skills.languages.forEach(skill => {
-          if (!skillMentions.has(skill)) skillMentions.set(skill, []);
-          skillMentions.get(skill)!.push('Listed in languages');
+          skillMentions.get(skill)!.push('Listed in skills');
         });
       }
     }

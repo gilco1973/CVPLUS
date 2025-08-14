@@ -47,6 +47,7 @@ export class MatchingFeatureService {
         experience: [{
           company: 'Tech Corp',
           position: 'Software Engineer',
+          duration: '3 years',
           startDate: '2020-01',
           endDate: '2023-01',
           description: 'Developed web applications using React and Node.js'
@@ -55,7 +56,8 @@ export class MatchingFeatureService {
         education: [{
           institution: 'University',
           degree: 'Bachelor of Science',
-          field: 'Computer Science'
+          field: 'Computer Science',
+          year: '2020'
         }]
       };
       
@@ -141,7 +143,7 @@ export class MatchingFeatureService {
       /certified|certification|aws|azure|google\s*cloud|cisco|microsoft/gi
     ];
     
-    const matches = [];
+    const matches: string[] = [];
     qualificationPatterns.forEach(pattern => {
       const found = text.match(pattern);
       if (found) {
@@ -164,7 +166,7 @@ export class MatchingFeatureService {
   }
 
   private extractCVSkills(cv: ParsedCV): string[] {
-    const skills = [];
+    const skills: string[] = [];
     
     if (Array.isArray(cv.skills)) {
       skills.push(...cv.skills.map(skill => skill.toLowerCase()));
@@ -214,8 +216,8 @@ export class MatchingFeatureService {
     const requirements = {
       requiredExperience: 0,
       preferredExperience: 0,
-      requiredEducation: [],
-      requiredSkills: [],
+      requiredEducation: [] as string[],
+      requiredSkills: [] as string[],
       salaryRange: undefined as { min: number; max: number } | undefined
     };
     
@@ -289,7 +291,7 @@ export class MatchingFeatureService {
       if (exp.description) {
         const descriptionWords = exp.description.toLowerCase().split(/\s+/);
         const jobWords = jobLower.split(/\s+/);
-        const commonWords = descriptionWords.filter(word => jobWords.includes(word)).length;
+        const commonWords = descriptionWords.filter((word: string) => jobWords.includes(word)).length;
         const relevance = commonWords / Math.max(descriptionWords.length, jobWords.length);
         expScore += relevance * 0.4;
       }

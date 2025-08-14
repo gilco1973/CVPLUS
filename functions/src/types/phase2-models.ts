@@ -767,6 +767,31 @@ export interface RegionalOptimizationResponse extends Phase2APIResponse<{
   recommendations: PredictiveRecommendation[];
 }> {}
 
+// ===============================
+// ML TRAINING CONFIGURATION
+// ===============================
+
+export interface MLTrainingConfig {
+  modelType: 'gradient_boosting' | 'neural_network' | 'random_forest' | 'ensemble';
+  hyperparameters: {
+    learning_rate?: number;
+    max_depth?: number;
+    n_estimators?: number;
+    batch_size?: number;
+    epochs?: number;
+  };
+  validation: {
+    testSize: number; // 0-1
+    crossValidation: number; // number of folds
+    stratify: boolean;
+  };
+  features: {
+    include: string[];
+    exclude?: string[];
+    engineered?: boolean;
+  };
+}
+
 // Export type unions for convenience
 export type PredictionTypes = SuccessPrediction | SalaryPrediction | TimeToHirePrediction;
 export type AnalyticsTypes = AnalyticsEvent | AnalyticsMetrics;

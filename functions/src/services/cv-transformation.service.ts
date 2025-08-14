@@ -425,21 +425,23 @@ Generate specific recommendations that can be directly applied to transform this
       if (!cv.skills) cv.skills = [];
       
       if (Array.isArray(cv.skills)) {
+        const skillsArray = cv.skills as string[];
         const relevantKeywords = keywords.filter(kw => 
-          !cv.skills!.some((skill: string) => 
+          !skillsArray.some((skill: string) => 
             skill.toLowerCase().includes(kw.toLowerCase())
           )
         );
-        (cv.skills as string[]).push(...relevantKeywords);
+        skillsArray.push(...relevantKeywords);
       } else {
         // Handle object-based skills
-        if (!cv.skills.technical) cv.skills.technical = [];
+        const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+        if (!skillsObj.technical) skillsObj.technical = [];
         const relevantKeywords = keywords.filter(kw => 
-          !cv.skills!.technical?.some((skill: string) => 
+          !skillsObj.technical?.some((skill: string) => 
             skill.toLowerCase().includes(kw.toLowerCase())
           )
         );
-        cv.skills.technical.push(...relevantKeywords);
+        skillsObj.technical.push(...relevantKeywords);
       }
       
       // Enhance summary with keywords

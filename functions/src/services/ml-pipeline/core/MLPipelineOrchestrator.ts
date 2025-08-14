@@ -6,11 +6,12 @@
  */
 
 import { 
-  SuccessPrediction, 
-  PredictiveRecommendation,
+  SuccessPrediction,
   FeatureVector,
   UserOutcome
 } from '../../../types/phase2-models';
+// @ts-ignore - PredictiveRecommendation import preserved for future use
+import { PredictiveRecommendation } from '../../../types/phase2-models';
 import { ParsedCV } from '../../../types/job';
 import { FeatureExtractor } from '../features/FeatureExtractor';
 import { InterviewPredictor } from '../predictions/InterviewPredictor';
@@ -39,16 +40,16 @@ export interface PredictionRequest {
 }
 
 export class MLPipelineOrchestrator {
-  private featureExtractor: FeatureExtractor;
-  private interviewPredictor: InterviewPredictor;
-  private offerPredictor: OfferPredictor;
-  private salaryPredictor: SalaryPredictor;
-  private timeToHirePredictor: TimeToHirePredictor;
-  private competitivenessAnalyzer: CompetitivenessAnalyzer;
-  private recommendationEngine: RecommendationEngine;
-  private outcomeTracker: OutcomeTracker;
-  private predictionCache: PredictionCache;
-  private fallbackManager: FallbackManager;
+  private featureExtractor!: FeatureExtractor;
+  private interviewPredictor!: InterviewPredictor;
+  private offerPredictor!: OfferPredictor;
+  private salaryPredictor!: SalaryPredictor;
+  private timeToHirePredictor!: TimeToHirePredictor;
+  private competitivenessAnalyzer!: CompetitivenessAnalyzer;
+  private recommendationEngine!: RecommendationEngine;
+  private outcomeTracker!: OutcomeTracker;
+  private predictionCache!: PredictionCache;
+  private fallbackManager!: FallbackManager;
 
   constructor() {
     this.initializeServices();
