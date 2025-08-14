@@ -201,8 +201,8 @@ export const generateATSKeywords = onCall(
 
       // Generate keywords
       const keywords = await atsOptimizationService.generateKeywords(
-        job.parsedData!,
         jobDescription,
+        job.industry,
         targetRole
       );
 

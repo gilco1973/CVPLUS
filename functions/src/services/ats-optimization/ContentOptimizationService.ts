@@ -55,7 +55,7 @@ export class ContentOptimizationService {
     
     // Optimize experience descriptions
     if (optimizedCV.experience) {
-      optimizedCV.experience = optimizedCV.experience.map(exp => ({
+      optimizedCV.experience = optimizedCV.experience.map((exp: any) => ({
         ...exp,
         description: exp.description ? 
           this.optimizeTextWithKeywords(exp.description, recommendedKeywords) : 
@@ -76,28 +76,39 @@ export class ContentOptimizationService {
     console.log('⚠️ Falling back to basic ATS analysis...');
     
     const basicScore = this.calculateBasicScore(parsedCV);
-    const basicAnalysis = await this.performBasicAnalysis(
+    // Basic analysis performed for fallback scenario
+    await this.performBasicAnalysis(
       parsedCV, 
       context.targetRole, 
       context.targetKeywords
     );
     
     return {
+      score: basicScore,
+      overall: basicScore,
       overallScore: basicScore,
+      passes: basicScore >= 75,
       breakdown: {
         parsing: this.calculateParsingScore(parsedCV),
         keywords: this.calculateKeywordScore(parsedCV, context.targetKeywords || []),
         formatting: this.calculateFormattingScore(parsedCV),
-        content: this.calculateContentScore(parsedCV)
+        content: this.calculateContentScore(parsedCV),
+        specificity: this.calculateSpecificityScore(parsedCV)
       },
       issues: this.identifyBasicIssues(parsedCV),
       suggestions: this.generateBasicSuggestions(parsedCV, context),
       keywords: {
         found: this.extractFoundKeywords(parsedCV, context.targetKeywords || []),
         missing: this.extractMissingKeywords(parsedCV, context.targetKeywords || []),
+        recommended: context.targetKeywords || [],
         density: this.calculateKeywordDensity(parsedCV, context.targetKeywords || []),
         suggestions: ['Add more relevant keywords', 'Improve keyword context']
       },
+      recommendations: [
+        'Improve content structure',
+        'Add more specific achievements', 
+        'Enhance keyword usage'
+      ],
       processingMetadata: {
         timestamp: new Date().toISOString(),
         version: '2.0.0-fallback',
@@ -146,7 +157,6 @@ export class ContentOptimizationService {
   private calculateKeywordScore(parsedCV: ParsedCV, targetKeywords: string[]): number {
     if (targetKeywords.length === 0) return 60; // Default when no targets
     
-    const cvText = this.cvToText(parsedCV);
     const foundKeywords = this.extractFoundKeywords(parsedCV, targetKeywords);
     
     const matchRatio = foundKeywords.length / targetKeywords.length;
@@ -182,7 +192,7 @@ export class ContentOptimizationService {
     
     // Experience quality
     if (parsedCV.experience && parsedCV.experience.length > 0) {
-      const avgDescLength = parsedCV.experience.reduce((sum, exp) => 
+      const avgDescLength = parsedCV.experience.reduce((sum: number, exp: any) => 
         sum + (exp.description?.length || 0), 0
       ) / parsedCV.experience.length;
       
@@ -246,7 +256,7 @@ export class ContentOptimizationService {
     
     // Experience descriptions
     if (parsedCV.experience) {
-      const hasGoodDescriptions = parsedCV.experience.some(exp => 
+      const hasGoodDescriptions = parsedCV.experience.some((exp: any) => 
         exp.description && exp.description.length > 100
       );
       if (hasGoodDescriptions) score += 40;
@@ -265,10 +275,65 @@ export class ContentOptimizationService {
   }
 
   /**
+   * Calculate specificity score based on detailed information
+   */
+  private calculateSpecificityScore(parsedCV: ParsedCV): number {
+    let score = 0;
+    
+    // Check for specific achievements with numbers/metrics
+    if (parsedCV.experience) {
+      const hasQuantifiedAchievements = parsedCV.experience.some((exp: any) => {
+        const description = exp.description || '';
+        const achievements = exp.achievements || [];
+        const combinedText = description + ' ' + achievements.join(' ');
+        // Look for numbers, percentages, dollar amounts, etc.
+        return /\d+[%$]?|\$\d+|increased|decreased|improved|reduced|generated|saved/i.test(combinedText);
+      });
+      if (hasQuantifiedAchievements) score += 40;
+    }
+    
+    // Check for specific technologies and tools
+    if (parsedCV.skills) {
+      let technicalSkills: string[] = [];
+      
+      if (Array.isArray(parsedCV.skills)) {
+        // If skills is just an array
+        technicalSkills = parsedCV.skills;
+      } else if (parsedCV.skills && typeof parsedCV.skills === 'object') {
+        // If skills is an object with technical property
+        const skillsObj = parsedCV.skills as any;
+        if (Array.isArray(skillsObj.technical)) {
+          technicalSkills = skillsObj.technical;
+        } else if (skillsObj.technical) {
+          technicalSkills = [skillsObj.technical];
+        }
+      }
+      
+      if (technicalSkills.length >= 5) score += 30;
+    }
+    
+    // Check for specific certifications or education details
+    if (parsedCV.education && parsedCV.education.length > 0) {
+      const hasSpecificDetails = parsedCV.education.some((edu: any) => 
+        edu.gpa || edu.honors || edu.coursework
+      );
+      if (hasSpecificDetails) score += 20;
+    }
+    
+    // Professional summary specificity
+    if (parsedCV.personalInfo?.summary) {
+      const summary = parsedCV.personalInfo.summary;
+      const hasSpecificTerms = /\d+\s*(years?|months?)|experienced|expert|proficient|specialized/i.test(summary);
+      if (hasSpecificTerms) score += 10;
+    }
+    
+    return Math.min(score, 100);
+  }
+
+  /**
    * Perform basic keyword analysis
    */
   private performBasicKeywordAnalysis(parsedCV: ParsedCV, targetKeywords: string[]): any {
-    const cvText = this.cvToText(parsedCV);
     const foundKeywords = this.extractFoundKeywords(parsedCV, targetKeywords);
     const missingKeywords = targetKeywords.filter(kw => 
       !foundKeywords.includes(kw.toLowerCase())
@@ -289,14 +354,14 @@ export class ContentOptimizationService {
     const keywords: string[] = [];
     
     recommendations.forEach(rec => {
-      if (rec.category === 'keywords' && rec.issue.includes('Missing')) {
+      if (rec.category === 'keywords' && rec.issue?.includes('Missing')) {
         // Extract keywords from issue description
-        const matches = rec.issue.match(/Missing.*?:(.*?)(?:\.|$)/);
+        const matches = rec.issue?.match(/Missing.*?:(.*?)(?:\.|$)/);
         if (matches && matches[1]) {
           const extractedKeywords = matches[1]
             .split(/[,;]/)
-            .map(kw => kw.trim())
-            .filter(kw => kw.length > 2);
+            .map((kw: string) => kw.trim())
+            .filter((kw: string) => kw.length > 2);
           keywords.push(...extractedKeywords);
         }
       }
@@ -385,7 +450,7 @@ export class ContentOptimizationService {
     }
     
     if (parsedCV.experience) {
-      const weakDescriptions = parsedCV.experience.filter(exp => 
+      const weakDescriptions = parsedCV.experience.filter((exp: any) => 
         !exp.description || exp.description.length < 50
       );
       if (weakDescriptions.length > 0) {
@@ -476,7 +541,7 @@ export class ContentOptimizationService {
 
     if (cv.personalInfo?.summary) sections.push(cv.personalInfo.summary);
     if (cv.experience) {
-      cv.experience.forEach(exp => {
+      cv.experience.forEach((exp: any) => {
         if (exp.role) sections.push(exp.role);
         if (exp.company) sections.push(exp.company);
         if (exp.description) sections.push(exp.description);

@@ -7,10 +7,7 @@
 
 import { 
   ParsedCV, 
-  ATSOptimizationResult,
-  EnhancedJob,
-  AdvancedATSScore,
-  ATSSystemSimulation 
+  ATSOptimizationResult 
 } from '../../types/enhanced-models';
 import { KeywordAnalysisService } from './KeywordAnalysisService';
 import { ATSScoringService } from './ATSScoringService';
@@ -111,30 +108,36 @@ export class ATSOptimizationOrchestrator {
 
       // Step 5: Build backward-compatible result
       const result: ATSOptimizationResult = {
+        score: advancedScore.overall,
+        overall: advancedScore.overall,
         overallScore: advancedScore.overall,
+        passes: advancedScore.overall >= 75,
         breakdown: {
           parsing: advancedScore.breakdown.parsing,
           keywords: advancedScore.breakdown.keywords,
           formatting: advancedScore.breakdown.formatting,
-          content: advancedScore.breakdown.content
+          content: advancedScore.breakdown.content,
+          specificity: advancedScore.breakdown.specificity
         },
         issues: [
-          ...systemSimulations.flatMap((sim: ATSSystemSimulation) => sim.identifiedIssues || []),
+          ...systemSimulations.flatMap((sim: any) => sim.identifiedIssues || []),
           ...recommendations
-            .filter(rec => rec.priority === 'critical' || rec.priority === 'high')
-            .map(rec => ({ type: 'warning' as const, description: rec.issue, severity: rec.priority as any }))
+            .filter(rec => rec.priority === 1 || rec.priority === 2)
+            .map(rec => ({ type: 'warning' as const, description: rec.description || 'Optimization needed', severity: rec.priority === 1 ? 'critical' : 'high' }))
         ],
         suggestions: recommendations.map(rec => ({
-          type: 'improvement' as const,
-          description: rec.solution,
-          impact: rec.expectedImpact || 'medium',
-          implementation: rec.implementation || 'unknown'
+          section: rec.section || 'general',
+          original: rec.currentContent || '',
+          suggested: rec.suggestedContent || rec.description || 'Apply recommended improvement',
+          reason: rec.description || 'Optimization needed',
+          impact: rec.impact || 'medium'
         })),
+        recommendations: recommendations.map(rec => rec.description || 'Optimization needed'),
         keywords: {
-          found: semanticAnalysis?.matchedKeywords?.map(kw => kw.keyword) || [],
+          found: semanticAnalysis?.matchedKeywords?.map((kw: any) => kw.keyword || kw) || [],
           missing: semanticAnalysis?.missingKeywords || [],
-          density: semanticAnalysis?.keywordDensity || 0,
-          suggestions: semanticAnalysis?.recommendations || []
+          recommended: semanticAnalysis?.recommendations || [],
+          density: semanticAnalysis?.keywordDensity || 0
         },
         advancedScore,
         semanticAnalysis,

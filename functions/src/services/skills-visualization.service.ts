@@ -569,8 +569,12 @@ Technical skills only (languages, frameworks, tools, platforms):`;
     }
     
     if (cv.skills) {
-      parts.push(...(cv.skills.technical || []));
-      parts.push(...(cv.skills.soft || []));
+      if (Array.isArray(cv.skills)) {
+        parts.push(...cv.skills);
+      } else {
+        parts.push(...((cv.skills as any).technical || []));
+        parts.push(...((cv.skills as any).soft || []));
+      }
     }
     
     return parts.join(' ');

@@ -4,7 +4,7 @@
  * Generates keyword optimization recommendations and improvement suggestions.
  */
 
-import { KeywordMatch } from '../../types/enhanced-models';
+import { KeywordMatch } from '../../../types/enhanced-models';
 
 export class KeywordRecommendationEngine {
 

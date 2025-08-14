@@ -5,7 +5,7 @@
  * and structure recommendations for better parsing compatibility.
  */
 
-import { ParsedCV } from '../types/enhanced-models';
+import { ParsedCV } from '../../types/enhanced-models';
 
 interface ATSTemplate {
   id: string;
@@ -388,9 +388,11 @@ export class FormatOptimizationService {
     }
     
     // Check for skills organization
-    if (parsedCV.skills && typeof parsedCV.skills === 'string') {
-      if (parsedCV.skills.length > 500) {
-        issues.push('Skills section may be too lengthy for optimal ATS parsing');
+    if (parsedCV.skills) {
+      if (Array.isArray(parsedCV.skills)) {
+        if (parsedCV.skills.length > 50) {
+          issues.push('Too many individual skills listed - consider grouping by category');
+        }
       }
     }
     
@@ -470,9 +472,7 @@ export class FormatOptimizationService {
    * Recommend best templates for specific CV
    */
   private recommendTemplatesForCV(parsedCV: ParsedCV): string[] {
-    const templates = this.getTemplateLibrary();
-    
-    // Simple template recommendation logic
+    // Note: template library integration pending - using hardcoded recommendations for now
     const recommendations: string[] = [];
     
     // Always recommend the universal professional template

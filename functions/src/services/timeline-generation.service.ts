@@ -47,16 +47,6 @@ export class TimelineGenerationService {
   /**
    * Helper function to safely extract skills array from various skill formats
    */
-  private getSkillsArray(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
-    if (!skills) return [];
-    return Array.isArray(skills) ? skills : [
-      ...(skills.technical || []),
-      ...(skills.soft || []),
-      ...(skills.languages || []),
-      ...(skills.tools || [])
-    ];
-  }
-  
   /**
    * Helper function to safely extract technical skills from various skill formats
    */

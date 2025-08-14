@@ -208,8 +208,6 @@ export const checkRegionalCompliance = onCall(
       }
 
       
-      const regionalizationService = RegionalLocalizationService.getInstance();
-      
       // Quick compliance check without full optimization
       const complianceResult = await performQuickComplianceCheck(cvData, region, country);
       

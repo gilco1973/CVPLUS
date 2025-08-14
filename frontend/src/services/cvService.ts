@@ -195,25 +195,93 @@ export const applyATSOptimizations = async (jobId: string, optimizations: any) =
 
 // CV Improvement Functions
 export const getRecommendations = async (jobId: string, targetRole?: string, industryKeywords?: string[], forceRegenerate?: boolean) => {
-  const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
-  const result = await getRecommendationsFunction({
-    jobId,
-    targetRole,
-    industryKeywords,
-    forceRegenerate
-  });
-  return result.data;
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated');
+  
+  const token = await user.getIdToken();
+  
+  try {
+    // First try the callable function
+    const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
+    const result = await getRecommendationsFunction({
+      jobId,
+      targetRole,
+      industryKeywords,
+      forceRegenerate
+    });
+    return result.data;
+  } catch (error: any) {
+    console.warn('Callable function failed, trying direct HTTP call:', error);
+    
+    // Fallback to direct HTTP call to V2 function
+    const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/getRecommendationsV2`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: {
+          jobId,
+          targetRole,
+          industryKeywords,
+          forceRegenerate
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.result;
+  }
 };
 
 export const applyImprovements = async (jobId: string, selectedRecommendationIds: string[], targetRole?: string, industryKeywords?: string[]) => {
-  const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
-  const result = await applyImprovementsFunction({
-    jobId,
-    selectedRecommendationIds,
-    targetRole,
-    industryKeywords
-  });
-  return result.data;
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated');
+  
+  const token = await user.getIdToken();
+  
+  try {
+    // First try the callable function
+    const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
+    const result = await applyImprovementsFunction({
+      jobId,
+      selectedRecommendationIds,
+      targetRole,
+      industryKeywords
+    });
+    return result.data;
+  } catch (error: any) {
+    console.warn('Callable function failed, trying direct HTTP call:', error);
+    
+    // Fallback to direct HTTP call to V2 function
+    const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/applyImprovementsV2`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: {
+          jobId,
+          selectedRecommendationIds,
+          targetRole,
+          industryKeywords
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.result;
+  }
 };
 
 export const previewImprovement = async (jobId: string, recommendationId: string) => {

@@ -4,7 +4,7 @@
  * Handles keyword extraction, matching, and relevance scoring.
  */
 
-import { ParsedCV, KeywordMatch } from '../../types/enhanced-models';
+import { KeywordMatch } from '../../../types/enhanced-models';
 
 export class KeywordExtractor {
   
@@ -39,9 +39,12 @@ export class KeywordExtractor {
       if (frequency > 0) {
         matchedKeywords.push({
           keyword,
+          variations: [keyword],
           frequency,
           relevanceScore: this.calculateKeywordRelevance(keyword, cvText, industry),
-          context: this.extractKeywordContext(keyword, cvText)
+          context: this.extractKeywordContext(keyword, cvText),
+          atsImportance: 0.8,
+          competitorUsage: 0.5
         });
       }
     }
@@ -55,9 +58,12 @@ export class KeywordExtractor {
           if (frequency > 0) {
             matchedKeywords.push({
               keyword: term,
+              variations: [term],
               frequency,
               relevanceScore: this.calculateKeywordRelevance(term, cvText, industry),
-              context: this.extractKeywordContext(term, cvText)
+              context: this.extractKeywordContext(term, cvText),
+              atsImportance: 0.7,
+              competitorUsage: 0.4
             });
           }
         }

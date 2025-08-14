@@ -12,7 +12,7 @@ import {
   ATSSystemSimulation,
   CompetitorAnalysis,
   PrioritizedRecommendation 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { RecommendationParams } from './types';
 
 export class RecommendationService {
@@ -64,20 +64,17 @@ export class RecommendationService {
       const criticalKeywords = semanticAnalysis.missingKeywords.slice(0, 5);
       
       recommendations.push({
+        id: `keyword-missing-${Date.now()}`,
         category: 'keywords',
-        priority: 'critical',
-        issue: `Missing ${criticalKeywords.length} critical keywords: ${criticalKeywords.join(', ')}`,
-        solution: 'Integrate these keywords naturally into your experience descriptions and skills section',
-        expectedImpact: 'high',
-        implementation: 'medium',
-        timeToComplete: '2-3 hours',
-        atsSystemsAffected: ['workday', 'greenhouse', 'lever'],
-        specificSteps: [
-          'Review job description for keyword context',
-          'Add keywords to relevant experience descriptions',
-          'Update skills section with missing technical terms',
-          'Include keywords in professional summary'
-        ]
+        priority: 1,
+        title: `Missing Critical Keywords`,
+        description: `Missing ${criticalKeywords.length} critical keywords: ${criticalKeywords.join(', ')}. Integrate these keywords naturally into your experience descriptions and skills section`,
+        impact: 'high',
+        estimatedScoreImprovement: 15,
+        actionRequired: 'add',
+        section: 'skills',
+        keywords: criticalKeywords,
+        atsSystemsAffected: ['workday', 'greenhouse', 'lever']
       });
     }
 
@@ -87,37 +84,29 @@ export class RecommendationService {
     
     if (currentDensity < optimalDensity * 0.7) {
       recommendations.push({
+        id: `keyword-density-low-${Date.now()}`,
         category: 'keywords',
-        priority: 'high',
-        issue: `Keyword density too low (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%)`,
-        solution: 'Increase keyword frequency by naturally incorporating relevant terms throughout your CV',
-        expectedImpact: 'high',
-        implementation: 'medium',
-        timeToComplete: '1-2 hours',
-        atsSystemsAffected: ['greenhouse', 'lever', 'icims'],
-        specificSteps: [
-          'Identify underused important keywords',
-          'Add synonyms and variations of key terms',
-          'Include keywords in multiple sections',
-          'Use keywords in context, not as lists'
-        ]
+        priority: 2,
+        title: 'Keyword Density Too Low',
+        description: `Keyword density too low (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%). Increase keyword frequency by naturally incorporating relevant terms throughout your CV`,
+        impact: 'high',
+        estimatedScoreImprovement: 10,
+        actionRequired: 'modify',
+        section: 'content',
+        atsSystemsAffected: ['greenhouse', 'lever', 'icims']
       });
     } else if (currentDensity > optimalDensity * 1.3) {
       recommendations.push({
+        id: `keyword-density-high-${Date.now()}`,
         category: 'keywords',
-        priority: 'medium',
-        issue: `Keyword density too high (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%)`,
-        solution: 'Reduce keyword repetition to avoid appearing as keyword stuffing',
-        expectedImpact: 'medium',
-        implementation: 'easy',
-        timeToComplete: '30-60 minutes',
-        atsSystemsAffected: ['workday', 'bamboohr'],
-        specificSteps: [
-          'Review for repetitive keyword usage',
-          'Replace some keywords with synonyms',
-          'Focus on natural language flow',
-          'Maintain keyword relevance in context'
-        ]
+        priority: 3,
+        title: 'Keyword Density Too High',
+        description: `Keyword density too high (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%). Reduce keyword repetition to avoid appearing as keyword stuffing`,
+        impact: 'medium',
+        estimatedScoreImprovement: 8,
+        actionRequired: 'modify',
+        section: 'content',
+        atsSystemsAffected: ['workday', 'bamboohr']
       });
     }
 
@@ -126,20 +115,17 @@ export class RecommendationService {
       const lowFreqKeywords = semanticAnalysis.matchedKeywords.filter(kw => kw.frequency === 1);
       if (lowFreqKeywords.length > 3) {
         recommendations.push({
+          id: `keyword-frequency-${Date.now()}`,
           category: 'keywords',
-          priority: 'medium',
-          issue: `${lowFreqKeywords.length} important keywords appear only once`,
-          solution: 'Increase frequency of critical keywords by using them in multiple relevant contexts',
-          expectedImpact: 'medium',
-          implementation: 'medium',
-          timeToComplete: '1 hour',
+          priority: 3,
+          title: 'Low Keyword Frequency',
+          description: `${lowFreqKeywords.length} important keywords appear only once. Increase frequency of critical keywords by using them in multiple relevant contexts`,
+          impact: 'medium',
+          estimatedScoreImprovement: 6,
+          actionRequired: 'modify',
+          section: 'content',
           atsSystemsAffected: ['greenhouse', 'icims'],
-          specificSteps: [
-            'Identify single-use critical keywords',
-            'Find additional relevant contexts for usage',
-            'Add to skills section if technical terms',
-            'Include in achievement descriptions'
-          ]
+          keywords: lowFreqKeywords.map(kw => kw.keyword)
         });
       }
     }
@@ -167,40 +153,32 @@ export class RecommendationService {
 
     if (missingSections.length > 0) {
       recommendations.push({
+        id: `structure-missing-${Date.now()}`,
         category: 'structure',
-        priority: 'critical',
-        issue: `Missing essential sections: ${missingSections.join(', ')}`,
-        solution: 'Add all missing essential sections to ensure ATS can parse your information',
-        expectedImpact: 'very high',
-        implementation: 'easy',
-        timeToComplete: '30-60 minutes',
-        atsSystemsAffected: ['all'],
-        specificSteps: [
-          'Add complete contact information',
-          'Include professional experience section',
-          'Add education background',
-          'Create comprehensive skills section'
-        ]
+        priority: 1,
+        title: 'Missing Essential Sections',
+        description: `Missing essential sections: ${missingSections.join(', ')}. Add all missing essential sections to ensure ATS can parse your information`,
+        impact: 'high',
+        estimatedScoreImprovement: 25,
+        actionRequired: 'add',
+        section: 'structure',
+        atsSystemsAffected: ['workday', 'greenhouse', 'lever', 'bamboohr', 'taleo', 'generic']
       });
     }
 
     // Professional summary missing
     if (!parsedCV.personalInfo?.summary) {
       recommendations.push({
+        id: `structure-summary-${Date.now()}`,
         category: 'structure',
-        priority: 'high',
-        issue: 'Missing professional summary section',
-        solution: 'Add a compelling 2-3 sentence professional summary at the top of your CV',
-        expectedImpact: 'high',
-        implementation: 'medium',
-        timeToComplete: '30-45 minutes',
-        atsSystemsAffected: ['workday', 'smartrecruiters'],
-        specificSteps: [
-          'Write 2-3 sentences highlighting your key strengths',
-          'Include your most relevant experience',
-          'Add 2-3 important keywords naturally',
-          'Focus on value proposition to employers'
-        ]
+        priority: 2,
+        title: 'Missing Professional Summary',
+        description: 'Missing professional summary section. Add a compelling 2-3 sentence professional summary at the top of your CV',
+        impact: 'high',
+        estimatedScoreImprovement: 12,
+        actionRequired: 'add',
+        section: 'summary',
+        atsSystemsAffected: ['workday', 'smartrecruiters']
       });
     }
 
@@ -208,20 +186,16 @@ export class RecommendationService {
     const hasInconsistentDates = this.checkDateConsistency(parsedCV);
     if (hasInconsistentDates) {
       recommendations.push({
+        id: `structure-dates-${Date.now()}`,
         category: 'structure',
-        priority: 'medium',
-        issue: 'Inconsistent date formatting across sections',
-        solution: 'Standardize all dates to MM/YYYY format for better ATS parsing',
-        expectedImpact: 'medium',
-        implementation: 'easy',
-        timeToComplete: '15-30 minutes',
-        atsSystemsAffected: ['workday', 'smartrecruiters', 'bamboohr'],
-        specificSteps: [
-          'Review all dates in experience section',
-          'Review all dates in education section',
-          'Convert to consistent MM/YYYY format',
-          'Use "Present" for current positions'
-        ]
+        priority: 3,
+        title: 'Inconsistent Date Formatting',
+        description: 'Inconsistent date formatting across sections. Standardize all dates to MM/YYYY format for better ATS parsing',
+        impact: 'medium',
+        estimatedScoreImprovement: 5,
+        actionRequired: 'modify',
+        section: 'formatting',
+        atsSystemsAffected: ['workday', 'smartrecruiters', 'bamboohr']
       });
     }
 
@@ -241,20 +215,16 @@ export class RecommendationService {
     const weakExperiences = this.identifyWeakExperiences(parsedCV.experience || []);
     if (weakExperiences.length > 0) {
       recommendations.push({
+        id: `content-experience-${Date.now()}`,
         category: 'content',
-        priority: 'high',
-        issue: `${weakExperiences.length} experience entries lack detailed descriptions`,
-        solution: 'Enhance experience descriptions with specific achievements, responsibilities, and quantified results',
-        expectedImpact: 'high',
-        implementation: 'hard',
-        timeToComplete: '2-4 hours',
-        atsSystemsAffected: ['greenhouse', 'icims', 'lever'],
-        specificSteps: [
-          'Add specific responsibilities for each role',
-          'Include quantified achievements (numbers, percentages)',
-          'Use action verbs to start bullet points',
-          'Highlight impact and results of your work'
-        ]
+        priority: 2,
+        title: 'Weak Experience Descriptions',
+        description: `${weakExperiences.length} experience entries lack detailed descriptions. Enhance experience descriptions with specific achievements, responsibilities, and quantified results`,
+        impact: 'high',
+        estimatedScoreImprovement: 15,
+        actionRequired: 'modify',
+        section: 'experience',
+        atsSystemsAffected: ['greenhouse', 'icims', 'lever']
       });
     }
 
@@ -262,20 +232,16 @@ export class RecommendationService {
     const hasQuantifiedAchievements = this.checkQuantifiedAchievements(parsedCV);
     if (!hasQuantifiedAchievements) {
       recommendations.push({
+        id: `content-achievements-${Date.now()}`,
         category: 'content',
-        priority: 'high',
-        issue: 'Experience lacks quantified achievements and measurable results',
-        solution: 'Add specific numbers, percentages, and metrics to demonstrate your impact',
-        expectedImpact: 'very high',
-        implementation: 'hard',
-        timeToComplete: '3-5 hours',
-        atsSystemsAffected: ['icims', 'greenhouse', 'lever'],
-        specificSteps: [
-          'Identify achievements from each role',
-          'Quantify results with specific numbers',
-          'Add percentages for improvements made',
-          'Include timeframes for project completion'
-        ]
+        priority: 2,
+        title: 'Lacks Quantified Achievements',
+        description: 'Experience lacks quantified achievements and measurable results. Add specific numbers, percentages, and metrics to demonstrate your impact',
+        impact: 'high',
+        estimatedScoreImprovement: 20,
+        actionRequired: 'modify',
+        section: 'experience',
+        atsSystemsAffected: ['icims', 'greenhouse', 'lever']
       });
     }
 
@@ -283,20 +249,16 @@ export class RecommendationService {
     const skillsQuality = this.assessSkillsQuality(parsedCV.skills);
     if (skillsQuality < 0.7) {
       recommendations.push({
+        id: `content-skills-${Date.now()}`,
         category: 'content',
-        priority: 'medium',
-        issue: 'Skills section lacks depth and organization',
-        solution: 'Expand and categorize skills by type (Technical, Soft Skills, Tools, etc.)',
-        expectedImpact: 'medium',
-        implementation: 'medium',
-        timeToComplete: '1-2 hours',
-        atsSystemsAffected: ['greenhouse', 'icims'],
-        specificSteps: [
-          'Categorize skills by type',
-          'Add proficiency levels where relevant',
-          'Include both technical and soft skills',
-          'Update with current industry-relevant skills'
-        ]
+        priority: 3,
+        title: 'Skills Section Lacks Depth',
+        description: 'Skills section lacks depth and organization. Expand and categorize skills by type (Technical, Soft Skills, Tools, etc.)',
+        impact: 'medium',
+        estimatedScoreImprovement: 8,
+        actionRequired: 'modify',
+        section: 'skills',
+        atsSystemsAffected: ['greenhouse', 'icims']
       });
     }
 
@@ -312,26 +274,23 @@ export class RecommendationService {
     const recommendations: PrioritizedRecommendation[] = [];
     
     // Find systems with low compatibility scores
-    const problemSystems = systemSimulations.filter(sim => sim.compatibilityScore < 75);
+    const problemSystems = systemSimulations.filter(sim => (sim.compatibilityScore || sim.overallScore) < 75);
     
     if (problemSystems.length > 0) {
-      const systemNames = problemSystems.map(sys => sys.systemName);
-      const commonIssues = this.identifyCommonSystemIssues(problemSystems);
+      const systemNames = problemSystems.map(sys => sys.systemName || sys.system);
+      // const commonIssues = this.identifyCommonSystemIssues(problemSystems); // Unused variable
       
       recommendations.push({
+        id: `ats-compatibility-${Date.now()}`,
         category: 'ats-compatibility',
-        priority: 'high',
-        issue: `Low compatibility with ${systemNames.length} ATS systems: ${systemNames.join(', ')}`,
-        solution: 'Address common parsing issues to improve compatibility across multiple ATS platforms',
-        expectedImpact: 'high',
-        implementation: 'medium',
-        timeToComplete: '2-3 hours',
-        atsSystemsAffected: systemNames,
-        specificSteps: [
-          ...commonIssues.slice(0, 4),
-          'Test CV with ATS-friendly formatting',
-          'Ensure clean section breaks and headers'
-        ]
+        priority: 2,
+        title: 'Low ATS Compatibility',
+        description: `Low compatibility with ${systemNames.length} ATS systems: ${systemNames.join(', ')}. Address common parsing issues to improve compatibility across multiple ATS platforms`,
+        impact: 'high',
+        estimatedScoreImprovement: 18,
+        actionRequired: 'modify',
+        section: 'formatting',
+        atsSystemsAffected: systemNames
       });
     }
 
@@ -355,42 +314,32 @@ export class RecommendationService {
     // Below average performance
     if (currentScore < averageScore - 5) {
       recommendations.push({
+        id: `competitive-score-${Date.now()}`,
         category: 'competitive',
-        priority: 'high',
-        issue: `CV scores ${currentScore} vs industry average of ${averageScore}`,
-        solution: 'Implement targeted improvements to exceed industry benchmarks',
-        expectedImpact: 'very high',
-        implementation: 'hard',
-        timeToComplete: '4-6 hours',
-        atsSystemsAffected: ['all'],
-        specificSteps: [
-          ...competitorBenchmark.improvementRecommendations?.slice(0, 4) || [
-            'Add industry-specific keywords',
-            'Quantify achievements with metrics',
-            'Enhance technical skills section',
-            'Improve formatting consistency'
-          ]
-        ]
+        priority: 2,
+        title: 'Below Industry Average',
+        description: `CV scores ${currentScore} vs industry average of ${averageScore}. Implement targeted improvements to exceed industry benchmarks`,
+        impact: 'high',
+        estimatedScoreImprovement: 22,
+        actionRequired: 'modify',
+        section: 'content',
+        atsSystemsAffected: ['workday', 'greenhouse', 'lever', 'bamboohr', 'taleo', 'generic']
       });
     }
 
     // Missing competitive advantages
     if (competitorBenchmark.keyDifferentiators && competitorBenchmark.keyDifferentiators.length < 3) {
       recommendations.push({
+        id: `competitive-differentiators-${Date.now()}`,
         category: 'competitive',
-        priority: 'medium',
-        issue: 'CV lacks clear differentiators from other candidates',
-        solution: 'Highlight unique achievements and specialized skills that set you apart',
-        expectedImpact: 'high',
-        implementation: 'hard',
-        timeToComplete: '2-3 hours',
-        atsSystemsAffected: ['lever', 'greenhouse'],
-        specificSteps: [
-          'Identify unique projects or achievements',
-          'Highlight specialized certifications',
-          'Emphasize leadership and innovation examples',
-          'Showcase measurable business impact'
-        ]
+        priority: 3,
+        title: 'Lacks Differentiators',
+        description: 'CV lacks clear differentiators from other candidates. Highlight unique achievements and specialized skills that set you apart',
+        impact: 'high',
+        estimatedScoreImprovement: 12,
+        actionRequired: 'modify',
+        section: 'content',
+        atsSystemsAffected: ['lever', 'greenhouse']
       });
     }
 
@@ -405,32 +354,26 @@ export class RecommendationService {
     advancedScore: AdvancedATSScore
   ): PrioritizedRecommendation[] {
     // Define priority weights
-    const priorityWeights = {
-      'critical': 100,
-      'high': 75,
-      'medium': 50,
-      'low': 25
+    const priorityWeights: { [key: number]: number } = {
+      1: 100, // Highest priority
+      2: 75,
+      3: 50,
+      4: 25,
+      5: 10   // Lowest priority
     };
 
-    const impactWeights = {
-      'very high': 40,
+    const impactWeights: { [key: string]: number } = {
       'high': 30,
       'medium': 20,
       'low': 10
-    };
-
-    const implementationWeights = {
-      'easy': 30,
-      'medium': 20,
-      'hard': 10
     };
 
     // Calculate weighted scores for sorting
     const scoredRecommendations = recommendations.map(rec => ({
       ...rec,
       _score: (priorityWeights[rec.priority] || 50) + 
-              (impactWeights[rec.expectedImpact] || 20) + 
-              (implementationWeights[rec.implementation] || 15)
+              (impactWeights[rec.impact] || 20) + 
+              (rec.estimatedScoreImprovement || 10)
     }));
 
     // Sort by score (highest first) and remove scoring field
@@ -536,15 +479,16 @@ export class RecommendationService {
       return skills.split(/[,;|\n]/).map(s => s.trim()).filter(s => s.length > 0);
     }
     if (typeof skills === 'object' && skills !== null) {
-      return Object.values(skills).flat().map(skill => 
+      return Object.values(skills).flat().map((skill: any) => 
         typeof skill === 'string' ? skill : skill?.name || skill?.skill || ''
       );
     }
     return [];
   }
 
+  /*
   private identifyCommonSystemIssues(problemSystems: ATSSystemSimulation[]): string[] {
-    const allIssues = problemSystems.flatMap(sys => sys.identifiedIssues || []);
+    const allIssues = problemSystems.flatMap(sys => sys.specificIssues || []);
     const issueCount: { [key: string]: number } = {};
     
     // Count issue frequency
@@ -558,4 +502,5 @@ export class RecommendationService {
       .slice(0, 4)
       .map(([issue]) => `Address: ${issue}`);
   }
+  */
 }

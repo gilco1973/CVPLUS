@@ -10,6 +10,9 @@ export type { ParsedCV } from './job';
  * Enhanced Job interface with all new features
  */
 export interface EnhancedJob extends Job {
+  // Industry information for ATS optimization
+  industry?: string;
+  
   // Enhancement features status and data
   enhancedFeatures?: {
     [featureId: string]: {
@@ -300,12 +303,19 @@ export interface AdvancedATSScore {
   };
   recommendations: PrioritizedRecommendation[];
   competitorBenchmark: CompetitorAnalysis;
+  // System-specific scoring details
+  systemSpecificScores?: Array<{
+    systemName: string;
+    score: number;
+    strengths: string[];
+    weaknesses: string[];
+  }>;
 }
 
 export interface PrioritizedRecommendation {
   id: string;
   priority: 1 | 2 | 3 | 4 | 5; // 1 = highest priority
-  category: 'parsing' | 'keywords' | 'formatting' | 'content' | 'specificity';
+  category: 'parsing' | 'keywords' | 'formatting' | 'content' | 'specificity' | 'structure' | 'ats-compatibility' | 'competitive';
   title: string;
   description: string;
   impact: 'high' | 'medium' | 'low';
@@ -316,12 +326,23 @@ export interface PrioritizedRecommendation {
   suggestedContent?: string;
   keywords?: string[];
   atsSystemsAffected: string[]; // Which ATS systems this affects
+  // Additional properties used in services
+  implementation?: string;
+  issue?: string;
+  expectedImpact?: number; // Used by RecommendationService
 }
 
 export interface CompetitorAnalysis {
   benchmarkScore: number;
   industryAverage: number;
   topPercentile: number;
+  averageScore?: number; // Used by some services for calculations
+  industryBenchmark?: any; // Used by CompetitorAnalysisService
+  keyDifferentiators?: string[]; // Used by CompetitorAnalysisService  
+  improvementRecommendations?: string[]; // Used by RecommendationService
+  marketWeaknesses?: string[]; // Used by CompetitorAnalysisService
+  competitiveAdvantages?: string[]; // Used by CompetitorAnalysisService
+  positioningInsights?: string[]; // Used by CompetitorAnalysisService
   gapAnalysis: {
     missingKeywords: string[];
     weakAreas: string[];
@@ -340,6 +361,13 @@ export interface SemanticKeywordAnalysis {
   };
   synonymMapping: { [original: string]: string[] };
   industrySpecificTerms: string[];
+  semanticVariations?: string[]; // Used by KeywordAnalysisService
+  // Additional properties for ATS optimization
+  matchedKeywords?: KeywordMatch[];
+  missingKeywords?: string[];
+  recommendations?: string[];
+  keywordDensity?: number; // Used by some services
+  optimalDensity?: number; // Used by some services
 }
 
 export interface KeywordMatch {
@@ -354,12 +382,14 @@ export interface KeywordMatch {
 
 export interface ATSSystemSimulation {
   system: 'workday' | 'greenhouse' | 'lever' | 'bamboohr' | 'taleo' | 'generic';
+  systemName?: string; // Alternative name property used by some services
   parsingAccuracy: number; // 0-1
   keywordMatching: number; // 0-1
   formatCompatibility: number; // 0-1
   overallScore: number; // 0-100
   specificIssues: string[];
   optimizationTips: string[];
+  compatibilityScore?: number; // Used by some services as alias for overallScore
 }
 
 /**
@@ -368,21 +398,34 @@ export interface ATSSystemSimulation {
 export interface ATSOptimizationResult {
   score: number; // 0-100 (maps to AdvancedATSScore.overall)
   overall: number; // Alias for score
+  overallScore?: number; // Additional alias for compatibility
   confidence?: number; // New field, optional for backward compatibility
   passes: boolean;
   issues: ATSIssue[];
   suggestions: ATSSuggestion[];
   recommendations: string[]; // List of recommendation strings
   optimizedContent?: Partial<ParsedCV>;
+  breakdown?: {
+    parsing: number;
+    keywords: number;
+    formatting: number;
+    content: number;
+    specificity: number;
+  }; // Score breakdown by category
   keywords: {
     found: string[];
     missing: string[];
     recommended: string[];
+    density?: number; // Keyword density score
+    suggestions?: string[]; // Used by ContentOptimizationService
   };
   // New advanced fields (optional for backward compatibility)
   advancedScore?: AdvancedATSScore;
   semanticAnalysis?: SemanticKeywordAnalysis;
   systemSimulations?: ATSSystemSimulation[];
+  competitorBenchmark?: CompetitorAnalysis; // Used by ATSOptimizationOrchestrator
+  processingMetadata?: any; // Used by ContentOptimizationService
+  verificationResults?: any; // Used by ATSOptimizationOrchestrator
 };
 
 export interface ATSIssue {

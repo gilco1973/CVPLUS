@@ -40,13 +40,14 @@ describe('PodcastGenerationService Progress Tracking', () => {
   describe('Progress Tracking', () => {
     test('should initialize progress tracking', async () => {
       const mockUpdate = jest.fn();
-      (admin.firestore as jest.Mock).mockReturnValue({
+      const mockFirestore = admin.firestore as jest.MockedFunction<typeof admin.firestore>;
+      mockFirestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
             update: mockUpdate
           }))
         }))
-      });
+      } as any);
 
       // Test initialization
       await (service as any).initializeProgress('test-job-123');
@@ -63,13 +64,14 @@ describe('PodcastGenerationService Progress Tracking', () => {
 
     test('should update progress during generation', async () => {
       const mockUpdate = jest.fn();
-      (admin.firestore as jest.Mock).mockReturnValue({
+      const mockFirestore = admin.firestore as jest.MockedFunction<typeof admin.firestore>;
+      mockFirestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
             update: mockUpdate
           }))
         }))
-      });
+      } as any);
 
       // Test progress update
       await (service as any).updateProgress(
@@ -93,13 +95,14 @@ describe('PodcastGenerationService Progress Tracking', () => {
 
     test('should calculate correct overall percentage', async () => {
       const mockUpdate = jest.fn();
-      (admin.firestore as jest.Mock).mockReturnValue({
+      const mockFirestore = admin.firestore as jest.MockedFunction<typeof admin.firestore>;
+      mockFirestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
             update: mockUpdate
           }))
         }))
-      });
+      } as any);
 
       // Set up service with test job
       (service as any).currentJobId = 'test-job';
@@ -118,13 +121,14 @@ describe('PodcastGenerationService Progress Tracking', () => {
 
     test('should handle Firestore update failures gracefully', async () => {
       const mockUpdate = jest.fn().mockRejectedValue(new Error('Firestore error'));
-      (admin.firestore as jest.Mock).mockReturnValue({
+      const mockFirestore = admin.firestore as jest.MockedFunction<typeof admin.firestore>;
+      mockFirestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
             update: mockUpdate
           }))
         }))
-      });
+      } as any);
 
       // Set up service
       (service as any).currentJobId = 'test-job';
@@ -140,13 +144,14 @@ describe('PodcastGenerationService Progress Tracking', () => {
 
     test('should estimate time remaining correctly', async () => {
       const mockUpdate = jest.fn();
-      (admin.firestore as jest.Mock).mockReturnValue({
+      const mockFirestore = admin.firestore as jest.MockedFunction<typeof admin.firestore>;
+      mockFirestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
             update: mockUpdate
           }))
         }))
-      });
+      } as any);
 
       // Set up service with known start time
       const now = Date.now();

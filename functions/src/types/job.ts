@@ -45,6 +45,7 @@ export interface ParsedCV {
   experience?: Array<{
     company: string;
     position: string;
+    role?: string; // Alias for position for compatibility
     duration: string;
     startDate: string;
     endDate?: string;
@@ -57,6 +58,8 @@ export interface ParsedCV {
     degree: string;
     field: string;
     year: string;
+    startDate?: string; // For compatibility with formatters
+    endDate?: string; // For compatibility with formatters
     gpa?: string;
     honors?: string[];
     description?: string;

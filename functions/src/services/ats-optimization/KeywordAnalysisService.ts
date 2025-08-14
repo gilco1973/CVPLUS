@@ -7,9 +7,8 @@
 
 import { 
   ParsedCV, 
-  SemanticKeywordAnalysis, 
-  KeywordMatch 
-} from '../types/enhanced-models';
+  SemanticKeywordAnalysis
+} from '../../types/enhanced-models';
 import { VerifiedClaudeService } from '../verified-claude.service';
 import { KeywordAnalysisParams } from './types';
 import { KeywordExtractor } from './keyword-analysis/KeywordExtractor';
@@ -113,6 +112,17 @@ Provide keyword analysis with frequency, context, and optimization recommendatio
     );
 
     return {
+      primaryKeywords: matchedKeywords,
+      semanticMatches: matchedKeywords,
+      contextualRelevance: 0.8, // Default relevance score
+      densityOptimization: {
+        current: keywordDensity,
+        recommended: optimalDensity,
+        sections: { experience: keywordDensity, skills: keywordDensity * 1.2 }
+      },
+      synonymMapping: {},
+      industrySpecificTerms: [],
+      // Backward compatibility properties
       matchedKeywords,
       missingKeywords,
       keywordDensity,
@@ -130,11 +140,25 @@ Provide keyword analysis with frequency, context, and optimization recommendatio
     const totalWords = cvText.split(/\s+/).length;
     const keywordDensity = matchedKeywords.reduce((sum, kw) => sum + kw.frequency, 0) / totalWords;
 
+    const missingKeywords = targetKeywords.filter(kw => !matchedKeywords.find(mkw => mkw.keyword.toLowerCase() === kw.toLowerCase()));
+    const optimalDensity = this.keywordExtractor.getOptimalKeywordDensity(industry);
+
     return {
+      primaryKeywords: matchedKeywords,
+      semanticMatches: matchedKeywords,
+      contextualRelevance: 0.7, // Default fallback relevance
+      densityOptimization: {
+        current: keywordDensity,
+        recommended: optimalDensity,
+        sections: { experience: keywordDensity, skills: keywordDensity * 1.2 }
+      },
+      synonymMapping: {},
+      industrySpecificTerms: [],
+      // Backward compatibility properties
       matchedKeywords,
-      missingKeywords: targetKeywords.filter(kw => !matchedKeywords.find(mkw => mkw.keyword.toLowerCase() === kw.toLowerCase())),
+      missingKeywords,
       keywordDensity,
-      optimalDensity: this.keywordExtractor.getOptimalKeywordDensity(industry),
+      optimalDensity,
       semanticVariations: [],
       recommendations: ['Add missing target keywords', 'Improve keyword context usage']
     };

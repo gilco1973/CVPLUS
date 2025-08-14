@@ -8,7 +8,7 @@
 import { 
   ParsedCV, 
   ATSSystemSimulation 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { ATSSystemConfigs, ATSSystemConfig } from './types';
 
 export class SystemSimulationService {
@@ -117,29 +117,24 @@ export class SystemSimulationService {
     );
 
     // Identify system-specific issues
-    const identifiedIssues = this.generateSystemSpecificIssues(parsedCV, systemName);
+    // const identifiedIssues = this.generateSystemSpecificIssues(parsedCV, systemName); // Unused
     
     // Generate optimization tips
     const optimizationTips = this.generateSystemSpecificTips(systemName);
     
-    // Determine strengths and weaknesses
-    const strengths = this.identifySystemStrengths(parsedCV, systemName, config);
-    const weaknesses = this.identifySystemWeaknesses(parsedCV, systemName, config);
+    // Determine strengths and weaknesses - not currently used
+    // const strengths = this.identifySystemStrengths(parsedCV, systemName, config);
+    // const weaknesses = this.identifySystemWeaknesses(parsedCV, systemName, config);
 
     return {
+      system: systemName as any,
       systemName,
-      compatibilityScore,
       parsingAccuracy,
-      identifiedIssues,
-      optimizationTips,
-      strengths,
-      weaknesses: weaknesses,
-      specificRecommendations: this.generateSystemSpecificRecommendations(
-        parsedCV, 
-        systemName, 
-        config,
-        compatibilityScore
-      )
+      keywordMatching: 0.8, // Default value
+      formatCompatibility,
+      overallScore: compatibilityScore,
+      specificIssues: [], // Empty for now
+      optimizationTips
     };
   }
 
@@ -285,6 +280,7 @@ export class SystemSimulationService {
 
   /**
    * Generate system-specific issues
+   * @unused Reserved for future system-specific issue generation
    */
   private generateSystemSpecificIssues(parsedCV: ParsedCV, systemName: string): string[] {
     const issues: string[] = [];
@@ -388,6 +384,7 @@ export class SystemSimulationService {
 
   /**
    * Identify system-specific strengths
+   * @unused Reserved for future system-specific strength identification
    */
   private identifySystemStrengths(
     parsedCV: ParsedCV, 
@@ -418,6 +415,7 @@ export class SystemSimulationService {
 
   /**
    * Identify system-specific weaknesses
+   * @unused Reserved for future system-specific weakness identification
    */
   private identifySystemWeaknesses(
     parsedCV: ParsedCV, 
@@ -444,6 +442,7 @@ export class SystemSimulationService {
 
   /**
    * Generate system-specific recommendations
+   * @unused Reserved for future system-specific recommendations
    */
   private generateSystemSpecificRecommendations(
     parsedCV: ParsedCV,

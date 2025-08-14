@@ -4,13 +4,12 @@
 
 import { 
   ParsedCV, 
-  ATSOptimizationResult, 
   AdvancedATSScore, 
   SemanticKeywordAnalysis, 
   ATSSystemSimulation,
   PrioritizedRecommendation,
   CompetitorAnalysis 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 
 export interface ATSSystemConfig {
   parsingWeight: number;

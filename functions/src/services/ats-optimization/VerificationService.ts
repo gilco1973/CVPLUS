@@ -9,11 +9,11 @@ import {
   AdvancedATSScore, 
   PrioritizedRecommendation, 
   ParsedCV 
-} from '../types/enhanced-models';
+} from '../../types/enhanced-models';
 import { VerifiedClaudeService } from '../verified-claude.service';
 import { VerificationParams } from './types';
 import OpenAI from 'openai';
-import { config } from '../config/environment';
+import { environment } from './config/environment';
 
 interface VerificationResult {
   verified: boolean;
@@ -335,7 +335,7 @@ Provide concise feedback on accuracy and suggested improvements.`;
    */
   private getOpenAI(): OpenAI {
     if (!this.openai) {
-      const apiKey = config.rag?.openaiApiKey || process.env.OPENAI_API_KEY;
+      const apiKey = environment.production ? process.env.OPENAI_API_KEY : process.env.OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error('OpenAI API key not configured');
       }

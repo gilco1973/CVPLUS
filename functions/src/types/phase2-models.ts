@@ -5,7 +5,7 @@
  * industry specialization, and regional localization.
  */
 
-import { ParsedCV } from './job';
+// Note: ParsedCV import removed as unused in this file
 
 // ===============================
 // SUCCESS PREDICTION MODELS
