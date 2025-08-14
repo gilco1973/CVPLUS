@@ -1,8 +1,8 @@
 /**
- * ML Pipeline Service - Phase 2
+ * ML Pipeline Service - Refactored with Modular Architecture
  * 
- * Advanced machine learning service for success predictions, feature engineering,
- * model training, and real-time inference.
+ * This service maintains backward compatibility while delegating to the new
+ * modular architecture for improved maintainability and scalability.
  */
 
 import * as admin from 'firebase-admin';
@@ -18,6 +18,12 @@ import {
 } from '../types/phase2-models';
 import { ParsedCV } from '../types/job';
 import { EnhancedJob } from '../types/enhanced-models';
+
+// Import the new modular architecture
+import { 
+  MLPipelineOrchestrator, 
+  PredictionRequest as OrchestratorRequest
+} from './ml-pipeline';
 
 export interface MLTrainingConfig {
   modelType: 'gradient_boosting' | 'neural_network' | 'random_forest' | 'ensemble';
@@ -56,6 +62,9 @@ export interface PredictionRequest {
 }
 
 export class MLPipelineService {
+  private orchestrator: MLPipelineOrchestrator;
+  
+  // Legacy properties for backward compatibility (deprecated)
   private models: Map<string, MLModelMetadata> = new Map();
   private featureCache: Map<string, FeatureVector> = new Map();
   private predictionCache: Map<string, SuccessPrediction> = new Map();
@@ -67,96 +76,44 @@ export class MLPipelineService {
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
   
   constructor() {
+    console.log('[ML-PIPELINE] Initializing with new modular architecture');
+    this.orchestrator = new MLPipelineOrchestrator();
+    
+    // Legacy initialization for backward compatibility
     this.initializeModels();
     this.setupModelMonitoring();
   }
 
   /**
    * Generate comprehensive success prediction for a job application
+   * Delegates to new modular architecture while maintaining backward compatibility
    */
   async predictSuccess(request: PredictionRequest): Promise<SuccessPrediction> {
     try {
-      console.log(`[ML-PIPELINE] Generating prediction for user ${request.userId}, job ${request.jobId}`);
+      console.log(`[ML-PIPELINE] Delegating prediction to modular architecture for user ${request.userId}, job ${request.jobId}`);
       
-      // Check cache first
-      const cacheKey = this.generateCacheKey(request);
-      if (this.ENABLE_CACHING && this.predictionCache.has(cacheKey)) {
-        const cached = this.predictionCache.get(cacheKey)!;
-        if (Date.now() - cached.timestamp.getTime() < this.CACHE_TTL) {
-          console.log(`[ML-PIPELINE] Returning cached prediction`);
-          return cached;
-        }
-      }
-      
-      // Extract features from CV and job
-      const features = await this.extractFeatures(request);
-      
-      // Get predictions from ML models
-      const [interviewProb, offerProb, salaryPred, timePred] = await Promise.all([
-        this.predictInterviewProbability(features),
-        this.predictOfferProbability(features),
-        this.predictSalary(features, request),
-        this.predictTimeToHire(features, request)
-      ]);
-      
-      // Calculate competitiveness score
-      const competitivenessScore = await this.calculateCompetitivenessScore(features, request);
-      
-      // Generate predictive recommendations
-      const recommendations = await this.generatePredictiveRecommendations(
-        features, 
-        { interviewProb, offerProb },
-        request
-      );
-      
-      // Calculate overall confidence
-      const confidence = this.calculatePredictionConfidence(features, {
-        interviewProb,
-        offerProb,
-        salaryPred,
-        timePred
-      });
-      
-      const prediction: SuccessPrediction = {
-        predictionId: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // Convert legacy request format to orchestrator format
+      const orchestratorRequest: OrchestratorRequest = {
         userId: request.userId,
         jobId: request.jobId,
-        timestamp: new Date(),
-        
-        interviewProbability: interviewProb,
-        offerProbability: offerProb,
-        hireProbability: offerProb * 0.8, // Simplified assumption
-        
-        salaryPrediction: salaryPred,
-        timeToHire: timePred,
-        competitivenessScore,
-        
-        confidence,
-        recommendations,
-        
-        modelMetadata: {
-          modelVersion: '2.0.0',
-          featuresUsed: Object.keys(features.cvFeatures).concat(Object.keys(features.matchingFeatures)),
-          trainingDataSize: await this.getTrainingDataSize(),
-          lastTrainingDate: new Date() // TODO: Get from model registry
-        }
+        cv: request.cv,
+        jobDescription: request.jobDescription,
+        targetRole: request.targetRole,
+        industry: request.industry,
+        location: request.location,
+        marketContext: request.marketContext
       };
       
-      // Cache the prediction
-      if (this.ENABLE_CACHING) {
-        this.predictionCache.set(cacheKey, prediction);
-      }
+      // Delegate to new orchestrator
+      const prediction = await this.orchestrator.predictSuccess(orchestratorRequest);
       
-      // Log prediction for model monitoring
-      await this.logPrediction(prediction, features);
-      
-      console.log(`[ML-PIPELINE] Generated prediction with ${Math.round(interviewProb * 100)}% interview probability`);
+      console.log(`[ML-PIPELINE] Modular architecture generated prediction with ${Math.round(prediction.interviewProbability * 100)}% interview probability`);
       return prediction;
       
     } catch (error) {
-      console.error('[ML-PIPELINE] Prediction failed:', error);
+      console.error('[ML-PIPELINE] Modular prediction failed, falling back to legacy logic:', error);
       
-      // Fallback to heuristic-based prediction
+      // Fallback to legacy logic if modular architecture fails
       return this.generateFallbackPrediction(request);
     }
   }
@@ -279,12 +236,21 @@ export class MLPipelineService {
 
   /**
    * Record user outcome for model improvement
+   * Delegates to new modular architecture
    */
   async recordOutcome(outcome: UserOutcome): Promise<void> {
     try {
-      console.log(`[ML-PIPELINE] Recording outcome for job ${outcome.jobId}`);
+      console.log(`[ML-PIPELINE] Delegating outcome recording to modular architecture for job ${outcome.jobId}`);
       
-      // Store outcome in training database
+      // Delegate to new orchestrator
+      await this.orchestrator.recordOutcome(outcome);
+      
+      console.log(`[ML-PIPELINE] Outcome recorded successfully through modular architecture`);
+      
+    } catch (error) {
+      console.error('[ML-PIPELINE] Modular outcome recording failed, falling back to legacy logic:', error);
+      
+      // Fallback to legacy logic
       await admin.firestore()
         .collection('user_outcomes')
         .doc(outcome.outcomeId)
@@ -294,21 +260,7 @@ export class MLPipelineService {
           dataVersion: '2.0'
         });
       
-      // Update model performance metrics
-      await this.updateModelPerformance(outcome);
-      
-      // Check if we need to retrain models
-      const outcomeCount = await this.getOutcomeCount();
-      if (outcomeCount % 1000 === 0) { // Retrain every 1000 outcomes
-        console.log('[ML-PIPELINE] Triggering model retraining...');
-        await this.scheduleModelRetraining();
-      }
-      
-      console.log(`[ML-PIPELINE] Outcome recorded successfully`);
-      
-    } catch (error) {
-      console.error('[ML-PIPELINE] Failed to record outcome:', error);
-      throw error;
+      console.log(`[ML-PIPELINE] Outcome recorded through legacy fallback`);
     }
   }
 
