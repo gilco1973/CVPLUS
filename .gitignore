@@ -61,3 +61,8 @@ firestore.indexes.json
 
 # Claude Code configuration backups
 claude-config-backup.zip
+
+# Deployment reports and logs
+logs/deployment/
+logs/testing/
+*.deployment-report.json
