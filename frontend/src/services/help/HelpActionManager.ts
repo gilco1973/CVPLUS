@@ -38,102 +38,44 @@ export class HelpActionManager {
     return {
       setContext: (context: string) => {
         this.dispatch({ type: 'SET_CONTEXT', payload: context });
-        this.trackAnalytics({
-          action: 'context_changed',
-          context,
-          helpId: null
-        });
       },
 
       showHelp: (helpId: string) => {
         this.dispatch({ type: 'SHOW_HELP', payload: helpId });
-        this.trackAnalytics({
-          action: 'help_shown',
-          context: state.currentContext,
-          helpId
-        });
       },
 
       hideHelp: () => {
-        const currentHelpId = state.activeHelp;
         this.dispatch({ type: 'HIDE_HELP' });
-        
-        if (currentHelpId) {
-          this.trackAnalytics({
-            action: 'help_hidden',
-            context: state.currentContext,
-            helpId: currentHelpId
-          });
-        }
       },
 
       dismissHelp: (helpId: string) => {
         this.dispatch({ type: 'DISMISS_HELP', payload: helpId });
-        this.trackAnalytics({
-          action: 'help_dismissed',
-          context: state.currentContext,
-          helpId
-        });
       },
 
       updatePreferences: (preferences: Partial<HelpUserPreferences>) => {
         const updatedPrefs = { ...state.userPreferences, ...preferences };
         this.dispatch({ type: 'UPDATE_PREFERENCES', payload: preferences });
         HelpStateUtils.savePreferences(updatedPrefs);
-        
-        this.trackAnalytics({
-          action: 'preferences_updated',
-          context: state.currentContext,
-          helpId: null,
-          metadata: { updatedFields: Object.keys(preferences) }
-        });
       },
 
       startTour: (tourId: string) => {
-        this.trackAnalytics({
-          action: 'tour_started',
-          context: state.currentContext,
-          helpId: tourId
-        });
+        // Tour start logic here
       },
 
       completeTour: (tourId: string) => {
         this.dispatch({ type: 'COMPLETE_TOUR', payload: tourId });
-        this.trackAnalytics({
-          action: 'tour_completed',
-          context: state.currentContext,
-          helpId: tourId
-        });
       },
 
       skipTour: (tourId: string) => {
-        this.trackAnalytics({
-          action: 'tour_skipped',
-          context: state.currentContext,
-          helpId: tourId
-        });
+        // Tour skip logic here
       },
 
       setSearchQuery: (query: string) => {
         this.dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
-        
-        if (query.length > 2) {
-          this.trackAnalytics({
-            action: 'help_searched',
-            context: state.currentContext,
-            helpId: null,
-            metadata: { query: query.substring(0, 50) } // Truncate for privacy
-          });
-        }
       },
 
       toggleSearch: () => {
         this.dispatch({ type: 'TOGGLE_SEARCH' });
-        this.trackAnalytics({
-          action: state.isSearchOpen ? 'search_closed' : 'search_opened',
-          context: state.currentContext,
-          helpId: null
-        });
       },
 
       trackAnalytics: (analytics: Omit<HelpAnalytics, 'timestamp' | 'sessionId'>) => {
@@ -154,11 +96,6 @@ export class HelpActionManager {
 
       resetOnboarding: () => {
         this.dispatch({ type: 'RESET_ONBOARDING' });
-        this.trackAnalytics({
-          action: 'onboarding_reset',
-          context: state.currentContext,
-          helpId: null
-        });
       }
     };
   }
@@ -180,7 +117,7 @@ export class HelpActionManager {
    */
   getAvailableTours(context: string): HelpTour[] {
     try {
-      return this.helpService.getToursByContext(context);
+      return this.helpService.getTourByContext(context);
     } catch (error) {
       console.error('Error getting tours:', error);
       return [];
@@ -217,7 +154,7 @@ export class HelpActionManager {
     }
 
     // Check frequency preferences
-    if (userPreferences.helpFrequency === 'minimal' && content.priority === 'low') {
+    if (userPreferences.helpFrequency === 'minimal' && content.priority < 50) {
       return false;
     }
 

@@ -21,9 +21,10 @@ import type {
 } from '../../types/language';
 import { LanguageAnalysisService } from '../../services/language/LanguageAnalysisService';
 import { LanguageVisualizationService } from '../../services/language/LanguageVisualizationService';
-import { LanguageVisualizationRenderer } from './language/LanguageVisualizationRenderer';
-import { LanguageAddForm } from './language/LanguageAddForm';
-import { LanguageInsights } from './language/LanguageInsights';
+// TODO: Create missing language components
+// import { LanguageVisualizationRenderer } from './language/LanguageVisualizationRenderer';
+// import { LanguageAddForm } from './language/LanguageAddForm';
+// import { LanguageInsights } from './language/LanguageInsights';
 
 export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
   visualization,
@@ -176,26 +177,36 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
           </div>
 
           {currentVisualization && (
-            <LanguageVisualizationRenderer
-              visualization={currentVisualization}
-              proficiencies={visualization.proficiencies}
-            />
+            <div className="flex items-center justify-center h-64 text-gray-400">
+              <p>Language visualization renderer coming soon...</p>
+            </div>
           )}
         </div>
 
         {/* Insights Panel */}
         <div className="space-y-6">
-          <LanguageInsights insights={visualization.insights} />
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h4 className="text-lg font-semibold text-white mb-2">Language Insights</h4>
+            <p className="text-gray-400">Insights panel coming soon...</p>
+          </div>
         </div>
       </div>
 
       {/* Add Language Form Modal */}
       <AnimatePresence>
         {showAddForm && (
-          <LanguageAddForm
-            onAdd={handleAddLanguage}
-            onCancel={() => setShowAddForm(false)}
-          />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-white mb-4">Add Language</h3>
+              <p className="text-gray-400 mb-4">Language form coming soon...</p>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </motion.div>
