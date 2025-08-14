@@ -4,6 +4,9 @@ import { CheckCircle, Circle, Loader2 } from 'lucide-react';
 import { subscribeToJob, processCV } from '../services/cvService';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { useHelp } from '../contexts/HelpContext';
+import { HelpTooltip } from '../components/help/HelpTooltip';
+import { HelpOverlay } from '../components/help/HelpOverlay';
 import type { Job } from '../services/cvService';
 
 const PROCESSING_STEPS = [
@@ -18,12 +21,16 @@ export const ProcessingPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { } = useAuth(); // Auth context needed but user not used directly
+  const { actions } = useHelp();
   const [job, setJob] = useState<Job | null>(null);
   const [steps, setSteps] = useState(PROCESSING_STEPS);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!jobId) return;
+
+    // Set help context
+    actions.setContext('processing');
 
     // Subscribe to job updates
     const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
@@ -84,7 +91,7 @@ export const ProcessingPage = () => {
     });
 
     return () => unsubscribe();
-  }, [jobId, navigate]);
+  }, [jobId, navigate, actions]);
 
   const getStepIcon = (status: string) => {
     switch (status) {
@@ -116,8 +123,9 @@ export const ProcessingPage = () => {
       {/* Processing Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-scale-in">
-            <h2 className="text-2xl font-bold text-center mb-8 text-gray-100 animate-fade-in-up">Processing Your CV</h2>
+          <HelpOverlay helpId="processing-steps" trigger="auto">
+            <div className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-scale-in">
+              <h2 className="text-2xl font-bold text-center mb-8 text-gray-100 animate-fade-in-up">Processing Your CV</h2>
 
             {/* Progress Bar */}
             <div className="mb-8 animate-fade-in animation-delay-200">
@@ -135,22 +143,27 @@ export const ProcessingPage = () => {
             {/* Steps */}
             <div className="space-y-4">
               {steps.map((step, index) => (
-                <div 
-                  key={step.id} 
-                  className="flex items-center space-x-4 animate-fade-in-left"
-                  style={{ animationDelay: `${300 + index * 100}ms` }}
+                <HelpTooltip 
+                  key={step.id}
+                  helpId={`processing-${step.id}`}
+                  trigger="hover" 
+                  position="right"
                 >
-                  <div className={step.status === 'active' ? 'animate-pulse' : ''}>
-                    {getStepIcon(step.status)}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-medium transition-colors duration-300 ${
-                      step.status === 'completed' ? 'text-gray-100' : 
-                      step.status === 'active' ? 'text-blue-400' : 
-                      'text-gray-500'
-                    }`}>
-                      {step.label}
-                    </p>
+                  <div 
+                    className="flex items-center space-x-4 animate-fade-in-left"
+                    style={{ animationDelay: `${300 + index * 100}ms` }}
+                  >
+                    <div className={step.status === 'active' ? 'animate-pulse' : ''}>
+                      {getStepIcon(step.status)}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`font-medium transition-colors duration-300 ${
+                        step.status === 'completed' ? 'text-gray-100' : 
+                        step.status === 'active' ? 'text-blue-400' : 
+                        'text-gray-500'
+                      }`}>
+                        {step.label}
+                      </p>
                     {step.status === 'active' && (
                       <p className="text-sm text-gray-400 animate-fade-in">
                         {step.id === 'analyze' && 'Extracting information with AI...'}
@@ -160,7 +173,8 @@ export const ProcessingPage = () => {
                       </p>
                     )}
                   </div>
-                </div>
+                  </div>
+                </HelpTooltip>
               ))}
             </div>
 
@@ -184,6 +198,7 @@ export const ProcessingPage = () => {
               </div>
             )}
           </div>
+          </HelpOverlay>
         </div>
       </main>
     </div>

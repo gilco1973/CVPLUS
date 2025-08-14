@@ -170,7 +170,7 @@ export const MobileFeatureSelection: React.FC<MobileFeatureSelectionProps> = ({
     return titles[category];
   };
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = (category: 'core' | 'enhancement' | 'advanced') => {
     const newExpanded = new Set(expandedCategories);
     if (newExpanded.has(category)) {
       newExpanded.delete(category);

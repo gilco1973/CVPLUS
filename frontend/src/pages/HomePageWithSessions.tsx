@@ -7,6 +7,10 @@ import { UserMenu } from '../components/UserMenu';
 import { Logo } from '../components/Logo';
 import { ResumeSessionDialog } from '../components/session/ResumeSessionDialog';
 import { useAuth } from '../contexts/AuthContext';
+import { useHelp } from '../contexts/HelpContext';
+import { HelpTooltip } from '../components/help/HelpTooltip';
+import { HelpOverlay } from '../components/help/HelpOverlay';
+import { InteractiveTour } from '../components/help/InteractiveTour';
 import { useSessionResume } from '../hooks/useSessionResume';
 import { useSession } from '../hooks/useSession';
 import { uploadCV, createJob } from '../services/cvService';
@@ -16,6 +20,7 @@ import toast from 'react-hot-toast';
 export const HomePage = () => {
   const navigate = useNavigate();
   const { user, signInAnonymous, signInWithGoogle } = useAuth();
+  const { actions } = useHelp();
   
   // Original state
   const [isLoading, setIsLoading] = useState(false);
@@ -58,10 +63,11 @@ export const HomePage = () => {
     autoSaveInterval: 30000 // 30 seconds
   });
 
-  // Clear resume dialog flag when page loads
+  // Clear resume dialog flag when page loads and set help context
   useEffect(() => {
     sessionStorage.removeItem('cvplus_resume_dialog_shown');
-  }, []);
+    actions.setContext('home');
+  }, [actions]);
 
   const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
     try {
@@ -339,7 +345,7 @@ export const HomePage = () => {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center gap-8 mb-16">
+            <div className="flex flex-wrap justify-center gap-8 mb-16 trust-indicators">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-400">10,000+</div>
                 <div className="text-sm text-gray-400">CVs Transformed</div>
@@ -355,12 +361,14 @@ export const HomePage = () => {
             </div>
 
             {/* Upload Options */}
-            <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-fade-in-up animation-delay-600">
+            <HelpOverlay helpId="home-welcome" trigger="auto" className="animate-fade-in-up animation-delay-600">
+              <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
               <h2 className="text-2xl font-bold text-gray-100 mb-6">Start Your Transformation</h2>
-              <div className="flex justify-center mb-8">
-                <div className="inline-flex items-center gap-6">
-                  <label className="text-sm font-medium text-gray-300">Upload Method:</label>
-                  <div className="inline-flex rounded-lg bg-gray-700 p-1">
+              <HelpTooltip helpId="home-upload-methods" trigger="hover" position="top">
+                <div className="flex justify-center mb-8">
+                  <div className="inline-flex items-center gap-6">
+                    <label className="text-sm font-medium text-gray-300">Upload Method:</label>
+                    <div className="inline-flex rounded-lg bg-gray-700 p-1">
                     <div
                       onClick={() => setUploadMode('file')}
                       className={`px-4 py-2 rounded-md cursor-pointer transition ${
@@ -383,9 +391,10 @@ export const HomePage = () => {
                       <Globe className="inline-block w-4 h-4 mr-2" />
                       URL Import
                     </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </HelpTooltip>
 
               {uploadMode === 'file' ? (
                 <FileUpload 
@@ -400,10 +409,11 @@ export const HomePage = () => {
               )}
 
               {/* User Instructions Input */}
-              <div className="mt-6">
-                <label htmlFor="userInstructions" className="block text-left text-sm font-medium text-gray-300 mb-2">
-                  Special Instructions (Optional)
-                </label>
+              <HelpTooltip helpId="home-instructions-field" trigger="focus" position="top">
+                <div className="mt-6">
+                  <label htmlFor="userInstructions" className="block text-left text-sm font-medium text-gray-300 mb-2">
+                    Special Instructions (Optional)
+                  </label>
                 <div className="relative">
                   <textarea
                     id="userInstructions"
@@ -426,29 +436,33 @@ export const HomePage = () => {
                   Provide specific instructions to customize how AI analyzes and enhances your CV
                 </p>
               </div>
+              </HelpTooltip>
 
               {/* Quick Create Button */}
               {selectedFile && (
-                <div className="mt-6 text-center">
-                  <div className="inline-flex items-center gap-4">
-                    <span className="text-sm text-gray-500">
-                      File selected: {selectedFile.name}
-                    </span>
-                    <button
-                      onClick={handleQuickCreate}
-                      disabled={isLoading}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                    >
-                      <Sparkles className="inline-block w-4 h-4 mr-2" />
-                      Just Create My CV
-                    </button>
+                <HelpTooltip helpId="home-quick-create" trigger="hover" position="top">
+                  <div className="mt-6 text-center">
+                    <div className="inline-flex items-center gap-4">
+                      <span className="text-sm text-gray-500">
+                        File selected: {selectedFile.name}
+                      </span>
+                      <button
+                        onClick={handleQuickCreate}
+                        disabled={isLoading}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      >
+                        <Sparkles className="inline-block w-4 h-4 mr-2" />
+                        Just Create My CV
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Automatically applies all enhancements and generates all formats
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Automatically applies all enhancements and generates all formats
-                  </p>
-                </div>
+                </HelpTooltip>
               )}
             </div>
+            </HelpOverlay>
 
           </div>
         </section>
@@ -482,6 +496,9 @@ export const HomePage = () => {
         onDelete={handleDeleteSession}
         loading={resumeLoading}
       />
+
+      {/* Interactive Tour for First-Time Users */}
+      <InteractiveTour tourId="first-time-user" autoStart={false} />
     </div>
   );
 };

@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="min-w-0 flex-1">
                   <Logo 
                     variant={variant === 'default' ? 'default' : 'white'} 
-                    size={isCollapsed ? 'small' : 'default'}
+                    size={isCollapsed ? 'small' : 'medium'}
                   />
                 </div>
                 

@@ -84,6 +84,72 @@ export const HELP_CONTENT: Record<string, HelpContent> = {
     tags: ['ai-analysis', 'skills', 'enhancement']
   },
 
+  // Individual Processing Steps Help Content
+  'processing-upload': {
+    id: 'processing-upload',
+    type: 'tooltip',
+    title: 'File Upload Complete',
+    content: 'Your CV file has been successfully uploaded and is ready for AI analysis. The system has validated the file format and extracted the text content.',
+    category: 'process-explanation',
+    context: 'processing',
+    trigger: 'hover',
+    position: 'right',
+    priority: 85,
+    tags: ['upload', 'file-processing', 'validation']
+  },
+
+  'processing-analyze': {
+    id: 'processing-analyze',
+    type: 'tooltip',
+    title: 'AI Content Analysis',
+    content: 'Advanced AI algorithms are analyzing your CV to identify key skills, experience patterns, achievements, and areas for improvement. This creates a personalized enhancement strategy.',
+    category: 'process-explanation',
+    context: 'processing',
+    trigger: 'hover',
+    position: 'right',
+    priority: 85,
+    tags: ['ai-analysis', 'skills-extraction', 'content-analysis']
+  },
+
+  'processing-enhance': {
+    id: 'processing-enhance',
+    type: 'tooltip',
+    title: 'CV Enhancement Generation',
+    content: 'Creating your enhanced CV with professional formatting, improved content structure, and ATS-optimized layout based on AI analysis results.',
+    category: 'process-explanation',
+    context: 'processing',
+    trigger: 'hover',
+    position: 'right',
+    priority: 85,
+    tags: ['enhancement', 'formatting', 'ats-optimization']
+  },
+
+  'processing-features': {
+    id: 'processing-features',
+    type: 'tooltip',
+    title: 'AI Features Application',
+    content: 'Applying selected features like skills visualization, personality insights, QR codes, and certification badges to make your CV stand out to recruiters.',
+    category: 'process-explanation',
+    context: 'processing',
+    trigger: 'hover',
+    position: 'right',
+    priority: 85,
+    tags: ['features', 'visualization', 'enhancement']
+  },
+
+  'processing-media': {
+    id: 'processing-media',
+    type: 'tooltip',
+    title: 'Media Content Creation',
+    content: 'Generating multimedia content including personalized podcast introductions, video summaries, and interactive portfolio elements to complement your CV.',
+    category: 'process-explanation',
+    context: 'processing',
+    trigger: 'hover',
+    position: 'right',
+    priority: 85,
+    tags: ['media', 'podcast', 'video', 'portfolio']
+  },
+
   // Analysis Page Help Content
   'analysis-results': {
     id: 'analysis-results',

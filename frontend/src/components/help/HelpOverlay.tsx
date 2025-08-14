@@ -33,7 +33,7 @@ export const HelpOverlay: React.FC<HelpOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
 
-  const helpContent = getContextualHelp(currentContext).find(content => content.id === helpId);
+  const helpContent = getContextualHelp(currentContext || 'global').find(content => content.id === helpId);
   const showHelp = shouldShowHelp(helpId) && helpContent;
 
   const calculateOverlayPosition = (): OverlayPosition | null => {
@@ -273,7 +273,7 @@ export const HelpOverlay: React.FC<HelpOverlayProps> = ({
         </div>
 
         {/* Demo Highlight Styles */}
-        <style jsx>{`
+        <style>{`
           .demo-highlight {
             position: relative;
             z-index: 10;

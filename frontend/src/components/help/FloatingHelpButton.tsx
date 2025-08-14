@@ -252,7 +252,7 @@ export const FloatingHelpButton: React.FC<FloatingHelpButtonProps> = ({
       )}
 
       {/* Custom styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes bounce-gentle {
           0%, 20%, 53%, 80%, 100% {
             animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);

@@ -10,7 +10,7 @@ interface Step {
 }
 
 interface ResponsiveStepIndicatorProps {
-  steps: Step[];
+  steps?: Step[];
   currentStepId: string;
   variant?: 'default' | 'dark';
   size?: 'compact' | 'normal' | 'large';
