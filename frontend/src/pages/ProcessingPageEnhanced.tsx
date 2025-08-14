@@ -8,7 +8,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
-import { subscribeToJob, processCV } from '../services/cvService';
+import { processCV } from '../services/cvService';
+import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorRecoveryDialog } from '../components/error-recovery/ErrorRecoveryDialog';
@@ -71,8 +72,24 @@ export const ProcessingPageEnhanced = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  // Enhanced job subscription with better error handling
+  const {
+    job,
+    loading: jobLoading,
+    error: jobError,
+    subscriptionActive,
+    retryCount,
+    refresh: refreshJob,
+    forceRefresh
+  } = useJobEnhanced(jobId!, {
+    enableRetry: true,
+    maxRetries: 3,
+    enableLogging: true,
+    pollWhenInactive: true, // Fallback to polling for critical processing page
+    pollInterval: 15000 // More frequent polling for processing updates
+  });
+
   // State management
-  const [job, setJob] = useState<Job | null>(null);
   const [steps, setSteps] = useState(PROCESSING_STEPS_ENHANCED);
   const [checkpoints, setCheckpoints] = useState<ProcessingCheckpoint[]>([]);
   const [error, setError] = useState<ClassifiedError | null>(null);
@@ -98,31 +115,20 @@ export const ProcessingPageEnhanced = () => {
     };
   }, [jobId, recoveryManager]);
 
-  // Subscribe to job updates with error recovery
+  // Handle job updates with error recovery
   useEffect(() => {
-    if (!jobId) return;
+    if (!job) return;
 
-    const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
-      if (!updatedJob) {
-        const error = recoveryManager.classifyError(
-          new Error('Job not found'),
-          { operation: 'job_subscription', jobId }
-        );
-        setError(error);
-        setShowErrorDialog(true);
-        return;
-      }
-
-      setJob(updatedJob);
-      await updateStepsFromJob(updatedJob);
+    const handleJobUpdate = async () => {
+      await updateStepsFromJob(job);
 
       // Handle processing failures
-      if (updatedJob.status === 'failed' && updatedJob.error) {
+      if (job.status === 'failed' && job.error) {
         const classifiedError = recoveryManager.classifyError(
-          new Error(updatedJob.error),
+          new Error(job.error),
           { 
             operation: 'cv_processing', 
-            jobId,
+            jobId: job.id,
             sessionId: user?.uid 
           }
         );
@@ -132,20 +138,32 @@ export const ProcessingPageEnhanced = () => {
       }
 
       // Start processing if job is pending
-      if (updatedJob.status === 'pending' && updatedJob.fileUrl) {
-        await handleProcessingWithRecovery(updatedJob);
+      if (job.status === 'pending' && job.fileUrl) {
+        await handleProcessingWithRecovery(job);
       }
 
       // Navigate to analysis when ready
-      if (updatedJob.status === 'analyzed' || updatedJob.status === 'completed') {
+      if (job.status === 'analyzed' || job.status === 'completed') {
         setTimeout(() => {
           navigate(`/analysis/${jobId}`);
         }, 1500);
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, [jobId, navigate, user, recoveryManager]);
+    handleJobUpdate();
+  }, [job, navigate, user, recoveryManager, jobId]);
+
+  // Handle job subscription errors
+  useEffect(() => {
+    if (jobError) {
+      const classifiedError = recoveryManager.classifyError(
+        new Error(jobError),
+        { operation: 'job_subscription', jobId: jobId! }
+      );
+      setError(classifiedError);
+      setShowErrorDialog(true);
+    }
+  }, [jobError, recoveryManager, jobId]);
 
   /**
    * Loads checkpoints for the current job

@@ -5,24 +5,22 @@
 
 import { 
   doc, 
-  getDoc, 
-  onSnapshot 
+  getDoc
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../lib/firebase';
+import { jobSubscriptionManager } from '../JobSubscriptionManager';
 import type { Job } from '../../types/cv';
 
 export class CVValidator {
   /**
-   * Subscribe to job updates in real-time
+   * Subscribe to job updates in real-time using centralized manager
    */
   static subscribeToJob(jobId: string, callback: (job: Job | null) => void) {
-    return onSnapshot(doc(db, 'jobs', jobId), (doc) => {
-      if (doc.exists()) {
-        callback({ id: doc.id, ...doc.data() } as Job);
-      } else {
-        callback(null);
-      }
+    return jobSubscriptionManager.subscribeToJob(jobId, callback, {
+      enableLogging: process.env.NODE_ENV === 'development',
+      debounceMs: 100,
+      maxRetries: 3
     });
   }
 

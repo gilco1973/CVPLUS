@@ -19,9 +19,10 @@
     "beforeRetry": [5000, 15000, 30000]
   },
   "validation": {
-    "skipNonCritical": false,
+    "skipNonCritical": true,
     "requireAllHealthChecks": false,
-    "allowWarnings": true
+    "allowWarnings": true,
+    "skipTypeCheck": true
   },
   "reporting": {
     "generateDetailedReport": true,

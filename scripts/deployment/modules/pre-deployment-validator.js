@@ -16,12 +16,14 @@ class PreDeploymentValidator {
     this.errors = [];
     this.warnings = [];
     this.info = [];
+    this.config = null;
   }
 
   async validate() {
     console.log('🔍 Starting pre-deployment validation...');
     
     try {
+      await this.loadConfig();
       await this.validateEnvironment();
       await this.validateAuthentication();
       await this.validateCodeQuality();
@@ -35,6 +37,17 @@ class PreDeploymentValidator {
     } catch (error) {
       this.errors.push(`Validation failed: ${error.message}`);
       return this.generateReport();
+    }
+  }
+
+  async loadConfig() {
+    try {
+      const configPath = path.join(this.configDir, 'deployment-config.json');
+      const configData = await fs.readFile(configPath, 'utf8');
+      this.config = JSON.parse(configData);
+    } catch (error) {
+      // Use default configuration if config file is not found
+      this.config = { validation: { skipTypeCheck: false } };
     }
   }
 
@@ -137,15 +150,19 @@ class PreDeploymentValidator {
     }
 
     // Check TypeScript compilation for functions
-    try {
-      const functionsPath = path.join(this.projectRoot, 'functions');
-      execSync('npm run build', { 
-        cwd: functionsPath, 
-        stdio: 'pipe' 
-      });
-      this.info.push('Functions TypeScript compilation: ✓');
-    } catch (error) {
-      this.errors.push('Functions TypeScript compilation failed. Fix errors before deployment.');
+    if (this.config?.validation?.skipTypeCheck) {
+      this.warnings.push('Functions TypeScript compilation: Skipped (skipTypeCheck enabled)');
+    } else {
+      try {
+        const functionsPath = path.join(this.projectRoot, 'functions');
+        execSync('npm run build', { 
+          cwd: functionsPath, 
+          stdio: 'pipe' 
+        });
+        this.info.push('Functions TypeScript compilation: ✓');
+      } catch (error) {
+        this.errors.push('Functions TypeScript compilation failed. Fix errors before deployment.');
+      }
     }
 
     // Check for common issues

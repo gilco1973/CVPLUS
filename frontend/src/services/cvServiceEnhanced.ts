@@ -10,7 +10,6 @@ import {
   doc, 
   setDoc, 
   getDoc, 
-  onSnapshot,
   serverTimestamp 
 } from 'firebase/firestore';
 import { 
@@ -23,6 +22,7 @@ import { db, storage, functions, auth } from '../lib/firebase';
 import ErrorRecoveryManager from './error-recovery/ErrorRecoveryManager';
 import { CheckpointType } from './error-recovery/CheckpointManager';
 import { withRetry } from './error-recovery/RetryMechanism';
+import { jobSubscriptionManager } from './JobSubscriptionManager';
 
 // Re-export types from original service
 export interface Job {
@@ -466,14 +466,12 @@ export class CVServiceEnhanced {
    * Simple operations that don't need full recovery (kept from original)
    */
   
-  // Subscribe to job updates (no retry needed for real-time subscriptions)
+  // Subscribe to job updates (uses centralized subscription manager)
   public subscribeToJob(jobId: string, callback: (job: Job | null) => void) {
-    return onSnapshot(doc(db, 'jobs', jobId), (doc) => {
-      if (doc.exists()) {
-        callback({ id: doc.id, ...doc.data() } as Job);
-      } else {
-        callback(null);
-      }
+    return jobSubscriptionManager.subscribeToJob(jobId, callback, {
+      enableLogging: process.env.NODE_ENV === 'development',
+      debounceMs: 50, // Faster debounce for enhanced service
+      maxRetries: 3
     });
   }
 

@@ -12,6 +12,7 @@ import { KeywordOptimization } from './pages/KeywordOptimization';
 import { AuthProvider } from './contexts/AuthContext';
 import { HelpProvider } from './contexts/HelpContext';
 import { FloatingHelpButton } from './components/help/FloatingHelpButton';
+import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
 
 const router = createBrowserRouter([
   {
@@ -59,6 +60,7 @@ function App() {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
           <RouterProvider router={router} />
           <FloatingHelpButton />
+          <SubscriptionMonitor />
           <Toaster 
             position="top-right"
             toastOptions={{

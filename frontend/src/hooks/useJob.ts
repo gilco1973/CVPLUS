@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getJob, subscribeToJob } from '../services/cvService';
+import { getJob } from '../services/cvService';
+import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
 import type { Job } from '../services/cvService';
 
 export const useJob = (jobId: string) => {
@@ -26,11 +27,15 @@ export const useJob = (jobId: string) => {
         if (initialJob) {
           setJob(initialJob);
           
-          // Subscribe to real-time updates
-          unsubscribe = subscribeToJob(jobId, (updatedJob) => {
+          // Subscribe to real-time updates using centralized manager
+          unsubscribe = jobSubscriptionManager.subscribeToJob(jobId, (updatedJob) => {
             if (updatedJob) {
               setJob(updatedJob);
             }
+          }, {
+            enableLogging: process.env.NODE_ENV === 'development',
+            debounceMs: 100,
+            maxRetries: 3
           });
         } else {
           setError('Job not found');
