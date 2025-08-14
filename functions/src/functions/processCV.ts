@@ -12,14 +12,29 @@ export const processCV = onCall(
     // secrets: ['ANTHROPIC_API_KEY'] // Temporarily disabled
   },
   async (request) => {
+    console.log('ProcessCV function called');
+    console.log('Request auth:', request.auth ? 'Present' : 'Missing');
+    console.log('Request data keys:', Object.keys(request.data || {}));
+    
     // Check authentication
     if (!request.auth) {
+      console.error('Authentication missing in processCV request');
       throw new Error('User must be authenticated to process CV');
     }
 
+    console.log('User ID:', request.auth.uid);
+
     const { jobId, fileUrl, mimeType, isUrl } = request.data;
+    
+    console.log('ProcessCV parameters:', { 
+      jobId: jobId || 'MISSING', 
+      fileUrl: fileUrl ? (fileUrl.substring(0, 100) + '...') : 'MISSING',
+      mimeType: mimeType || 'MISSING',
+      isUrl: isUrl
+    });
 
     if (!jobId || (!fileUrl && !isUrl)) {
+      console.error('Missing required parameters:', { jobId, fileUrl: !!fileUrl, isUrl });
       throw new Error('Missing required parameters');
     }
 
@@ -139,16 +154,36 @@ export const processCV = onCall(
     } catch (error: any) {
       console.error('Error processing CV:', error);
       
-      // Update job status to failed
+      // Determine error type and provide appropriate user message
+      let userMessage = error.message;
+      let errorType = 'unknown';
+      
+      if (error.message.includes('credit balance is too low') || error.message.includes('billing issues')) {
+        errorType = 'billing';
+        userMessage = 'The AI service is temporarily unavailable due to billing issues. Please try again later or contact support.';
+      } else if (error.message.includes('Authentication failed')) {
+        errorType = 'auth';
+        userMessage = 'Authentication failed with the AI service. Please try again later or contact support.';
+      } else if (error.message.includes('overloaded') || error.message.includes('429')) {
+        errorType = 'rate_limit';
+        userMessage = 'The AI service is currently overloaded. Please try again in a few moments.';
+      } else if (error.message.includes('service is temporarily')) {
+        errorType = 'service_unavailable';
+        userMessage = 'The AI service is temporarily experiencing issues. Please try again later.';
+      }
+      
+      // Update job status to failed with detailed error info
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
         .update({
           status: 'failed',
-          error: error.message,
+          error: userMessage,
+          errorType: errorType,
+          technicalError: error.message, // Keep original error for debugging
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-      throw new Error(`Failed to process CV: ${error.message}`);
+      throw new Error(userMessage);
     }
   });

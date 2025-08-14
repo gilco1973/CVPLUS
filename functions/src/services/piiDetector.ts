@@ -125,9 +125,27 @@ For masking, use:
       }
 
       throw new Error('Failed to parse PII detection response');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error detecting PII:', error);
-      throw new Error(`Failed to detect PII: ${error}`);
+      
+      // Handle specific API errors with user-friendly messages
+      if (error.status === 400 && error.error?.error?.message?.includes('credit balance is too low')) {
+        throw new Error('The AI service is temporarily unavailable due to billing issues. Please try again later or contact support.');
+      }
+      
+      if (error.status === 401) {
+        throw new Error('Authentication failed with the AI service. Please try again later or contact support.');
+      }
+      
+      if (error.status === 429) {
+        throw new Error('The AI service is currently overloaded. Please try again in a few moments.');
+      }
+      
+      if (error.status >= 500) {
+        throw new Error('The AI service is temporarily experiencing issues. Please try again later.');
+      }
+      
+      throw new Error(`Failed to analyze privacy information: ${error.message || 'Unknown error occurred'}`);
     }
   }
 
