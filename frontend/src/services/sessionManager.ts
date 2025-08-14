@@ -1,30 +1,21 @@
 // SessionManager Service - Core session management with dual storage
 import { 
-  collection, 
   doc, 
   setDoc, 
-  getDoc, 
-  getDocs,
+  getDoc,
   deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit as firestoreLimit,
-  serverTimestamp,
-  onSnapshot,
-  Unsubscribe
+  serverTimestamp
 } from 'firebase/firestore';
+// Unsubscribe type removed as it was unused
 import { db, auth } from '../lib/firebase';
-import {
+import type {
   SessionState,
   SessionStorageConfig,
-  SessionSearchCriteria,
   SessionEvent,
-  SessionError,
   CVStep,
-  SessionStatus,
   SessionFormData
 } from '../types/session';
+import { SessionError } from '../types/session';
 
 class SessionManager {
   private static instance: SessionManager;

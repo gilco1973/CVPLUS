@@ -109,6 +109,7 @@ export const HomePage = () => {
       await uploadCV(file, jobId);
       
       // Navigate to processing page with quick create flag
+      console.log('Created session:', sessionId);
       navigate(`/process/${jobId}${quickCreate ? '?quickCreate=true' : ''}`);
     } catch (error: any) {
       console.error('Error uploading file:', error);
@@ -155,6 +156,7 @@ export const HomePage = () => {
       await session.updateSession({ jobId });
       
       // Navigate to processing page
+      console.log('Created session from URL:', sessionId);
       navigate(`/process/${jobId}`);
     } catch (error: any) {
       console.error('Error processing URL:', error);
@@ -200,7 +202,11 @@ export const HomePage = () => {
       await sessionResume.resumeSession(sessionId, {
         navigateToStep: true,
         restoreFormData: true,
-        showConfirmationDialog: false
+        showConfirmationDialog: false,
+        mergeWithCurrentState: false,
+        clearOldSession: true,
+        showProgressIndicator: true,
+        animateTransitions: true
       });
       setShowResumeDialog(false);
     } catch (error) {

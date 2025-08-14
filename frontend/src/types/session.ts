@@ -174,14 +174,21 @@ export type SessionEvent =
 
 // Error types for session operations
 export class SessionError extends Error {
+  public code: SessionErrorCode;
+  public sessionId?: string;
+  public retryable: boolean;
+
   constructor(
     message: string,
-    public code: SessionErrorCode,
-    public sessionId?: string,
-    public retryable: boolean = false
+    code: SessionErrorCode,
+    sessionId?: string,
+    retryable: boolean = false
   ) {
     super(message);
     this.name = 'SessionError';
+    this.code = code;
+    this.sessionId = sessionId;
+    this.retryable = retryable;
   }
 }
 

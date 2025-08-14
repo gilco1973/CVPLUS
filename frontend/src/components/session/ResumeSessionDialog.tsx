@@ -12,7 +12,7 @@ import {
   User,
   Trash2
 } from 'lucide-react';
-import { SessionState, CVStep } from '../../types/session';
+import type { SessionState, CVStep } from '../../types/session';
 
 interface ResumeSessionDialogProps {
   isOpen: boolean;

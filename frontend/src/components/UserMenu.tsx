@@ -4,9 +4,10 @@ import { LogOut } from 'lucide-react';
 
 interface UserMenuProps {
   variant?: 'default' | 'white' | 'dark';
+  size?: 'default' | 'small';
 }
 
-export const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
+export const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default', size = 'default' }) => {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -49,14 +50,22 @@ export const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center space-x-2 transition font-medium ${getTextClasses()}`}
       >
-        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+        <div className={`bg-blue-600 text-white rounded-full flex items-center justify-center font-medium ${
+          size === 'small' ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'
+        }`}>
           {user.photoURL ? (
-            <img src={user.photoURL} alt={displayName} className="w-8 h-8 rounded-full" />
+            <img 
+              src={user.photoURL} 
+              alt={displayName} 
+              className={size === 'small' ? 'w-6 h-6 rounded-full' : 'w-8 h-8 rounded-full'} 
+            />
           ) : (
             initials
           )}
         </div>
-        <span className="text-sm font-medium hidden sm:block">{displayName}</span>
+        {size !== 'small' && (
+          <span className="text-sm font-medium hidden sm:block">{displayName}</span>
+        )}
       </button>
 
       {isOpen && (

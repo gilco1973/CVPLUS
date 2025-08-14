@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import SessionService from '../services/sessionService';
-import { SessionState, ResumeSessionOptions } from '../types/session';
+import type { SessionState, ResumeSessionOptions } from '../types/session';
 
 interface UseSessionResumeReturn {
   // Available sessions
@@ -203,7 +203,11 @@ export const useQuickResume = (options: UseQuickResumeOptions = {}) => {
     const result = await sessionResume.resumeSession(quickResumeSession.sessionId, {
       navigateToStep: true,
       showConfirmationDialog: false,
-      restoreFormData: true
+      restoreFormData: true,
+      mergeWithCurrentState: false,
+      clearOldSession: true,
+      showProgressIndicator: true,
+      animateTransitions: true
     });
     
     setQuickResumeSession(null);

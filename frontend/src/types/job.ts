@@ -1,5 +1,6 @@
 // Enhanced Job interface with session management support
-import { SessionState, CVStep } from './session';
+import type { CVStep } from './session';
+// SessionState import removed as it was unused
 
 export interface Job {
   id: string;
@@ -174,15 +175,24 @@ export type JobEvent =
 
 // Error types for job operations
 export class JobError extends Error {
+  public code: JobErrorCode;
+  public jobId?: string;
+  public step?: CVStep;
+  public retryable: boolean;
+
   constructor(
     message: string,
-    public code: JobErrorCode,
-    public jobId?: string,
-    public step?: CVStep,
-    public retryable: boolean = false
+    code: JobErrorCode,
+    jobId?: string,
+    step?: CVStep,
+    retryable: boolean = false
   ) {
     super(message);
     this.name = 'JobError';
+    this.code = code;
+    this.jobId = jobId;
+    this.step = step;
+    this.retryable = retryable;
   }
 }
 
@@ -279,4 +289,5 @@ export const jobUtils = {
   }
 };
 
-export default Job;
+// Note: Default export removed due to TypeScript verbatimModuleSyntax constraint
+// Use named import instead: import type { Job } from './job';

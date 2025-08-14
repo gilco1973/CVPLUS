@@ -9,13 +9,12 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import SessionManager from './sessionManager';
-import {
+import type {
   SessionState,
   SessionSearchCriteria,
   SessionMetrics,
   ResumeSessionOptions,
-  CVStep,
-  SessionStatus
+  CVStep
 } from '../types/session';
 
 export class SessionService {
@@ -61,7 +60,8 @@ export class SessionService {
     if (!auth.currentUser) return [];
 
     try {
-      let q = collection(db, 'users', auth.currentUser.uid, 'sessions');
+      const collectionRef = collection(db, 'users', auth.currentUser.uid, 'sessions');
+      let q: any = collectionRef;
       
       // Apply filters
       if (criteria.status?.length) {
@@ -92,13 +92,16 @@ export class SessionService {
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        ...doc.data(),
-        sessionId: doc.id,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        lastActiveAt: doc.data().lastActiveAt?.toDate() || new Date(),
-        lastSyncAt: doc.data().lastSyncAt?.toDate()
-      })) as SessionState[];
+      return snapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        return {
+          ...data,
+          sessionId: doc.id,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          lastActiveAt: data.lastActiveAt?.toDate() || new Date(),
+          lastSyncAt: data.lastSyncAt?.toDate()
+        };
+      }) as SessionState[];
     } catch (error) {
       console.error('Error searching Firestore sessions:', error);
       return [];
@@ -106,6 +109,8 @@ export class SessionService {
   }
 
   private searchLocalSessions(criteria: SessionSearchCriteria): SessionState[] {
+    // Suppress unused parameter warning  
+    void criteria;
     const sessions: SessionState[] = [];
     
     try {
@@ -215,7 +220,7 @@ export class SessionService {
   // Resume session with options
   public async resumeSessionWithOptions(
     sessionId: string, 
-    options: ResumeSessionOptions = {}
+    options?: Partial<ResumeSessionOptions>
   ): Promise<{ session: SessionState; resumeUrl: string }> {
     const defaultOptions: ResumeSessionOptions = {
       navigateToStep: true,
@@ -227,7 +232,7 @@ export class SessionService {
       animateTransitions: true
     };
 
-    const finalOptions = { ...defaultOptions, ...options };
+    const finalOptions = { ...defaultOptions, ...(options || {}) };
     
     // Resume the session
     const session = await this.sessionManager.resumeSession(sessionId);
@@ -298,6 +303,8 @@ export class SessionService {
     });
 
     const now = Date.now();
+    // Suppress unused variable warning
+    void now;
     const totalSessions = allSessions.length;
     const completedSessions = allSessions.filter(s => s.status === 'completed').length;
     const resumedSessions = allSessions.filter(s => s.completedSteps.length > 1).length;

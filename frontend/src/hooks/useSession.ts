@@ -1,13 +1,15 @@
 // useSession Hook - Core React hook for session management
 import { useState, useEffect, useCallback, useRef } from 'react';
 import SessionManager from '../services/sessionManager';
-import { 
+import type { 
   SessionState, 
   SessionFormData, 
   CVStep, 
-  SessionEvent,
-  SessionError 
+  SessionEvent
 } from '../types/session';
+
+// Define local type for session errors (unused but kept for future use)
+// type SessionError = string;
 
 interface UseSessionReturn {
   // Session state
@@ -54,7 +56,7 @@ export const useSession = (options: UseSessionOptions = {}): UseSessionReturn =>
   const [error, setError] = useState<string | null>(null);
   
   const sessionManager = useRef(SessionManager.getInstance());
-  const autoSaveIntervalRef = useRef<NodeJS.Timeout>();
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const currentSessionId = useRef<string | null>(options.sessionId || null);
 
   // Initialize session
@@ -85,6 +87,7 @@ export const useSession = (options: UseSessionOptions = {}): UseSessionReturn =>
       options.onSessionEvent?.(event);
     };
 
+    // Add event listener for session events
     sessionManager.current.addEventListener(handleSessionEvent);
     
     return () => {

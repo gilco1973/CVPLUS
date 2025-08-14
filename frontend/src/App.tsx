@@ -10,6 +10,8 @@ import { CVFeaturesPage } from './pages/CVFeaturesPage';
 import { AboutPage } from './pages/AboutPage';
 import { KeywordOptimization } from './pages/KeywordOptimization';
 import { AuthProvider } from './contexts/AuthContext';
+import { HelpProvider } from './contexts/HelpContext';
+import { FloatingHelpButton } from './components/help/FloatingHelpButton';
 
 const router = createBrowserRouter([
   {
@@ -53,19 +55,22 @@ const router = createBrowserRouter([
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <RouterProvider router={router} />
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
-        />
-      </div>
+      <HelpProvider>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <RouterProvider router={router} />
+          <FloatingHelpButton />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
+        </div>
+      </HelpProvider>
     </AuthProvider>
   );
 }

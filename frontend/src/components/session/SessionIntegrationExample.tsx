@@ -3,14 +3,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { SessionAwarePageWrapper, SessionProgress, useSessionAwarePage } from './SessionAwarePageWrapper';
 import { useSession } from '../../hooks/useSession';
-import { Job } from '../../types/job';
-import { CVStep, SessionFormData } from '../../types/session';
+import type { Job } from '../../types/job';
+import type { CVStep, SessionFormData } from '../../types/session';
 
 // Example 1: Using SessionAwarePageWrapper (Higher-Order Component approach)
 export const ProcessingPageWithSession: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
-  const [job, setJob] = useState<Job | null>(null);
-  const [processingStep, setProcessingStep] = useState<string>('uploading');
+  const [job] = useState<Job | null>(null);
+  const [processingStep] = useState<string>('uploading');
+  
+  // Suppress unused variable warnings
+  void job;
+  void processingStep;
 
   // Form data that should be preserved
   const formData: Partial<SessionFormData> = {
@@ -104,7 +108,10 @@ export const ProcessingPageWithSession: React.FC = () => {
 // Example 2: Using useSessionAwarePage hook (more flexible approach)
 export const CVAnalysisPageWithSession: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
-  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [analysisData] = useState<any>(null);
+  
+  // Suppress unused variable warnings
+  void analysisData;
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [keywords, setKeywords] = useState<string[]>([]);
 
@@ -297,6 +304,8 @@ export const withSessionManagement = <P extends object>(
 };
 
 // Usage of HOC
+// Commented out to avoid unused variable warning
+/*
 const EnhancedTemplatesPage = withSessionManagement(
   // Your existing TemplatesPage component
   ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -307,3 +316,4 @@ const EnhancedTemplatesPage = withSessionManagement(
     autoSaveInterval: 20000
   }
 );
+*/

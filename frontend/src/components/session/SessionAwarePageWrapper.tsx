@@ -2,7 +2,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { SaveProgressButton, CompactSaveButton } from './SaveProgressButton';
-import { CVStep, SessionFormData } from '../../types/session';
+import type { CVStep, SessionFormData } from '../../types/session';
 
 interface SessionAwarePageWrapperProps {
   children: React.ReactNode;

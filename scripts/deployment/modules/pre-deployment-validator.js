@@ -321,7 +321,8 @@ class PreDeploymentValidator {
     const requiredVars = [
       'ANTHROPIC_API_KEY',
       'OPENAI_API_KEY', 
-      'ELEVENLABS_API_KEY'
+      'ELEVENLABS_API_KEY',
+      'MILVUS_TOKEN'
     ];
 
     // Check local .env file first
