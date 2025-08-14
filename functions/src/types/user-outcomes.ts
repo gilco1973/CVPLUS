@@ -67,12 +67,14 @@ export interface UserOutcome {
   
   // Final result tracking
   finalResult?: {
-    outcome: 'hired' | 'rejected' | 'withdrawn' | 'no_response';
-    status?: 'hired' | 'rejected' | 'withdrawn' | 'no_response'; // Alternative field name
+    outcome: 'hired' | 'rejected' | 'withdrawn' | 'no_response' | 'pending';
+    status?: 'hired' | 'rejected' | 'withdrawn' | 'no_response' | 'pending'; // Alternative field name
     reason?: string;
     feedback?: string;
     salaryOffered?: number;
     negotiatedSalary?: number;
+    finalDate?: Date; // Add finalDate property
+    timeToResult?: number; // Add timeToResult property
   };
   
   // User feedback
@@ -89,12 +91,15 @@ export interface UserOutcome {
   };
   
   // Additional metadata
-  metadata: {
+  metadata?: {
     interviewType?: 'phone' | 'video' | 'in_person' | 'panel' | 'technical';
     numberOfRounds?: number;
     negotiationRounds?: number;
     competitorsCount?: number;
   };
+  
+  // Data version for schema evolution
+  dataVersion?: string;
   
   // Timestamps
   updatedAt?: Date;
@@ -116,7 +121,7 @@ export interface OutcomeEvent {
   details?: string; // Event details for compatibility
   
   // Context
-  source: 'user_input' | 'email_tracking' | 'calendar_integration' | 'manual_entry';
+  source: 'user_input' | 'email_tracking' | 'calendar_integration' | 'manual_entry' | 'automated_system';
   confidence: number; // How confident are we in this data
   
   // Related entities

@@ -3,7 +3,7 @@
  */
 
 import { ParsedCV } from '../../types/job';
-import { RegionalConfiguration } from '../../types/phase2-models';
+import { RegionalConfiguration } from '../../types/regional-localization';
 
 export class RegionalScoreCalculator {
   /**
@@ -40,24 +40,24 @@ export class RegionalScoreCalculator {
     let score = 0.5; // Base score
 
     // Photo preferences
-    if (regionConfig.formatPreferences.photoRequired && !this.hasPhoto(cvData)) {
+    if (regionConfig.formatPreferences?.photoRequired && !this.hasPhoto(cvData)) {
       score -= 0.2;
-    } else if (!regionConfig.formatPreferences.photoRequired && this.hasPhoto(cvData)) {
+    } else if (!regionConfig.formatPreferences?.photoRequired && this.hasPhoto(cvData)) {
       score -= 0.1;
     }
 
     // Length preferences
     const cvLength = this.estimateCVLength(cvData);
-    const preferredLength = regionConfig.formatPreferences.preferredLength;
+    const preferredLength = regionConfig.formatPreferences?.preferredLength;
     
-    if (Math.abs(cvLength - preferredLength) <= 0.5) {
+    if (preferredLength && Math.abs(cvLength - preferredLength) <= 0.5) {
       score += 0.2;
-    } else if (Math.abs(cvLength - preferredLength) <= 1) {
+    } else if (preferredLength && Math.abs(cvLength - preferredLength) <= 1) {
       score += 0.1;
     }
 
     // Date format alignment
-    if (this.checkDateFormat(cvData, regionConfig.formatPreferences.dateFormat)) {
+    if (this.checkDateFormat(cvData, regionConfig.formatPreferences?.dateFormat || 'DD/MM/YYYY')) {
       score += 0.1;
     }
 
@@ -68,7 +68,8 @@ export class RegionalScoreCalculator {
     let score = 0.5; // Base score
 
     // Required sections
-    for (const section of regionConfig.contentGuidelines.requiredSections) {
+    const requiredSections = regionConfig.contentGuidelines?.requiredSections || [];
+    for (const section of requiredSections) {
       if (this.hasSectionContent(cvData, section)) {
         score += 0.1;
       } else {
@@ -77,7 +78,8 @@ export class RegionalScoreCalculator {
     }
 
     // Discouraged sections
-    for (const section of regionConfig.contentGuidelines.discouragedSections) {
+    const discouragedSections = regionConfig.contentGuidelines?.discouragedSections || [];
+    for (const section of discouragedSections) {
       if (this.hasSectionContent(cvData, section)) {
         score -= 0.1;
       }
@@ -91,18 +93,19 @@ export class RegionalScoreCalculator {
 
     // Formality level check
     const currentFormality = this.assessFormality(cvData);
-    const preferredFormality = regionConfig.languageGuidelines.formalityLevel;
+    const preferredFormality = regionConfig.languageGuidelines?.formalityLevel;
     
     if (currentFormality === preferredFormality) {
       score += 0.3;
-    } else if (Math.abs(this.formalityToNumber(currentFormality) - this.formalityToNumber(preferredFormality)) === 1) {
+    } else if (preferredFormality && Math.abs(this.formalityToNumber(currentFormality) - this.formalityToNumber(preferredFormality)) === 1) {
       score += 0.1;
     } else {
       score -= 0.2;
     }
 
     // Terminology appropriateness
-    if (this.checkTerminology(cvData, regionConfig.languageGuidelines.preferredTerminology)) {
+    const preferredTerminology = regionConfig.languageGuidelines?.preferredTerminology || [];
+    if (this.checkTerminology(cvData, preferredTerminology)) {
       score += 0.2;
     }
 
@@ -113,7 +116,8 @@ export class RegionalScoreCalculator {
     let score = 1.0; // Start with perfect compliance
 
     // Check for compliance violations
-    for (const restriction of regionConfig.legalRestrictions.prohibitedInfo) {
+    const prohibitedInfo = regionConfig.legalRestrictions?.prohibitedInfo || [];
+    for (const restriction of prohibitedInfo) {
       if (this.hasProhibitedInfo(cvData, restriction)) {
         score -= 0.3;
       }

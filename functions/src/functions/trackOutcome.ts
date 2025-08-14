@@ -9,7 +9,8 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
-import { UserOutcome, OutcomeEvent, AnalyticsEvent } from '../types/phase2-models';
+import { UserOutcome, OutcomeEvent } from '../types/user-outcomes';
+import { AnalyticsEvent } from '../types/analytics';
 import { CallableRequest } from 'firebase-functions/v2/https';
 import { corsOptions } from '../config/cors';
 
@@ -45,6 +46,16 @@ export const trackUserOutcome = onCall(
         outcomeId: `${auth.uid}_${outcomeData.jobId}_${Date.now()}`,
         userId: auth.uid,
         jobId: outcomeData.jobId,
+        outcomeType: 'no_response', // Default to no_response as initial state
+        dateOccurred: new Date(),
+        jobDetails: {
+          company: outcomeData.applicationData.company,
+          position: outcomeData.applicationData.jobTitle || 'Unknown Position',
+          industry: outcomeData.applicationData.industry || 'General',
+          location: outcomeData.applicationData.location || 'Remote'
+        },
+        applicationSource: 'direct', // Default value
+        cvVersion: outcomeData.cvData?.cvVersion || 'unknown',
         
         applicationData: {
           applicationDate: new Date(outcomeData.applicationData.applicationDate || Date.now()),
@@ -66,16 +77,22 @@ export const trackUserOutcome = onCall(
         
         timeline: outcomeData.timeline || [{
           eventId: `initial_${Date.now()}`,
+          userId: auth.uid,
+          jobId: outcomeData.jobId,
+          outcomeId: `${auth.uid}_${outcomeData.jobId}_${Date.now()}`,
           eventType: 'application_sent',
+          eventData: { stage: 'application', details: 'Application submitted through CVPlus' },
+          timestamp: new Date(),
           date: new Date(),
           stage: 'application',
-          details: 'Application submitted through CVPlus'
+          details: 'Application submitted through CVPlus',
+          source: 'user_input',
+          confidence: 1.0
         }],
         
         finalResult: {
-          status: 'pending',
-          finalDate: undefined,
-          timeToResult: undefined
+          outcome: 'pending',
+          status: 'pending'
         },
         
         userFeedback: outcomeData.userFeedback,
@@ -91,25 +108,26 @@ export const trackUserOutcome = onCall(
       await trackAnalyticsEvent({
         eventId: `outcome_tracked_${Date.now()}`,
         userId: auth.uid,
-        sessionId: data.sessionId || 'unknown',
+        eventType: 'outcome_reported',
+        eventCategory: 'user_action',
+        eventData: {
+          action: 'outcome_tracked',
+          properties: {
+            industry: outcomeData.applicationData.industry,
+            applicationMethod: outcomeData.applicationData.applicationMethod,
+            atsScore: outcomeData.cvData?.atsScore,
+            feature: 'outcome_tracking',
+            device: 'desktop'
+          }
+        },
         timestamp: new Date(),
-        category: 'user_action',
-        action: 'outcome_tracked',
-        label: outcomeData.applicationData.jobTitle,
-        context: {
-          feature: 'outcome_tracking',
-          device: 'desktop'
-        },
-        properties: {
-          industry: outcomeData.applicationData.industry,
-          applicationMethod: outcomeData.applicationData.applicationMethod,
-          atsScore: outcomeData.cvData?.atsScore
-        },
-        processed: false
+        sessionId: data.sessionId || 'unknown'
       });
       
       // Schedule follow-up reminders
-      await scheduleFollowUps(sanitizedOutcome.outcomeId, sanitizedOutcome.applicationData.applicationDate);
+      if (sanitizedOutcome.applicationData?.applicationDate) {
+        await scheduleFollowUps(sanitizedOutcome.outcomeId, sanitizedOutcome.applicationData.applicationDate);
+      }
       
       // Update user statistics
       await updateUserOutcomeStats(auth.uid, sanitizedOutcome);
@@ -168,11 +186,17 @@ export const updateUserOutcome = onCall(
       if (event) {
         const newEvent: OutcomeEvent = {
           eventId: `event_${Date.now()}`,
+          userId: auth.uid,
+          jobId: currentOutcome.jobId,
+          outcomeId: outcomeId,
           eventType: event.eventType,
+          eventData: event.eventData || { stage: event.stage, details: event.details },
+          timestamp: new Date(event.date || Date.now()),
           date: new Date(event.date || Date.now()),
           stage: event.stage,
           details: event.details,
-          eventData: event.eventData
+          source: 'user_input',
+          confidence: 0.9
         };
         
         updateData.timeline = [...(currentOutcome.timeline || []), newEvent];
@@ -181,11 +205,14 @@ export const updateUserOutcome = onCall(
       // Update final result if provided
       if (finalResult) {
         updateData.finalResult = {
+          outcome: finalResult.status,
           status: finalResult.status,
           finalDate: finalResult.finalDate ? new Date(finalResult.finalDate) : new Date(),
-          timeToResult: finalResult.timeToResult || calculateDaysFromApplication(currentOutcome.applicationData.applicationDate),
-          offerDetails: finalResult.offerDetails,
-          rejectionDetails: finalResult.rejectionDetails
+          timeToResult: finalResult.timeToResult || (currentOutcome.applicationData?.applicationDate ? calculateDaysFromApplication(currentOutcome.applicationData.applicationDate) : 0),
+          reason: finalResult.rejectionDetails || finalResult.reason,
+          feedback: finalResult.feedback,
+          salaryOffered: finalResult.offerDetails?.salaryOffered,
+          negotiatedSalary: finalResult.offerDetails?.negotiatedSalary
         };
         
         // Cancel future follow-ups if outcome is final
@@ -200,20 +227,19 @@ export const updateUserOutcome = onCall(
       await trackAnalyticsEvent({
         eventId: `outcome_updated_${Date.now()}`,
         userId: auth.uid,
-        sessionId: data.sessionId || 'unknown',
+        eventType: 'outcome_reported',
+        eventCategory: 'user_action',
+        eventData: {
+          action: 'outcome_updated',
+          properties: {
+            outcomeId,
+            eventType: event?.eventType,
+            finalStatus: finalResult?.status,
+            feature: 'outcome_tracking'
+          }
+        },
         timestamp: new Date(),
-        category: 'user_action',
-        action: 'outcome_updated',
-        label: event?.eventType || finalResult?.status,
-        context: {
-          feature: 'outcome_tracking'
-        },
-        properties: {
-          outcomeId,
-          eventType: event?.eventType,
-          finalStatus: finalResult?.status
-        },
-        processed: false
+        sessionId: data.sessionId || 'unknown'
       });
 
       return {
@@ -250,20 +276,20 @@ export const getUserOutcomeStats = onCall(
       
       const stats = {
         totalApplications: outcomes.length,
-        hired: outcomes.filter(o => o.finalResult.status === 'hired').length,
-        rejected: outcomes.filter(o => o.finalResult.status === 'rejected').length,
-        pending: outcomes.filter(o => o.finalResult.status === 'pending').length,
-        noResponse: outcomes.filter(o => o.finalResult.status === 'no_response').length,
+        hired: outcomes.filter(o => o.finalResult?.status === 'hired').length,
+        rejected: outcomes.filter(o => o.finalResult?.status === 'rejected').length,
+        pending: outcomes.filter(o => o.finalResult?.status === 'pending').length,
+        noResponse: outcomes.filter(o => o.finalResult?.status === 'no_response').length,
         
         averageTimeToResult: calculateAverageTimeToResult(outcomes),
         successRate: outcomes.length > 0 ? 
-          outcomes.filter(o => o.finalResult.status === 'hired').length / outcomes.length : 0,
+          outcomes.filter(o => o.finalResult?.status === 'hired').length / outcomes.length : 0,
         
         industryBreakdown: calculateIndustryBreakdown(outcomes),
         applicationMethods: calculateApplicationMethods(outcomes),
         
         averageAtsScore: outcomes.length > 0 ?
-          outcomes.reduce((sum, o) => sum + (o.cvData.atsScore || 0), 0) / outcomes.length : 0,
+          outcomes.reduce((sum, o) => sum + (o.cvData?.atsScore || 0), 0) / outcomes.length : 0,
         
         lastUpdated: new Date()
       };
@@ -303,7 +329,7 @@ export const sendFollowUpReminders = onSchedule(
           
           // Check if reminder already sent for this threshold
           const reminderKey = `reminder_${days}d`;
-          if (!outcome.timeline.some(e => e.details?.includes(reminderKey))) {
+          if (!outcome.timeline?.some(e => e.details?.includes(reminderKey))) {
             await sendFollowUpNotification(outcome, days);
           }
         }
@@ -335,9 +361,9 @@ export const processOutcomeForML = onDocumentCreated(
         outcomeId: outcome.outcomeId,
         userId: outcome.userId,
         features,
-        label: outcome.finalResult.status,
+        label: outcome.finalResult?.status || 'pending',
         createdAt: new Date(),
-        ready: outcome.finalResult.status !== 'pending' // Only use completed outcomes for training
+        ready: outcome.finalResult?.status !== 'pending' // Only use completed outcomes for training
       });
       
       // Check if we should trigger model retraining
@@ -377,10 +403,17 @@ async function sendFollowUpNotification(outcome: UserOutcome, daysSince: number)
   // Add reminder event to timeline
   const reminderEvent: OutcomeEvent = {
     eventId: `reminder_${daysSince}d_${Date.now()}`,
+    userId: outcome.userId,
+    jobId: outcome.jobId,
+    outcomeId: outcome.outcomeId,
     eventType: 'no_response',
+    eventData: { stage: 'application', daysSince, reminderType: `${daysSince}d_followup` },
+    timestamp: new Date(),
     date: new Date(),
     stage: 'application',
-    details: `reminder_${daysSince}d sent - no response after ${daysSince} days`
+    details: `reminder_${daysSince}d sent - no response after ${daysSince} days`,
+    source: 'automated_system',
+    confidence: 1.0
   };
   
   await db.collection('user_outcomes').doc(outcome.outcomeId).update({
@@ -394,8 +427,8 @@ async function updateUserOutcomeStats(userId: string, outcome: UserOutcome): Pro
   
   await statsRef.set({
     totalApplications: admin.firestore.FieldValue.increment(1),
-    lastApplicationDate: outcome.applicationData.applicationDate,
-    averageAtsScore: outcome.cvData.atsScore,
+    lastApplicationDate: outcome.applicationData?.applicationDate,
+    averageAtsScore: outcome.cvData?.atsScore,
     updatedAt: new Date()
   }, { merge: true });
 }
@@ -407,22 +440,22 @@ async function trackAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
 async function extractMLFeatures(outcome: UserOutcome): Promise<any> {
   return {
     // CV features
-    atsScore: outcome.cvData.atsScore,
-    optimizationsCount: outcome.cvData.optimizationsApplied.length,
+    atsScore: outcome.cvData?.atsScore || 0,
+    optimizationsCount: outcome.cvData?.optimizationsApplied?.length || 0,
     
     // Application features
-    industry: outcome.applicationData.industry,
-    applicationMethod: outcome.applicationData.applicationMethod,
-    hasJobDescription: !!outcome.applicationData.jobDescription,
-    hasSalaryPosted: !!outcome.applicationData.salaryPosted,
+    industry: outcome.applicationData?.industry,
+    applicationMethod: outcome.applicationData?.applicationMethod,
+    hasJobDescription: !!outcome.applicationData?.jobDescription,
+    hasSalaryPosted: !!outcome.applicationData?.salaryPosted,
     
     // Timeline features
-    timelineEvents: outcome.timeline.length,
-    responseTime: calculateResponseTime(outcome.timeline),
+    timelineEvents: outcome.timeline?.length || 0,
+    responseTime: outcome.timeline ? calculateResponseTime(outcome.timeline) : 0,
     
     // Context features
-    applicationDate: outcome.applicationData.applicationDate,
-    location: outcome.applicationData.location
+    applicationDate: outcome.applicationData?.applicationDate,
+    location: outcome.applicationData?.location
   };
 }
 
@@ -432,19 +465,21 @@ function calculateDaysFromApplication(applicationDate: Date): number {
 
 function calculateAverageTimeToResult(outcomes: UserOutcome[]): number {
   const completedOutcomes = outcomes.filter(o => 
-    o.finalResult.timeToResult && o.finalResult.status !== 'pending'
+    o.finalResult?.timeToResult && o.finalResult?.status !== 'pending'
   );
   
   if (completedOutcomes.length === 0) return 0;
   
-  return completedOutcomes.reduce((sum, o) => sum + (o.finalResult.timeToResult || 0), 0) / completedOutcomes.length;
+  return completedOutcomes.reduce((sum, o) => sum + (o.finalResult?.timeToResult || 0), 0) / completedOutcomes.length;
 }
 
 function calculateIndustryBreakdown(outcomes: UserOutcome[]): Record<string, number> {
   const breakdown: Record<string, number> = {};
   outcomes.forEach(outcome => {
-    const industry = outcome.applicationData.industry;
-    breakdown[industry] = (breakdown[industry] || 0) + 1;
+    const industry = outcome.applicationData?.industry;
+    if (industry) {
+      breakdown[industry] = (breakdown[industry] || 0) + 1;
+    }
   });
   return breakdown;
 }
@@ -452,8 +487,10 @@ function calculateIndustryBreakdown(outcomes: UserOutcome[]): Record<string, num
 function calculateApplicationMethods(outcomes: UserOutcome[]): Record<string, number> {
   const methods: Record<string, number> = {};
   outcomes.forEach(outcome => {
-    const method = outcome.applicationData.applicationMethod;
-    methods[method] = (methods[method] || 0) + 1;
+    const method = outcome.applicationData?.applicationMethod;
+    if (method) {
+      methods[method] = (methods[method] || 0) + 1;
+    }
   });
   return methods;
 }

@@ -3,7 +3,7 @@
  */
 
 import { ParsedCV } from '../../types/job';
-import { RegionalConfiguration } from '../../types/phase2-models';
+import { RegionalConfiguration } from '../../types/regional-localization';
 import { FormatAdjustment, ContentAdjustment, LanguageOptimization } from './types';
 
 export class CulturalOptimizer {
@@ -26,7 +26,7 @@ export class CulturalOptimizer {
     const adjustments: FormatAdjustment[] = [];
 
     // Photo requirements
-    if (regionConfig.formatPreferences.photoRequired && !this.hasPhoto(cvData)) {
+    if (regionConfig.formatPreferences?.photoRequired && !this.hasPhoto(cvData)) {
       adjustments.push({
         aspect: 'photo',
         current: 'No photo',
@@ -34,7 +34,7 @@ export class CulturalOptimizer {
         reason: 'Photos are expected in CVs for this region',
         importance: 'high'
       });
-    } else if (!regionConfig.formatPreferences.photoRequired && this.hasPhoto(cvData)) {
+    } else if (!regionConfig.formatPreferences?.photoRequired && this.hasPhoto(cvData)) {
       adjustments.push({
         aspect: 'photo',
         current: 'Photo included',
@@ -46,9 +46,9 @@ export class CulturalOptimizer {
 
     // Length preferences
     const currentLength = this.estimateCVLength(cvData);
-    const preferredLength = regionConfig.formatPreferences.preferredLength;
+    const preferredLength = regionConfig.formatPreferences?.preferredLength;
     
-    if (currentLength > preferredLength + 0.5) {
+    if (preferredLength && currentLength > preferredLength + 0.5) {
       adjustments.push({
         aspect: 'length',
         current: `${currentLength} pages`,
@@ -62,7 +62,7 @@ export class CulturalOptimizer {
     adjustments.push({
       aspect: 'date_format',
       current: 'MM/DD/YYYY',
-      recommended: regionConfig.formatPreferences.dateFormat,
+      recommended: regionConfig.formatPreferences?.dateFormat || 'DD/MM/YYYY',
       reason: 'Use local date format for better readability',
       importance: 'low'
     });
@@ -74,7 +74,8 @@ export class CulturalOptimizer {
     const adjustments: ContentAdjustment[] = [];
 
     // Required sections check
-    for (const requiredSection of regionConfig.contentGuidelines.requiredSections) {
+    const requiredSections = regionConfig.contentGuidelines?.requiredSections || [];
+    for (const requiredSection of requiredSections) {
       if (!this.hasSectionContent(cvData, requiredSection)) {
         adjustments.push({
           section: requiredSection,
@@ -87,7 +88,8 @@ export class CulturalOptimizer {
     }
 
     // Discouraged sections check
-    for (const discouragedSection of regionConfig.contentGuidelines.discouragedSections) {
+    const discouragedSections = regionConfig.contentGuidelines?.discouragedSections || [];
+    for (const discouragedSection of discouragedSections) {
       if (this.hasSectionContent(cvData, discouragedSection)) {
         adjustments.push({
           section: discouragedSection,
@@ -107,13 +109,13 @@ export class CulturalOptimizer {
 
     // Formality suggestions
     const currentFormality = this.assessFormality(cvData);
-    const preferredFormality = regionConfig.languageGuidelines.formalityLevel;
+    const preferredFormality = regionConfig.languageGuidelines?.formalityLevel;
 
     if (currentFormality !== preferredFormality) {
       optimizations.push({
         aspect: 'formality',
-        suggestion: `Adjust language to be more ${preferredFormality}`,
-        examples: this.getFormalityExamples(currentFormality, preferredFormality)
+        suggestion: `Adjust language to be more ${preferredFormality || 'professional'}`,
+        examples: this.getFormalityExamples(currentFormality, preferredFormality || 'formal')
       });
     }
 
@@ -124,7 +126,7 @@ export class CulturalOptimizer {
       examples: [
         {
           before: 'CV',
-          after: regionConfig.languageGuidelines.cvTerminology || 'Resume'
+          after: regionConfig.languageGuidelines?.cvTerminology || 'Resume'
         },
         {
           before: 'Mobile',
@@ -184,6 +186,7 @@ export class CulturalOptimizer {
       ]
     };
 
-    return examples[`${current}_to_${preferred}`] || [];
+    const key = `${current}_to_${preferred}` as keyof typeof examples;
+    return examples[key] || [];
   }
 }

@@ -6,7 +6,7 @@
  */
 
 import * as admin from 'firebase-admin';
-import { RegionalConfiguration } from '../types/phase2-models';
+import { RegionalConfiguration } from '../types/regional-localization';
 import { RegionalScoreCalculator } from './regional-localization/RegionalScoreCalculator';
 import { ComplianceChecker } from './regional-localization/ComplianceChecker';
 import { CulturalOptimizer } from './regional-localization/CulturalOptimizer';
@@ -155,14 +155,18 @@ export class RegionalLocalizationService {
   }
 
   private getMarketInsights(regionConfig: RegionalConfiguration) {
+    const networkingValue = regionConfig.culturalFactors?.networkingImportance || 0;
+    const networkingImportance: 'low' | 'medium' | 'high' = 
+      networkingValue > 0.7 ? 'high' : networkingValue > 0.4 ? 'medium' : 'low';
+    
     return {
-      popularIndustries: regionConfig.marketInsights?.popularIndustries || [],
-      averageJobSearchDuration: regionConfig.marketInsights?.averageJobSearchDuration || 90,
-      networkingImportance: regionConfig.marketInsights?.networkingImportance || 'medium' as const,
-      remoteWorkAdoption: regionConfig.marketInsights?.remoteWorkAdoption || 0.5,
-      salaryExpectations: regionConfig.marketInsights?.salaryExpectations || {
+      popularIndustries: regionConfig.jobMarket?.topIndustries?.map(i => i.industry) || [],
+      averageJobSearchDuration: regionConfig.jobMarket?.averageTimeToHire || 90,
+      networkingImportance,
+      remoteWorkAdoption: regionConfig.technologyLandscape?.remoteWorkAcceptance || 0.5,
+      salaryExpectations: {
         expectationLevel: 'market_rate' as const,
-        currencyPreference: 'USD',
+        currencyPreference: regionConfig.currency || 'USD',
         negotiationCulture: 'subtle' as const,
         benefitsImportance: 0.7
       }
@@ -185,7 +189,7 @@ export class RegionalLocalizationService {
         title: 'Legal Compliance Issue',
         description: issue.description,
         actionItems: [issue.solution],
-        culturalContext: `Required for compliance in ${regionConfig.region}`,
+        culturalContext: `Required for compliance in ${regionConfig.regionName}`,
         impact: issue.severity === 'error' ? 0.9 : 0.5
       });
     }

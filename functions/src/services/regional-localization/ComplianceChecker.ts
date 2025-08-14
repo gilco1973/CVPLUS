@@ -3,7 +3,7 @@
  */
 
 import { ParsedCV } from '../../types/job';
-import { RegionalConfiguration } from '../../types/phase2-models';
+import { RegionalConfiguration } from '../../types/regional-localization';
 import { ComplianceIssue } from './types';
 
 export class ComplianceChecker {
@@ -15,8 +15,9 @@ export class ComplianceChecker {
     const recommendations: string[] = [];
 
     // Check prohibited information
-    for (const prohibitedInfo of regionConfig.legalRestrictions.prohibitedInfo) {
-      const issue = this.checkProhibitedInfo(cvData, prohibitedInfo, regionConfig.region);
+    const prohibitedInfo = regionConfig.legalRestrictions?.prohibitedInfo || [];
+    for (const info of prohibitedInfo) {
+      const issue = this.checkProhibitedInfo(cvData, info, regionConfig.regionName);
       if (issue) {
         issues.push(issue);
       }
@@ -28,7 +29,7 @@ export class ComplianceChecker {
     }
 
     // Add general recommendations
-    if (regionConfig.legalRestrictions.photoRequired === false && this.hasPhoto(cvData)) {
+    if (regionConfig.legalRestrictions?.photoRequired === false && this.hasPhoto(cvData)) {
       recommendations.push('Consider removing photo as it may lead to unconscious bias');
     }
 
@@ -44,7 +45,7 @@ export class ComplianceChecker {
 
     switch (prohibitedType) {
       case 'age':
-        if (personalInfo.age || personalInfo.dateOfBirth) {
+        if (personalInfo.age || (personalInfo as any).dateOfBirth) {
           return {
             type: 'age',
             severity: 'error',
