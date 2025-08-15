@@ -65,8 +65,18 @@ export const FinalResultsPage = () => {
           return;
         }
 
+        // Debug: Check the state of generatedCV
+        console.log('🔍 [DEBUG] FinalResultsPage - Job data check:', {
+          hasGeneratedCV: !!jobData.generatedCV,
+          hasHtml: !!(jobData.generatedCV?.html),
+          generatedCVKeys: jobData.generatedCV ? Object.keys(jobData.generatedCV) : null,
+          generatedCV: jobData.generatedCV,
+          hasTriggeredGeneration: hasTriggeredGeneration.current
+        });
+
         // Check if CV has been generated, if not trigger generation
         if (!jobData.generatedCV || !jobData.generatedCV.html) {
+          console.log('🚀 [DEBUG] FinalResultsPage - Triggering CV generation');
           // Only trigger generation once
           if (!hasTriggeredGeneration.current) {
             hasTriggeredGeneration.current = true;
@@ -74,6 +84,8 @@ export const FinalResultsPage = () => {
           }
           return;
         }
+
+        console.log('✅ [DEBUG] FinalResultsPage - CV already generated, displaying results');
 
         if (isMountedRef.current) {
           setJob(jobData);
@@ -115,7 +127,8 @@ export const FinalResultsPage = () => {
         podcastGeneration = generationConfig.features?.generatePodcast || false;
       }
 
-      console.log('Generating CV with config:', {
+      console.log('🎨 [DEBUG] FinalResultsPage - Generating CV with config:', {
+        jobId: jobData.id,
         template: selectedTemplate,
         features: selectedFeatures,
         privacyMode: privacyModeEnabled,
@@ -127,7 +140,9 @@ export const FinalResultsPage = () => {
         selectedFeatures.push('privacy-mode');
       }
 
+      console.log('🔥 [DEBUG] FinalResultsPage - Calling generateCV service');
       const result = await generateCV(jobData.id, selectedTemplate, selectedFeatures);
+      console.log('✅ [DEBUG] FinalResultsPage - generateCV service returned:', result);
       
       // Generate podcast separately if selected
       if (podcastGeneration && isMountedRef.current) {

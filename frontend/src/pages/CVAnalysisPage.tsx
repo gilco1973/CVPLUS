@@ -7,6 +7,7 @@ import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { NavigationDebugger } from '../components/dev/NavigationDebugger';
 
 export const CVAnalysisPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -61,29 +62,121 @@ export const CVAnalysisPage = () => {
   }, [jobId, navigate, user]);
 
   const handleContinueToPreview = (selectedRecommendations: string[]) => {
-    console.log('🚀 [DEBUG] handleContinueToPreview called with:', selectedRecommendations);
-    console.log('🚀 [DEBUG] Current jobId:', jobId);
+    console.log('🚀 [PARENT] handleContinueToPreview called:', {
+      selectedRecommendations: selectedRecommendations.length,
+      jobId,
+      currentURL: window.location.href,
+      currentPath: window.location.pathname
+    });
     
     if (!jobId) {
-      console.error('❌ [DEBUG] No jobId available, cannot navigate');
+      console.error('❌ [PARENT] No jobId available, cannot navigate');
+      toast.error('Missing job ID for navigation');
       return;
     }
 
+    const targetPath = `/preview/${jobId}`;
+    console.log('📍 [PARENT] Navigation target:', targetPath);
+
     try {
-      // Store selected recommendations in session storage for now
-      // In a real app, you might want to save this to the job document
+      // Store recommendations data first (critical for preview page)
       sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
-      console.log('💾 [DEBUG] Stored recommendations in sessionStorage');
+      console.log('💾 [PARENT] Stored recommendations in sessionStorage');
       
-      // Navigate to preview page for feature selection and customization
-      const targetPath = `/preview/${jobId}`;
-      console.log('🚀 [DEBUG] Attempting navigation to:', targetPath);
-      navigate(targetPath);
-      console.log('✅ [DEBUG] Navigation call completed');
+      // Store navigation timestamp for debugging
+      sessionStorage.setItem(`nav-timestamp-${jobId}`, Date.now().toString());
+      
+      // Enhanced navigation with multiple strategies
+      console.log('🔄 [PARENT] Starting enhanced navigation sequence...');
+      
+      // Strategy 1: Immediate React Router navigation
+      try {
+        console.log('🔄 [PARENT] Attempt 1 - React Router navigate');
+        navigate(targetPath, { replace: true });
+        console.log('🔄 [PARENT] React Router navigate command executed');
+      } catch (navigateError) {
+        console.error('❌ [PARENT] React Router navigate failed:', navigateError);
+        throw navigateError;
+      }
+      
+      // Strategy 2: Verification with progressive fallbacks
+      let verificationAttempt = 0;
+      const maxVerificationAttempts = 12;
+      const verificationInterval = 100;
+      
+      const verifyNavigation = () => {
+        verificationAttempt++;
+        const currentPath = window.location.pathname;
+        
+        console.log(`🔍 [PARENT] Verification ${verificationAttempt}/${maxVerificationAttempts}:`, {
+          currentPath,
+          targetPath,
+          matched: currentPath === targetPath
+        });
+        
+        if (currentPath === targetPath) {
+          console.log('✅ [PARENT] Navigation verification successful!');
+          toast.dismiss();
+          toast.success('Welcome to CV Preview!', { icon: '🎉', duration: 3000 });
+          return;
+        }
+        
+        // Progressive fallback strategy
+        if (verificationAttempt === 4) {
+          // First fallback: Try navigate again
+          console.log('🔄 [PARENT] Fallback 1 - Retry React Router');
+          try {
+            navigate(targetPath, { replace: false }); // Try without replace
+          } catch (retryError) {
+            console.error('❌ [PARENT] Retry navigate failed:', retryError);
+          }
+        } else if (verificationAttempt === 8) {
+          // Second fallback: window.location.replace
+          console.log('🔄 [PARENT] Fallback 2 - window.location.replace');
+          try {
+            window.location.replace(targetPath);
+          } catch (replaceError) {
+            console.error('❌ [PARENT] window.location.replace failed:', replaceError);
+          }
+        } else if (verificationAttempt >= maxVerificationAttempts) {
+          // Final fallback: window.location.href
+          console.log('🚑 [PARENT] Final fallback - window.location.href');
+          toast.dismiss();
+          toast.loading('Redirecting to preview...', { duration: 3000 });
+          
+          try {
+            window.location.href = targetPath;
+          } catch (hrefError) {
+            console.error('💥 [PARENT] All navigation methods failed:', hrefError);
+            toast.error('Navigation failed. Please refresh and try again.');
+          }
+          return;
+        }
+        
+        // Continue verification
+        setTimeout(verifyNavigation, verificationInterval);
+      };
+      
+      // Start verification after small delay to allow initial navigation
+      setTimeout(verifyNavigation, 50);
+      
+      // Show user feedback
+      toast.loading('Preparing CV preview...', { duration: 2000 });
       
     } catch (error: any) {
-      console.error('💥 [DEBUG] Error in handleContinueToPreview:', error);
-      toast.error('Failed to navigate to preview. Please try again.');
+      console.error('💥 [PARENT] Critical error in handleContinueToPreview:', error);
+      toast.error('Navigation error. Attempting recovery...');
+      
+      // Emergency recovery navigation
+      setTimeout(() => {
+        try {
+          console.log('🚑 [PARENT] Emergency recovery navigation');
+          window.location.href = `/preview/${jobId}`;
+        } catch (recoveryError: any) {
+          console.error('💥 [PARENT] Recovery navigation failed:', recoveryError);
+          toast.error('Complete navigation failure. Please refresh the page and try again.');
+        }
+      }, 300);
     }
   };
 
@@ -200,6 +293,9 @@ export const CVAnalysisPage = () => {
           className="animate-fade-in-up"
         />
       </main>
+      
+      {/* Navigation Debugger for development */}
+      <NavigationDebugger jobId={jobId} />
     </div>
   );
 };

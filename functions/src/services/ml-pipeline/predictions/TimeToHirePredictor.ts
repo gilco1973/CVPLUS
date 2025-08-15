@@ -26,15 +26,26 @@ export class TimeToHirePredictor {
       estimatedDays -= 3; // Fast-growing industries move quicker
     }
     
+    const finalEstimate = Math.max(7, Math.min(45, estimatedDays));
+    
     return {
-      estimatedDays: Math.max(7, Math.min(45, estimatedDays)),
+      estimatedDays: {
+        min: Math.round(finalEstimate * 0.8),
+        max: Math.round(finalEstimate * 1.3),
+        median: finalEstimate
+      },
       confidence: 0.6,
-      stageBreakdown: {
-        applicationReview: Math.round(estimatedDays * 0.2),
-        initialScreening: Math.round(estimatedDays * 0.25),
-        interviews: Math.round(estimatedDays * 0.3),
-        decisionMaking: Math.round(estimatedDays * 0.15),
-        offerNegotiation: Math.round(estimatedDays * 0.1)
+      phaseBreakdown: {
+        application: Math.round(finalEstimate * 0.2),
+        screening: Math.round(finalEstimate * 0.25),
+        interviews: Math.round(finalEstimate * 0.3),
+        decision: Math.round(finalEstimate * 0.15),
+        negotiation: Math.round(finalEstimate * 0.1)
+      },
+      seasonalFactors: {
+        currentSeason: 'Q2',
+        seasonalAdjustment: 1.0,
+        holidayImpact: false
       },
       factors: {
         companySize: 'medium',

@@ -281,6 +281,15 @@ Return a JSON array of recommendations following this exact structure:
     const roleContext = targetRole ? `\nTarget Role: ${targetRole}` : '';
     const keywordContext = industryKeywords?.length ? `\nIndustry Keywords to Consider: ${industryKeywords.join(', ')}` : '';
     
+    // Optimize prompt length based on CV complexity
+    const cvComplexity = this.getCVComplexity(parsedCV);
+    const isComplexCV = cvComplexity === 'high';
+    
+    // Use condensed prompt for complex CVs to reduce processing time
+    if (isComplexCV) {
+      return this.buildCondensedPrompt(parsedCV, targetRole, industryKeywords);
+    }
+    
     return `Analyze this CV and provide detailed, actionable recommendations for improvement.${roleContext}${keywordContext}
 
 CV TO ANALYZE:
@@ -799,6 +808,60 @@ Generate specific recommendations with placeholder templates that users can cust
     };
   }
 
+  /**
+   * Assess CV complexity to optimize processing strategy
+   */
+  private getCVComplexity(cv: ParsedCV): 'low' | 'medium' | 'high' {
+    const jsonSize = JSON.stringify(cv).length;
+    const experienceCount = cv.experience?.length || 0;
+    const totalSections = [
+      cv.summary, cv.skills, cv.education, cv.experience, 
+      cv.achievements, cv.certifications, cv.customSections
+    ].filter(Boolean).length;
+    
+    if (jsonSize > 15000 || experienceCount > 8 || totalSections > 6) {
+      return 'high';
+    } else if (jsonSize > 8000 || experienceCount > 4 || totalSections > 4) {
+      return 'medium';
+    }
+    return 'low';
+  }
+  
+  /**
+   * Build condensed prompt for complex CVs to reduce processing time
+   */
+  private buildCondensedPrompt(parsedCV: ParsedCV, targetRole?: string, industryKeywords?: string[]): string {
+    const roleContext = targetRole ? `\nTarget Role: ${targetRole}` : '';
+    const keywordContext = industryKeywords?.length ? `\nKeywords: ${industryKeywords.join(', ')}` : '';
+    
+    // Create a simplified CV summary for analysis
+    const simplifiedCV = {
+      summary: parsedCV.summary,
+      experience: parsedCV.experience?.slice(0, 3).map(exp => ({
+        company: exp.company,
+        title: exp.title,
+        description: exp.description?.substring(0, 200) + '...'
+      })),
+      skills: Array.isArray(parsedCV.skills) 
+        ? parsedCV.skills.slice(0, 10) 
+        : parsedCV.skills,
+      education: parsedCV.education?.slice(0, 2)
+    };
+    
+    return `Generate 5-8 high-impact CV improvement recommendations.${roleContext}${keywordContext}
+
+CV Summary:
+${JSON.stringify(simplifiedCV, null, 2)}
+
+Focus on:
+1. Professional summary enhancement
+2. Top experience bullets with metrics
+3. Key skills optimization
+4. ATS keyword integration
+
+Return JSON only: {"recommendations": [...]} with id, type, category, title, description, section, impact, priority, estimatedScoreImprovement fields.`;
+  }
+  
   private generateFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
     const recommendations: CVRecommendation[] = [];
     

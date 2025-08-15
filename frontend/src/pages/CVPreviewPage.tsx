@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const CVPreviewPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -20,6 +21,16 @@ export const CVPreviewPage = () => {
   console.log('🎅 [DEBUG] CVPreviewPage component mounted');
   console.log('🎅 [DEBUG] jobId from params:', jobId);
   console.log('🎅 [DEBUG] Current URL:', window.location.href);
+  console.log('🎅 [DEBUG] Current pathname:', window.location.pathname);
+  
+  // Show success toast when preview page loads from analysis
+  useEffect(() => {
+    const referrer = document.referrer;
+    if (referrer.includes('/analysis/')) {
+      console.log('🎉 [DEBUG] Successfully navigated from analysis page!');
+      toast.success('Successfully loaded CV preview!', { icon: '🎉', duration: 3000 });
+    }
+  }, []);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({
     atsOptimized: true,
@@ -88,7 +99,7 @@ export const CVPreviewPage = () => {
         }
 
         // If analysis not done, redirect to analysis page
-        if (updatedJob.parsedData) {
+        if (!updatedJob.parsedData) {
           navigate(`/analysis/${jobId}`);
           return;
         }

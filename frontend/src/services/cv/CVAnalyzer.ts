@@ -221,7 +221,17 @@ export class CVAnalyzer {
       
       const result = await response.json();
       console.log(`[CVAnalyzer] Direct HTTP call succeeded for job: ${jobId}`);
-      return result.result;
+      console.log(`[CVAnalyzer] HTTP response structure:`, result);
+      
+      // The HTTP endpoint returns the response in result.data format
+      // But we need to match the callable function format
+      if (result.result) {
+        return result.result;
+      } else if (result.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     }
   }
 

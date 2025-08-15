@@ -32,7 +32,7 @@ export class RequestManager {
   
   // Configuration
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  private readonly DEFAULT_TIMEOUT = 30000; // 30 seconds
+  private readonly DEFAULT_TIMEOUT = 300000; // 5 minutes for CV analysis
   private readonly MAX_CACHE_SIZE = 1000; // Prevent memory leaks
   
   private constructor() {

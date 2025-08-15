@@ -92,7 +92,7 @@ export const navigationTest = {
     // Strategy 1: React Router navigate
     try {
       console.log('🔄 [NAV] Strategy 1: React Router navigate');
-      navigate(targetPath);
+      navigate(targetPath, { replace: false });
       
       // Check if navigation happened after a short delay
       setTimeout(() => {

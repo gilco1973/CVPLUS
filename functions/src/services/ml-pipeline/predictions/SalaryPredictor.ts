@@ -22,20 +22,48 @@ export class SalaryPredictor {
     const estimatedSalary = Math.round(baseAmount * experienceMultiplier * educationMultiplier * skillsMultiplier);
     
     return {
-      predictedRange: {
+      predictedSalaryRange: {
         min: Math.round(estimatedSalary * 0.85),
         max: Math.round(estimatedSalary * 1.2),
         median: estimatedSalary,
         currency: 'USD'
       },
-      locationAdjustment: 1.0,
-      industryPremium: 0,
-      experiencePremium: Math.round((experienceMultiplier - 1) * 100),
-      skillsPremium: Math.round((skillsMultiplier - 1) * 100),
-      industryMedian: 75000,
-      marketPercentile: 50,
-      negotiationPotential: 0.2,
-      marketDemand: 'medium'
+      predictedRange: {
+        min: Math.round(estimatedSalary * 0.85),
+        max: Math.round(estimatedSalary * 1.2),
+        median: estimatedSalary
+      },
+      confidenceInterval: {
+        lower: Math.round(estimatedSalary * 0.75),
+        upper: Math.round(estimatedSalary * 1.35)
+      },
+      regionalAdjustment: {
+        baseLocation: 'USA',
+        adjustmentFactor: 1.0,
+        costOfLivingIndex: 100
+      },
+      industryBenchmark: {
+        industryMedian: 75000,
+        percentileRank: 50
+      },
+      factors: [
+        {
+          factor: 'Experience',
+          impact: (experienceMultiplier - 1),
+          description: 'Years of relevant experience'
+        },
+        {
+          factor: 'Skills',
+          impact: (skillsMultiplier - 1),
+          description: 'Technical skills alignment'
+        },
+        {
+          factor: 'Education',
+          impact: (educationMultiplier - 1) / 3,
+          description: 'Educational background'
+        }
+      ],
+      negotiationPotential: 0.2
     };
   }
   

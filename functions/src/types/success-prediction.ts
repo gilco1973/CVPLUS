@@ -109,6 +109,12 @@ export interface TimeToHirePrediction {
     interviewPreparation: string;
     availability: string;
   };
+  factors?: {
+    companySize?: string;
+    industrySpeed?: string;
+    roleComplexity?: string;
+    marketConditions?: string;
+  };
   confidence: number;
   industryBenchmark?: number;
 }
@@ -119,6 +125,8 @@ export interface PredictiveRecommendation {
   priority: 'high' | 'medium' | 'low';
   title: string;
   description: string;
+  actionItems?: string[];
+  timeToImplement?: number;
   
   // Impact prediction
   expectedImpact: {
@@ -140,6 +148,7 @@ export interface PredictiveRecommendation {
     dataPoints: number;
     successRate: number;
     similarProfiles: number;
+    similarCases?: string;
   };
   
   // Tracking

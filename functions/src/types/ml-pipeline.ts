@@ -110,7 +110,7 @@ export interface FeatureVector {
   timestamp: Date;
   
   // Raw features
-  rawFeatures: {
+  rawFeatures?: {
     // Personal information
     age?: number;
     location?: string;
@@ -138,7 +138,7 @@ export interface FeatureVector {
   };
   
   // Engineered features
-  engineeredFeatures: {
+  engineeredFeatures?: {
     // Composite scores
     overallQualityScore?: number;
     experienceRelevanceScore?: number;
@@ -181,7 +181,7 @@ export interface FeatureVector {
   };
   
   // Feature metadata
-  metadata: {
+  metadata?: {
     extractionVersion: string;
     extractionTimestamp: Date;
     confidenceScores?: Record<string, number>;
@@ -196,6 +196,17 @@ export interface FeatureVector {
     experienceRelevance?: number;
     educationMatch?: number;
     educationLevel?: number;
+    // Additional CV features for predictions
+    experienceYears?: number;
+    skillsCount?: number;
+    wordCount?: number;
+    sectionsCount?: number;
+    certificationsCount?: number;
+    projectsCount?: number;
+    achievementsCount?: number;
+    keywordDensity?: number;
+    readabilityScore?: number;
+    formattingScore?: number;
   };
   
   matchingFeatures?: {
@@ -205,6 +216,23 @@ export interface FeatureVector {
     experienceMatch?: number;
     skillMatchPercentage?: number;
     experienceRelevance?: number;
+    // Additional matching features
+    educationMatch?: number;
+    titleSimilarity?: number;
+    companyFit?: number;
+    salaryAlignment?: number;
+    industryExperience?: number;
+    locationMatch?: number;
+  };
+  
+  behaviorFeatures?: {
+    applicationTiming?: number;
+    weekdayApplication?: boolean;
+    timeOfDay?: number;
+    applicationMethod?: number;
+    cvOptimizationLevel?: number;
+    platformEngagement?: number;
+    previousApplications?: number;
   };
   
   derivedFeatures?: {
@@ -213,6 +241,13 @@ export interface FeatureVector {
     marketAlignment?: number;
     competitiveness?: number;
     careerProgressionScore?: number;
+    // Additional derived features for predictions
+    leadershipPotential?: number;
+    innovationIndicator?: number;
+    adaptabilityScore?: number;
+    stabilityScore?: number;
+    underqualificationScore?: number;
+    overqualificationScore?: number;
   };
   
   marketFeatures?: {
@@ -221,6 +256,12 @@ export interface FeatureVector {
     salaryBenchmark?: number;
     growthPotential?: number;
     demandSupplyRatio?: number;
+    // Additional market features
+    industryGrowth?: number;
+    economicIndicators?: number;
+    locationCompetitiveness?: number;
+    salaryCompetitiveness?: number;
+    seasonality?: number;
   };
   
   // Backward compatibility

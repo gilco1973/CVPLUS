@@ -14,6 +14,7 @@ import { IntegrationService } from '../features/IntegrationService';
 import { ProfileService } from '../features/ProfileService';
 import { recommendationsDebugger } from '../../utils/debugRecommendations';
 import { RequestManager } from '../RequestManager';
+import { strictModeAwareRequestManager } from '../../utils/strictModeAwareRequestManager';
 import { auth } from '../../lib/firebase';
 import type { 
   Job, 
@@ -72,16 +73,18 @@ export class CVServiceCore {
     industryKeywords?: string[], 
     forceRegenerate?: boolean
   ) {
-    const requestManager = RequestManager.getInstance();
-    
     // Create unique request key including user ID for multi-user safety
     const userId = auth.currentUser?.uid || 'anonymous';
     const requestKey = `getRecommendations-${userId}-${jobId}-${targetRole || 'default'}-${(industryKeywords || []).join(',')}-${forceRegenerate || false}`;
     
-    console.log(`[CVServiceCore] getRecommendations called for jobId: ${jobId}`);
+    console.log(`[CVServiceCore] getRecommendations called for jobId: ${jobId}`, {
+      requestKey,
+      forceRegenerate,
+      strictMode: process.env.NODE_ENV === 'development'
+    });
     
-    // Use RequestManager for zero-tolerance duplicate prevention
-    const result = await requestManager.executeOnce(
+    // Use StrictMode-aware request manager for enhanced duplicate prevention
+    const result = await strictModeAwareRequestManager.executeOnce(
       requestKey,
       async () => {
         console.log(`[CVServiceCore] Executing actual request for jobId: ${jobId}`);
@@ -90,15 +93,20 @@ export class CVServiceCore {
       },
       {
         forceRegenerate,
-        timeout: 45000, // 45 second timeout for Firebase functions
+        timeout: 320000, // 320 second timeout for Firebase functions (5 min + buffer)
         context: `getRecommendations-${jobId}`
       }
     );
     
-    // Track whether this was from cache for debugging
+    // Enhanced debugging with StrictMode detection
     if (result.wasFromCache) {
-      recommendationsDebugger.trackCall(jobId, 'CVServiceCore.getRecommendations-cached', true, requestKey);
-      console.log(`[CVServiceCore] Returned cached result for jobId: ${jobId}`);
+      const cacheType = result.wasStrictModeDuplicate ? 'strictmode-duplicate' : 'cached';
+      recommendationsDebugger.trackCall(jobId, `CVServiceCore.getRecommendations-${cacheType}`, true, requestKey);
+      
+      console.log(`[CVServiceCore] Returned ${cacheType} result for jobId: ${jobId}`, {
+        wasStrictModeDuplicate: result.wasStrictModeDuplicate,
+        wasFromCache: result.wasFromCache
+      });
     } else {
       console.log(`[CVServiceCore] Returned fresh result for jobId: ${jobId}`);
     }

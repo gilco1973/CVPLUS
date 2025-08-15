@@ -251,9 +251,10 @@ export class OfferPredictor {
 
   private createTestFeatures(): FeatureVector {
     return {
+      vectorId: 'test_vector',
       userId: 'test_user',
       jobId: 'test_job',
-      extractionDate: new Date(),
+      timestamp: new Date(),
       
       cvFeatures: {
         wordCount: 300,
