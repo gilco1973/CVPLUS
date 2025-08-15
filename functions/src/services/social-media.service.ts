@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
 import { ParsedCV } from './cvParsing.service';

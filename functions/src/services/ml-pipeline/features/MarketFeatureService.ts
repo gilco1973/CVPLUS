@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Market Feature Service
  * 

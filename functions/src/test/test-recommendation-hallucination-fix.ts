@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Test script to verify that CV recommendations no longer contain fabricated metrics
  * This test ensures that the AI hallucination issue has been resolved

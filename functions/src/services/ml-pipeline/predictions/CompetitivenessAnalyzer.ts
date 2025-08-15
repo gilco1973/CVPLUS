@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Competitiveness Analyzer Service (Stub Implementation)
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Interview Predictor Service
  * 

@@ -20,60 +20,109 @@ import type { Job, JobCreateParams, FileUploadParams, CVProcessParams } from '..
 
 export class CVParser {
   /**
-   * Create a new job
+   * Retry logic for database operations
+   */
+  private static async retryOperation<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3,
+    delayMs: number = 1000
+  ): Promise<T> {
+    for (let i = 0; i <= maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        console.warn(`Operation attempt ${i + 1} failed:`, error);
+        
+        if (i === maxRetries) {
+          throw error;
+        }
+        
+        // Check if error is retryable
+        const isRetryable = error?.code === 'unavailable' ||
+                           error?.code === 'deadline-exceeded' ||
+                           error?.message?.includes('EMPTY_RESPONSE') ||
+                           error?.message?.includes('CONNECTION_RESET') ||
+                           error?.message?.includes('network');
+        
+        if (!isRetryable) {
+          throw error;
+        }
+        
+        // Exponential backoff
+        const delay = delayMs * Math.pow(2, i);
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw new Error('Max retries exceeded');
+  }
+
+  /**
+   * Create a new job with retry logic
    */
   static async createJob(params: JobCreateParams): Promise<string> {
     const { url, quickCreate = false, userInstructions } = params;
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
 
-    const jobId = doc(collection(db, 'jobs')).id;
-    const jobData = {
-      userId: user.uid,
-      status: 'pending' as const,
-      isUrl: !!url,
-      fileUrl: url || null,
-      quickCreate,
-      userInstructions: userInstructions || null,
-      settings: quickCreate ? {
-        applyAllEnhancements: true,
-        generateAllFormats: true,
-        enablePIIProtection: true,
-        createPodcast: true,
-        useRecommendedTemplate: true
-      } : null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
+    return this.retryOperation(async () => {
+      const jobId = doc(collection(db, 'jobs')).id;
+      const jobData = {
+        userId: user.uid,
+        status: 'pending' as const,
+        isUrl: !!url,
+        fileUrl: url || null,
+        quickCreate,
+        userInstructions: userInstructions || null,
+        settings: quickCreate ? {
+          applyAllEnhancements: true,
+          generateAllFormats: true,
+          enablePIIProtection: true,
+          createPodcast: true,
+          useRecommendedTemplate: true
+        } : null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
 
-    await setDoc(doc(db, 'jobs', jobId), jobData);
-    return jobId;
+      console.log('🔄 Creating job with ID:', jobId);
+      await setDoc(doc(db, 'jobs', jobId), jobData);
+      console.log('✅ Job created successfully:', jobId);
+      return jobId;
+    });
   }
 
   /**
-   * Upload CV file to storage
+   * Upload CV file to storage with retry logic
    */
   static async uploadCV(params: FileUploadParams): Promise<string> {
     const { file, jobId } = params;
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
 
-    // Create storage reference
-    const storageRef = ref(storage, `users/${user.uid}/uploads/${jobId}/${file.name}`);
-    
-    // Upload file
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
+    return this.retryOperation(async () => {
+      console.log('🔄 Uploading file:', file.name, 'for job:', jobId);
+      
+      // Create storage reference
+      const storageRef = ref(storage, `users/${user.uid}/uploads/${jobId}/${file.name}`);
+      
+      // Upload file
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      console.log('✅ File uploaded successfully, updating job...');
 
-    // Update job with file info
-    await setDoc(doc(db, 'jobs', jobId), {
-      fileUrl: downloadURL,
-      mimeType: file.type,
-      fileName: file.name,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+      // Update job with file info
+      await setDoc(doc(db, 'jobs', jobId), {
+        fileUrl: downloadURL,
+        mimeType: file.type,
+        fileName: file.name,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
 
-    return downloadURL;
+      console.log('✅ Job updated with file info');
+      return downloadURL;
+    });
   }
 
   /**

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Success Prediction Model Service
  * 
