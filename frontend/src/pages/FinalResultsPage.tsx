@@ -24,8 +24,13 @@ export const FinalResultsPage = () => {
   const hasTriggeredGeneration = useRef(false);
 
   useEffect(() => {
+    // Ensure mounted state is true when component mounts
+    isMountedRef.current = true;
+    console.log('🏗️ [DEBUG] FinalResultsPage component mounted, isMountedRef.current set to:', isMountedRef.current);
+    
     // Cleanup function to prevent memory leaks
     return () => {
+      console.log('🧹 [DEBUG] FinalResultsPage component unmounting, setting isMountedRef.current to false');
       isMountedRef.current = false;
     };
   }, []);
@@ -77,10 +82,16 @@ export const FinalResultsPage = () => {
         // Check if CV has been generated, if not trigger generation
         if (!jobData.generatedCV || !jobData.generatedCV.html) {
           console.log('🚀 [DEBUG] FinalResultsPage - Triggering CV generation');
+          console.log('⏰ [DEBUG] About to trigger generation - isMountedRef.current:', isMountedRef.current);
           // Only trigger generation once
           if (!hasTriggeredGeneration.current) {
             hasTriggeredGeneration.current = true;
-            await triggerCVGeneration(jobData);
+            
+            // Small delay to ensure component is fully mounted
+            setTimeout(async () => {
+              console.log('⏰ [DEBUG] After timeout - isMountedRef.current:', isMountedRef.current);
+              await triggerCVGeneration(jobData);
+            }, 100);
           }
           return;
         }
@@ -106,7 +117,12 @@ export const FinalResultsPage = () => {
   }, [jobId, user]);
 
   const triggerCVGeneration = async (jobData: Job) => {
-    if (!isMountedRef.current) return;
+    console.log('🎯 [DEBUG] triggerCVGeneration started - isMounted:', isMountedRef.current, 'jobData:', jobData?.id, 'generationConfig:', generationConfig);
+    
+    if (!isMountedRef.current) {
+      console.log('❌ [DEBUG] Component not mounted, returning early');
+      return;
+    }
     
     try {
       if (isMountedRef.current) {
@@ -120,11 +136,16 @@ export const FinalResultsPage = () => {
       let privacyModeEnabled = false;
       let podcastGeneration = false;
       
+      console.log('⚙️ [DEBUG] Setting up generation config - has generationConfig:', !!generationConfig);
+      
       if (generationConfig) {
         selectedTemplate = generationConfig.template || 'modern';
         selectedFeatures = Object.keys(generationConfig.features || {}).filter(key => generationConfig.features[key]);
         privacyModeEnabled = generationConfig.features?.privacyMode || false;
         podcastGeneration = generationConfig.features?.generatePodcast || false;
+        console.log('✅ [DEBUG] Using stored config');
+      } else {
+        console.log('⚠️ [DEBUG] No generationConfig found, using defaults');
       }
 
       console.log('🎨 [DEBUG] FinalResultsPage - Generating CV with config:', {
@@ -175,13 +196,19 @@ export const FinalResultsPage = () => {
       console.log('✅ CV generation completed successfully');
       toast.success('CV generated successfully!');
     } catch (error: any) {
-      console.error('❌ Error generating CV:', error);
+      console.error('❌ [DEBUG] Error in triggerCVGeneration:', error);
+      console.error('❌ [DEBUG] Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+        name: error?.name
+      });
       if (isMountedRef.current) {
         setError('Failed to generate CV. Please try again.');
         toast.error(error?.message || 'Failed to generate CV');
       }
     } finally {
-      console.log('🏁 Generation process finished, cleaning up...');
+      console.log('🏁 [DEBUG] Generation process finished, cleaning up...');
       if (isMountedRef.current) {
         setIsGenerating(false);
       }

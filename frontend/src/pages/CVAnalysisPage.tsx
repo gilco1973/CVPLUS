@@ -7,7 +7,6 @@ import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { NavigationDebugger } from '../components/dev/NavigationDebugger';
 
 export const CVAnalysisPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -294,8 +293,6 @@ export const CVAnalysisPage = () => {
         />
       </main>
       
-      {/* Navigation Debugger for development */}
-      <NavigationDebugger jobId={jobId} />
     </div>
   );
 };

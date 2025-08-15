@@ -17,17 +17,10 @@ export const CVPreviewPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Debug: Log that we've reached the preview page
-  console.log('🎅 [DEBUG] CVPreviewPage component mounted');
-  console.log('🎅 [DEBUG] jobId from params:', jobId);
-  console.log('🎅 [DEBUG] Current URL:', window.location.href);
-  console.log('🎅 [DEBUG] Current pathname:', window.location.pathname);
-  
   // Show success toast when preview page loads from analysis
   useEffect(() => {
     const referrer = document.referrer;
     if (referrer.includes('/analysis/')) {
-      console.log('🎉 [DEBUG] Successfully navigated from analysis page!');
       toast.success('Successfully loaded CV preview!', { icon: '🎉', duration: 3000 });
     }
   }, []);

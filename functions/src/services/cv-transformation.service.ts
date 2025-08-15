@@ -839,7 +839,7 @@ Generate specific recommendations with placeholder templates that users can cust
       summary: parsedCV.summary,
       experience: parsedCV.experience?.slice(0, 3).map(exp => ({
         company: exp.company,
-        title: exp.title,
+        title: exp.position,
         description: exp.description?.substring(0, 200) + '...'
       })),
       skills: Array.isArray(parsedCV.skills) 

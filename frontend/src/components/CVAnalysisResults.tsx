@@ -5,9 +5,7 @@ import { applyImprovements } from '../services/cvService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
-import { recommendationsDebugger } from '../utils/debugRecommendations';
 import { robustNavigation } from '../utils/robustNavigation';
-import { navigationDebugger } from '../utils/navigationDebugger';
 
 interface RecommendationItem {
   id: string;
@@ -66,7 +64,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   const [loadedJobId, setLoadedJobId] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   
-  // Debug: Track recommendations state changes
   useEffect(() => {
     console.log(`🔄 [STATE CHANGE] Recommendations updated:`, {
       length: recommendations.length,
@@ -142,7 +139,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       // Get real recommendations from backend using RequestManager (zero-tolerance duplicate prevention)
       console.log(`[CVAnalysisResults] Calling CVServiceCore.getRecommendations for job: ${job.id}`);
       console.log(`[CVAnalysisResults] Job object:`, { id: job.id, status: job.status, userId: job.userId });
-      recommendationsDebugger.trackCall(job.id, 'CVAnalysisResults.loadAnalysisAndRecommendations');
       
       let recommendationsData;
       try {
@@ -516,7 +512,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         .filter(rec => rec.priority === 'high' || rec.priority === 'medium')
         .map(rec => rec.id);
       
-      console.log('🪄 [DEBUG] Magic transform applying improvements with IDs:', magicSelectedRecs);
       
       if (magicSelectedRecs.length === 0) {
         toast.error('No high or medium priority recommendations available.');
@@ -526,29 +521,23 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       
       // Apply improvements and get the enhanced content
       const result = await applyImprovements(job.id, magicSelectedRecs);
-      console.log('✨ [DEBUG] Magic transform result:', result);
       
       // Store the improved content for the preview page
       if (result && (result as any).improvedContent) {
         sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
-        console.log('💾 [DEBUG] Magic transform stored improvements in sessionStorage');
       }
       
       // Store selected recommendations
       sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(magicSelectedRecs));
-      console.log('💾 [DEBUG] Magic transform stored recommendations in sessionStorage');
       
       // Show success message
       toast.success('✨ Magic transformation complete! Review your enhanced CV.');
       
       // Enhanced Magic Transform navigation with same multi-strategy approach
-      console.log('🚀 [DEBUG] Magic transform starting enhanced navigation...');
       
       // Strategy 1: Parent callback
       try {
-        console.log('📞 [DEBUG] Magic transform using parent callback...');
         onContinue(magicSelectedRecs);
-        console.log('✅ [DEBUG] Magic transform parent callback completed');
         
         // Verify navigation with timeout
         const navigationPromise = new Promise<boolean>((resolve) => {
@@ -562,7 +551,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             const expectedPath = `/preview/${job.id}`;
             
             if (currentPath === expectedPath) {
-              console.log('✅ [DEBUG] Magic transform navigation verified!');
               resolve(true);
               return;
             }
@@ -591,7 +579,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       }
       
       // Strategy 2: Robust fallback
-      console.log('🔄 [DEBUG] Magic transform using robust navigation fallback...');
       try {
         const fallbackSuccess = await robustNavigation.navigateToPreview(
           navigate,
@@ -602,7 +589,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             timeout: 400,
             maxRetries: 2,
             onSuccess: () => {
-              console.log('✅ [DEBUG] Magic transform robust navigation successful!');
               toast.success('✨ Magic transformation complete!');
               setIsMagicTransforming(false);
             },
@@ -621,7 +607,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       }
       
       // Strategy 3: Emergency navigation
-      console.log('🚑 [DEBUG] Magic transform emergency navigation');
       toast.loading('Completing magic transformation...', { duration: 2000 });
       
       setTimeout(() => {
@@ -677,38 +662,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
     );
   }
 
-  // Debug Panel Component
-  const DebugPanel = () => (
-    <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-      <h3 className="text-red-400 font-medium mb-2">🐛 Debug Information</h3>
-      <div className="text-sm text-gray-300 space-y-1">
-        <div>Job ID: <code className="bg-gray-800 px-1 rounded">{job.id}</code></div>
-        <div>Loaded Job ID: <code className="bg-gray-800 px-1 rounded">{loadedJobId}</code></div>
-        <div>Loading: <span className={isLoading ? 'text-yellow-400' : 'text-green-400'}>{isLoading ? 'YES' : 'NO'}</span></div>
-        <div>Recommendations Count: <span className={recommendations.length === 0 ? 'text-red-400 font-bold' : 'text-green-400'}>{recommendations.length}</span></div>
-        <div>Component Mounted: <span className={isMountedRef.current ? 'text-green-400' : 'text-red-400'}>{isMountedRef.current ? 'YES' : 'NO'}</span></div>
-        <div>Magic Transform Count: <span className="text-blue-400">{magicSelectedRecs.length}</span></div>
-        {recommendations.length > 0 && (
-          <div className="mt-2">
-            <div className="text-green-400 font-medium">✅ Recommendations Found:</div>
-            {recommendations.slice(0, 3).map(rec => (
-              <div key={rec.id} className="ml-2 text-xs text-gray-400">
-                • {rec.title} ({rec.priority})
-              </div>
-            ))}
-            {recommendations.length > 3 && (
-              <div className="ml-2 text-xs text-gray-500">... and {recommendations.length - 3} more</div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Debug Panel - only show when there are issues */}
-      {(recommendations.length === 0 || !isLoading) && <DebugPanel />}
       
       {/* Header */}
       <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
@@ -916,25 +872,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               Please try again later or contact support if the issue persists.
             </p>
             
-            {/* Debug Information */}
-            <details className="mt-4 text-left">
-              <summary className="text-sm text-gray-400 cursor-pointer hover:text-gray-300">Debug Info (Click to expand)</summary>
-              <div className="mt-2 p-3 bg-gray-900 rounded text-xs text-gray-400 font-mono">
-                <div>Job ID: {job.id}</div>
-                <div>Job Status: {job.status}</div>
-                <div>Loading State: {isLoading ? 'true' : 'false'}</div>
-                <div>Loaded Job ID: {loadedJobId}</div>
-                <div>Component Mounted: {isMountedRef.current ? 'true' : 'false'}</div>
-                <div>Recommendations Length: {recommendations.length}</div>
-                <div>Is Loading: {isLoading ? 'true' : 'false'}</div>
-                <div>Component State: {JSON.stringify({ 
-                  recommendationsLength: recommendations.length,
-                  isLoading,
-                  loadedJobId,
-                  jobId: job.id
-                })}</div>
-              </div>
-            </details>
           </div>
         )}
         
@@ -1054,9 +991,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             )}
             <button
               onClick={async (event) => {
-                console.log('🔍 [DEBUG] Apply & Preview button clicked');
                 const selectedRecommendationIds = selectedRecs.map(r => r.id);
-                console.log('🔍 [DEBUG] Selected recommendation IDs:', selectedRecommendationIds);
                 
                 // Prevent multiple clicks
                 const button = event?.target as HTMLButtonElement;
@@ -1066,43 +1001,32 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                 try {
                   // Apply improvements if any are selected
                   if (selectedRecommendationIds.length > 0) {
-                    console.log('🔄 [DEBUG] Applying improvements...');
-                    navigationDebugger.trackApplyRecommendations(job.id, selectedRecommendationIds);
                     
                     try {
                       const result = await applyImprovements(job.id, selectedRecommendationIds);
-                      console.log('✅ [DEBUG] Apply improvements completed successfully:', result);
                       
                       // Store the improved content for the preview page
                       if (result && (result as any).improvedContent) {
                         sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
-                        console.log('💾 [DEBUG] Stored improvements in sessionStorage');
                       }
                       
-                      navigationDebugger.trackApplyRecommendationsResult(job.id, true);
                       toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
                     } catch (error: any) {
                       console.error('❌ [DEBUG] Apply improvements error:', error);
-                      navigationDebugger.trackApplyRecommendationsResult(job.id, false, error.message);
                       toast.error(error.message || 'Failed to apply some improvements. Continuing to preview...');
                       // Continue anyway - don't let this stop navigation
                     }
                   } else {
-                    console.log('⏭️ [DEBUG] No recommendations selected, proceeding to preview');
                   }
                   
                   // Store recommendations for preview page
                   sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(selectedRecommendationIds));
-                  console.log('💾 [DEBUG] Stored recommendations in sessionStorage');
                   
                   // Enhanced navigation with multiple strategies and better error handling
-                  console.log('🚀 [DEBUG] Starting enhanced navigation process...');
                   
                   // Strategy 1: Parent callback (primary method)
                   try {
-                    console.log('📞 [DEBUG] Attempting parent callback navigation...');
                     onContinue(selectedRecommendationIds);
-                    console.log('✅ [DEBUG] Parent callback completed successfully');
                     
                     // Verify navigation worked with timeout
                     const navigationPromise = new Promise<boolean>((resolve) => {
@@ -1115,14 +1039,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                         const currentPath = window.location.pathname;
                         const expectedPath = `/preview/${job.id}`;
                         
-                        console.log(`🔍 [DEBUG] Navigation check ${attempts}/${maxAttempts}:`, {
-                          currentPath,
-                          expectedPath,
-                          matched: currentPath === expectedPath
-                        });
                         
                         if (currentPath === expectedPath) {
-                          console.log('✅ [DEBUG] Parent callback navigation verified!');
                           resolve(true);
                           return;
                         }
@@ -1155,7 +1073,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   }
                   
                   // Strategy 2: Robust navigation fallback
-                  console.log('🔄 [DEBUG] Using robust navigation fallback...');
                   try {
                     const fallbackSuccess = await robustNavigation.navigateToPreview(
                       navigate,
@@ -1166,7 +1083,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                         timeout: 500,
                         maxRetries: 3,
                         onSuccess: () => {
-                          console.log('✅ [DEBUG] Robust navigation successful!');
                           toast.success('Navigation successful!', { icon: '🚀' });
                           if (button) button.disabled = false;
                           setIsNavigating(false);
@@ -1187,13 +1103,11 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   }
                   
                   // Strategy 3: Emergency direct navigation
-                  console.log('🚑 [DEBUG] Emergency navigation - direct window.location');
                   try {
                     const targetPath = `/preview/${job.id}`;
                     toast.loading('Redirecting to preview...', { duration: 3000 });
                     
                     setTimeout(() => {
-                      console.log('🚑 [DEBUG] Executing emergency redirect');
                       window.location.href = targetPath;
                     }, 100);
                     
@@ -1218,7 +1132,6 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   
                   // Emergency navigation using utility
                   setTimeout(() => {
-                    console.log('🚑 [DEBUG] Emergency navigation');
                     robustNavigation.emergencyNavigate(job.id);
                     setIsNavigating(false);
                     if (button) button.disabled = false;

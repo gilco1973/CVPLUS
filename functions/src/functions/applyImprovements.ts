@@ -155,9 +155,9 @@ export const getRecommendations = onCall(
 
     const db = getFirestore();
     const userId = request.auth.uid;
+    const startTime = Date.now();
 
     try {
-      const startTime = Date.now();
       console.log(`[getRecommendations] Starting for job ${jobId}`, {
         userId,
         targetRole,
