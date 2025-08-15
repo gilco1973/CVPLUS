@@ -712,7 +712,10 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                 // Set a timeout to ensure navigation happens within 10 seconds
                 const navigationTimeout = setTimeout(() => {
                   console.log('⏰ [DEBUG] Navigation timeout triggered - forcing navigation');
-                  toast.warning('Taking longer than expected. Navigating to preview...');
+                  toast('Taking longer than expected. Navigating to preview...', { 
+                    icon: '⚠️',
+                    duration: 4000 
+                  });
                   try {
                     onContinue(selectedRecommendationIds);
                   } catch (error: any) {
