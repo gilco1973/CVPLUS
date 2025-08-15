@@ -30,7 +30,7 @@ class SubscriptionBenchmark {
   private results: BenchmarkResult[] = [];
   private manager: JobSubscriptionManager;
   private firestoreCallCount = 0;
-  private mockFirestoreCall: jest.Mock;
+  private mockFirestoreCall!: jest.Mock;
 
   constructor() {
     this.manager = JobSubscriptionManager.getInstance();

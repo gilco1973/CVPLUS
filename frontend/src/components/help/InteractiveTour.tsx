@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, SkipForward } from 'lucide-react';
 import { useHelp } from '../../contexts/HelpContext';
@@ -24,22 +24,22 @@ interface TooltipPosition {
   maxWidth: number;
 }
 
-export const InteractiveTour: React.FC<InteractiveTourProps> = ({
+export const InteractiveTour: React.FC<InteractiveTourProps> = React.memo(({
   tourId,
   onComplete,
   onSkip,
   autoStart = false
 }) => {
-  const { getAvailableTours, actions, currentContext, userPreferences } = useHelp();
-  const [isActive, setIsActive] = useState(false);
+  const { getAvailableTours, actions, currentContext, userPreferences, activeTour } = useHelp();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepPosition, setStepPosition] = useState<StepPosition | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const tour = getAvailableTours(currentContext).find(t => t.id === tourId);
+  const tour = useMemo(() => getAvailableTours(currentContext).find(t => t.id === tourId), [getAvailableTours, currentContext, tourId]);
   const currentStep = tour?.steps[currentStepIndex];
+  const isActive = activeTour === tourId;
 
   const calculatePositions = useCallback((step: TourStep): { step: StepPosition | null; tooltip: TooltipPosition | null } => {
     const target = document.querySelector(step.target);
@@ -119,10 +119,9 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
     setTooltipPosition(positions.tooltip);
   }, [currentStep, calculatePositions]);
 
-  const startTour = () => {
+  const startTour = useCallback(() => {
     if (!tour || !userPreferences.showOnboarding) return;
     
-    setIsActive(true);
     setCurrentStepIndex(0);
     actions.startTour(tourId);
     
@@ -136,29 +135,31 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
         }
       }
     }, 100);
-  };
+  }, [tour, userPreferences.showOnboarding, tourId, actions, updatePositions]);
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     if (!tour) return;
     
     if (currentStepIndex < tour.steps.length - 1) {
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       
-      const nextStep = tour.steps[nextIndex];
-      if (nextStep) {
-        const target = document.querySelector(nextStep.target);
+      const nextStepData = tour.steps[nextIndex];
+      if (nextStepData) {
+        const target = document.querySelector(nextStepData.target);
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(updatePositions, 500);
         }
       }
     } else {
-      completeTour();
+      // Complete the tour
+      actions.completeTour(tourId);
+      onComplete?.();
     }
-  };
+  }, [tour, currentStepIndex, updatePositions, actions, tourId, onComplete]);
 
-  const previousStep = () => {
+  const previousStep = useCallback(() => {
     if (currentStepIndex > 0) {
       const prevIndex = currentStepIndex - 1;
       setCurrentStepIndex(prevIndex);
@@ -172,33 +173,31 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
         }
       }
     }
-  };
+  }, [currentStepIndex, tour, updatePositions]);
 
-  const skipTour = () => {
-    setIsActive(false);
+  const skipTour = useCallback(() => {
     actions.skipTour(tourId);
     onSkip?.();
-  };
+  }, [actions, tourId, onSkip]);
 
-  const completeTour = () => {
-    setIsActive(false);
+  const completeTour = useCallback(() => {
     actions.completeTour(tourId);
     onComplete?.();
-  };
+  }, [actions, tourId, onComplete]);
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     // Only close if clicked on overlay, not on spotlight or tooltip
     if (e.target === e.currentTarget) {
       skipTour();
     }
-  };
+  }, [skipTour]);
 
   useEffect(() => {
-    if (autoStart && tour && !userPreferences.completedTours.includes(tourId)) {
+    if (autoStart && tour && !userPreferences.completedTours.includes(tourId) && !isActive) {
       const timer = setTimeout(startTour, 1000);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, tour, tourId, userPreferences.completedTours]);
+  }, [autoStart, tour, tourId, userPreferences.completedTours, isActive, startTour]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -248,14 +247,12 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isActive]);
+  }, [isActive, skipTour, nextStep, previousStep]);
 
+  // Debug logging (should be removed after fixing)
   if (!tour || !isActive || !currentStep) {
-    console.log('Tour not rendering:', { tour: !!tour, isActive, currentStep: !!currentStep });
     return null;
   }
-
-  console.log('Rendering interactive tour:', { tourId, isActive, currentStepIndex, currentStep: currentStep.title });
 
   const overlay = (
     <div
@@ -383,4 +380,4 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
   );
 
   return typeof document !== 'undefined' ? createPortal(overlay, document.body) : null;
-};
+});

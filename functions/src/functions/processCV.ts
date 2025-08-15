@@ -1,5 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { CVParser } from '../services/cvParser';
 import { PIIDetector } from '../services/piiDetector';
 import { corsOptions } from '../config/cors';
@@ -45,7 +46,7 @@ export const processCV = onCall(
         .doc(jobId)
         .update({
           status: 'processing',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // Get job data to retrieve user instructions
@@ -109,7 +110,7 @@ export const processCV = onCall(
             recommendations: piiResult.recommendations
           },
           privacyVersion: piiResult.maskedData,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // Check if this is a quick create job
@@ -123,7 +124,7 @@ export const processCV = onCall(
           .doc(jobId)
           .update({
             status: 'generating',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
           });
         
         // For now, create a simple generated CV
@@ -141,7 +142,7 @@ export const processCV = onCall(
           .update({
             status: 'completed',
             generatedCV,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
           });
       }
 
@@ -181,7 +182,7 @@ export const processCV = onCall(
           error: userMessage,
           errorType: errorType,
           technicalError: error.message, // Keep original error for debugging
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       throw new Error(userMessage);

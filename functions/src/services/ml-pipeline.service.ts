@@ -95,7 +95,7 @@ export class MLPipelineService {
    * Record user outcome for model improvement
    */
   async recordOutcome(outcome: UserOutcome): Promise<void> {
-    console.log(`[ML-PIPELINE] Recording outcome for user ${outcome.userId}, job ${outcome.jobId}: ${outcome.outcome}`);
+    console.log(`[ML-PIPELINE] Recording outcome for user ${outcome.userId}, job ${outcome.jobId}: ${outcome.outcomeType}`);
     return this.orchestrator.recordOutcome(outcome);
   }
 
@@ -106,12 +106,14 @@ export class MLPipelineService {
     console.log(`[ML-PIPELINE] Getting statistics for user ${userId}`);
     // Delegate to orchestrator's health status which includes statistics
     const healthStatus = await this.orchestrator.getHealthStatus();
-    return healthStatus.userStatistics?.[userId] || {
+    // Return basic statistics structure (userStatistics not implemented in health status)
+    return {
       totalPredictions: 0,
       averageSuccessProbability: 0,
       averageInterviewProbability: 0,
       averageOfferProbability: 0,
-      lastPrediction: null
+      lastPrediction: null,
+      healthStatus
     };
   }
 

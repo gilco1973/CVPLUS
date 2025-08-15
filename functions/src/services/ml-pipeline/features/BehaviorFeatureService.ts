@@ -15,7 +15,7 @@ export class BehaviorFeatureService {
   /**
    * Extract user behavior features
    */
-  async extractFeatures(userId: string): Promise<FeatureVector['behaviorFeatures']> {
+  async extractFeatures(userId: string): Promise<any> {
     console.log('[BEHAVIOR-FEATURES] Extracting user behavior features');
     
     const cacheKey = `behavior_${userId}`;
@@ -385,7 +385,7 @@ export class BehaviorFeatureService {
     }
   }
 
-  private getCachedData(key: string): FeatureVector['behaviorFeatures'] | undefined {
+  private getCachedData(key: string): any | undefined {
     const cached = this.behaviorCache.get(key);
     
     if (cached) {
@@ -400,7 +400,7 @@ export class BehaviorFeatureService {
     return undefined;
   }
 
-  private setCachedData(key: string, data: FeatureVector['behaviorFeatures']): void {
+  private setCachedData(key: string, data: any): void {
     this.behaviorCache.set(key, {
       data,
       timestamp: new Date()

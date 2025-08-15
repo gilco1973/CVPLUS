@@ -31,45 +31,15 @@ export class CVTransformer {
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
     
-    const token = await user.getIdToken();
-    
-    try {
-      // First try the callable function
-      const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
-      const result = await applyImprovementsFunction({
-        jobId,
-        selectedRecommendationIds,
-        targetRole,
-        industryKeywords
-      });
-      return result.data;
-    } catch (error: any) {
-      console.warn('Callable function failed, trying direct HTTP call:', error);
-      
-      // Fallback to direct HTTP call to V2 function
-      const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/applyImprovementsV2`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          data: {
-            jobId,
-            selectedRecommendationIds,
-            targetRole,
-            industryKeywords
-          }
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      return result.result;
-    }
+    // Use the callable function - CORS is handled automatically by Firebase v2 callable functions
+    const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
+    const result = await applyImprovementsFunction({
+      jobId,
+      selectedRecommendationIds,
+      targetRole,
+      industryKeywords
+    });
+    return result.data;
   }
 
   /**

@@ -46,7 +46,7 @@ export class PodcastGenerationService {
       apiKey: config.openai?.apiKey || process.env.OPENAI_API_KEY || ''
     });
     
-    this.elevenLabsApiKey = config.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY || '';
+    this.elevenLabsApiKey = (config.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY || '').trim();
     
     // Configure voices for conversational podcast
     this.voiceConfig = {
@@ -247,6 +247,14 @@ Focus: ${options.focus || 'balanced'}`;
         : this.voiceConfig.host2.voiceId;
       
       try {
+        // Validate and clean API key before making request
+        if (!this.elevenLabsApiKey || this.elevenLabsApiKey.length < 10) {
+          throw new Error('Invalid ElevenLabs API key');
+        }
+
+        // Ensure API key contains only valid characters (remove newlines, spaces, etc.)
+        const cleanApiKey = this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '');
+        
         // Call ElevenLabs API
         const response = await axios.post(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -263,7 +271,7 @@ Focus: ${options.focus || 'balanced'}`;
           {
             headers: {
               'Accept': 'audio/mpeg',
-              'xi-api-key': this.elevenLabsApiKey,
+              'xi-api-key': cleanApiKey,
               'Content-Type': 'application/json'
             },
             responseType: 'arraybuffer'

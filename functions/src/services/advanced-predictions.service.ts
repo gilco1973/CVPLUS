@@ -154,20 +154,53 @@ export class AdvancedPredictionsService {
       const range = this.calculateSalaryRange(adjustedSalary, candidateMultipliers.confidence);
 
       return {
-        predictedRange: {
+        predictedSalaryRange: {
           min: Math.round(range.min),
           max: Math.round(range.max),
           median: Math.round(adjustedSalary),
           currency: request.jobData.salaryRange?.currency || 'USD'
         },
-        locationAdjustment: marketAdjustments.location,
-        industryPremium: marketAdjustments.industry * 100,
-        experiencePremium: (candidateMultipliers.experience - 1) * 100,
-        skillsPremium: (candidateMultipliers.skills - 1) * 100,
-        industryMedian: marketData.median,
-        marketPercentile: this.calculateMarketPercentile(adjustedSalary, marketData),
-        negotiationPotential: candidateMultipliers.negotiation,
-        marketDemand: this.assessMarketDemand(marketData.demandSupplyRatio)
+        predictedRange: {
+          min: Math.round(range.min),
+          max: Math.round(range.max),
+          median: Math.round(adjustedSalary)
+        },
+        confidenceInterval: {
+          lower: Math.round(range.min * 0.9),
+          upper: Math.round(range.max * 1.1)
+        },
+        regionalAdjustment: {
+          baseLocation: request.jobData.location || 'Unknown',
+          adjustmentFactor: marketAdjustments.location,
+          costOfLivingIndex: marketAdjustments.location * 100
+        },
+        industryBenchmark: {
+          industryMedian: marketData.median,
+          percentileRank: this.calculateMarketPercentile(adjustedSalary, marketData)
+        },
+        factors: [
+          {
+            factor: 'Experience Level',
+            impact: (candidateMultipliers.experience - 1),
+            description: `Experience premium: ${((candidateMultipliers.experience - 1) * 100).toFixed(1)}%`
+          },
+          {
+            factor: 'Skills Match',
+            impact: (candidateMultipliers.skills - 1),
+            description: `Skills premium: ${((candidateMultipliers.skills - 1) * 100).toFixed(1)}%`
+          },
+          {
+            factor: 'Industry Context',
+            impact: (marketAdjustments.industry - 1),
+            description: `Industry premium: ${((marketAdjustments.industry - 1) * 100).toFixed(1)}%`
+          },
+          {
+            factor: 'Market Demand',
+            impact: marketData.demandSupplyRatio ? (marketData.demandSupplyRatio - 1) * 0.5 : 0,
+            description: `Market demand: ${this.assessMarketDemand(marketData.demandSupplyRatio || 1)}`
+          }
+        ],
+        negotiationPotential: candidateMultipliers.negotiation
       };
     } catch (error) {
       console.error('Advanced salary prediction failed:', error);
@@ -199,10 +232,28 @@ export class AdvancedPredictionsService {
       const factors = await this.assessTimelineFactors(request.jobData, request.marketContext);
 
       return {
-        estimatedDays,
-        confidence: Math.min(0.9, candidateAdjustment * 0.8 + 0.2),
-        stageBreakdown,
-        factors
+        estimatedDays: {
+          min: Math.round(estimatedDays * 0.8),
+          max: Math.round(estimatedDays * 1.2),
+          median: estimatedDays
+        },
+        phaseBreakdown: stageBreakdown,
+        seasonalFactors: factors.seasonal || {
+          currentSeason: 'normal',
+          seasonalAdjustment: 1.0,
+          holidayImpact: false
+        },
+        companyFactors: factors.company || {
+          companySize: 'medium',
+          hiringVelocity: 'normal',
+          processComplexity: 'standard'
+        },
+        candidateFactors: factors.candidate || {
+          experienceLevel: 'mid',
+          interviewPreparation: 'adequate',
+          availability: 'flexible'
+        },
+        confidence: Math.min(0.9, candidateAdjustment * 0.8 + 0.2)
       };
     } catch (error) {
       console.error('Advanced time prediction failed:', error);
@@ -755,7 +806,7 @@ export class AdvancedPredictionsService {
       minimum: Math.round(median * 0.9),
       target: median,
       stretch: Math.round(median * 1.15),
-      currency: salaryPrediction.predictedRange.currency
+      currency: salaryPrediction.predictedSalaryRange.currency
     };
   }
 

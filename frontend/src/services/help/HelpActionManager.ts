@@ -59,7 +59,15 @@ export class HelpActionManager {
       },
 
       startTour: (tourId: string) => {
-        // Tour start logic here
+        this.dispatch({ type: 'START_TOUR', payload: tourId });
+        const analytics = {
+          helpId: tourId,
+          event: 'shown' as const,
+          timestamp: new Date(),
+          context: state.currentContext,
+          sessionId: this.sessionId
+        };
+        this.dispatch({ type: 'TRACK_ANALYTICS', payload: analytics });
       },
 
       completeTour: (tourId: string) => {
@@ -67,7 +75,15 @@ export class HelpActionManager {
       },
 
       skipTour: (tourId: string) => {
-        // Tour skip logic here
+        this.dispatch({ type: 'SKIP_TOUR', payload: tourId });
+        const analytics = {
+          helpId: tourId,
+          event: 'skipped' as const,
+          timestamp: new Date(),
+          context: state.currentContext,
+          sessionId: this.sessionId
+        };
+        this.dispatch({ type: 'TRACK_ANALYTICS', payload: analytics });
       },
 
       setSearchQuery: (query: string) => {

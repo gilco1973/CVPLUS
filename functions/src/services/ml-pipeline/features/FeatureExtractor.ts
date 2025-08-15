@@ -49,20 +49,18 @@ export class FeatureExtractor {
       const [
         cvFeatures,
         matchingFeatures,
-        marketFeatures,
-        behaviorFeatures
+        marketFeatures
       ] = await Promise.all([
         this.cvFeatureService.extractFeatures(cv),
         this.matchingFeatureService.extractFeatures(cv, jobDescription),
-        this.marketFeatureService.extractFeatures(industry, location),
-        this.behaviorFeatureService.extractFeatures(request.userId)
+        this.marketFeatureService.extractFeatures(industry, location)
       ]);
       
       // Extract derived features (depends on other features)
       const derivedFeatures = await this.derivedFeatureService.extractFeatures(
         cv,
         jobDescription,
-        { cvFeatures, matchingFeatures, marketFeatures, behaviorFeatures }
+        { cvFeatures, matchingFeatures, marketFeatures }
       );
       
       // Construct final feature vector
@@ -74,7 +72,6 @@ export class FeatureExtractor {
         cvFeatures,
         matchingFeatures,
         marketFeatures,
-        behaviorFeatures,
         derivedFeatures
       };
       
@@ -111,23 +108,23 @@ export class FeatureExtractor {
     const missingFeatures: string[] = [];
     
     // Check CV features
-    if (!features.cvFeatures.wordCount || features.cvFeatures.wordCount < 50) {
+    if (!features.rawFeatures?.cvWordCount || features.rawFeatures.cvWordCount < 50) {
       issues.push('CV word count is too low');
       missingFeatures.push('sufficient CV content');
     }
     
-    if (features.cvFeatures.experienceYears === 0) {
+    if ((features.rawFeatures?.yearsExperience || 0) === 0) {
       issues.push('No work experience detected');
       missingFeatures.push('work experience');
     }
     
-    if (features.cvFeatures.skillsCount === 0) {
+    if ((features.rawFeatures?.skillsCount || 0) === 0) {
       issues.push('No skills detected');
       missingFeatures.push('skills information');
     }
     
     // Check matching features
-    if (features.matchingFeatures.skillMatchPercentage < 0.1) {
+    if ((features.matchingFeatures?.skillMatchPercentage || 0) < 0.1) {
       issues.push('Very low skill matching with job');
     }
     
@@ -137,7 +134,6 @@ export class FeatureExtractor {
       features.cvFeatures,
       features.matchingFeatures,
       features.marketFeatures,
-      features.behaviorFeatures,
       features.derivedFeatures
     ].filter(group => Object.values(group).some(value => value !== 0 && value !== undefined)).length;
     
@@ -146,12 +142,12 @@ export class FeatureExtractor {
     // Calculate quality score based on feature richness
     let qualityScore = 0.5; // Base score
     
-    if (features.cvFeatures.wordCount > 200) qualityScore += 0.1;
-    if (features.cvFeatures.experienceYears > 2) qualityScore += 0.1;
-    if (features.cvFeatures.skillsCount > 5) qualityScore += 0.1;
-    if (features.matchingFeatures.skillMatchPercentage > 0.5) qualityScore += 0.1;
-    if (features.cvFeatures.educationLevel > 2) qualityScore += 0.1;
-    if (features.cvFeatures.readabilityScore > 0.7) qualityScore += 0.1;
+    if ((features.rawFeatures?.cvWordCount || 0) > 200) qualityScore += 0.1;
+    if ((features.rawFeatures?.yearsExperience || 0) > 2) qualityScore += 0.1;
+    if ((features.rawFeatures?.skillsCount || 0) > 5) qualityScore += 0.1;
+    if ((features.matchingFeatures?.skillMatchPercentage || 0) > 0.5) qualityScore += 0.1;
+    if ((features.cvFeatures?.educationLevel || 0) > 2) qualityScore += 0.1;
+    if ((features.rawFeatures?.readabilityScore || 0) > 0.7) qualityScore += 0.1;
     
     qualityScore = Math.min(1.0, qualityScore);
     
@@ -276,15 +272,6 @@ export class FeatureExtractor {
         economicIndicators: 0.8
       },
       
-      behaviorFeatures: {
-        applicationTiming: 5,
-        weekdayApplication: true,
-        timeOfDay: 12,
-        applicationMethod: 1,
-        cvOptimizationLevel: 0.5,
-        platformEngagement: 0.5,
-        previousApplications: 3
-      },
       
       derivedFeatures: {
         overqualificationScore: 0.3,
@@ -301,16 +288,15 @@ export class FeatureExtractor {
   }
 
   private logFeatureQuality(features: FeatureVector): void {
-    const cvFeatureCount = Object.keys(features.cvFeatures).length;
-    const matchingFeatureCount = Object.keys(features.matchingFeatures).length;
+    const cvFeatureCount = Object.keys(features.cvFeatures || {}).length;
+    const matchingFeatureCount = Object.keys(features.matchingFeatures || {}).length;
     const totalFeatures = cvFeatureCount + matchingFeatureCount + 
-                         Object.keys(features.marketFeatures).length +
-                         Object.keys(features.behaviorFeatures).length +
-                         Object.keys(features.derivedFeatures).length;
+                         Object.keys(features.marketFeatures || {}).length +
+                         Object.keys(features.derivedFeatures || {}).length;
     
     console.log(`[FEATURE-EXTRACTOR] Extracted ${totalFeatures} features total`);
     console.log(`[FEATURE-EXTRACTOR] CV features: ${cvFeatureCount}, Matching: ${matchingFeatureCount}`);
-    console.log(`[FEATURE-EXTRACTOR] Skill match: ${Math.round(features.matchingFeatures.skillMatchPercentage * 100)}%`);
-    console.log(`[FEATURE-EXTRACTOR] Experience: ${features.cvFeatures.experienceYears} years`);
+    console.log(`[FEATURE-EXTRACTOR] Skill match: ${Math.round((features.matchingFeatures?.skillMatchPercentage || 0) * 100)}%`);
+    console.log(`[FEATURE-EXTRACTOR] Experience: ${features.rawFeatures?.yearsExperience || 0} years`);
   }
 }

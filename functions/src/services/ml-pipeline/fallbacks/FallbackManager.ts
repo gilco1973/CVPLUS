@@ -143,38 +143,55 @@ export class FallbackManager {
       hireProbability: offerProb * 0.8,
       
       salaryPrediction: {
-        predictedRange: {
+        predictedSalaryRange: {
           min: 50000,
           max: 90000,
           median: 70000,
           currency: 'USD'
         },
-        locationAdjustment: 1.0,
-        industryPremium: 0,
-        experiencePremium: experienceYears * 5,
-        skillsPremium: 0,
-        industryMedian: 70000,
-        marketPercentile: 50,
-        negotiationPotential: 0.15,
-        marketDemand: 'medium'
+        predictedRange: {
+          min: 50000,
+          max: 90000,
+          median: 70000
+        },
+        confidenceInterval: {
+          lower: 45000,
+          upper: 95000
+        },
+        regionalAdjustment: {
+          baseLocation: 'US',
+          adjustmentFactor: 1.0,
+          costOfLivingIndex: 100
+        },
+        industryBenchmark: {
+          industryMedian: 70000,
+          percentileRank: 50
+        },
+        factors: [{
+          factor: 'experience',
+          impact: 0.1,
+          description: 'Years of relevant experience'
+        }]
       },
       
       timeToHire: {
-        estimatedDays: 25,
-        confidence: 0.4,
-        stageBreakdown: {
-          applicationReview: 4,
-          initialScreening: 6,
-          interviews: 8,
-          decisionMaking: 5,
-          offerNegotiation: 2
+        estimatedDays: {
+          min: 18,
+          max: 35,
+          median: 25
         },
-        factors: {
-          companySize: 'medium',
-          industrySpeed: 'medium',
-          roleComplexity: 'medium',
-          marketConditions: 'balanced'
-        }
+        phaseBreakdown: {
+          application: 4,
+          screening: 6,
+          interviews: 8,
+          decision: 5,
+          negotiation: 2
+        },
+        seasonalFactors: {
+          currentSeason: 'spring',
+          seasonalAdjustment: 1.0
+        },
+        confidence: 0.4
       },
       
       competitivenessScore: Math.round((interviewProb + (skillsCount / 20) + (experienceYears / 10)) * 50),
@@ -187,34 +204,28 @@ export class FallbackManager {
       },
       
       recommendations: [{
-        id: 'general_improvement',
-        type: 'strategy',
-        priority: 1,
-        impactOnSuccess: {
-          interviewBoost: 10,
-          offerBoost: 5,
-          salaryBoost: 0,
-          timeReduction: 0
+        recommendationId: 'general_improvement',
+        type: 'skill',
+        priority: 'high',
+        expectedImpact: {
+          interviewProbabilityIncrease: 0.1,
+          offerProbabilityIncrease: 0.05,
+          salaryIncrease: 0
         },
         title: 'Improve your profile',
         description: 'Consider updating your CV with more details about your experience and skills',
-        actionItems: [
-          'Add more specific details to your work experience',
-          'Include quantifiable achievements',
-          'Update your skills section with relevant technologies'
-        ],
-        timeToImplement: 60,
-        difficulty: 'easy',
-        cost: 0,
-        marketRelevance: 0.8,
-        competitorAdoption: 0.5,
-        emergingTrend: false,
-        evidenceScore: 0.6,
-        similarProfilesData: {
-          sampleSize: 1000,
-          successRate: 0.6,
-          averageImprovement: 10
-        }
+        implementation: {
+          estimatedTimeToComplete: 60,
+          difficulty: 'easy',
+          cost: 0,
+          resources: ['CV templates', 'Writing guides']
+        },
+        evidence: {
+          dataPoints: 100,
+          successRate: 0.7,
+          similarProfiles: 50
+        },
+        dateGenerated: new Date()
       }],
       
       modelMetadata: {

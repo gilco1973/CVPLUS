@@ -8,7 +8,7 @@ admin.initializeApp();
 
 // Export all functions
 export { processCV } from './functions/processCV';
-export { generatePodcast as generatePodcastLegacy } from './functions/generatePodcast';
+export { generatePodcast } from './functions/generatePodcast';
 export { generateCV } from './functions/generateCV';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
@@ -80,7 +80,7 @@ export {
 // Export media generation functions
 export {
   generateVideoIntro,
-  generatePodcast,
+  generatePodcast as generatePodcastScript,
   generateAudioFromText,
   regenerateMedia,
   getMediaStatus,

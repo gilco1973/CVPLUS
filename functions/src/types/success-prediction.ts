@@ -97,8 +97,20 @@ export interface TimeToHirePrediction {
   seasonalFactors: {
     currentSeason: string;
     seasonalAdjustment: number;
+    holidayImpact?: boolean;
   };
-  industryBenchmark: number;
+  companyFactors?: {
+    companySize: string;
+    hiringVelocity: string;
+    processComplexity: string;
+  };
+  candidateFactors?: {
+    experienceLevel: string;
+    interviewPreparation: string;
+    availability: string;
+  };
+  confidence: number;
+  industryBenchmark?: number;
 }
 
 export interface PredictiveRecommendation {

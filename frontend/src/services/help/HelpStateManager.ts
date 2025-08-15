@@ -25,7 +25,8 @@ export const initialState: HelpContextState = {
   content: {},
   analytics: [],
   searchQuery: '',
-  isSearchOpen: false
+  isSearchOpen: false,
+  activeTour: null
 };
 
 export type HelpAction =
@@ -34,7 +35,9 @@ export type HelpAction =
   | { type: 'HIDE_HELP' }
   | { type: 'DISMISS_HELP'; payload: string }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<HelpUserPreferences> }
+  | { type: 'START_TOUR'; payload: string }
   | { type: 'COMPLETE_TOUR'; payload: string }
+  | { type: 'SKIP_TOUR'; payload: string }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'TOGGLE_SEARCH' }
   | { type: 'TRACK_ANALYTICS'; payload: HelpAnalytics }
@@ -81,9 +84,26 @@ export function helpReducer(state: HelpContextState, action: HelpAction): HelpCo
         }
       };
     
+    case 'START_TOUR':
+      return {
+        ...state,
+        activeTour: action.payload
+      };
+    
     case 'COMPLETE_TOUR':
       return {
         ...state,
+        activeTour: null,
+        userPreferences: {
+          ...state.userPreferences,
+          completedTours: [...state.userPreferences.completedTours, action.payload]
+        }
+      };
+    
+    case 'SKIP_TOUR':
+      return {
+        ...state,
+        activeTour: null,
         userPreferences: {
           ...state.userPreferences,
           completedTours: [...state.userPreferences.completedTours, action.payload]

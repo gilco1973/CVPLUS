@@ -162,8 +162,8 @@ export const CVPreviewPage = () => {
     
     sessionStorage.setItem(`generation-config-${jobId}`, JSON.stringify(generationConfig));
     
-    // Navigate to results/generation page
-    navigate(`/results/${jobId}`);
+    // Navigate to final results page
+    navigate(`/final-results/${jobId}`);
   };
 
   const handleBackToAnalysis = () => {

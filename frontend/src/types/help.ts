@@ -79,6 +79,7 @@ export interface HelpContextState {
   isHelpEnabled: boolean;
   currentContext: string;
   activeHelp: string | null;
+  activeTour: string | null;
   userPreferences: HelpUserPreferences;
   tours: Record<string, HelpTour>;
   content: Record<string, HelpContent>;

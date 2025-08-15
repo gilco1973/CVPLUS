@@ -223,11 +223,10 @@ export class MLPipelineOrchestrator {
 
   private getFeatureNames(features: FeatureVector): string[] {
     return [
-      ...Object.keys(features.cvFeatures),
-      ...Object.keys(features.matchingFeatures),
-      ...Object.keys(features.marketFeatures),
-      ...Object.keys(features.behaviorFeatures),
-      ...Object.keys(features.derivedFeatures)
+      ...Object.keys(features.cvFeatures || {}),
+      ...Object.keys(features.matchingFeatures || {}),
+      ...Object.keys(features.marketFeatures || {}),
+      ...Object.keys(features.derivedFeatures || {})
     ];
   }
 
@@ -251,11 +250,11 @@ export class MLPipelineOrchestrator {
   private assessFeatureQuality(features: FeatureVector): number {
     let quality = 0.5;
     
-    if (features.cvFeatures.wordCount > 200) quality += 0.1;
-    if (features.cvFeatures.experienceYears > 0) quality += 0.1;
-    if (features.cvFeatures.skillsCount > 5) quality += 0.1;
-    if (features.matchingFeatures.skillMatchPercentage > 0.3) quality += 0.1;
-    if (features.cvFeatures.educationLevel > 2) quality += 0.1;
+    if ((features.rawFeatures?.cvWordCount || 0) > 200) quality += 0.1;
+    if ((features.rawFeatures?.yearsExperience || 0) > 0) quality += 0.1;
+    if ((features.rawFeatures?.skillsCount || 0) > 5) quality += 0.1;
+    if ((features.matchingFeatures?.skillMatchPercentage || 0) > 0.3) quality += 0.1;
+    if ((features.cvFeatures?.educationLevel || 0) > 2) quality += 0.1;
     
     return Math.min(1.0, quality);
   }

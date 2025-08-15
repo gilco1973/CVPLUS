@@ -215,6 +215,8 @@ const getStepNumber = (currentPage: string): string => {
       return '3b'; // Keywords are sub-step of customization
     case 'results':
       return '4'; // Results are step 4 in the complete flow
+    case 'final-results':
+      return '4'; // Final results are also step 4
     default:
       return '1';
   }
@@ -234,6 +236,8 @@ const getStepLabel = (currentPage: string): string => {
       return 'Keyword Optimization';
     case 'results':
       return 'Final Results';
+    case 'final-results':
+      return 'Your Enhanced CV';
     default:
       return 'Getting Started';
   }

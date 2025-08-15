@@ -51,8 +51,9 @@ export class MediaService {
     const podcastFunction = httpsCallable(functions, 'generatePodcast');
     const result = await podcastFunction({
       jobId,
-      format: style || 'professional',
-      duration: 300
+      style: style || 'professional',
+      duration: 'medium',
+      focus: 'balanced'
     });
     return result.data;
   }
@@ -64,10 +65,13 @@ export class MediaService {
     jobId: string, 
     style?: 'professional' | 'conversational' | 'storytelling'
   ) {
-    const regeneratePodcastFunction = httpsCallable(functions, 'regeneratePodcast');
-    const result = await regeneratePodcastFunction({
+    // Use the same generatePodcast function for regeneration
+    const podcastFunction = httpsCallable(functions, 'generatePodcast');
+    const result = await podcastFunction({
       jobId,
-      style: style || 'professional'
+      style: style || 'professional',
+      duration: 'medium',
+      focus: 'balanced'
     });
     return result.data;
   }

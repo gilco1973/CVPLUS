@@ -12,7 +12,7 @@
 export interface MLModelMetadata {
   modelId: string;
   modelName: string;
-  modelType: 'classification' | 'regression' | 'clustering' | 'recommendation' | 'nlp' | 'computer_vision';
+  modelType: 'classification' | 'regression' | 'clustering' | 'recommendation' | 'nlp' | 'computer_vision' | 'ensemble';
   modelVersion: string;
   
   // Training information
@@ -51,6 +51,7 @@ export interface MLModelMetadata {
     cvScores?: number[];
     cvMean?: number;
     cvStd?: number;
+    crossValidation?: any;
   };
   
   // Feature importance
@@ -70,6 +71,7 @@ export interface MLModelMetadata {
       maxInstances: number;
       targetConcurrency: number;
     };
+    endpoint?: string;
   };
   
   // Model monitoring
@@ -81,6 +83,7 @@ export interface MLModelMetadata {
       throughputMin: number;
     };
     alertingConfig: Record<string, any>;
+    predictionCount?: number;
   };
   
   // Lineage and dependencies
@@ -192,6 +195,7 @@ export interface FeatureVector {
     skillsAlignment?: number;
     experienceRelevance?: number;
     educationMatch?: number;
+    educationLevel?: number;
   };
   
   matchingFeatures?: {
@@ -199,6 +203,8 @@ export interface FeatureVector {
     industryMatch?: number;
     skillsMatch?: number;
     experienceMatch?: number;
+    skillMatchPercentage?: number;
+    experienceRelevance?: number;
   };
   
   derivedFeatures?: {
@@ -206,6 +212,7 @@ export interface FeatureVector {
     skillGrowth?: number;
     marketAlignment?: number;
     competitiveness?: number;
+    careerProgressionScore?: number;
   };
   
   marketFeatures?: {
@@ -213,6 +220,7 @@ export interface FeatureVector {
     competitionLevel?: number;
     salaryBenchmark?: number;
     growthPotential?: number;
+    demandSupplyRatio?: number;
   };
   
   // Backward compatibility

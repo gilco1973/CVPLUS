@@ -12,6 +12,7 @@ import {
   initialState, 
   HelpStateUtils 
 } from '../services/help/HelpStateManager';
+import type { HelpUserPreferences, HelpAnalytics } from '../types/help';
 import { 
   HelpActionManager, 
   type HelpContextActions 
@@ -61,11 +62,76 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
     loadPreferences();
   }, []);
 
-  // Create actions with current state
-  const actions = useMemo(
-    () => actionManager.createActions(state),
-    [actionManager, state]
-  );
+  // Create stable actions that get current state from closure
+  const actions = useMemo(() => ({
+    setContext: (context: string) => {
+      dispatch({ type: 'SET_CONTEXT', payload: context });
+    },
+    showHelp: (helpId: string) => {
+      dispatch({ type: 'SHOW_HELP', payload: helpId });
+    },
+    hideHelp: () => {
+      dispatch({ type: 'HIDE_HELP' });
+    },
+    dismissHelp: (helpId: string) => {
+      dispatch({ type: 'DISMISS_HELP', payload: helpId });
+    },
+    updatePreferences: (preferences: Partial<HelpUserPreferences>) => {
+      const updatedPrefs = { ...state.userPreferences, ...preferences };
+      dispatch({ type: 'UPDATE_PREFERENCES', payload: preferences });
+      HelpStateUtils.savePreferences(updatedPrefs);
+    },
+    startTour: (tourId: string) => {
+      dispatch({ type: 'START_TOUR', payload: tourId });
+      const analytics = {
+        helpId: tourId,
+        event: 'shown' as const,
+        timestamp: new Date(),
+        context: state.currentContext,
+        sessionId
+      };
+      dispatch({ type: 'TRACK_ANALYTICS', payload: analytics });
+    },
+    completeTour: (tourId: string) => {
+      dispatch({ type: 'COMPLETE_TOUR', payload: tourId });
+      const analytics = {
+        helpId: tourId,
+        event: 'completed' as const,
+        timestamp: new Date(),
+        context: state.currentContext,
+        sessionId
+      };
+      dispatch({ type: 'TRACK_ANALYTICS', payload: analytics });
+    },
+    skipTour: (tourId: string) => {
+      dispatch({ type: 'SKIP_TOUR', payload: tourId });
+      const analytics = {
+        helpId: tourId,
+        event: 'skipped' as const,
+        timestamp: new Date(),
+        context: state.currentContext,
+        sessionId
+      };
+      dispatch({ type: 'TRACK_ANALYTICS', payload: analytics });
+    },
+    setSearchQuery: (query: string) => {
+      dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
+    },
+    toggleSearch: () => {
+      dispatch({ type: 'TOGGLE_SEARCH' });
+    },
+    trackAnalytics: (analytics: Omit<HelpAnalytics, 'timestamp' | 'sessionId'>) => {
+      const fullAnalytics: HelpAnalytics = {
+        ...analytics,
+        timestamp: new Date(),
+        sessionId
+      };
+      dispatch({ type: 'TRACK_ANALYTICS', payload: fullAnalytics });
+    },
+    resetOnboarding: () => {
+      dispatch({ type: 'RESET_ONBOARDING' });
+    }
+  }), [dispatch, sessionId]);
 
   // Helper functions using the action manager
   const getContextualHelp = useCallback(

@@ -273,6 +273,15 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
         { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
+        { label: 'Feature Selection', current: true, icon: <CheckCircle className="w-4 h-4" /> },
+      ];
+
+    case 'final-results':
+      return [
+        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
+        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
+        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
+        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
         { label: 'Final Results', current: true, icon: <CheckCircle className="w-4 h-4" /> },
       ];
 

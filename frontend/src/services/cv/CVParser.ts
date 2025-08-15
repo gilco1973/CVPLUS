@@ -126,13 +126,80 @@ export class CVParser {
    * Generate CV with template
    */
   static async generateCV(jobId: string, templateId: string, features: string[]) {
+    // Ensure user is authenticated before making the call
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to generate CV. Please sign in and try again.');
+    }
+
     const generateCVFunction = httpsCallable(functions, 'generateCV');
-    const result = await generateCVFunction({
-      jobId,
-      templateId,
-      features
+    
+    // Create timeout promise for hanging Firebase calls
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('CV generation request timed out after 5 minutes'));
+      }, 300000); // 5 minutes timeout
     });
-    return result.data;
+
+    try {
+      console.log('🚀 Calling Firebase generateCV function with:', {
+        jobId,
+        templateId,
+        features,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Race between the function call and timeout
+      const result = await Promise.race([
+        generateCVFunction({
+          jobId,
+          templateId,
+          features
+        }),
+        timeoutPromise
+      ]) as any;
+      
+      console.log('✅ Firebase generateCV function completed:', {
+        hasResult: !!result,
+        hasData: !!result?.data,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!result || typeof result.data === 'undefined') {
+        throw new Error('Invalid response from CV generation service');
+      }
+      
+      return result.data;
+    } catch (error: any) {
+      console.error('❌ Firebase generateCV function failed:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Enhanced Firebase error handling
+      if (error?.code === 'functions/timeout') {
+        throw new Error('CV generation is taking longer than expected. Please try again.');
+      } else if (error?.code === 'functions/unavailable') {
+        throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
+      } else if (error?.code === 'functions/unauthenticated') {
+        throw new Error('Authentication required. Please sign in and try again.');
+      } else if (error?.code === 'functions/permission-denied') {
+        throw new Error('You do not have permission to generate CVs. Please check your account.');
+      } else if (error?.code === 'functions/resource-exhausted') {
+        throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
+      } else if (error?.code === 'functions/invalid-argument') {
+        throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
+      } else if (error?.message?.includes('timeout')) {
+        throw new Error('CV generation timed out. Please try again with a smaller feature set.');
+      } else if (error?.message?.includes('network')) {
+        throw new Error('Network error occurred. Please check your connection and try again.');
+      } else {
+        // Re-throw with a user-friendly message for unknown errors
+        throw new Error(`Failed to generate CV: ${error.message || 'Unknown error occurred'}`);
+      }
+    }
   }
 
   /**

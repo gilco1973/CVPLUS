@@ -88,7 +88,7 @@ export const SubscriptionMonitor: React.FC = () => {
   return (
     <>
       {/* Toggle Button */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-6 right-20 md:right-20 sm:right-4 sm:bottom-20 z-30">
         <button
           onClick={handleToggleVisibility}
           className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors"
@@ -100,7 +100,7 @@ export const SubscriptionMonitor: React.FC = () => {
 
       {/* Monitor Panel */}
       {isVisible && (
-        <div className="fixed bottom-20 right-4 w-96 max-h-96 bg-white border border-gray-200 rounded-lg shadow-xl z-40 overflow-hidden">
+        <div className="fixed bottom-20 right-20 md:right-20 sm:right-4 w-96 sm:w-80 max-h-96 bg-white border border-gray-200 rounded-lg shadow-xl z-30 overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Monitor className="w-4 h-4 text-gray-600" />

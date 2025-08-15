@@ -10,16 +10,39 @@
 // ===============================
 
 export interface IndustryModel {
-  industryId: string;
-  industryName: string;
-  industryCategory: string;
+  industryId?: string;
+  industryName?: string;
+  industryCategory?: string;
   // Alias for backward compatibility
   industry?: string;
   
+  // Service-specific properties
+  subIndustries?: string[];
+  priority?: number;
+  atsPreferences?: {
+    keywordDensity?: number;
+    preferredSections?: string[];
+    sectionOrder?: string[];
+    commonRejectionReasons?: string[];
+    successPatterns?: string[];
+  };
+  marketIntelligence?: {
+    growthRate?: number;
+    jobDemand?: string;
+    competitionLevel?: string;
+    automation_risk?: number;
+    remote_friendliness?: number;
+    trends?: {
+      emerging?: string[];
+      declining?: string[];
+      stable?: string[];
+    };
+  };
+  
   // Market data
-  marketSize: number;
-  growthRate: number;
-  averageSalary: {
+  marketSize?: number;
+  growthRate?: number;
+  averageSalary?: {
     entry: number;
     mid: number;
     senior: number;
@@ -27,15 +50,15 @@ export interface IndustryModel {
   };
   
   // Skills and requirements
-  coreSkills: SkillDefinition[];
-  emergingSkills: SkillDefinition[];
+  coreSkills?: SkillDefinition[];
+  emergingSkills?: SkillDefinition[];
   
   // Career progression
-  careerPaths: CareerPath[];
-  typicalProgression: CareerLevel[];
+  careerPaths?: CareerPath[];
+  typicalProgression?: CareerLevel[];
   
   // Hiring trends
-  hiringTrends: {
+  hiringTrends?: {
     demandLevel: 'low' | 'moderate' | 'high' | 'very_high';
     seasonalPatterns: Array<{
       month: number;
@@ -49,7 +72,7 @@ export interface IndustryModel {
   };
   
   // Geographic data
-  topRegions: Array<{
+  topRegions?: Array<{
     region: string;
     jobCount: number;
     averageSalary: number;
@@ -57,10 +80,10 @@ export interface IndustryModel {
   }>;
   
   // Key companies
-  leadingCompanies: CompanyProfile[];
+  leadingCompanies?: CompanyProfile[];
   
   // Industry-specific requirements
-  commonRequirements: {
+  commonRequirements?: {
     education: string[];
     certifications: string[];
     experience: {
@@ -72,7 +95,7 @@ export interface IndustryModel {
   };
   
   // Trends and predictions
-  futureOutlook: {
+  futureOutlook?: {
     automationRisk: number; // 0-1
     growthPotential: number; // 0-1
     skillEvolution: Array<{
@@ -88,12 +111,18 @@ export interface IndustryModel {
     commonSkills?: string[];
     industryStandards?: string[];
     certifications?: string[];
+    companies?: string[];
+    skills?: any[];
+    salaryBenchmarks?: any;
+    [key: string]: any; // Allow additional dynamic properties
   };
   
   modelConfig?: {
     algorithms?: string[];
     parameters?: Record<string, any>;
     weights?: Record<string, number>;
+    successFactorWeights?: Record<string, number>;
+    featureImportance?: any[];
   };
 }
 

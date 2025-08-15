@@ -132,20 +132,35 @@ export class HeuristicPredictor {
     const max = Math.round(median * 1.25);
     
     return {
-      predictedRange: {
+      predictedSalaryRange: {
         min,
         max,
         median,
         currency: 'USD'
       },
-      locationAdjustment: locationMultiplier,
-      industryPremium: Math.round((this.getBaseSalaryByIndustry(industry) / 70000 - 1) * 100),
-      experiencePremium: Math.round((experienceMultiplier - 1) * 100),
-      skillsPremium: Math.round((skillsMultiplier - 1) * 100),
-      industryMedian: Math.round(this.getBaseSalaryByIndustry(industry) * locationMultiplier),
-      marketPercentile: this.estimateMarketPercentile(baseSalary, industry),
-      negotiationPotential: Math.min(0.40, 0.15 + experienceYears * 0.02),
-      marketDemand: this.assessMarketDemand(industry)
+      predictedRange: {
+        min,
+        max,
+        median
+      },
+      confidenceInterval: {
+        lower: Math.round(min * 0.9),
+        upper: Math.round(max * 1.1)
+      },
+      regionalAdjustment: {
+        baseLocation: 'US',
+        adjustmentFactor: locationMultiplier,
+        costOfLivingIndex: Math.round(locationMultiplier * 100)
+      },
+      industryBenchmark: {
+        industryMedian: Math.round(median),
+        percentileRank: 50
+      },
+      factors: [{
+        factor: 'experience',
+        impact: 0.1,
+        description: 'Experience multiplier effect'
+      }]
     };
   }
 
@@ -175,15 +190,23 @@ export class HeuristicPredictor {
     const estimatedDays = Math.round(baseDays);
     
     return {
-      estimatedDays,
-      confidence: 0.6, // Moderate confidence for heuristic
-      stageBreakdown: this.generateStageBreakdown(estimatedDays),
-      factors: {
-        companySize,
-        industrySpeed: this.getIndustrySpeed(industry),
-        roleComplexity: complexity > 0.7 ? 'high' : complexity > 0.4 ? 'medium' : 'low',
-        marketConditions: 'balanced'
-      }
+      estimatedDays: {
+        min: Math.round(estimatedDays * 0.8),
+        max: Math.round(estimatedDays * 1.3),
+        median: estimatedDays
+      },
+      phaseBreakdown: {
+        application: Math.round(estimatedDays * 0.15),
+        screening: Math.round(estimatedDays * 0.25), 
+        interviews: Math.round(estimatedDays * 0.35),
+        decision: Math.round(estimatedDays * 0.15),
+        negotiation: Math.round(estimatedDays * 0.10)
+      },
+      seasonalFactors: {
+        currentSeason: this.getCurrentSeason(),
+        seasonalAdjustment: 1.0
+      },
+      confidence: 0.6
     };
   }
 
@@ -216,34 +239,28 @@ export class HeuristicPredictor {
     const skillMatch = await this.calculateSkillMatch(request.cv, request.jobDescription);
     if (skillMatch < 0.6) {
       recommendations.push({
-        id: 'improve_skills',
+        recommendationId: 'improve_skills',
         type: 'skill',
-        priority: 1,
-        impactOnSuccess: {
-          interviewBoost: 20,
-          offerBoost: 15,
-          salaryBoost: 8,
-          timeReduction: 5
+        priority: 'high',
+        expectedImpact: {
+          interviewProbabilityIncrease: 0.2,
+          offerProbabilityIncrease: 0.15,
+          salaryIncrease: 8
         },
         title: 'Improve skill alignment',
         description: 'Your skills match could be stronger for this role',
-        actionItems: [
-          'Review the job requirements and identify missing skills',
-          'Take online courses or certifications in required technologies',
-          'Add relevant projects to demonstrate these skills'
-        ],
-        timeToImplement: 45,
-        difficulty: 'medium',
-        cost: 150,
-        marketRelevance: 0.9,
-        competitorAdoption: 0.7,
-        emergingTrend: true,
-        evidenceScore: 0.8,
-        similarProfilesData: {
-          sampleSize: 800,
-          successRate: 0.72,
-          averageImprovement: 18
-        }
+        implementation: {
+          estimatedTimeToComplete: 90,
+          difficulty: 'medium',
+          cost: 150,
+          resources: ['Online courses', 'Skill assessments']
+        },
+        evidence: {
+          dataPoints: 200,
+          successRate: 0.8,
+          similarProfiles: 75
+        },
+        dateGenerated: new Date()
       });
     }
     
@@ -253,34 +270,28 @@ export class HeuristicPredictor {
     
     if (experienceYears < requiredExperience * 0.8) {
       recommendations.push({
-        id: 'highlight_experience',
+        recommendationId: 'highlight_experience',
         type: 'experience',
-        priority: 2,
-        impactOnSuccess: {
-          interviewBoost: 15,
-          offerBoost: 20,
-          salaryBoost: 5,
-          timeReduction: 3
+        priority: 'medium',
+        expectedImpact: {
+          interviewProbabilityIncrease: 0.15,
+          offerProbabilityIncrease: 0.20,
+          salaryIncrease: 5
         },
         title: 'Better highlight relevant experience',
         description: 'Emphasize experience that directly relates to this role',
-        actionItems: [
-          'Quantify your achievements with specific metrics',
-          'Use keywords that match the job description',
-          'Focus on relevant projects and responsibilities'
-        ],
-        timeToImplement: 15,
-        difficulty: 'easy',
-        cost: 0,
-        marketRelevance: 0.95,
-        competitorAdoption: 0.5,
-        emergingTrend: false,
-        evidenceScore: 0.9,
-        similarProfilesData: {
-          sampleSize: 1200,
-          successRate: 0.68,
-          averageImprovement: 12
-        }
+        implementation: {
+          estimatedTimeToComplete: 30,
+          difficulty: 'easy',
+          cost: 0,
+          resources: ['CV optimization guide']
+        },
+        evidence: {
+          dataPoints: 300,
+          successRate: 0.9,
+          similarProfiles: 100
+        },
+        dateGenerated: new Date()
       });
     }
     
@@ -320,7 +331,7 @@ export class HeuristicPredictor {
       
       return interviewProb > 0 && offerProb > 0 && 
              salaryPred.predictedRange.median > 0 && 
-             timePred.estimatedDays > 0;
+             timePred.estimatedDays.median > 0;
     } catch (error) {
       console.error('[HEURISTIC-PREDICTOR] Health check failed:', error);
       return false;
@@ -644,5 +655,13 @@ export class HeuristicPredictor {
       decisionMaking: Math.round(totalDays * 0.15),
       offerNegotiation: Math.round(totalDays * 0.10)
     };
+  }
+
+  private getCurrentSeason(): string {
+    const month = new Date().getMonth() + 1; // 1-12
+    if (month >= 12 || month <= 2) return 'winter';
+    if (month >= 3 && month <= 5) return 'spring';
+    if (month >= 6 && month <= 8) return 'summer';
+    return 'fall';
   }
 }

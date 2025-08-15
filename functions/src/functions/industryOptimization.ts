@@ -22,7 +22,9 @@ const db = admin.firestore();
  * Optimize CV for specific industry
  */
 export const optimizeForIndustry = onCall(
-  { ...corsOptions, timeoutSeconds: 60 },
+  { ...corsOptions, timeoutSeconds: 60 ,
+    secrets: ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY']
+  },
   async (request: CallableRequest) => {
     const { data, auth } = request;
     

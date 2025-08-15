@@ -2,8 +2,8 @@
  * Results Page - Refactored with Modular Components
  */
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import type { Job } from '../types/cv';
@@ -23,6 +23,7 @@ import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
+  const navigate = useNavigate();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(false);
@@ -57,12 +58,22 @@ export const ResultsPage = () => {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const featureAvailability = useFeatureAvailability(job);
+  
+  // Track component mount state to prevent state updates after unmount
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     if (jobId) {
       loadJob();
     }
   }, [jobId]);
+
+  // Cleanup effect to prevent state updates after unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const loadJob = async () => {
     try {
@@ -80,13 +91,32 @@ export const ResultsPage = () => {
   const handleGenerateCV = async () => {
     if (!job) return;
 
+    // Prevent multiple simultaneous generation attempts
+    if (isGenerating) {
+      console.warn('CV generation already in progress');
+      return;
+    }
+
+    // Ensure component is still mounted before starting
+    if (!isMountedRef.current) {
+      console.warn('Component unmounted before CV generation started');
+      return;
+    }
+
     try {
       setIsGenerating(true);
+      
       const result = await generateCV(
         job.id, 
         selectedTemplate, 
         Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures])
       );
+
+      // Check if component is still mounted before updating state
+      if (!isMountedRef.current) {
+        console.warn('Component unmounted during CV generation, skipping state update');
+        return;
+      }
 
       setJob({ 
         ...job, 
@@ -99,12 +129,28 @@ export const ResultsPage = () => {
           features?: string[];
         }
       });
+      
       toast.success('CV generated successfully!');
-    } catch (error) {
+      
+      // Navigate to final results page
+      navigate(`/final-results/${jobId}`);
+    } catch (error: any) {
       console.error('Error generating CV:', error);
-      toast.error('Failed to generate CV');
+      
+      // Check if component is still mounted before showing error
+      if (!isMountedRef.current) {
+        console.warn('Component unmounted during CV generation error, skipping error display');
+        return;
+      }
+
+      // Show user-friendly error message based on error type
+      const errorMessage = error?.message || 'Failed to generate CV';
+      toast.error(errorMessage);
     } finally {
-      setIsGenerating(false);
+      // Always reset loading state if component is still mounted
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
     }
   };
 
