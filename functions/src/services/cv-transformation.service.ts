@@ -64,11 +64,13 @@ export class CVTransformationService {
 
 CRITICAL REQUIREMENTS:
 1. Base recommendations ONLY on the actual content provided
-2. For each recommendation, provide the exact current content and specific improved version
-3. Generate real, professional content - no placeholders or generic suggestions
-4. Focus on quantifiable improvements (metrics, numbers, impact)
-5. Use strong action verbs and achievement-focused language
-6. Ensure ATS compatibility with relevant keywords
+2. NEVER invent specific numbers, metrics, team sizes, or financial figures
+3. For quantifiable improvements, use placeholder templates like "[INSERT TEAM SIZE]" or "[ADD PERCENTAGE IMPROVEMENT]"
+4. Suggest improvement patterns and structures, not fabricated data
+5. Use strong action verbs and achievement-focused language based on existing content
+6. Ensure ATS compatibility with relevant keywords from the actual CV
+7. When existing content lacks metrics, suggest adding them without providing fake numbers
+8. IMPORTANT: Return ONLY valid JSON - no markdown formatting, no code blocks, no explanatory text
 
 Return a JSON array of recommendations following this exact structure:
 {
@@ -101,10 +103,21 @@ Return a JSON array of recommendations following this exact structure:
       const content = response.content[0];
       if (content.type === 'text') {
         try {
-          const parsed = JSON.parse(content.text);
+          // Clean the response text to remove markdown code blocks
+          let cleanText = content.text.trim();
+          
+          // Remove markdown code blocks if present
+          if (cleanText.startsWith('```json')) {
+            cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          } else if (cleanText.startsWith('```')) {
+            cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          }
+          
+          const parsed = JSON.parse(cleanText);
           return parsed.recommendations || [];
         } catch (parseError) {
           console.error('Failed to parse recommendations JSON:', parseError);
+          console.error('Raw response text:', content.text);
           // Fallback: extract recommendations from text response
           return this.extractRecommendationsFromText(content.text, parsedCV);
         }
@@ -126,6 +139,8 @@ Return a JSON array of recommendations following this exact structure:
     selectedRecommendations: CVRecommendation[]
   ): Promise<CVTransformationResult> {
     console.log(`Applying ${selectedRecommendations.length} recommendations to CV`);
+    console.log('Selected recommendation IDs:', selectedRecommendations.map(r => r.id));
+    console.log('Selected recommendation sections:', selectedRecommendations.map(r => `${r.id}: "${r.section}"`));
     
     // Deep clone the original CV to avoid mutations
     const improvedCV = JSON.parse(JSON.stringify(originalCV)) as ParsedCV;
@@ -143,10 +158,16 @@ Return a JSON array of recommendations following this exact structure:
 
     // Group recommendations by type for efficient processing
     const groupedRecommendations = this.groupRecommendationsByType(selectedRecommendations);
+    console.log('Grouped recommendations by type:');
+    Object.entries(groupedRecommendations).forEach(([type, recs]) => {
+      console.log(`  ${type}: ${recs.length} recommendations`);
+    });
 
     // Apply content improvements first
     if (groupedRecommendations.content) {
+      console.log(`Applying ${groupedRecommendations.content.length} content recommendations`);
       for (const rec of groupedRecommendations.content) {
+        console.log(`Processing content recommendation: ${rec.id} for section "${rec.section}"`);
         const result = await this.applyContentRecommendation(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
@@ -163,48 +184,90 @@ Return a JSON array of recommendations following this exact structure:
             after: rec.suggestedContent || '',
             improvement: rec.description
           });
+          console.log(`Successfully applied content recommendation: ${rec.id}`);
+        } else {
+          console.error(`Failed to apply content recommendation ${rec.id}: ${result.error}`);
         }
       }
     }
 
     // Apply structural changes
     if (groupedRecommendations.structure) {
+      console.log(`Applying ${groupedRecommendations.structure.length} structural recommendations`);
       for (const rec of groupedRecommendations.structure) {
+        console.log(`Processing structural recommendation: ${rec.id}`);
         const result = await this.applyStructuralRecommendation(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
+          console.log(`Successfully applied structural recommendation: ${rec.id}`);
+        } else {
+          console.error(`Failed to apply structural recommendation ${rec.id}: ${result.error}`);
         }
       }
     }
 
     // Add new sections
     if (groupedRecommendations.section_addition) {
+      console.log(`Adding ${groupedRecommendations.section_addition.length} new sections`);
       for (const rec of groupedRecommendations.section_addition) {
+        console.log(`Processing section addition: ${rec.id} for section "${rec.section}"`);
         const result = await this.addNewSection(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.newSections.push(rec.section);
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
+          console.log(`Successfully added new section: ${rec.id}`);
+        } else {
+          console.error(`Failed to add new section ${rec.id}: ${result.error}`);
         }
       }
     }
 
     // Apply keyword optimizations
     if (groupedRecommendations.keyword_optimization) {
+      console.log(`Applying ${groupedRecommendations.keyword_optimization.length} keyword optimizations`);
       for (const rec of groupedRecommendations.keyword_optimization) {
+        console.log(`Processing keyword optimization: ${rec.id}`);
         const result = await this.applyKeywordOptimization(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.keywordsAdded.push(...(rec.keywords || []));
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
+          console.log(`Successfully applied keyword optimization: ${rec.id}`);
+        } else {
+          console.error(`Failed to apply keyword optimization ${rec.id}: ${result.error}`);
         }
       }
     }
 
+    const successRate = appliedRecommendations.length / selectedRecommendations.length * 100;
+    console.log(`\n=== TRANSFORMATION SUMMARY ===`);
+    console.log(`Total recommendations to apply: ${selectedRecommendations.length}`);
+    console.log(`Successfully applied: ${appliedRecommendations.length}`);
+    console.log(`Failed to apply: ${selectedRecommendations.length - appliedRecommendations.length}`);
+    console.log(`Success rate: ${successRate.toFixed(1)}%`);
+    console.log(`Total changes made: ${transformationSummary.totalChanges}`);
+    console.log(`Sections modified: ${transformationSummary.sectionsModified.join(', ')}`);
+    console.log(`New sections added: ${transformationSummary.newSections.join(', ')}`);
+    console.log(`Estimated score increase: ${transformationSummary.estimatedScoreIncrease}`);
+    console.log(`==============================\n`);
+    
+    // Log any failed recommendations for debugging
+    const failedRecommendations = selectedRecommendations.filter(rec => 
+      !appliedRecommendations.some(applied => applied.id === rec.id)
+    );
+    
+    if (failedRecommendations.length > 0) {
+      console.warn('Failed recommendations:');
+      failedRecommendations.forEach(rec => {
+        console.warn(`  - ${rec.id}: "${rec.section}" (${rec.type})`);
+      });
+    }
+    
     return {
       originalCV,
       improvedCV,
@@ -239,14 +302,17 @@ For each recommendation:
 - Include relevant keywords for ATS optimization
 - Estimate the ATS score improvement (5-25 points)
 
-EXAMPLE TRANSFORMATIONS:
+EXAMPLE IMPROVEMENT PATTERNS:
 ❌ "Responsible for managing a team"
-✅ "Led cross-functional team of 12 developers, reducing project delivery time by 30% and increasing client satisfaction scores from 7.2 to 9.1"
+✅ "Led cross-functional team of [INSERT TEAM SIZE], reducing project delivery time by [ADD PERCENTAGE]% and increasing client satisfaction scores"
 
 ❌ "Worked on various projects"
-✅ "Spearheaded 5 high-priority client projects worth $2.3M, delivering all milestones on time and 15% under budget"
+✅ "Spearheaded [NUMBER] high-priority client projects worth [INSERT VALUE], delivering all milestones on time and [ADD PERCENTAGE]% under budget"
 
-Generate specific recommendations that can be directly applied to transform this CV.`;
+❌ "Handled customer service"
+✅ "Managed customer relationships resulting in [ADD SPECIFIC OUTCOME] and [INSERT METRIC] improvement in customer retention"
+
+Generate specific recommendations with placeholder templates that users can customize with their real data.`;
   }
 
   private async applyContentRecommendation(
@@ -254,70 +320,66 @@ Generate specific recommendations that can be directly applied to transform this
     recommendation: CVRecommendation
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const section = recommendation.section.toLowerCase();
+      const section = recommendation.section.toLowerCase().trim();
+      console.log(`Applying content recommendation for section: "${section}"`);
       
-      switch (section) {
-        case 'professional_summary':
-        case 'summary':
-          if (!cv.summary) cv.summary = '';
-          cv.summary = recommendation.suggestedContent || cv.summary;
-          break;
-          
-        case 'experience':
-        case 'work_experience':
-          if (cv.experience && recommendation.currentContent && recommendation.suggestedContent) {
-            // Find and replace specific experience bullet or description
-            cv.experience = cv.experience.map(exp => {
-              if (exp.description && exp.description.includes(recommendation.currentContent!)) {
-                exp.description = exp.description.replace(
-                  recommendation.currentContent!,
-                  recommendation.suggestedContent!
-                );
-              }
-              return exp;
-            });
-          }
-          break;
-          
-        case 'skills':
-          if (recommendation.suggestedContent) {
-            // Parse and update skills
-            const skillsToAdd = recommendation.suggestedContent.split(',').map(s => s.trim());
-            
-            // Handle both skills structures: simple array or object with categories
-            if (!cv.skills) {
-              cv.skills = [];
-            }
-            
-            if (Array.isArray(cv.skills)) {
-              // Simple array format
-              cv.skills = [...new Set([...cv.skills, ...skillsToAdd])];
-            } else {
-              // Object format with categories
-              if (!cv.skills.technical) cv.skills.technical = [];
-              cv.skills.technical = [...new Set([...cv.skills.technical, ...skillsToAdd])];
-            }
-          }
-          break;
-          
-        case 'education':
-          if (cv.education && recommendation.currentContent && recommendation.suggestedContent) {
-            cv.education = cv.education.map(edu => {
-              if (edu.description && edu.description.includes(recommendation.currentContent!)) {
-                edu.description = edu.description.replace(
-                  recommendation.currentContent!,
-                  recommendation.suggestedContent!
-                );
-              }
-              return edu;
-            });
-          }
-          break;
-          
-        default:
-          console.warn(`Unknown section for content recommendation: ${section}`);
-          return { success: false, error: `Unknown section: ${section}` };
+      // Handle professional summary sections
+      if (this.isSummarySection(section)) {
+        if (!cv.summary) cv.summary = '';
+        cv.summary = recommendation.suggestedContent || cv.summary;
+        console.log(`Applied summary recommendation`);
+        return { success: true };
       }
+      
+      // Handle experience sections (including company-specific ones)
+      if (this.isExperienceSection(section)) {
+        const applied = this.applyExperienceRecommendation(cv, recommendation, section);
+        if (applied) {
+          console.log(`Applied experience recommendation for section: "${section}"`);
+          return { success: true };
+        }
+      }
+      
+      // Handle skills sections
+      if (this.isSkillsSection(section)) {
+        const applied = this.applySkillsRecommendation(cv, recommendation);
+        if (applied) {
+          console.log(`Applied skills recommendation`);
+          return { success: true };
+        }
+      }
+      
+      // Handle education sections
+      if (this.isEducationSection(section)) {
+        const applied = this.applyEducationRecommendation(cv, recommendation);
+        if (applied) {
+          console.log(`Applied education recommendation`);
+          return { success: true };
+        }
+      }
+      
+      // Handle achievements sections
+      if (this.isAchievementsSection(section)) {
+        const applied = this.applyAchievementsRecommendation(cv, recommendation);
+        if (applied) {
+          console.log(`Applied achievements recommendation`);
+          return { success: true };
+        }
+      }
+      
+      // Handle custom sections
+      if (this.isCustomSection(section)) {
+        const applied = this.applyCustomSectionRecommendation(cv, recommendation, section);
+        if (applied) {
+          console.log(`Applied custom section recommendation for: "${section}"`);
+          return { success: true };
+        }
+      }
+      
+      console.warn(`Unable to apply recommendation for section: "${section}" - treating as custom section`);
+      // As a fallback, treat as custom section
+      if (!cv.customSections) cv.customSections = {};
+      cv.customSections[recommendation.section] = recommendation.suggestedContent || '';
       
       return { success: true };
     } catch (error) {
@@ -356,56 +418,75 @@ Generate specific recommendations that can be directly applied to transform this
     recommendation: CVRecommendation
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const sectionName = recommendation.section.toLowerCase();
+      const section = recommendation.section.toLowerCase().trim();
+      console.log(`Adding new section: "${section}"`);
       
-      switch (sectionName) {
-        case 'professional_summary':
-        case 'summary':
-          if (!cv.summary) {
-            cv.summary = recommendation.suggestedContent || '';
-          }
-          break;
-          
-        case 'achievements':
-        case 'key_achievements':
-          if (!cv.achievements) {
-            cv.achievements = [];
-          }
-          if (recommendation.suggestedContent) {
-            const achievementsList = recommendation.suggestedContent
-              .split('\n')
-              .filter(line => line.trim())
-              .map(line => line.replace(/^[•\-*]\s*/, '').trim());
-            cv.achievements.push(...achievementsList);
-          }
-          break;
-          
-        case 'certifications':
-          if (!cv.certifications) {
-            cv.certifications = [];
-          }
-          if (recommendation.suggestedContent) {
-            const certsList = recommendation.suggestedContent
-              .split('\n')
-              .filter(line => line.trim())
-              .map(cert => ({
-                name: cert.trim(),
-                issuer: '',
-                date: '',
-                url: ''
-              }));
-            cv.certifications.push(...certsList);
-          }
-          break;
-          
-        default:
-          // For custom sections, add to a general sections object
-          if (!cv.customSections) {
-            cv.customSections = {};
-          }
-          cv.customSections[recommendation.section] = recommendation.suggestedContent || '';
-          break;
+      // Handle professional summary sections
+      if (this.isSummarySection(section)) {
+        if (!cv.summary) {
+          cv.summary = recommendation.suggestedContent || '';
+          console.log('Added new summary section');
+          return { success: true };
+        }
       }
+      
+      // Handle achievements sections
+      if (this.isAchievementsSection(section)) {
+        if (!cv.achievements) {
+          cv.achievements = [];
+        }
+        if (recommendation.suggestedContent) {
+          const achievementsList = recommendation.suggestedContent
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => line.replace(/^[•\-*]\s*/, '').trim())
+            .filter(line => line.length > 0);
+          
+          // Add unique achievements only
+          const uniqueAchievements = achievementsList.filter(achievement => 
+            !cv.achievements?.some(existing => 
+              existing.toLowerCase() === achievement.toLowerCase()
+            )
+          );
+          
+          cv.achievements.push(...uniqueAchievements);
+          console.log(`Added ${uniqueAchievements.length} new achievements`);
+        }
+        return { success: true };
+      }
+      
+      // Handle certifications
+      if (section.includes('certification') || section.includes('certificate')) {
+        if (!cv.certifications) {
+          cv.certifications = [];
+        }
+        if (recommendation.suggestedContent) {
+          const certsList = recommendation.suggestedContent
+            .split('\n')
+            .filter(line => line.trim())
+            .map(cert => ({
+              name: cert.trim(),
+              issuer: '',
+              date: '',
+              url: ''
+            }));
+          cv.certifications.push(...certsList);
+          console.log(`Added ${certsList.length} new certifications`);
+        }
+        return { success: true };
+      }
+      
+      // Handle skills sections
+      if (this.isSkillsSection(section)) {
+        return { success: this.applySkillsRecommendation(cv, recommendation) };
+      }
+      
+      // For all other sections, add to custom sections
+      if (!cv.customSections) {
+        cv.customSections = {};
+      }
+      cv.customSections[recommendation.section] = recommendation.suggestedContent || '';
+      console.log(`Added custom section: "${recommendation.section}"`);
       
       return { success: true };
     } catch (error) {
@@ -456,6 +537,197 @@ Generate specific recommendations that can be directly applied to transform this
     }
   }
 
+  // Section detection helper methods
+  private isSummarySection(section: string): boolean {
+    const summaryPatterns = [
+      'professional_summary', 'summary', 'professional summary',
+      'profile', 'objective', 'career_summary', 'career summary'
+    ];
+    return summaryPatterns.some(pattern => section.includes(pattern));
+  }
+  
+  private isExperienceSection(section: string): boolean {
+    const experiencePatterns = [
+      'experience', 'work_experience', 'work experience', 'employment',
+      'career', 'professional_experience', 'professional experience'
+    ];
+    return experiencePatterns.some(pattern => section.includes(pattern));
+  }
+  
+  private isSkillsSection(section: string): boolean {
+    const skillsPatterns = [
+      'skills', 'technical_skills', 'technical skills', 'core_competencies',
+      'competencies', 'technologies', 'expertise'
+    ];
+    return skillsPatterns.some(pattern => section.includes(pattern));
+  }
+  
+  private isEducationSection(section: string): boolean {
+    const educationPatterns = [
+      'education', 'academic', 'qualification', 'training'
+    ];
+    return educationPatterns.some(pattern => section.includes(pattern));
+  }
+  
+  private isAchievementsSection(section: string): boolean {
+    const achievementPatterns = [
+      'achievements', 'accomplishments', 'awards', 'honors',
+      'recognition', 'key_achievements', 'key achievements'
+    ];
+    return achievementPatterns.some(pattern => section.includes(pattern));
+  }
+  
+  private isCustomSection(section: string): boolean {
+    // Any section that doesn't match the standard patterns
+    return !this.isSummarySection(section) && 
+           !this.isExperienceSection(section) && 
+           !this.isSkillsSection(section) && 
+           !this.isEducationSection(section) && 
+           !this.isAchievementsSection(section);
+  }
+  
+  // Specialized application methods
+  private applyExperienceRecommendation(cv: ParsedCV, recommendation: CVRecommendation, section: string): boolean {
+    if (!cv.experience) return false;
+    
+    // Check if this is a company-specific experience section
+    const companyMatch = section.match(/experience\s*-\s*(.+)/);
+    const targetCompany = companyMatch ? companyMatch[1].trim().toLowerCase() : null;
+    
+    let applied = false;
+    
+    cv.experience = cv.experience.map(exp => {
+      // If targeting a specific company, only apply to that company
+      if (targetCompany && !exp.company.toLowerCase().includes(targetCompany)) {
+        return exp;
+      }
+      
+      // Apply the recommendation
+      if (recommendation.currentContent && recommendation.suggestedContent) {
+        // Replace specific content
+        if (exp.description && exp.description.includes(recommendation.currentContent)) {
+          exp.description = exp.description.replace(
+            recommendation.currentContent,
+            recommendation.suggestedContent
+          );
+          applied = true;
+        }
+      } else if (recommendation.suggestedContent && !recommendation.currentContent) {
+        // Add new content if no current content specified
+        if (!exp.description) {
+          exp.description = recommendation.suggestedContent;
+          applied = true;
+        } else {
+          // Append to existing description
+          exp.description += '\n' + recommendation.suggestedContent;
+          applied = true;
+        }
+      }
+      
+      return exp;
+    });
+    
+    return applied;
+  }
+  
+  private applySkillsRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    if (!recommendation.suggestedContent) return false;
+    
+    // Parse and update skills
+    const skillsToAdd = recommendation.suggestedContent
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    
+    if (skillsToAdd.length === 0) return false;
+    
+    // Handle both skills structures: simple array or object with categories
+    if (!cv.skills) {
+      cv.skills = [];
+    }
+    
+    if (Array.isArray(cv.skills)) {
+      // Simple array format
+      const currentSkills = cv.skills as string[];
+      const newSkills = skillsToAdd.filter(skill => 
+        !currentSkills.some(existing => 
+          existing.toLowerCase() === skill.toLowerCase()
+        )
+      );
+      cv.skills = [...currentSkills, ...newSkills];
+    } else {
+      // Object format with categories
+      const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
+      if (!skillsObj.technical) skillsObj.technical = [];
+      
+      const newSkills = skillsToAdd.filter(skill => 
+        !skillsObj.technical?.some(existing => 
+          existing.toLowerCase() === skill.toLowerCase()
+        )
+      );
+      skillsObj.technical.push(...newSkills);
+    }
+    
+    return true;
+  }
+  
+  private applyEducationRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    if (!cv.education || !recommendation.currentContent || !recommendation.suggestedContent) {
+      return false;
+    }
+    
+    let applied = false;
+    
+    cv.education = cv.education.map(edu => {
+      if (edu.description && edu.description.includes(recommendation.currentContent!)) {
+        edu.description = edu.description.replace(
+          recommendation.currentContent!,
+          recommendation.suggestedContent!
+        );
+        applied = true;
+      }
+      return edu;
+    });
+    
+    return applied;
+  }
+  
+  private applyAchievementsRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    if (!recommendation.suggestedContent) return false;
+    
+    if (!cv.achievements) {
+      cv.achievements = [];
+    }
+    
+    // Parse achievements from suggested content
+    const newAchievements = recommendation.suggestedContent
+      .split('\n')
+      .map(line => line.replace(/^[•\-*]\s*/, '').trim())
+      .filter(line => line.length > 0);
+    
+    // Add unique achievements only
+    const uniqueAchievements = newAchievements.filter(achievement => 
+      !cv.achievements?.some(existing => 
+        existing.toLowerCase() === achievement.toLowerCase()
+      )
+    );
+    
+    cv.achievements.push(...uniqueAchievements);
+    
+    return uniqueAchievements.length > 0;
+  }
+  
+  private applyCustomSectionRecommendation(cv: ParsedCV, recommendation: CVRecommendation, section: string): boolean {
+    if (!recommendation.suggestedContent) return false;
+    
+    if (!cv.customSections) {
+      cv.customSections = {};
+    }
+    
+    cv.customSections[recommendation.section] = recommendation.suggestedContent;
+    return true;
+  }
+  
   private groupRecommendationsByType(recommendations: CVRecommendation[]): Record<string, CVRecommendation[]> {
     return recommendations.reduce((groups, rec) => {
       if (!groups[rec.type]) {
@@ -538,7 +810,7 @@ Generate specific recommendations that can be directly applied to transform this
         category: 'professional_summary',
         title: 'Add Professional Summary',
         description: 'A compelling professional summary is missing. This is crucial for ATS and recruiter attention.',
-        suggestedContent: 'Results-driven professional with proven track record in [your field]. Experienced in [key skills] with demonstrated ability to [key achievement]. Seeking to leverage expertise in [target role].',
+        suggestedContent: 'Results-driven professional with proven track record in [INSERT YOUR FIELD]. Experienced in [LIST KEY SKILLS] with demonstrated ability to [DESCRIBE KEY ACHIEVEMENT]. Seeking to leverage expertise in [INSERT TARGET ROLE].',
         impact: 'high',
         priority: 1,
         section: 'professional_summary',
@@ -557,7 +829,7 @@ Generate specific recommendations that can be directly applied to transform this
         title: 'Enhance Experience Descriptions',
         description: 'Experience descriptions are too brief and lack quantifiable achievements.',
         currentContent: 'Responsible for team management',
-        suggestedContent: 'Led cross-functional team of 8 members, increasing productivity by 25% and reducing project delivery time by 3 weeks',
+        suggestedContent: 'Led cross-functional team of [INSERT TEAM SIZE], increasing productivity by [ADD PERCENTAGE]% and reducing project delivery time by [INSERT TIMEFRAME]',
         impact: 'high',
         priority: 2,
         section: 'experience',

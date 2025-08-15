@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { applyImprovements } from '../services/cvService';
+import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
+import { recommendationsDebugger } from '../utils/debugRecommendations';
+import { navigationTest } from '../utils/navigationTest';
 
 interface RecommendationItem {
   id: string;
@@ -56,140 +59,188 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isMagicTransforming, setIsMagicTransforming] = useState(false);
+  const isMountedRef = useRef(true);
+  const [loadedJobId, setLoadedJobId] = useState<string | null>(null);
 
-  // Mock ATS analysis - replace with actual API call
+  // Cleanup function to prevent memory leaks
   useEffect(() => {
-    const mockAnalysis = (_jobData: Job): ATSAnalysis => {
-      // Simulate realistic analysis based on common CV issues
-      // TODO: Use actual job data to generate realistic analysis
-      const issues = [
-        { message: 'Missing professional summary section', severity: 'error' as const, category: 'Structure' },
-        { message: 'Date format inconsistency detected', severity: 'warning' as const, category: 'Formatting' },
-        { message: 'Skills section needs better keyword density', severity: 'warning' as const, category: 'Keywords' }
-      ];
-
-      const suggestions = [
-        { reason: 'Add action verbs to experience descriptions', impact: 'High', category: 'Content' },
-        { reason: 'Include industry-specific keywords', impact: 'Medium', category: 'Keywords' },
-        { reason: 'Quantify achievements with metrics', impact: 'High', category: 'Impact' },
-        { reason: 'Optimize section headings for ATS scanning', impact: 'Medium', category: 'Structure' }
-      ];
-
-      const currentScore = 72;
-      const maxImprovement = issues.length * 8 + suggestions.length * 5;
-      const predictedScore = Math.min(95, currentScore + maxImprovement);
-
-      return {
-        currentScore,
-        predictedScore,
-        issues,
-        suggestions,
-        overall: currentScore,
-        passes: currentScore >= 70
-      };
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
     };
+  }, []);
 
-    const generateRecommendations = (analysis: ATSAnalysis): RecommendationItem[] => {
-      const recs: RecommendationItem[] = [];
+  // Simple load function - RequestManager handles all duplicate prevention
+  const loadAnalysisAndRecommendations = async () => {
+    // Skip if already loaded for this job
+    if (loadedJobId === job.id) {
+      console.log(`[CVAnalysisResults] Already loaded for job ${job.id}`);
+      return;
+    }
 
-      // Convert issues to high-priority recommendations
-      analysis.issues.forEach((issue, index) => {
-        recs.push({
-          id: `issue-${index}`,
-          title: issue.message,
-          description: `Critical ATS compatibility issue that needs immediate attention`,
-          priority: issue.severity === 'error' ? 'high' : 'medium',
-          category: issue.category,
-          impact: 'Significantly improves ATS parsing',
-          estimatedImprovement: issue.severity === 'error' ? 12 : 8,
-          selected: true
-        });
-      });
-
-      // Convert suggestions to medium/low priority recommendations
-      analysis.suggestions.forEach((suggestion, index) => {
-        recs.push({
-          id: `suggestion-${index}`,
-          title: suggestion.reason,
-          description: `Enhancement to boost your CV's impact and readability`,
-          priority: suggestion.impact === 'High' ? 'medium' : 'low',
-          category: suggestion.category,
-          impact: `${suggestion.impact} impact on recruiter engagement`,
-          estimatedImprovement: suggestion.impact === 'High' ? 6 : 4,
-          selected: suggestion.impact === 'High'
-        });
-      });
-
-      // Add some additional smart recommendations
-      const additionalRecs: RecommendationItem[] = [
-        {
-          id: 'keyword-optimization',
-          title: 'Optimize keywords for target industry',
-          description: 'Enhance keyword density for better ATS matching and search visibility',
-          priority: 'high',
-          category: 'Keywords',
-          impact: 'Increases visibility by 40%',
-          estimatedImprovement: 10,
-          selected: true
-        },
-        {
-          id: 'achievement-quantification',
-          title: 'Add quantifiable achievements',
-          description: 'Transform bullet points into measurable accomplishments with specific metrics',
-          priority: 'medium',
-          category: 'Impact',
-          impact: 'Demonstrates concrete value',
-          estimatedImprovement: 8,
-          selected: true
-        },
-        {
-          id: 'skills-enhancement',
-          title: 'Enhance technical skills presentation',
-          description: 'Reorganize and categorize skills for better scanning and relevance',
-          priority: 'medium',
-          category: 'Skills',
-          impact: 'Improves skill matching',
-          estimatedImprovement: 6,
-          selected: false
-        },
-        {
-          id: 'formatting-consistency',
-          title: 'Standardize formatting and structure',
-          description: 'Ensure consistent fonts, spacing, and section organization throughout',
-          priority: 'low',
-          category: 'Formatting',
-          impact: 'Professional appearance',
-          estimatedImprovement: 4,
-          selected: false
-        },
-        {
-          id: 'contact-optimization',
-          title: 'Optimize contact information layout',
-          description: 'Ensure contact details are ATS-friendly and easily accessible',
-          priority: 'low',
-          category: 'Structure',
-          impact: 'Better contact parsing',
-          estimatedImprovement: 3,
-          selected: false
-        }
-      ];
-
-      return [...recs, ...additionalRecs].sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
-      });
-    };
-
-    // Simulate loading
-    setTimeout(() => {
-      const analysis = mockAnalysis(job);
-      const recs = generateRecommendations(analysis);
+    console.log(`[CVAnalysisResults] Loading recommendations for job ${job.id}`);
+    
+    try {
+      // Check if component is still mounted
+      if (!isMountedRef.current) return;
       
-      setAtsAnalysis(analysis);
-      setRecommendations(recs);
-      setIsLoading(false);
-    }, 1500);
-  }, [job]);
+      setIsLoading(true);
+      setLoadedJobId(job.id);
+      
+      // Generate mock ATS analysis (this can be replaced with real analysis later)
+      const mockAnalysis: ATSAnalysis = {
+        currentScore: 72,
+        predictedScore: 85,
+        issues: [
+          { message: 'Missing professional summary section', severity: 'error' as const, category: 'Structure' },
+          { message: 'Date format inconsistency detected', severity: 'warning' as const, category: 'Formatting' },
+          { message: 'Skills section needs better keyword density', severity: 'warning' as const, category: 'Keywords' }
+        ],
+        suggestions: [
+          { reason: 'Add action verbs to experience descriptions', impact: 'High', category: 'Content' },
+          { reason: 'Include industry-specific keywords', impact: 'Medium', category: 'Keywords' },
+          { reason: 'Quantify achievements with metrics', impact: 'High', category: 'Impact' },
+          { reason: 'Optimize section headings for ATS scanning', impact: 'Medium', category: 'Structure' }
+        ],
+        overall: 72,
+        passes: true
+      };
+      
+      // Check if component is still mounted before setting state
+      if (!isMountedRef.current) return;
+      setAtsAnalysis(mockAnalysis);
+      
+      // Get real recommendations from backend using RequestManager (zero-tolerance duplicate prevention)
+      console.log(`[CVAnalysisResults] Calling CVServiceCore.getRecommendations for job: ${job.id}`);
+      recommendationsDebugger.trackCall(job.id, 'CVAnalysisResults.loadAnalysisAndRecommendations');
+      
+      const recommendationsData = await CVServiceCore.getRecommendations(job.id);
+      
+      console.log(`[CVAnalysisResults] getRecommendations completed for job: ${job.id}`);
+      console.log('Raw recommendations data:', recommendationsData);
+      console.log('Response structure keys:', Object.keys(recommendationsData || {}));
+      
+      if (recommendationsData?.data) {
+        console.log('Data structure keys:', Object.keys(recommendationsData.data));
+        console.log('Recommendations array length:', recommendationsData.data.recommendations?.length || 0);
+      }
+      
+      // Transform backend recommendations to frontend format
+      if (recommendationsData && recommendationsData.data && recommendationsData.data.recommendations) {
+        const backendRecs = recommendationsData.data.recommendations;
+        const transformedRecommendations: RecommendationItem[] = backendRecs.map((rec: any) => {
+          // Map backend impact to frontend priority
+          let frontendPriority: 'high' | 'medium' | 'low';
+          if (rec.impact === 'high' || rec.priority >= 8) {
+            frontendPriority = 'high';
+          } else if (rec.impact === 'medium' || rec.priority >= 5) {
+            frontendPriority = 'medium';
+          } else {
+            frontendPriority = 'low';
+          }
+          
+          return {
+            id: rec.id,
+            title: rec.title || 'CV Improvement',
+            description: rec.description || 'Enhance your CV content',
+            priority: frontendPriority,
+            category: rec.category || rec.section || 'General',
+            impact: rec.description || `${rec.impact || 'medium'} impact improvement`,
+            estimatedImprovement: rec.estimatedScoreImprovement || 5,
+            selected: frontendPriority === 'high' // Auto-select high priority items
+          };
+        });
+        
+        console.log('Transformed recommendations:', transformedRecommendations);
+        
+        // Check if component is still mounted before setting state
+        if (!isMountedRef.current) return;
+        setRecommendations(transformedRecommendations);
+        
+      } else if (recommendationsData && recommendationsData.recommendations) {
+        // Handle direct recommendations array (fallback format)
+        const transformedRecommendations: RecommendationItem[] = recommendationsData.recommendations.map((rec: any) => {
+          let frontendPriority: 'high' | 'medium' | 'low';
+          if (rec.impact === 'high' || rec.priority >= 8) {
+            frontendPriority = 'high';
+          } else if (rec.impact === 'medium' || rec.priority >= 5) {
+            frontendPriority = 'medium';
+          } else {
+            frontendPriority = 'low';
+          }
+          
+          return {
+            id: rec.id,
+            title: rec.title || 'CV Improvement',
+            description: rec.description || 'Enhance your CV content',
+            priority: frontendPriority,
+            category: rec.category || rec.section || 'General',
+            impact: rec.description || `${rec.impact || 'medium'} impact improvement`,
+            estimatedImprovement: rec.estimatedScoreImprovement || 5,
+            selected: frontendPriority === 'high'
+          };
+        });
+        
+        console.log('Transformed recommendations (fallback):', transformedRecommendations);
+        
+        // Check if component is still mounted before setting state
+        if (!isMountedRef.current) return;
+        setRecommendations(transformedRecommendations);
+        
+      } else {
+        console.warn('No recommendations found in response, using empty array');
+        
+        // Check if component is still mounted before setting state
+        if (!isMountedRef.current) return;
+        setRecommendations([]);
+      }
+      
+    } catch (error) {
+      console.error(`[CVAnalysisResults] Error loading recommendations for job ${job.id}:`, error);
+      toast.error('Failed to load recommendations. Please try again.');
+      
+      // Check if component is still mounted before setting state
+      if (!isMountedRef.current) return;
+      
+      setRecommendations([]);
+      
+      // Set basic analysis for fallback
+      const fallbackAnalysis: ATSAnalysis = {
+        currentScore: 70,
+        predictedScore: 75,
+        issues: [],
+        suggestions: [],
+        overall: 70,
+        passes: true
+      };
+      
+      setAtsAnalysis(fallbackAnalysis);
+    } finally {
+      // Check if component is still mounted before setting state
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Load recommendations when job changes - RequestManager handles all deduplication
+  useEffect(() => {
+    console.log(`[CVAnalysisResults] useEffect triggered for job ${job.id}, loadedJobId: ${loadedJobId}`);
+    
+    // Reset state if job changed
+    if (loadedJobId && loadedJobId !== job.id) {
+      console.log(`[CVAnalysisResults] Job changed from ${loadedJobId} to ${job.id}, resetting state`);
+      setRecommendations([]);
+      setAtsAnalysis(null);
+      setIsLoading(true);
+      setLoadedJobId(null);
+    }
+    
+    // Load if not already loaded for this job
+    if (loadedJobId !== job.id) {
+      loadAnalysisAndRecommendations();
+    }
+  }, [job.id]); // Simple dependency - RequestManager handles all complexity
 
   const toggleRecommendation = (id: string) => {
     setRecommendations(prev =>
@@ -246,6 +297,11 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
 
   // Magic Transform Handler
   const handleMagicTransform = async () => {
+    if (recommendations.length === 0) {
+      toast.error('No recommendations available for magic transformation.');
+      return;
+    }
+    
     setIsMagicTransforming(true);
     
     try {
@@ -254,25 +310,39 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         .filter(rec => rec.priority === 'high' || rec.priority === 'medium')
         .map(rec => rec.id);
       
+      console.log('🪄 [DEBUG] Magic transform applying improvements with IDs:', magicSelectedRecs);
+      
+      if (magicSelectedRecs.length === 0) {
+        toast.error('No high or medium priority recommendations available.');
+        setIsMagicTransforming(false);
+        return;
+      }
+      
       // Apply improvements and get the enhanced content
       const result = await applyImprovements(job.id, magicSelectedRecs);
+      console.log('✨ [DEBUG] Magic transform result:', result);
       
       // Store the improved content for the preview page
       if (result && (result as any).improvedContent) {
         sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+        console.log('💾 [DEBUG] Magic transform stored improvements in sessionStorage');
       }
       
       // Store selected recommendations
       sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(magicSelectedRecs));
+      console.log('💾 [DEBUG] Magic transform stored recommendations in sessionStorage');
       
       // Show success message
       toast.success('✨ Magic transformation complete! Review your enhanced CV.');
       
       // Navigate to preview page for feature selection and customization
-      navigate(`/preview/${job.id}`);
+      const targetPath = `/preview/${job.id}`;
+      console.log('🚀 [DEBUG] Magic transform navigating to:', targetPath);
+      navigate(targetPath);
+      console.log('✅ [DEBUG] Magic transform navigation completed');
       
     } catch (error: any) {
-      console.error('Magic transform error:', error);
+      console.error('💥 [DEBUG] Magic transform error:', error);
       toast.error(error.message || 'Failed to apply magic transformation. Please try manual selection.');
       setIsMagicTransforming(false);
     }
@@ -286,21 +356,26 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   if (isLoading) {
     return (
       <div className={`space-y-6 ${className}`}>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
+            <div className="h-8 bg-gray-600 rounded w-1/2 mb-4"></div>
+            <div className="h-4 bg-gray-600 rounded w-3/4 mb-6"></div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center gap-3 mt-4">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+              <span className="text-gray-300">Loading personalized recommendations...</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div className="space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-600 rounded w-1/3"></div>
+                <div className="h-32 bg-gray-600 rounded"></div>
               </div>
               <div className="space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-600 rounded w-1/2"></div>
+                <div className="h-20 bg-gray-600 rounded"></div>
+                <div className="h-20 bg-gray-600 rounded"></div>
+                <div className="h-20 bg-gray-600 rounded"></div>
               </div>
             </div>
           </div>
@@ -362,7 +437,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
           <div className="flex-shrink-0">
             <button
               onClick={handleMagicTransform}
-              disabled={isMagicTransforming || magicSelectedRecs.length === 0}
+              disabled={isMagicTransforming || magicSelectedRecs.length === 0 || recommendations.length === 0}
               className="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group overflow-hidden"
             >
               {/* Animated background */}
@@ -394,9 +469,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               )}
             </button>
             
-            {magicSelectedRecs.length === 0 && (
+            {(magicSelectedRecs.length === 0 || recommendations.length === 0) && (
               <p className="text-xs text-gray-500 mt-2 text-center">
-                No improvements available
+                {recommendations.length === 0 ? 'No recommendations loaded' : 'No improvements available'}
               </p>
             )}
           </div>
@@ -477,23 +552,41 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-100">Improvement Recommendations</h2>
           <div className="flex items-center space-x-3">
-            <button
-              onClick={() => applyAll(true)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Apply All
-            </button>
-            <button
-              onClick={() => applyAll(false)}
-              className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
-            >
-              Clear All
-            </button>
+            {recommendations.length > 0 ? (
+              <>
+                <button
+                  onClick={() => applyAll(true)}
+                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Apply All
+                </button>
+                <button
+                  onClick={() => applyAll(false)}
+                  className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
+                >
+                  Clear All
+                </button>
+              </>
+            ) : (
+              <span className="text-sm text-gray-400">No recommendations available</span>
+            )}
           </div>
         </div>
 
+        {/* No Recommendations Message */}
+        {recommendations.length === 0 && (
+          <div className="text-center py-8">
+            <AlertTriangle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-300 mb-2">No recommendations available</h3>
+            <p className="text-gray-500">
+              We couldn't generate recommendations for this CV at the moment. 
+              Please try again later or contact support if the issue persists.
+            </p>
+          </div>
+        )}
+        
         {/* Priority Sections */}
-        {(['high', 'medium', 'low'] as const).map((priority) => {
+        {recommendations.length > 0 && (['high', 'medium', 'low'] as const).map((priority) => {
           const priorityRecs = getRecommendationsByPriority(priority);
           const selectedCount = priorityRecs.filter(r => r.selected).length;
           const isExpanded = expandedPriorities[priority];
@@ -608,34 +701,88 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             )}
             <button
               onClick={async () => {
+                console.log('🔍 [DEBUG] Apply & Preview button clicked');
                 const selectedRecommendationIds = selectedRecs.map(r => r.id);
+                console.log('🔍 [DEBUG] Selected recommendation IDs:', selectedRecommendationIds);
                 
-                // If recommendations are selected, apply them first
-                if (selectedRecommendationIds.length > 0) {
+                // Run navigation tests first
+                console.log('🧪 [DEBUG] Running navigation diagnostic tests...');
+                navigationTest.runAllTests(navigate, job.id);
+                
+                // Set a timeout to ensure navigation happens within 10 seconds
+                const navigationTimeout = setTimeout(() => {
+                  console.log('⏰ [DEBUG] Navigation timeout triggered - forcing navigation');
+                  toast.warning('Taking longer than expected. Navigating to preview...');
                   try {
-                    const result = await applyImprovements(job.id, selectedRecommendationIds);
-                    
-                    // Store the improved content for the preview page
-                    if (result && (result as any).improvedContent) {
-                      sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
-                    }
-                    
-                    toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
+                    onContinue(selectedRecommendationIds);
                   } catch (error: any) {
-                    console.error('Apply improvements error:', error);
-                    toast.error('Failed to apply some improvements. Continuing to preview...');
+                    console.error('💥 [DEBUG] Timeout navigation failed:', error);
+                    // Direct navigation as last resort
+                    navigate(`/preview/${job.id}`);
+                  }
+                }, 10000);
+
+                try {
+                  // If recommendations are selected, apply them first
+                  if (selectedRecommendationIds.length > 0) {
+                    console.log('🔄 [DEBUG] Applying improvements...');
+                    try {
+                      const result = await applyImprovements(job.id, selectedRecommendationIds);
+                      console.log('✅ [DEBUG] Apply improvements completed successfully:', result);
+                      
+                      // Store the improved content for the preview page
+                      if (result && (result as any).improvedContent) {
+                        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+                        console.log('💾 [DEBUG] Stored improvements in sessionStorage');
+                      }
+                      
+                      toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
+                    } catch (error: any) {
+                      console.error('❌ [DEBUG] Apply improvements error:', error);
+                      toast.error(error.message || 'Failed to apply some improvements. Continuing to preview...');
+                      // Continue anyway - don't let this stop navigation
+                    }
+                  } else {
+                    console.log('⏭️ [DEBUG] No recommendations selected, proceeding to preview');
+                  }
+                  
+                  // Clear the timeout since we're proceeding normally
+                  clearTimeout(navigationTimeout);
+                  
+                  // Always continue to preview regardless of apply improvements outcome
+                  console.log('🚀 [DEBUG] Calling onContinue with selectedRecommendationIds:', selectedRecommendationIds);
+                  console.log('🚀 [DEBUG] Job ID:', job.id);
+                  onContinue(selectedRecommendationIds);
+                  console.log('✅ [DEBUG] onContinue called successfully');
+                  
+                } catch (error: any) {
+                  console.error('💥 [DEBUG] Unexpected error in Apply & Preview handler:', error);
+                  toast.error('Unexpected error occurred. Navigating to preview anyway...');
+                  
+                  // Clear timeout on error
+                  clearTimeout(navigationTimeout);
+                  
+                  // Try to navigate anyway
+                  try {
+                    console.log('🔄 [DEBUG] Attempting navigation as fallback...');
+                    onContinue(selectedRecommendationIds);
+                  } catch (navError: any) {
+                    console.error('💥 [DEBUG] Navigation fallback also failed:', navError);
+                    // Direct navigation as absolute last resort
+                    console.log('🚑 [DEBUG] Using direct navigation as last resort');
+                    navigate(`/preview/${job.id}`);
                   }
                 }
-                
-                // Continue to preview
-                onContinue(selectedRecommendationIds);
               }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg"
+              disabled={recommendations.length === 0}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Apply & Preview</span>
-              <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">
-                {selectedRecs.length}
-              </span>
+              <span>{selectedRecs.length > 0 ? 'Apply & Preview' : 'Continue to Preview'}</span>
+              {selectedRecs.length > 0 && (
+                <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">
+                  {selectedRecs.length}
+                </span>
+              )}
             </button>
           </div>
         </div>

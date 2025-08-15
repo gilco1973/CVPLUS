@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const CVAnalysisPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -60,14 +61,30 @@ export const CVAnalysisPage = () => {
   }, [jobId, navigate, user]);
 
   const handleContinueToPreview = (selectedRecommendations: string[]) => {
-    if (!jobId) return;
-
-    // Store selected recommendations in session storage for now
-    // In a real app, you might want to save this to the job document
-    sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
+    console.log('🚀 [DEBUG] handleContinueToPreview called with:', selectedRecommendations);
+    console.log('🚀 [DEBUG] Current jobId:', jobId);
     
-    // Navigate to preview page for feature selection and customization
-    navigate(`/preview/${jobId}`);
+    if (!jobId) {
+      console.error('❌ [DEBUG] No jobId available, cannot navigate');
+      return;
+    }
+
+    try {
+      // Store selected recommendations in session storage for now
+      // In a real app, you might want to save this to the job document
+      sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
+      console.log('💾 [DEBUG] Stored recommendations in sessionStorage');
+      
+      // Navigate to preview page for feature selection and customization
+      const targetPath = `/preview/${jobId}`;
+      console.log('🚀 [DEBUG] Attempting navigation to:', targetPath);
+      navigate(targetPath);
+      console.log('✅ [DEBUG] Navigation call completed');
+      
+    } catch (error: any) {
+      console.error('💥 [DEBUG] Error in handleContinueToPreview:', error);
+      toast.error('Failed to navigate to preview. Please try again.');
+    }
   };
 
   const handleBack = () => {

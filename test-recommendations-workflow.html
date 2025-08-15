@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CV Recommendations Workflow</title>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJIVXA0L8e0xnSWMFUj4v5vlPHrGD6dJo",
+            authDomain: "getmycv-ai.firebaseapp.com",
+            projectId: "getmycv-ai",
+            storageBucket: "getmycv-ai.firebasestorage.app",
+            messagingSenderId: "644488728556",
+            appId: "1:644488728556:web:6b2b0a4ad8b8f9e89b10bd",
+            measurementId: "G-1XPLH6WDSM"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const functions = getFunctions(app, 'us-central1');
+        const auth = getAuth(app);
+        
+        // Use emulator for local testing
+        if (window.location.hostname === 'localhost') {
+            const { connectFunctionsEmulator } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
+            const { connectAuthEmulator } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+            
+            if (!functions._delegate._url) {
+                connectFunctionsEmulator(functions, 'localhost', 5001);
+            }
+            if (!auth._delegate.config.emulator) {
+                connectAuthEmulator(auth, 'http://localhost:9099');
+            }
+        }
+        
+        let globalJobId = null;
+        let globalRecommendations = [];
+        
+        // Test complete workflow
+        window.testRecommendationsWorkflow = async function() {
+            try {
+                document.getElementById('result').innerHTML = '<p>🔄 Testing recommendations workflow...</p>';
+                
+                // Step 1: Authenticate
+                console.log('Step 1: Authenticating...');
+                await signInAnonymously(auth);
+                console.log('✅ Authentication successful');
+                
+                // Step 2: Get recommendations for a test job
+                console.log('Step 2: Fetching recommendations...');
+                const jobId = 'test-job-for-recommendations'; // Use a consistent test job ID
+                globalJobId = jobId;
+                
+                const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
+                const recommendationsResult = await getRecommendationsFunction({
+                    jobId: jobId,
+                    forceRegenerate: true // Force fresh recommendations
+                });
+                
+                console.log('✅ Recommendations received:', recommendationsResult);
+                globalRecommendations = recommendationsResult.data?.data?.recommendations || recommendationsResult.data?.recommendations || [];
+                
+                if (globalRecommendations.length === 0) {
+                    throw new Error('No recommendations received from backend');
+                }
+                
+                // Step 3: Test applying improvements with REAL recommendation IDs
+                console.log('Step 3: Applying improvements with real IDs...');
+                const firstTwoRecommendationIds = globalRecommendations.slice(0, 2).map(r => r.id);
+                console.log('Using recommendation IDs:', firstTwoRecommendationIds);
+                
+                const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
+                const applyResult = await applyImprovementsFunction({
+                    jobId: jobId,
+                    selectedRecommendationIds: firstTwoRecommendationIds
+                });
+                
+                console.log('✅ Improvements applied successfully:', applyResult);
+                
+                // Display results
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <h3>✅ Workflow Test SUCCESSFUL!</h3>
+                        <p><strong>Recommendations received:</strong> ${globalRecommendations.length}</p>
+                        <p><strong>Improvements applied:</strong> ${firstTwoRecommendationIds.length}</p>
+                        <p><strong>Sample recommendation IDs:</strong></p>
+                        <ul>
+                            ${globalRecommendations.slice(0, 3).map(r => `<li>${r.id} - ${r.title || r.description?.substring(0, 50) || 'N/A'}</li>`).join('')}
+                        </ul>
+                        <p><strong>Applied IDs:</strong> ${firstTwoRecommendationIds.join(', ')}</p>
+                    </div>
+                    <details>
+                        <summary>View Full Response Data</summary>
+                        <pre style="background: #f8f9fa; padding: 10px; overflow: auto; max-height: 300px;">${JSON.stringify({
+                            recommendations: recommendationsResult.data,
+                            improvements: applyResult.data
+                        }, null, 2)}</pre>
+                    </details>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Workflow test failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <h3>❌ Workflow Test FAILED</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Job ID:</strong> ${globalJobId || 'N/A'}</p>
+                        <p><strong>Recommendations received:</strong> ${globalRecommendations.length}</p>
+                        ${globalRecommendations.length > 0 ? `
+                            <p><strong>Available recommendation IDs:</strong></p>
+                            <ul>
+                                ${globalRecommendations.slice(0, 5).map(r => `<li>${r.id}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                    <details>
+                        <summary>View Error Details</summary>
+                        <pre style="background: #f8f9fa; padding: 10px; overflow: auto;">${error.stack || error.message}</pre>
+                    </details>
+                `;
+            }
+        };
+        
+        // Test just getting recommendations
+        window.testGetRecommendations = async function() {
+            try {
+                document.getElementById('result').innerHTML = '<p>🔄 Testing getRecommendations only...</p>';
+                
+                await signInAnonymously(auth);
+                
+                const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
+                const result = await getRecommendationsFunction({
+                    jobId: 'test-job-for-recommendations',
+                    forceRegenerate: true
+                });
+                
+                console.log('Recommendations result:', result);
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #d4edda; padding: 15px; border-radius: 5px;">
+                        <h3>✅ getRecommendations Success</h3>
+                        <pre style="background: #f8f9fa; padding: 10px; overflow: auto; max-height: 400px;">${JSON.stringify(result.data, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('getRecommendations failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 5px;">
+                        <h3>❌ getRecommendations Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>CV Recommendations Workflow Test</h1>
+    <p>This test verifies that the frontend can successfully get real recommendation IDs from the backend and use them to apply improvements.</p>
+    
+    <div style="margin: 20px 0;">
+        <button onclick="testRecommendationsWorkflow()" style="padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px;">
+            Test Complete Workflow
+        </button>
+        <button onclick="testGetRecommendations()" style="padding: 10px 20px; margin: 5px; background: #28a745; color: white; border: none; border-radius: 5px;">
+            Test Get Recommendations Only
+        </button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <hr>
+    <h3>Expected Workflow:</h3>
+    <ol>
+        <li><strong>Frontend calls getRecommendations(jobId)</strong> → Gets real recommendation IDs from backend</li>
+        <li><strong>User selects recommendations</strong> → Frontend has real IDs to work with</li>
+        <li><strong>Frontend calls applyImprovements(jobId, realIds)</strong> → Backend can match and apply the improvements</li>
+    </ol>
+    
+    <h3>What was broken:</h3>
+    <p>The frontend was generating mock recommendations with hardcoded IDs like 'issue-0', 'suggestion-1', 'keyword-optimization', etc. But the backend generates different IDs each time (UUIDs), so none of the hardcoded IDs matched the real backend IDs.</p>
+    
+    <h3>The fix:</h3>
+    <p>Updated CVAnalysisResults.tsx to call getRecommendations() first, then use the real recommendation data and IDs returned by the backend.</p>
+</body>
+</html>

@@ -15,6 +15,11 @@ export const CVPreviewPage = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Debug: Log that we've reached the preview page
+  console.log('🎅 [DEBUG] CVPreviewPage component mounted');
+  console.log('🎅 [DEBUG] jobId from params:', jobId);
+  console.log('🎅 [DEBUG] Current URL:', window.location.href);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({
     atsOptimized: true,

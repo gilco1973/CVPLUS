@@ -12,6 +12,9 @@ import { MediaService } from '../features/MediaService';
 import { VisualizationService } from '../features/VisualizationService';
 import { IntegrationService } from '../features/IntegrationService';
 import { ProfileService } from '../features/ProfileService';
+import { recommendationsDebugger } from '../../utils/debugRecommendations';
+import { RequestManager } from '../RequestManager';
+import { auth } from '../../lib/firebase';
 import type { 
   Job, 
   JobCreateParams, 
@@ -69,7 +72,38 @@ export class CVServiceCore {
     industryKeywords?: string[], 
     forceRegenerate?: boolean
   ) {
-    return CVAnalyzer.getRecommendations(jobId, targetRole, industryKeywords, forceRegenerate);
+    const requestManager = RequestManager.getInstance();
+    
+    // Create unique request key including user ID for multi-user safety
+    const userId = auth.currentUser?.uid || 'anonymous';
+    const requestKey = `getRecommendations-${userId}-${jobId}-${targetRole || 'default'}-${(industryKeywords || []).join(',')}-${forceRegenerate || false}`;
+    
+    console.log(`[CVServiceCore] getRecommendations called for jobId: ${jobId}`);
+    
+    // Use RequestManager for zero-tolerance duplicate prevention
+    const result = await requestManager.executeOnce(
+      requestKey,
+      async () => {
+        console.log(`[CVServiceCore] Executing actual request for jobId: ${jobId}`);
+        recommendationsDebugger.trackCall(jobId, 'CVServiceCore.getRecommendations', false, requestKey);
+        return CVAnalyzer._executeGetRecommendationsDirectly(jobId, targetRole, industryKeywords, forceRegenerate);
+      },
+      {
+        forceRegenerate,
+        timeout: 45000, // 45 second timeout for Firebase functions
+        context: `getRecommendations-${jobId}`
+      }
+    );
+    
+    // Track whether this was from cache for debugging
+    if (result.wasFromCache) {
+      recommendationsDebugger.trackCall(jobId, 'CVServiceCore.getRecommendations-cached', true, requestKey);
+      console.log(`[CVServiceCore] Returned cached result for jobId: ${jobId}`);
+    } else {
+      console.log(`[CVServiceCore] Returned fresh result for jobId: ${jobId}`);
+    }
+    
+    return result.data;
   }
 
   static async previewImprovement(jobId: string, recommendationId: string) {

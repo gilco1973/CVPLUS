@@ -9,6 +9,11 @@
             "date": 1755177396729,
             "name": "/Users/gklainert/Documents/cvplus/logs/mcp-puppeteer-2025-08-14.log",
             "hash": "53c42167508b7eaa5ff56399d3e9b3384bcb6f2b12fc2b93992d343c72787f90"
+        },
+        {
+            "date": 1755264201795,
+            "name": "/Users/gklainert/Documents/cvplus/logs/mcp-puppeteer-2025-08-15.log",
+            "hash": "61bddff7f481be068df9a3b89639e439962fe31874dbdf1c11b69c034723eff1"
         }
     ],
     "hashType": "sha256"

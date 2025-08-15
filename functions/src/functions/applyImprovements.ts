@@ -43,7 +43,7 @@ export const applyImprovements = onCall(
       }
 
       // Get the original parsed CV
-      const originalCV: ParsedCV = jobData?.parsedCV;
+      const originalCV: ParsedCV = jobData?.parsedData;
       if (!originalCV) {
         throw new Error('No parsed CV found for this job');
       }
@@ -69,11 +69,15 @@ export const applyImprovements = onCall(
       }
 
       // Filter selected recommendations
+      console.log('Generated recommendation IDs:', storedRecommendations.map(r => r.id));
+      console.log('Requested recommendation IDs:', selectedRecommendationIds);
+      
       const selectedRecommendations = storedRecommendations.filter(rec => 
         selectedRecommendationIds.includes(rec.id)
       );
 
       if (selectedRecommendations.length === 0) {
+        console.error('ID mismatch - none of the requested IDs match generated recommendations');
         throw new Error('No valid recommendations found for the selected IDs');
       }
 
@@ -165,7 +169,7 @@ export const getRecommendations = onCall(
         throw new Error('Unauthorized access to job');
       }
 
-      const originalCV: ParsedCV = jobData?.parsedCV;
+      const originalCV: ParsedCV = jobData?.parsedData;
       if (!originalCV) {
         throw new Error('No parsed CV found for this job');
       }
@@ -253,7 +257,7 @@ export const previewImprovement = onCall(
         throw new Error('Unauthorized access to job');
       }
 
-      const originalCV: ParsedCV = jobData?.parsedCV;
+      const originalCV: ParsedCV = jobData?.parsedData;
       const recommendations: CVRecommendation[] = jobData?.cvRecommendations || [];
       
       const recommendation = recommendations.find(rec => rec.id === recommendationId);

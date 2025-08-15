@@ -225,8 +225,8 @@ if (!cv.summary) {
 // Before
 "Responsible for managing team"
 
-// After (AI-generated)
-"Led cross-functional team of 8 developers, reducing project delivery time by 25% and increasing client satisfaction scores from 7.2 to 9.1"
+// After (AI-enhanced with placeholders)
+"Led cross-functional team of [INSERT TEAM SIZE], reducing project delivery time by [ADD PERCENTAGE]% and increasing client satisfaction scores by [ADD IMPROVEMENT METRIC]"
 ```
 
 ### Skills Optimization

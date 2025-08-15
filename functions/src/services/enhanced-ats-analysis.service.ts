@@ -505,7 +505,7 @@ Return recommendations in this JSON format:
     const actionVerbs = ['Led', 'Developed', 'Implemented', 'Managed', 'Delivered', 'Optimized', 'Increased', 'Reduced'];
     const randomVerb = actionVerbs[Math.floor(Math.random() * actionVerbs.length)];
     
-    return `${randomVerb} ${exp.position.toLowerCase()} initiatives at ${exp.company}, delivering measurable business impact through strategic implementation of key technologies. Collaborated with cross-functional teams of 8-12 members to achieve 25% improvement in operational efficiency. Successfully managed projects worth $500K+ budget, completing all deliverables 2 weeks ahead of schedule with 15% cost savings.`;
+    return `${randomVerb} ${exp.position.toLowerCase()} initiatives at ${exp.company}, delivering measurable business impact through strategic implementation of key technologies. Collaborated with cross-functional teams of [INSERT TEAM SIZE] to achieve [ADD PERCENTAGE]% improvement in operational efficiency. Successfully managed projects worth [INSERT BUDGET] budget, completing all deliverables [INSERT TIMEFRAME] ahead of schedule with [ADD PERCENTAGE]% cost savings.`;
   }
 
   private async generateKeywordOptimizedSummary(parsedCV: ParsedCV, keywords: string[]): Promise<string> {
