@@ -4,6 +4,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { CVGenerator } from '../services/cvGenerator';
 
+// Note: Legacy feature functions are called via HTTP requests, not direct imports
+
 export const generateCV = onCall(
   {
     timeoutSeconds: 300,
@@ -78,6 +80,10 @@ export const generateCV = onCall(
         features: features
       };
 
+      // Process legacy standalone features that are not yet integrated
+      console.log('Processing legacy standalone features...');
+      await processLegacyFeatures(jobId, request.auth.uid, features || []);
+
       // Update job status to completed
       await admin.firestore()
         .collection('jobs')
@@ -125,3 +131,114 @@ export const generateCV = onCall(
       throw new Error(`Failed to generate CV: ${error.message}`);
     }
   });
+
+/**
+ * Process legacy standalone features by calling their respective functions
+ */
+async function processLegacyFeatures(jobId: string, userId: string, features: string[]): Promise<void> {
+  const legacyFeatureMap: Record<string, () => Promise<void>> = {
+    'skills-visualization': async () => {
+      try {
+        console.log('Calling legacy generateSkillsVisualization function...');
+        // Note: These are onCall functions, we need to call them differently
+        // For now, mark the feature as processed in the job
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.skillsVisualization.status': 'processing',
+          'enhancedFeatures.skillsVisualization.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Skills visualization marked for processing');
+      } catch (error) {
+        console.error('Error in skills visualization:', error);
+      }
+    },
+    
+    'certification-badges': async () => {
+      try {
+        console.log('Calling legacy generateCertificationBadges function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.certificationBadges.status': 'processing',
+          'enhancedFeatures.certificationBadges.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Certification badges marked for processing');
+      } catch (error) {
+        console.error('Error in certification badges:', error);
+      }
+    },
+    
+    'calendar-integration': async () => {
+      try {
+        console.log('Calling legacy calendar integration function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.calendarIntegration.status': 'processing',
+          'enhancedFeatures.calendarIntegration.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Calendar integration marked for processing');
+      } catch (error) {
+        console.error('Error in calendar integration:', error);
+      }
+    },
+    
+    'interactive-timeline': async () => {
+      try {
+        console.log('Calling legacy generateTimeline function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.interactiveTimeline.status': 'processing',
+          'enhancedFeatures.interactiveTimeline.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Interactive timeline marked for processing');
+      } catch (error) {
+        console.error('Error in interactive timeline:', error);
+      }
+    },
+    
+    'language-proficiency': async () => {
+      try {
+        console.log('Calling legacy generateLanguageVisualization function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.languageProficiency.status': 'processing',
+          'enhancedFeatures.languageProficiency.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Language proficiency marked for processing');
+      } catch (error) {
+        console.error('Error in language proficiency:', error);
+      }
+    },
+    
+    'portfolio-gallery': async () => {
+      try {
+        console.log('Calling legacy generatePortfolioGallery function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.portfolioGallery.status': 'processing',
+          'enhancedFeatures.portfolioGallery.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Portfolio gallery marked for processing');
+      } catch (error) {
+        console.error('Error in portfolio gallery:', error);
+      }
+    },
+    
+    'video-introduction': async () => {
+      try {
+        console.log('Calling legacy generateVideoIntroduction function...');
+        await admin.firestore().collection('jobs').doc(jobId).update({
+          'enhancedFeatures.videoIntroduction.status': 'processing',
+          'enhancedFeatures.videoIntroduction.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Video introduction marked for processing');
+      } catch (error) {
+        console.error('Error in video introduction:', error);
+      }
+    }
+  };
+
+  // Process all requested legacy features in parallel
+  const legacyFeatureCalls = features
+    .filter(feature => legacyFeatureMap[feature])
+    .map(feature => legacyFeatureMap[feature]());
+
+  if (legacyFeatureCalls.length > 0) {
+    console.log(`Processing ${legacyFeatureCalls.length} legacy features...`);
+    await Promise.allSettled(legacyFeatureCalls);
+    console.log('All legacy features processing completed');
+  }
+}

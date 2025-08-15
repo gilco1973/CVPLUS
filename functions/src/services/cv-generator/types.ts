@@ -76,6 +76,7 @@ export type TemplateType = 'modern' | 'classic' | 'creative';
 export type FeatureType = 
   | 'embed-qr-code'
   | 'generate-podcast'
+  | 'privacy-mode'
   | 'interactive-timeline'
   | 'skills-visualization'
   | 'social-links'

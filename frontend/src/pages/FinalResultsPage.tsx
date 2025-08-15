@@ -183,10 +183,10 @@ export const FinalResultsPage = () => {
       const updatedJob = { 
         ...jobData, 
         generatedCV: {
-          html: result.html,
-          htmlUrl: result.htmlUrl,
-          pdfUrl: result.pdfUrl,
-          docxUrl: result.docxUrl,
+          html: result.generatedCV.html,
+          htmlUrl: result.generatedCV.htmlUrl,
+          pdfUrl: result.generatedCV.pdfUrl,
+          docxUrl: result.generatedCV.docxUrl,
           template: selectedTemplate,
           features: selectedFeatures
         }

@@ -26,8 +26,14 @@ service firebase.storage {
     }
     
     // Allow users to read their generated CVs
-    match /users/{userId}/generated/{fileName} {
+    match /users/{userId}/generated/{jobId}/{fileName} {
       allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow public access to generated CV HTML files for sharing
+    match /users/{userId}/generated/{jobId}/cv.html {
+      allow read: if true; // Public access for sharing
       allow write: if false; // Only functions can write
     }
     

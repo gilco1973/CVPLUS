@@ -57,10 +57,21 @@ export class FileManager {
       },
     });
     
-    const [htmlUrl] = await htmlFile.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
-    });
+    // Check if we're in emulator environment
+    const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+    let htmlUrl: string;
+    
+    if (isEmulator) {
+      // Use emulator URL format
+      htmlUrl = `http://localhost:9199/v0/b/${this.getBucket().name}/o/${encodeURIComponent(htmlFileName)}?alt=media`;
+    } else {
+      // Use signed URL for production
+      const [signedUrl] = await htmlFile.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+      });
+      htmlUrl = signedUrl;
+    }
     
     console.log(`HTML file saved successfully: ${htmlFileName}`);
     return htmlUrl;
@@ -125,10 +136,21 @@ export class FileManager {
         },
       });
       
-      const [pdfSignedUrl] = await pdfFile.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
-      });
+      // Check if we're in emulator environment
+      const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+      let pdfSignedUrl: string;
+      
+      if (isEmulator) {
+        // Use emulator URL format
+        pdfSignedUrl = `http://localhost:9199/v0/b/${this.getBucket().name}/o/${encodeURIComponent(pdfFileName)}?alt=media`;
+      } else {
+        // Use signed URL for production
+        const [signedUrl] = await pdfFile.getSignedUrl({
+          action: 'read',
+          expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+        });
+        pdfSignedUrl = signedUrl;
+      }
       
       console.log(`PDF generated successfully: ${pdfFileName}`);
       return pdfSignedUrl;

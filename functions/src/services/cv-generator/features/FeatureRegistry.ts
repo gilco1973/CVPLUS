@@ -82,6 +82,9 @@ export class FeatureRegistry {
         return new QRCodeFeature();
       case 'generate-podcast':
         return new PodcastFeature();
+      case 'privacy-mode':
+        // Privacy mode is handled at the data level, not as injected content
+        return null;
       
       // Placeholder for other features - to be implemented
       case 'interactive-timeline':
@@ -164,6 +167,7 @@ export class FeatureRegistry {
     return [
       'embed-qr-code',
       'generate-podcast',
+      'privacy-mode',
       'interactive-timeline',
       'skills-visualization',
       'social-links',
