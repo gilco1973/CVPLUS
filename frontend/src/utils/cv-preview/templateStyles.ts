@@ -209,6 +209,74 @@ export const CVTemplateStyles = {
       font-weight: bold;
       font-size: 16px;
     }
+    
+    .preview-content-with-placeholders {
+      background: linear-gradient(90deg, transparent 0%, #e3f2fd 25%, #f3e5f5 50%, #e8f5e8 75%, transparent 100%);
+      background-size: 400% 100%;
+      animation: shimmer 3s ease-in-out infinite;
+      border: 1px solid #e1f5fe;
+      border-radius: 4px;
+      padding: 6px 8px;
+      position: relative;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .placeholder-hint {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #0369a1;
+      text-align: center;
+    }
+    
+    .placeholder-hint em {
+      font-style: normal;
+      font-weight: 500;
+    }
+    
+    /* Enhanced Content Styles */
+    .experience-item.enhanced-content {
+      border-left: 4px solid #10b981;
+      background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+      position: relative;
+    }
+    
+    .enhanced-description {
+      color: #065f46;
+      line-height: 1.7;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    
+    .improvement-badge {
+      position: absolute;
+      top: -8px;
+      right: 12px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+      animation: gentle-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes gentle-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
   `,
 
   getSkillsStyles: (): string => `

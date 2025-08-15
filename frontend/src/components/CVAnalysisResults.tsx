@@ -523,8 +523,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       const result = await applyImprovements(job.id, magicSelectedRecs);
       
       // Store the improved content for the preview page
-      if (result && (result as any).improvedContent) {
-        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+      if (result && (result as any).data?.improvedCV) {
+        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).data.improvedCV));
       }
       
       // Store selected recommendations
@@ -1006,8 +1006,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                       const result = await applyImprovements(job.id, selectedRecommendationIds);
                       
                       // Store the improved content for the preview page
-                      if (result && (result as any).improvedContent) {
-                        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).improvedContent));
+                      if (result && (result as any).data?.improvedCV) {
+                        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).data.improvedCV));
                       }
                       
                       toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);

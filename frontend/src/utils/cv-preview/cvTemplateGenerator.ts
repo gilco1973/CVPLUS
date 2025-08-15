@@ -27,10 +27,10 @@ export class CVTemplateGenerator {
         ${SectionGenerators.generateQRCodeSection(qrCodeSettings, collapsedSections)}
 
         <!-- Summary Section -->
-        ${SectionGenerators.generateSummarySection(previewData?.summary, collapsedSections)}
+        ${SectionGenerators.generateSummarySection(previewData?.summary, collapsedSections, previewData?.customSections)}
 
         <!-- Experience Section -->
-        ${SectionGenerators.generateExperienceSection(experience, collapsedSections)}
+        ${SectionGenerators.generateExperienceSection(experience, collapsedSections, previewData?.customSections)}
 
         <!-- Education Section -->
         ${SectionGenerators.generateEducationSection(education, collapsedSections)}

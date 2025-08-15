@@ -4,8 +4,10 @@ import { useCVPreview } from '../../hooks/cv-preview/useCVPreview';
 import { useAutoSave } from '../../hooks/cv-preview/useAutoSave';
 import { useAchievementAnalysis } from '../../hooks/cv-preview/useAchievementAnalysis';
 import { useKeyboardShortcuts } from '../../utils/cv-preview/keyboardShortcuts';
+import { useHasComparison } from '../../hooks/cv-preview/useCVComparison';
 import { CVPreviewToolbar } from './CVPreviewToolbar';
 import { CVPreviewContent } from './CVPreviewContent';
+import { CVComparisonView } from '../cv-comparison/CVComparisonView';
 import { SectionEditor } from '../SectionEditor';
 import { QRCodeEditor } from '../QRCodeEditor';
 
@@ -41,6 +43,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     job.id,
     selectedFeatures.achievementhighlighting || false
   );
+
+  // Check if comparison is available
+  const hasComparison = useHasComparison(job.parsedData, appliedImprovements);
 
   // Keyboard shortcuts
   const handleKeyDown = useKeyboardShortcuts(
@@ -92,8 +97,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     }
   };
 
-  return (
-    <div className={`cv-preview-wrapper ${className}`}>
+  // Main preview content component
+  const previewContent = (
+    <>
       {/* Toolbar */}
       <CVPreviewToolbar
         isEditing={state.isEditing}
@@ -123,11 +129,31 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         isEditing={state.isEditing}
         editingSection={state.editingSection}
         achievementAnalysis={achievementAnalysis}
+        showPlaceholderBanner={state.showPlaceholderBanner}
         onSectionEdit={handleSectionEdit}
         onToggleSection={actions.toggleSection}
         onEditQRCode={actions.startEditingQRCode}
         onAnalyzeAchievements={handleAchievementAnalysis}
+        onStartEditing={actions.startEditing}
+        onDismissPlaceholderBanner={actions.closePlaceholderBanner}
       />
+    </>
+  );
+
+  return (
+    <div className={`cv-preview-wrapper ${className}`}>
+      {/* Wrap content with comparison view if improvements are available */}
+      {hasComparison ? (
+        <CVComparisonView
+          originalData={job.parsedData}
+          improvedData={appliedImprovements}
+          className="h-full"
+        >
+          {previewContent}
+        </CVComparisonView>
+      ) : (
+        previewContent
+      )}
 
       {/* Section Editor Modal */}
       {state.editingSection && (

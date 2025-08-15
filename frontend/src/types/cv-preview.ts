@@ -16,6 +16,7 @@ export interface CVPreviewState {
   editingSection: string | null;
   isEditingQRCode: boolean;
   showPreviewBanner: boolean;
+  showPlaceholderBanner: boolean;
   previewData: any;
   hasUnsavedChanges: boolean;
   autoSaveEnabled: boolean;
@@ -99,10 +100,13 @@ export interface CVPreviewContentProps {
   isEditing: boolean;
   editingSection: string | null;
   achievementAnalysis: AchievementAnalysis | null;
+  showPlaceholderBanner: boolean;
   onSectionEdit: (section: string, newValue: any) => void;
   onToggleSection: (sectionId: string) => void;
   onEditQRCode: () => void;
   onAnalyzeAchievements: () => void;
+  onStartEditing?: () => void;
+  onDismissPlaceholderBanner?: () => void;
 }
 
 export interface MockDataGenerator {
@@ -120,4 +124,22 @@ export interface TemplateGenerator {
       collapsedSections: Record<string, boolean> 
     }
   ): string;
+}
+
+// CV Comparison Types
+export type ComparisonViewMode = 'single' | 'comparison';
+
+export interface CVComparisonData {
+  originalData: any;
+  improvedData: any;
+  hasComparison: boolean;
+  comparisonResult?: any;
+}
+
+export interface ComparisonStats {
+  totalSections: number;
+  modifiedSections: number;
+  newSections: number;
+  enhancedSections: number;
+  improvementPercentage: number;
 }

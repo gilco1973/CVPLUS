@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import type { CVPreviewContentProps } from '../../types/cv-preview';
 import { CVTemplateGenerator } from '../../utils/cv-preview/cvTemplateGenerator';
 import { useFeaturePreviews } from '../../hooks/cv-preview/useFeaturePreviews';
+import { PlaceholderBanner } from './PlaceholderBanner';
 
 export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   previewData,
@@ -13,10 +14,13 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   isEditing: _isEditing, // Not used in current implementation
   editingSection: _editingSection, // Not used in current implementation
   achievementAnalysis: _achievementAnalysis, // Not used in current implementation
+  showPlaceholderBanner,
   onSectionEdit: _onSectionEdit, // Not used in current implementation
   onToggleSection,
   onEditQRCode,
-  onAnalyzeAchievements
+  onAnalyzeAchievements,
+  onStartEditing,
+  onDismissPlaceholderBanner
 }) => {
   const previewRef = useRef<HTMLDivElement>(null);
   const { generateFeaturePreview } = useFeaturePreviews(previewData);
@@ -121,10 +125,24 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   }, [selectedFeatures]);
 
   return (
-    <div 
-      ref={previewRef}
-      className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200"
-      dangerouslySetInnerHTML={{ __html: generatePreviewHTML() }}
-    />
+    <div className="cv-preview-content-wrapper">
+      {/* Placeholder Banner */}
+      {showPlaceholderBanner && (
+        <PlaceholderBanner
+          cvData={previewData}
+          onDismiss={onDismissPlaceholderBanner}
+          onStartEditing={onStartEditing}
+          className="mb-4"
+          autoHideAfter={15000} // Auto-hide after 15 seconds
+        />
+      )}
+      
+      {/* CV Preview Content */}
+      <div 
+        ref={previewRef}
+        className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200"
+        dangerouslySetInnerHTML={{ __html: generatePreviewHTML() }}
+      />
+    </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Job } from '../../services/cvService';
 import type { CVPreviewState, QRCodeSettings } from '../../types/cv-preview';
+import { hasPlaceholders } from '../../utils/placeholderDetection';
 
 export const useCVPreview = (
   job: Job,
@@ -16,6 +17,7 @@ export const useCVPreview = (
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isEditingQRCode, setIsEditingQRCode] = useState(false);
   const [showPreviewBanner, setShowPreviewBanner] = useState(true);
+  const [showPlaceholderBanner, setShowPlaceholderBanner] = useState(true);
   const [previewData, setPreviewData] = useState(baseData);
   
   // Auto-save state
@@ -40,6 +42,13 @@ export const useCVPreview = (
   useEffect(() => {
     const newBaseData = appliedImprovements || job.parsedData;
     setPreviewData(newBaseData);
+    
+    // Check for placeholders and show banner if needed
+    if (newBaseData && hasPlaceholders(newBaseData)) {
+      setShowPlaceholderBanner(true);
+    } else {
+      setShowPlaceholderBanner(false);
+    }
   }, [appliedImprovements, job.parsedData]);
 
   // Toggle editing mode
@@ -63,6 +72,16 @@ export const useCVPreview = (
   // Close preview banner
   const closeBanner = useCallback(() => {
     setShowPreviewBanner(false);
+  }, []);
+
+  // Close placeholder banner
+  const closePlaceholderBanner = useCallback(() => {
+    setShowPlaceholderBanner(false);
+  }, []);
+
+  // Start editing (can be triggered by placeholder banner)
+  const startEditing = useCallback(() => {
+    setIsEditing(true);
   }, []);
 
   // Section collapse management
@@ -163,6 +182,7 @@ export const useCVPreview = (
     editingSection,
     isEditingQRCode,
     showPreviewBanner,
+    showPlaceholderBanner,
     previewData,
     hasUnsavedChanges,
     autoSaveEnabled,
@@ -175,6 +195,8 @@ export const useCVPreview = (
     toggleFeaturePreviews,
     toggleAutoSave,
     closeBanner,
+    closePlaceholderBanner,
+    startEditing,
     toggleSection,
     expandAllSections,
     collapseAllSections,

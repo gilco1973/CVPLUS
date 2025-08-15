@@ -1,5 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { CVGenerator } from '../services/cvGenerator';
 
@@ -10,11 +11,16 @@ export const generateCV = onCall(
     ...corsOptions
   },
   async (request) => {
+    console.log('generateCV function called');
+    
     if (!request.auth) {
+      console.error('Authentication failed: No auth token');
       throw new Error('User must be authenticated');
     }
 
+    console.log('User authenticated:', request.auth.uid);
     const { jobId, templateId, features } = request.data;
+    console.log('Processing CV generation for job:', jobId);
 
     try {
       // Update status to generating
@@ -25,7 +31,7 @@ export const generateCV = onCall(
           status: 'generating',
           selectedTemplate: templateId,
           selectedFeatures: features,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // Get job data
@@ -51,10 +57,12 @@ export const generateCV = onCall(
         : parsedCV;
 
       // Generate CV HTML
+      console.log('Generating CV HTML with template:', templateId || 'modern');
       const generator = new CVGenerator();
       const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
       
       // Save generated files and get URLs
+      console.log('Saving generated files to Firebase Storage...');
       const { pdfUrl, docxUrl, htmlUrl } = await generator.saveGeneratedFiles(
         jobId,
         request.auth.uid,
@@ -77,7 +85,7 @@ export const generateCV = onCall(
         .update({
           status: 'completed',
           generatedCV,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // If podcast generation is requested, initialize it
@@ -88,7 +96,7 @@ export const generateCV = onCall(
           .doc(jobId)
           .update({
             podcastStatus: 'generating',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
           });
       }
 
@@ -97,17 +105,22 @@ export const generateCV = onCall(
         generatedCV
       };
     } catch (error: any) {
-      console.error('Error generating CV:', error);
+      console.error('Error generating CV:', error.message);
+      console.error('Error stack:', error.stack);
       
       // Update job status to failed
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          status: 'failed',
-          error: error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+      try {
+        await admin.firestore()
+          .collection('jobs')
+          .doc(jobId)
+          .update({
+            status: 'failed',
+            error: error.message,
+            updatedAt: FieldValue.serverTimestamp()
+          });
+      } catch (updateError: any) {
+        console.error('Failed to update job status:', updateError);
+      }
       
       throw new Error(`Failed to generate CV: ${error.message}`);
     }

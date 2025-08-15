@@ -6,7 +6,17 @@ import { FileGenerationResult } from '../types';
  * Handles saving HTML, PDF, and DOCX files to Firebase Storage
  */
 export class FileManager {
-  private bucket = admin.storage().bucket();
+  private _bucket?: any;
+  
+  /**
+   * Get Firebase Storage bucket (lazy initialization)
+   */
+  private getBucket() {
+    if (!this._bucket) {
+      this._bucket = admin.storage().bucket();
+    }
+    return this._bucket;
+  }
 
   /**
    * Save generated CV files to Firebase Storage
@@ -38,7 +48,7 @@ export class FileManager {
    */
   private async saveHtmlFile(userId: string, jobId: string, htmlContent: string): Promise<string> {
     const htmlFileName = `users/${userId}/generated/${jobId}/cv.html`;
-    const htmlFile = this.bucket.file(htmlFileName);
+    const htmlFile = this.getBucket().file(htmlFileName);
     
     await htmlFile.save(htmlContent, {
       metadata: {
@@ -106,7 +116,7 @@ export class FileManager {
       
       // Save PDF to Firebase Storage
       const pdfFileName = `users/${userId}/generated/${jobId}/cv.pdf`;
-      const pdfFile = this.bucket.file(pdfFileName);
+      const pdfFile = this.getBucket().file(pdfFileName);
       
       await pdfFile.save(pdfBuffer, {
         metadata: {
@@ -231,7 +241,7 @@ export class FileManager {
       
       for (const filePath of filePaths) {
         try {
-          await this.bucket.file(filePath).delete();
+          await this.getBucket().file(filePath).delete();
           console.log(`Deleted file: ${filePath}`);
         } catch (error: any) {
           // File might not exist, continue with others
@@ -253,9 +263,9 @@ export class FileManager {
     docxExists: boolean;
   }> {
     try {
-      const [htmlExists] = await this.bucket.file(`users/${userId}/generated/${jobId}/cv.html`).exists();
-      const [pdfExists] = await this.bucket.file(`users/${userId}/generated/${jobId}/cv.pdf`).exists();
-      const [docxExists] = await this.bucket.file(`users/${userId}/generated/${jobId}/cv.docx`).exists();
+      const [htmlExists] = await this.getBucket().file(`users/${userId}/generated/${jobId}/cv.html`).exists();
+      const [pdfExists] = await this.getBucket().file(`users/${userId}/generated/${jobId}/cv.pdf`).exists();
+      const [docxExists] = await this.getBucket().file(`users/${userId}/generated/${jobId}/cv.docx`).exists();
       
       return { htmlExists, pdfExists, docxExists };
     } catch (error: any) {

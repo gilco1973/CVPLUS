@@ -138,10 +138,13 @@ export const CVPreviewPageMobile = () => {
       const recommendations = Object.entries(selectedRecommendations)
         .filter(([_, selected]) => selected)
         .map(([id]) => id);
-      const improvements = await applyImprovements(jobId, recommendations);
+      const result = await applyImprovements(jobId, recommendations);
       
-      setAppliedImprovements(improvements);
-      sessionStorage.setItem(`improvements-${jobId}`, JSON.stringify(improvements));
+      const improvedCV = (result as any)?.data?.improvedCV;
+      if (improvedCV) {
+        setAppliedImprovements(improvedCV);
+        sessionStorage.setItem(`improvements-${jobId}`, JSON.stringify(improvedCV));
+      }
       
       toast.success('CV saved successfully!');
     } catch (error: any) {

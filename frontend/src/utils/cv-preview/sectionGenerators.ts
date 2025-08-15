@@ -1,4 +1,5 @@
 import type { QRCodeSettings } from '../../types/cv-preview';
+import { createPreviewContent, hasPlaceholders } from '../placeholderReplacer';
 
 export class SectionGenerators {
   static generateQRCodeSection(qrCodeSettings: QRCodeSettings, collapsedSections: Record<string, boolean>): string {
@@ -26,7 +27,15 @@ export class SectionGenerators {
     `;
   }
 
-  static generateSummarySection(summary: string, collapsedSections: Record<string, boolean>): string {
+  static generateSummarySection(summary: string, collapsedSections: Record<string, boolean>, customSections?: Record<string, string>): string {
+    // Check for enhanced summary in customSections
+    const enhancedSummary = customSections?.['Summary'] || customSections?.['Professional Summary'];
+    const contentToUse = enhancedSummary || summary;
+    const isEnhanced = !!enhancedSummary;
+    
+    const displaySummary = contentToUse ? createPreviewContent(contentToUse) : 'Professional summary will be displayed here...';
+    const hasPlaceholderContent = contentToUse && hasPlaceholders(contentToUse);
+    
     return `
       <div class="section editable-section" data-section="summary">
         <div class="edit-overlay" onclick="editSection('summary')">✏️</div>
@@ -35,13 +44,17 @@ export class SectionGenerators {
           <div class="collapse-icon ${collapsedSections.summary ? 'collapsed' : ''}">▼</div>
         </h2>
         <div class="section-content ${collapsedSections.summary ? 'collapsed' : ''}">
-          <p>${summary || 'Professional summary will be displayed here...'}</p>
+          <div class="${isEnhanced ? 'enhanced-summary' : ''}">
+            <p${hasPlaceholderContent ? ' class="preview-content-with-placeholders"' : ''}>${displaySummary}</p>
+            ${hasPlaceholderContent ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual achievements</em></div>' : ''}
+            ${isEnhanced ? '<div class="improvement-badge">✨ Enhanced with AI</div>' : ''}
+          </div>
         </div>
       </div>
     `;
   }
 
-  static generateExperienceSection(experience: any[], collapsedSections: Record<string, boolean>): string {
+  static generateExperienceSection(experience: any[], collapsedSections: Record<string, boolean>, customSections?: Record<string, string>): string {
     return `
       <div class="section editable-section" data-section="experience">
         <div class="edit-overlay" onclick="editSection('experience')">✏️</div>
@@ -50,19 +63,46 @@ export class SectionGenerators {
           <div class="collapse-icon ${collapsedSections.experience ? 'collapsed' : ''}">▼</div>
         </h2>
         <div class="section-content ${collapsedSections.experience ? 'collapsed' : ''}">
-          ${experience.map(exp => `
+          ${experience.map(exp => {
+            // Check for enhanced content in customSections
+            const companyName = exp.company || '';
+            const experienceKey = `Experience - ${companyName}`;
+            const enhancedContent = customSections?.[experienceKey];
+            
+            // If we have enhanced content, use it instead of basic content
+            if (enhancedContent) {
+              const hasEnhancedPlaceholders = hasPlaceholders(enhancedContent);
+              return `
+              <div class="experience-item enhanced-content">
+                <div class="position">${exp.position || 'Position'}</div>
+                <div class="company">${companyName || 'Company'}</div>
+                <div class="duration">${exp.startDate || 'Start'} - ${exp.endDate || 'End'}</div>
+                <div class="enhanced-description${hasEnhancedPlaceholders ? ' preview-content-with-placeholders' : ''}">${createPreviewContent(enhancedContent)}</div>
+                ${hasEnhancedPlaceholders ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual metrics</em></div>' : ''}
+                <div class="improvement-badge">✨ Enhanced with AI</div>
+              </div>
+              `;
+            }
+
+            // Fall back to basic content if no enhanced version available
+            const hasDescPlaceholders = exp.description && hasPlaceholders(exp.description);
+            const hasAchievementPlaceholders = exp.achievements && exp.achievements.some((achievement: string) => hasPlaceholders(achievement));
+            
+            return `
             <div class="experience-item">
               <div class="position">${exp.position || 'Position'}</div>
-              <div class="company">${exp.company || 'Company'}</div>
+              <div class="company">${companyName || 'Company'}</div>
               <div class="duration">${exp.startDate || 'Start'} - ${exp.endDate || 'End'}</div>
-              ${exp.description ? `<div class="description">${exp.description}</div>` : ''}
+              ${exp.description ? `<div class="description${hasDescPlaceholders ? ' preview-content-with-placeholders' : ''}">${createPreviewContent(exp.description)}</div>` : ''}
               ${exp.achievements && exp.achievements.length > 0 ? `
                 <ul class="achievements">
-                  ${exp.achievements.map((achievement: string) => `<li>${achievement}</li>`).join('')}
+                  ${exp.achievements.map((achievement: string) => `<li${hasPlaceholders(achievement) ? ' class="preview-content-with-placeholders"' : ''}>${createPreviewContent(achievement)}</li>`).join('')}
                 </ul>
               ` : ''}
+              ${(hasDescPlaceholders || hasAchievementPlaceholders) ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual metrics</em></div>' : ''}
             </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       </div>
     `;
