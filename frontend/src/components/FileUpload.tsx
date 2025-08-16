@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, FileRejection } from 'react-dropzone';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -20,7 +20,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false }) => {
   const [error, setError] = useState<string | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: { file: File; errors: { code: string; message: string }[] }[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
     setError(null);
 
     if (rejectedFiles.length > 0) {

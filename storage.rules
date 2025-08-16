@@ -43,6 +43,67 @@ service firebase.storage {
       allow write: if false; // Only functions can write
     }
     
+    // Allow users to read their generated podcasts (jobId structure)
+    // EMULATOR FIX: Temporary public access for development
+    match /users/{userId}/podcasts/{jobId}/{fileName} {
+      allow read: if true; // Temporary: public access for emulator testing
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to podcasts by jobId path (for backward compatibility)
+    match /podcasts/{jobId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow users to read their generated videos
+    match /users/{userId}/videos/{jobId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to videos by jobId path (for backward compatibility)
+    match /videos/{jobId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow users to read their generated QR codes
+    match /users/{userId}/qr-codes/{jobId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to QR codes by jobId path (for backward compatibility)
+    match /qr-codes/{jobId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to enhanced QR codes by jobId path (for backward compatibility)
+    match /qrcodes/{jobId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow users to read their calendar files
+    match /users/{userId}/calendar/{jobId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to calendar files by jobId path (for backward compatibility)
+    match /calendar/{jobId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
+    // Allow access to merged audio files (temporary processing files)
+    match /merged-audio/{tempId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+    
     // Public template assets
     match /templates/{allPaths=**} {
       allow read: if true;

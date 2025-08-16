@@ -7,7 +7,7 @@ const originalCV = {
     name: 'John Smith',
     email: 'john.smith@email.com',
     phone: '(555) 123-4567',
-    address: 'New York, NY'
+    location: 'New York, NY'
   },
   summary: 'Software developer with experience in web development.',
   experience: [
@@ -39,7 +39,7 @@ const improvedCV = {
     name: 'John Smith',
     email: 'john.smith@email.com',
     phone: '(555) 123-4567',
-    address: 'New York, NY',
+    location: 'New York, NY',
     linkedin: 'linkedin.com/in/johnsmith',
     github: 'github.com/johnsmith'
   },
@@ -114,6 +114,8 @@ export const ComparisonDemo: React.FC = () => {
       email: string;
       phone: string;
       location: string;
+      linkedin?: string;
+      github?: string;
     };
     summary: string;
     experience: Array<{
@@ -121,18 +123,22 @@ export const ComparisonDemo: React.FC = () => {
       company: string;
       duration: string;
       description: string;
+      achievements?: string[];
     }>;
     skills: string[];
     education: Array<{
       degree: string;
       institution: string;
       year: string;
+      gpa?: string;
+      honors?: string[];
     }>;
     certifications?: Array<{
       name: string;
       issuer: string;
       date: string;
     }>;
+    achievements?: string[];
   }
 
   const SimpleCV = ({ data }: { data: DemoCVData }) => (
@@ -143,7 +149,7 @@ export const ComparisonDemo: React.FC = () => {
         <div className="flex flex-wrap gap-4 mt-2 text-gray-600">
           <span>{data.personalInfo.email}</span>
           <span>{data.personalInfo.phone}</span>
-          <span>{data.personalInfo.address}</span>
+          <span>{data.personalInfo.location}</span>
           {data.personalInfo.linkedin && <span>{data.personalInfo.linkedin}</span>}
           {data.personalInfo.github && <span>{data.personalInfo.github}</span>}
         </div>

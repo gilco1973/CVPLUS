@@ -80,6 +80,7 @@ export const generatePodcast = onCall(
       const podcastResult = await podcastGenerationService.generatePodcast(
         jobData.parsedData,
         jobId,
+        request.auth.uid,
         {
           style,
           duration,

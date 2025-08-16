@@ -603,7 +603,14 @@ export const FeatureDashboard = ({ job }: FeatureDashboardProps) => {
               return result.visualization;
             }}
             onAddLanguage={async (language) => {
-              const result = await cvService.addLanguageProficiency(job.id, language) as any;
+              // Ensure required fields are present with defaults
+              const fullLanguage = {
+                ...language,
+                language: language.language || '',
+                level: language.level || 'Basic' as const,
+                score: language.score || 0
+              };
+              const result = await cvService.addLanguageProficiency(job.id, fullLanguage) as any;
               setFeatureData({ ...featureData, languages: result.visualization });
               toast.success('Language added');
             }}

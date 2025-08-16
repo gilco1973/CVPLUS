@@ -251,36 +251,36 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       });
       
       // Transform backend recommendations to frontend format
-      let backendRecs: unknown[] | null = null;
+      let backendRecs: any[] | null = null;
       
       console.log('🔍 [DATA PARSING] Starting comprehensive data structure analysis...');
       
       // Check multiple possible response structures with enhanced debugging
-      const structureChecks = [
+      const structureChecks: Array<{name: string; condition: boolean; data: any}> = [
         {
           name: 'Firebase Callable Response (success + data.recommendations)',
           condition: recommendationsData?.success && recommendationsData?.data?.recommendations && Array.isArray(recommendationsData.data.recommendations),
-          data: recommendationsData?.data?.recommendations
+          data: recommendationsData?.data?.recommendations as any[]
         },
         {
           name: 'Direct data.recommendations',
           condition: recommendationsData?.data?.recommendations && Array.isArray(recommendationsData.data.recommendations),
-          data: recommendationsData?.data?.recommendations
+          data: recommendationsData?.data?.recommendations as any[]
         },
         {
           name: 'Direct recommendations array',
           condition: recommendationsData?.recommendations && Array.isArray(recommendationsData.recommendations),
-          data: recommendationsData?.recommendations
+          data: recommendationsData?.recommendations as any[]
         },
         {
           name: 'HTTP Response (result.data.recommendations)',
           condition: recommendationsData?.result?.data?.recommendations && Array.isArray(recommendationsData.result.data.recommendations),
-          data: recommendationsData?.result?.data?.recommendations
+          data: recommendationsData?.result?.data?.recommendations as any[]
         },
         {
           name: 'Nested data.data.recommendations',
           condition: recommendationsData?.data?.data?.recommendations && Array.isArray(recommendationsData.data.data.recommendations),
-          data: recommendationsData?.data?.data?.recommendations
+          data: recommendationsData?.data?.data?.recommendations as any[]
         }
       ];
       
@@ -293,12 +293,12 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         
         if (check.condition && !backendRecs) {
           console.log(`✅ MATCH! Using structure: ${check.name}`);
-          backendRecs = check.data;
+          backendRecs = check.data as any[];
         }
       });
       
-      if (backendRecs && Array.isArray(backendRecs) && backendRecs.length > 0) {
-        const validBackendRecs = backendRecs;
+      if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
+        const validBackendRecs: any[] = backendRecs;
         console.log(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
         console.log('First 3 recommendations:', validBackendRecs.slice(0, 3));
         const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: unknown) => {

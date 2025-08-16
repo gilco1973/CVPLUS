@@ -5,6 +5,7 @@
 
 import { httpsCallable } from 'firebase/functions';
 import { functions, auth } from '../../lib/firebase';
+import { LanguageProficiency } from '../../types/language';
 
 // Define interfaces for CV data structures
 interface ATSOptimizations {
@@ -40,17 +41,11 @@ interface TimelineEventUpdates {
 }
 
 interface LanguageProficiencyUpdates {
-  proficiency?: 'beginner' | 'intermediate' | 'advanced' | 'native';
+  level?: 'Native' | 'Fluent' | 'Professional' | 'Conversational' | 'Basic';
   certifications?: string[];
-  testScores?: Record<string, number>;
-}
-
-interface LanguageProficiency {
-  language: string;
-  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native';
-  certifications?: string[];
-  testScores?: Record<string, number>;
-  native?: boolean;
+  score?: number;
+  yearsOfExperience?: number;
+  contexts?: string[];
 }
 
 export class CVTransformer {

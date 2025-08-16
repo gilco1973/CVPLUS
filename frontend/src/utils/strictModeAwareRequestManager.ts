@@ -75,7 +75,7 @@ export class StrictModeAwareRequestManager {
         });
         
         return {
-          data: cached.result,
+          data: cached.result as T,
           wasFromCache: true,
           wasStrictModeDuplicate: false
         };
@@ -104,7 +104,7 @@ export class StrictModeAwareRequestManager {
         try {
           const result = await this.activeRequests.get(key)!;
           return {
-            data: result,
+            data: result as T,
             wasFromCache: true,
             wasStrictModeDuplicate: true
           };
@@ -126,7 +126,7 @@ export class StrictModeAwareRequestManager {
       try {
         const result = await this.activeRequests.get(key)!;
         return {
-          data: result,
+          data: result as T,
           wasFromCache: true,
           wasStrictModeDuplicate: false
         };
@@ -158,7 +158,7 @@ export class StrictModeAwareRequestManager {
       });
       
       return {
-        data: result,
+        data: result as T,
         wasFromCache: false,
         wasStrictModeDuplicate: false
       };
@@ -279,7 +279,7 @@ export const strictModeAwareRequestManager = StrictModeAwareRequestManager.getIn
 
 // Add global debug access
 if (typeof window !== 'undefined') {
-  (window as Record<string, unknown>).strictModeAwareRequestManager = {
+  (window as unknown as Record<string, unknown>).strictModeAwareRequestManager = {
     getDebugInfo: () => strictModeAwareRequestManager.getDebugInfo(),
     clearKey: (key: string) => strictModeAwareRequestManager.clearKey(key)
   };

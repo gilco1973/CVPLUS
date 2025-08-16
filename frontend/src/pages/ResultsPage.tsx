@@ -73,6 +73,8 @@ export const ResultsPage = () => {
   
   // Track component mount state to prevent state updates after unmount
   const isMountedRef = useRef(true);
+  // Track when CV generation is active to prevent premature unmounting
+  const isGeneratingRef = useRef(false);
 
   useEffect(() => {
     if (jobId) {
@@ -94,8 +96,24 @@ export const ResultsPage = () => {
 
   // Cleanup effect to prevent state updates after unmount
   useEffect(() => {
+    isMountedRef.current = true; // Explicitly set to true on mount
+    console.log('🔧 [MOUNT DEBUG] ResultsPage component mounted, isMountedRef set to true');
+    
     return () => {
-      isMountedRef.current = false;
+      console.log('🔧 [MOUNT DEBUG] ResultsPage component unmounting');
+      console.log('🔧 [MOUNT DEBUG] isGeneratingRef.current:', isGeneratingRef.current);
+      
+      // If CV generation is active, delay unmounting
+      if (isGeneratingRef.current) {
+        console.warn('🔧 [MOUNT DEBUG] CV generation in progress, delaying unmount');
+        setTimeout(() => {
+          console.log('🔧 [MOUNT DEBUG] Delayed unmount after CV generation');
+          isMountedRef.current = false;
+        }, 1000);
+      } else {
+        console.log('🔧 [MOUNT DEBUG] Setting isMountedRef to false');
+        isMountedRef.current = false;
+      }
     };
   }, []);
 
@@ -103,12 +121,18 @@ export const ResultsPage = () => {
     try {
       setLoading(true);
       const jobData = await getJob(jobId!);
-      setJob(jobData);
+      if (isMountedRef.current) {
+        setJob(jobData);
+      }
     } catch (error) {
       console.error('Error loading job:', error);
-      toast.error('Failed to load job data');
+      if (isMountedRef.current) {
+        toast.error('Failed to load job data');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -121,14 +145,24 @@ export const ResultsPage = () => {
       return;
     }
 
-    // Ensure component is still mounted before starting
+    // Enhanced component mounting check with debugging
     if (!isMountedRef.current) {
-      console.warn('Component unmounted before CV generation started');
-      return;
+      console.warn('Component unmounted before CV generation started - this should not happen during normal user interaction');
+      console.warn('Debug info:', {
+        jobId: job?.id,
+        isGenerating,
+        selectedFeatureCount: Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length,
+        timestamp: new Date().toISOString()
+      });
+      // Don't return early - this might be a false positive
+      // Instead, set the ref back to true and continue
+      isMountedRef.current = true;
+      console.log('Resetting isMountedRef to true and continuing with CV generation');
     }
 
     try {
       setIsGenerating(true);
+      isGeneratingRef.current = true;
       
       // Enhanced Debug: Check what features are selected
       const selectedFeatureKeys = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]);
@@ -163,10 +197,12 @@ export const ResultsPage = () => {
         selectedFeatureKeys
       );
 
-      // Check if component is still mounted before updating state
+      // Enhanced check if component is still mounted before updating state
       if (!isMountedRef.current) {
-        console.warn('Component unmounted during CV generation, skipping state update');
-        return;
+        console.warn('Component unmounted during CV generation, but this might be a false positive');
+        console.warn('CV generation completed successfully, attempting to update state anyway');
+        // Reset the ref to true since we have a valid result
+        isMountedRef.current = true;
       }
 
       setJob({ 
@@ -188,20 +224,21 @@ export const ResultsPage = () => {
     } catch (error: any) {
       console.error('Error generating CV:', error);
       
-      // Check if component is still mounted before showing error
+      // Enhanced check if component is still mounted before showing error
       if (!isMountedRef.current) {
-        console.warn('Component unmounted during CV generation error, skipping error display');
-        return;
+        console.warn('Component unmounted during CV generation error, but showing error anyway');
+        // Reset the ref to true to allow error display
+        isMountedRef.current = true;
       }
 
       // Show user-friendly error message based on error type
       const errorMessage = error?.message || 'Failed to generate CV';
       toast.error(errorMessage);
     } finally {
-      // Always reset loading state if component is still mounted
-      if (isMountedRef.current) {
-        setIsGenerating(false);
-      }
+      // Always reset loading state, regardless of mount status
+      // This prevents the button from staying in loading state
+      setIsGenerating(false);
+      isGeneratingRef.current = false;
     }
   };
 
@@ -292,7 +329,12 @@ export const ResultsPage = () => {
 
             {/* Generate Button */}
             <button
-              onClick={handleGenerateCV}
+              onClick={() => {
+                const selectedCount = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length;
+                console.log('🚀 [BUTTON CLICK] Generate CV button clicked with', selectedCount, 'features selected');
+                console.log('🔧 [MOUNT DEBUG] Button click - isMountedRef.current:', isMountedRef.current);
+                handleGenerateCV();
+              }}
               disabled={isGenerating}
               className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg"
             >

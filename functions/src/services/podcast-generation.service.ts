@@ -8,10 +8,13 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
-import * as ffmpeg from 'fluent-ffmpeg';
+import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+
+// Set FFmpeg path for fluent-ffmpeg
+ffmpeg.setFfmpegPath('/usr/local/bin/ffmpeg');
 
 interface ConversationalScript {
   segments: Array<{
@@ -49,14 +52,15 @@ export class PodcastGenerationService {
     this.elevenLabsApiKey = (config.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY || '').trim();
     
     // Configure voices for conversational podcast
+    // Note: Swapped voice IDs to fix gender assignment issue
     this.voiceConfig = {
       host1: {
-        voiceId: config.elevenLabs?.host1VoiceId || process.env.ELEVENLABS_HOST1_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
+        voiceId: config.elevenLabs?.host1VoiceId || process.env.ELEVENLABS_HOST1_VOICE_ID || 'yoZ06aMxZJJ28mfd3POQ',
         name: 'Sarah',
         style: 'Professional podcast host'
       },
       host2: {
-        voiceId: config.elevenLabs?.host2VoiceId || process.env.ELEVENLABS_HOST2_VOICE_ID || 'yoZ06aMxZJJ28mfd3POQ',
+        voiceId: config.elevenLabs?.host2VoiceId || process.env.ELEVENLABS_HOST2_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
         name: 'Mike',
         style: 'Engaging co-host'
       }
@@ -69,6 +73,7 @@ export class PodcastGenerationService {
   async generatePodcast(
     parsedCV: ParsedCV,
     jobId: string,
+    userId: string,
     options: {
       duration?: 'short' | 'medium' | 'long'; // 2-3min, 5-7min, 10-12min
       style?: 'professional' | 'casual' | 'enthusiastic';
@@ -88,7 +93,7 @@ export class PodcastGenerationService {
       const audioSegments = await this.generateAudioSegments(script);
       
       // Step 3: Merge audio segments into final podcast
-      const podcastUrl = await this.mergeAudioSegments(audioSegments, jobId);
+      const podcastUrl = await this.mergeAudioSegments(audioSegments, jobId, userId);
       
       // Step 4: Generate chapters from script
       const chapters = this.generateChapters(script);
@@ -135,7 +140,7 @@ export class PodcastGenerationService {
     
     const targetWords = durationWords[options.duration as keyof typeof durationWords] || durationWords.medium;
     
-    const prompt = `Create a natural, engaging podcast conversation between two hosts discussing this professional's career. The conversation should feel like a real podcast episode.
+    const prompt = `Create a natural, engaging podcast conversation between two hosts discussing this professional's career. Write ONLY the spoken dialogue - no stage directions, no emotional cues, no sound effects.
 
 Host 1 (Sarah): Professional podcast host, asks insightful questions
 Host 2 (Mike): Engaging co-host, adds color commentary and follow-up questions
@@ -156,14 +161,22 @@ Create a ${targetWords}-word conversation that includes:
 7. Engaging closing
 
 Format each line as:
-[SPEAKER]: Text
+[SARAH]: Spoken dialogue only
+[MIKE]: Spoken dialogue only
 
-Include natural elements like:
-- "Wow, that's fascinating!"
-- "Can you tell us more about..."
-- "What I find interesting is..."
-- Laughter and reactions
-- Natural interruptions and back-and-forth
+IMPORTANT RULES:
+- Write only what should be spoken aloud
+- NO stage directions like "laughs", "chuckles", "pauses"
+- NO emotional descriptions like "excitedly" or "thoughtfully"
+- NO sound effects or action descriptions
+- Use natural conversational language with enthusiasm and personality
+- Let the voice actors convey emotion through delivery, not through text
+
+Example of what NOT to do:
+[SARAH]: That's amazing! *laughs* I can't believe how impressive that is.
+
+Example of what TO do:
+[SARAH]: That's absolutely incredible! I'm genuinely impressed by that achievement.
 
 Style: ${options.style || 'casual'}
 Focus: ${options.focus || 'balanced'}`;
@@ -205,15 +218,26 @@ Focus: ${options.focus || 'balanced'}`;
       const match = line.match(/\[(HOST1|HOST2|SARAH|MIKE)\]:\s*(.+)/i);
       if (match) {
         const speaker = match[1].toLowerCase().includes('1') || match[1].toLowerCase() === 'sarah' ? 'host1' : 'host2';
-        const text = match[2];
+        let text = match[2];
         
-        // Detect emotion from text
+        // Clean the text of any stage directions or emotional cues
+        text = this.cleanScriptText(text);
+        
+        // Skip empty segments after cleaning
+        if (!text.trim()) {
+          continue;
+        }
+        
+        // Detect emotion from text content and punctuation
         let emotion: 'excited' | 'curious' | 'thoughtful' | 'impressed' = 'thoughtful';
-        if (text.includes('!') || text.toLowerCase().includes('wow') || text.toLowerCase().includes('amazing')) {
+        if (text.includes('!') || text.toLowerCase().includes('wow') || text.toLowerCase().includes('amazing') || 
+            text.toLowerCase().includes('incredible') || text.toLowerCase().includes('fantastic')) {
           emotion = 'excited';
-        } else if (text.includes('?')) {
+        } else if (text.includes('?') || text.toLowerCase().includes('how') || text.toLowerCase().includes('what') || 
+                  text.toLowerCase().includes('why') || text.toLowerCase().includes('tell us')) {
           emotion = 'curious';
-        } else if (text.toLowerCase().includes('impressive') || text.toLowerCase().includes('excellent')) {
+        } else if (text.toLowerCase().includes('impressive') || text.toLowerCase().includes('excellent') || 
+                  text.toLowerCase().includes('outstanding') || text.toLowerCase().includes('remarkable')) {
           emotion = 'impressed';
         }
         
@@ -231,6 +255,30 @@ Focus: ${options.focus || 'balanced'}`;
     const totalDuration = (totalWords / 150) * 60 * 1000; // milliseconds
     
     return { segments, totalDuration };
+  }
+  
+  /**
+   * Clean script text of stage directions and emotional cues
+   */
+  private cleanScriptText(text: string): string {
+    // Remove common stage directions and emotional cues
+    let cleanText = text
+      // Remove content in parentheses (laughs), (chuckles), (pause), etc.
+      .replace(/\([^)]*\)/g, '')
+      // Remove content in square brackets [laughs], [chuckle], [pause], etc.
+      .replace(/\[[^\]]*\]/g, '')
+      // Remove content in asterisks *laughs*, *chuckles*, *pauses*, etc.
+      .replace(/\*[^*]*\*/g, '')
+      // Remove common stage direction words when they appear as standalone elements
+      .replace(/\b(laughs?|chuckles?|giggles?|pauses?|sighs?|gasps?)\b/gi, '')
+      // Remove multiple spaces and clean up
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // Remove leading/trailing punctuation that might be left over
+    cleanText = cleanText.replace(/^[,\s]+|[,\s]+$/g, '');
+    
+    return cleanText;
   }
   
   /**
@@ -255,18 +303,25 @@ Focus: ${options.focus || 'balanced'}`;
         // Ensure API key contains only valid characters (remove newlines, spaces, etc.)
         const cleanApiKey = this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '');
         
+        // Clean text one more time before sending to ElevenLabs
+        const cleanText = this.cleanScriptText(segment.text);
+        
+        // Skip if text is empty after cleaning
+        if (!cleanText.trim()) {
+          console.log('Skipping empty segment after cleaning');
+          continue;
+        }
+        
+        // Enhanced voice settings based on emotion
+        const voiceSettings = this.getVoiceSettingsForEmotion(segment.emotion, segment.speaker);
+        
         // Call ElevenLabs API
         const response = await axios.post(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
           {
-            text: segment.text,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: segment.emotion === 'excited' ? 0.8 : 0.5,
-              use_speaker_boost: true
-            }
+            text: cleanText,
+            model_id: 'eleven_multilingual_v2', // Better for natural conversation
+            voice_settings: voiceSettings
           },
           {
             headers: {
@@ -284,14 +339,15 @@ Focus: ${options.focus || 'balanced'}`;
           duration: this.estimateAudioDuration(segment.text)
         });
         
-        // Add pause if specified
-        if (segment.pause && segment.pause > 200) {
-          audioSegments.push({
-            speaker: 'pause',
-            audioBuffer: this.generateSilence(segment.pause),
-            duration: segment.pause
-          });
-        }
+        // Add pause if specified (skip for now to avoid FFmpeg lavfi issues)
+        // Note: Pauses can be handled by adding brief silence between segments in the concat process
+        // if (segment.pause && segment.pause > 200) {
+        //   audioSegments.push({
+        //     speaker: 'pause',
+        //     audioBuffer: this.generateSilence(segment.pause),
+        //     duration: segment.pause
+        //   });
+        // }
       } catch (error) {
         console.error('Error generating audio segment:', error);
         // Skip failed segments
@@ -306,7 +362,8 @@ Focus: ${options.focus || 'balanced'}`;
    */
   private async mergeAudioSegments(
     segments: Array<{ speaker: string; audioBuffer: Buffer; duration: number; }>,
-    jobId: string
+    jobId: string,
+    userId: string
   ): Promise<string> {
     const tempDir = path.join(os.tmpdir(), `podcast-${jobId}`);
     const outputPath = path.join(tempDir, 'final-podcast.mp3');
@@ -326,11 +383,10 @@ Focus: ${options.focus || 'balanced'}`;
         const segment = segments[i];
         
         if (segment.speaker === 'pause') {
-          // Generate silence file
-          const silenceFile = path.join(tempDir, `silence-${i}.mp3`);
-          await this.generateSilenceFile(segment.duration, silenceFile);
-          tempFiles.push(silenceFile);
-          listFileContent.push(`file '${silenceFile}'`);
+          // Skip pause segments for now to avoid FFmpeg lavfi issues
+          // In production, these could be handled by adding crossfade or brief silence
+          console.log(`Skipping pause segment of ${segment.duration}ms`);
+          continue;
         } else {
           // Save audio segment
           const segmentFile = path.join(tempDir, `segment-${i}.mp3`);
@@ -345,28 +401,37 @@ Focus: ${options.focus || 'balanced'}`;
       
       // Merge audio files using FFmpeg
       await new Promise<void>((resolve, reject) => {
-        (ffmpeg as any)()
+        const command = ffmpeg()
           .input(listFilePath)
           .inputOptions(['-f', 'concat', '-safe', '0'])
-          .audioCodec('mp3')
+          .audioCodec('libmp3lame')
           .audioBitrate('128k')
           .audioFrequency(44100)
           .audioChannels(2)
           .output(outputPath)
+          .on('start', (cmdline: string) => {
+            console.log('FFmpeg command:', cmdline);
+          })
+          .on('progress', (progress: any) => {
+            console.log('FFmpeg progress:', progress.percent + '% done');
+          })
           .on('end', () => {
             console.log('Audio merging completed');
             resolve();
           })
           .on('error', (err: any) => {
             console.error('FFmpeg error:', err);
+            console.error('FFmpeg stderr:', err.stderr);
             reject(new Error(`Audio merging failed: ${err.message}`));
-          })
-          .run();
+          });
+        
+        console.log('Starting FFmpeg audio merging...');
+        command.run();
       });
       
       // Upload merged file to Firebase Storage
       const bucket = admin.storage().bucket();
-      const fileName = `podcasts/${jobId}/career-podcast.mp3`;
+      const fileName = `users/${userId}/podcasts/${jobId}/career-podcast.mp3`;
       const file = bucket.file(fileName);
       
       const mergedAudioBuffer = fs.readFileSync(outputPath);
@@ -387,7 +452,19 @@ Focus: ${options.focus || 'balanced'}`;
       // Clean up temp files
       this.cleanupTempFiles([...tempFiles, listFilePath, outputPath]);
       
-      return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      // Check if we're in emulator environment
+      const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+      let audioUrl: string;
+      
+      if (isEmulator) {
+        // Use emulator URL format
+        audioUrl = `http://localhost:9199/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+      } else {
+        // Use production URL format
+        audioUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      }
+      
+      return audioUrl;
       
     } catch (error) {
       console.error('Error merging audio segments:', error);
@@ -399,22 +476,18 @@ Focus: ${options.focus || 'balanced'}`;
   
   /**
    * Generate silence file using FFmpeg
+   * Note: Currently disabled due to lavfi compatibility issues
+   * Pauses are handled by skipping silence generation for now
    */
   private async generateSilenceFile(durationMs: number, outputPath: string): Promise<void> {
-    const durationSeconds = durationMs / 1000;
+    // This method is currently disabled to avoid FFmpeg lavfi issues
+    // In production, silence could be handled by:
+    // 1. Using crossfade between audio segments
+    // 2. Adding brief delays in the concat process
+    // 3. Using a different audio processing library
     
-    return new Promise<void>((resolve, reject) => {
-      (ffmpeg as any)()
-        .input('anullsrc=channel_layout=stereo:sample_rate=44100')
-        .inputOptions(['-f', 'lavfi'])
-        .audioCodec('mp3')
-        .audioBitrate('128k')
-        .duration(durationSeconds)
-        .output(outputPath)
-        .on('end', () => resolve())
-        .on('error', (err: any) => reject(err))
-        .run();
-    });
+    console.log(`Silence generation skipped for ${durationMs}ms duration`);
+    throw new Error('Silence generation temporarily disabled');
   }
   
   /**
@@ -452,12 +525,12 @@ Focus: ${options.focus || 'balanced'}`;
       },
       {
         speaker: 'host2',
-        text: `Hey everyone! Today we have an fascinating professional to discuss - ${name}.`,
+        text: `Hey everyone! Today we have a fascinating professional to discuss.`,
         emotion: 'excited'
       },
       {
         speaker: 'host1',
-        text: `That's right! ${name} is currently working as ${role} at ${company}, and their journey is really inspiring.`,
+        text: `That's right! We're talking about ${name}, who is currently working as ${role} at ${company}. Their journey is really inspiring.`,
         emotion: 'thoughtful'
       },
       {
@@ -467,12 +540,12 @@ Focus: ${options.focus || 'balanced'}`;
       },
       {
         speaker: 'host1',
-        text: `Absolutely! And if we look at their career progression, it's clear they've been consistently growing. They've worked at ${cv.experience?.length || 'several'} different companies.`,
+        text: `Absolutely! And if we look at their career progression, it's clear they've been consistently growing. They've worked at ${cv.experience?.length || 'several'} different organizations.`,
         emotion: 'thoughtful'
       },
       {
         speaker: 'host2',
-        text: `You know what really stands out to me? ${cv.experience?.[0]?.achievements?.[0] || 'Their ability to drive meaningful results'}.`,
+        text: `You know what really stands out to me? ${cv.experience?.[0]?.achievements?.[0] || 'Their ability to drive meaningful results and make a real impact'}.`,
         emotion: 'impressed'
       },
       {
@@ -482,12 +555,12 @@ Focus: ${options.focus || 'balanced'}`;
       },
       {
         speaker: 'host2',
-        text: `I think it's the combination of technical expertise and soft skills. They clearly understand not just the "how" but also the "why" behind their work.`,
+        text: `I think it's the combination of technical expertise and soft skills. They clearly understand not just the how but also the why behind their work.`,
         emotion: 'thoughtful'
       },
       {
         speaker: 'host1',
-        text: `Definitely. For our listeners who might be in similar fields, what key takeaways do you see from ${name}'s career journey?`,
+        text: `Definitely. For our listeners who might be in similar fields, what key takeaways do you see from this career journey?`,
         emotion: 'thoughtful'
       },
       {
@@ -497,7 +570,7 @@ Focus: ${options.focus || 'balanced'}`;
       },
       {
         speaker: 'host1',
-        text: `That's excellent advice. Well, that wraps up today's Career Conversation about ${name}. Thanks for joining us!`,
+        text: `That's excellent advice. Well, that wraps up today's Career Conversation. Thanks for joining us!`,
         emotion: 'excited'
       },
       {
@@ -556,6 +629,53 @@ Focus: ${options.focus || 'balanced'}`;
     // Generate silent MP3 data
     // In production, use proper audio library
     return Buffer.alloc(duration * 16); // Simplified
+  }
+  
+  /**
+   * Get voice settings optimized for emotion and speaker
+   */
+  private getVoiceSettingsForEmotion(emotion: string, speaker: string) {
+    const baseSettings = {
+      stability: speaker === 'host1' ? 0.6 : 0.5, // Sarah (host1) slightly more stable
+      similarity_boost: 0.8,
+      use_speaker_boost: true
+    };
+    
+    switch (emotion) {
+      case 'excited':
+        return {
+          ...baseSettings,
+          stability: baseSettings.stability - 0.1, // More expressive
+          similarity_boost: 0.9,
+          style: 0.8,
+          use_speaker_boost: true
+        };
+      case 'curious':
+        return {
+          ...baseSettings,
+          stability: baseSettings.stability + 0.1, // More controlled
+          similarity_boost: 0.75,
+          style: 0.4,
+          use_speaker_boost: true
+        };
+      case 'impressed':
+        return {
+          ...baseSettings,
+          stability: baseSettings.stability,
+          similarity_boost: 0.85,
+          style: 0.6,
+          use_speaker_boost: true
+        };
+      case 'thoughtful':
+      default:
+        return {
+          ...baseSettings,
+          stability: baseSettings.stability + 0.05,
+          similarity_boost: 0.75,
+          style: 0.3,
+          use_speaker_boost: true
+        };
+    }
   }
   
   /**

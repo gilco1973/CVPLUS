@@ -100,9 +100,10 @@ export const detectPlaceholdersInObject = (
  * @returns Array of all placeholder matches found
  */
 export const detectPlaceholdersInCV = (cvData: unknown): PlaceholderMatch[] => {
-  if (!cvData) return [];
+  if (!cvData || typeof cvData !== 'object') return [];
   
   const allMatches: PlaceholderMatch[] = [];
+  const cvObject = cvData as Record<string, any>;
   
   // Check different sections of the CV
   const sections = [
@@ -120,9 +121,9 @@ export const detectPlaceholdersInCV = (cvData: unknown): PlaceholderMatch[] => {
   ];
   
   sections.forEach(sectionName => {
-    if (cvData[sectionName]) {
+    if (cvObject[sectionName]) {
       const sectionMatches = detectPlaceholdersInObject(
-        cvData[sectionName], 
+        cvObject[sectionName], 
         sectionName
       );
       allMatches.push(...sectionMatches);

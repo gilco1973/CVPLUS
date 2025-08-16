@@ -43,8 +43,8 @@ export const JobDescriptionParser: React.FC<JobDescriptionParserProps> = ({
     try {
       const result = await generateATSKeywords(jobDescription, undefined, targetRole);
       const keywordData = (result && typeof result === 'object' && 'keywords' in result) 
-        ? (result as { keywords: ExtractedKeywords }).keywords 
-        : result as ExtractedKeywords;
+        ? (result as { keywords: KeywordResults }).keywords 
+        : result as KeywordResults;
       
       setKeywords(keywordData);
       onKeywordsExtracted(keywordData);

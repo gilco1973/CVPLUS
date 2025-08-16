@@ -72,13 +72,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         setError(null);
       }
-    }, (authError) => {
+    }, (authError: any) => {
       // Handle auth state change errors gracefully
       console.warn('Auth state change error (this is normal on first load):', authError);
       setLoading(false);
       
       // Only set user-friendly errors for actual problems
-      if (authError.code && authError.code !== 'auth/user-not-found') {
+      if (authError?.code && authError.code !== 'auth/user-not-found') {
         const friendlyMessage = getFriendlyAuthErrorMessage(authError.code);
         setError(friendlyMessage);
       }

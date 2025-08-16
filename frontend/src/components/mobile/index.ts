@@ -1,6 +1,7 @@
 // Mobile Navigation Components Export
 export { Header } from '../Header';
-export { Breadcrumb, generateBreadcrumbs } from '../Breadcrumb';
+export { Breadcrumb } from '../Breadcrumb';
+export { generateBreadcrumbs } from '../../utils/breadcrumbs';
 export { MobileBottomNav, MobileBottomNavSpacer } from '../MobileBottomNav';
 export { MobilePageWrapper, MobileGestureWrapper } from '../MobilePageWrapper';
 export { MobileFeatureSelection } from '../MobileFeatureSelection';
