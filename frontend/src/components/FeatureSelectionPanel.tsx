@@ -204,7 +204,7 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -249,7 +249,7 @@ export const FeatureSelectionPanel: React.FC<FeatureSelectionPanelProps> = ({
                   key={feature.id}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
                     selectedFeatures[feature.id]
-                      ? 'border-blue-300 bg-blue-900/20'
+                      ? 'border-blue-400 bg-blue-900/30'
                       : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
                   }`}
                   onClick={() => onFeatureToggle(feature.id, !selectedFeatures[feature.id])}

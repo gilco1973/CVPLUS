@@ -39,6 +39,190 @@ export const CVTemplateStyles = {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
+    
+    @keyframes fade-in-up {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    .animate-fade-in-up {
+      animation: fade-in-up 0.5s ease-out forwards;
+    }
+    
+    .feature-preview {
+      transition: all 0.3s ease-in-out;
+    }
+    
+    .feature-preview.opacity-50 {
+      transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, filter 0.3s ease-in-out;
+    }
+    
+    .grayscale {
+      filter: grayscale(100%);
+    }
+    
+    .timeline-container {
+      position: relative;
+      padding-left: 30px;
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+      padding-left: 30px;
+    }
+    
+    .timeline-dot {
+      position: absolute;
+      left: -6px;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      background: #4299e1;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 0 2px #4299e1;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 18px;
+      bottom: -20px;
+      width: 2px;
+      background: #e2e8f0;
+    }
+    
+    .timeline-item:last-child::before {
+      display: none;
+    }
+    
+    .skills-chart {
+      space-y: 16px;
+    }
+    
+    .skill-bar {
+      margin-bottom: 16px;
+    }
+    
+    .skill-bar span {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #2d3748;
+    }
+    
+    .progress {
+      width: 100%;
+      height: 12px;
+      background: #edf2f7;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    
+    .progress .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+      border-radius: 6px;
+      transition: width 0.8s ease-in-out;
+    }
+    
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f7fafc;
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .play-button {
+      width: 60px;
+      height: 60px;
+      background: #4299e1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .play-button:hover {
+      background: #3182ce;
+      transform: scale(1.1);
+    }
+    
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    
+    .portfolio-item {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .portfolio-item:hover {
+      border-color: #4299e1;
+      background: #edf8ff;
+      transform: translateY(-2px);
+    }
+    
+    .contact-form {
+      max-width: 400px;
+    }
+    
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      outline: none;
+      border-color: #4299e1;
+    }
+    
+    .contact-form button {
+      background: #4299e1;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .contact-form button:hover {
+      background: #3182ce;
+    }
   `,
 
   getSectionStyles: (): string => `

@@ -35,55 +35,126 @@ interface FeatureConfig {
   description: string;
 }
 
-// Feature Configuration
+// Feature Configuration - Maps camelCase feature names to kebab-case configs
 const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
-  'skills-visualization': {
+  // Core Enhancement Features
+  'atsOptimization': {
+    id: 'ats-optimization',
+    name: 'ATS Optimization',
+    icon: '🎯',
+    description: 'Applicant Tracking System optimization'
+  },
+  'keywordEnhancement': {
+    id: 'keyword-enhancement',
+    name: 'Keyword Enhancement',
+    icon: '🔑',
+    description: 'Strategic keyword optimization'
+  },
+  'achievementHighlighting': {
+    id: 'achievement-highlighting',
+    name: 'Achievement Highlighting',
+    icon: '⭐',
+    description: 'Professional achievement emphasis'
+  },
+  
+  // Interactive Features
+  'skillsVisualization': {
     id: 'skills-visualization',
     name: 'Skills Visualization',
     icon: '📊',
     description: 'Interactive charts and skill assessments'
   },
-  'certification-badges': {
-    id: 'certification-badges',
-    name: 'Certification Badges',
-    icon: '🏆',
-    description: 'Professional certification displays'
+  'skillsChart': {
+    id: 'skills-chart',
+    name: 'Skills Chart',
+    icon: '📈',
+    description: 'Visual skills proficiency chart'
   },
-  'calendar-integration': {
-    id: 'calendar-integration',
-    name: 'Calendar Integration',
-    icon: '📅',
-    description: 'Availability and scheduling'
-  },
-  'interactive-timeline': {
+  'interactiveTimeline': {
     id: 'interactive-timeline',
     name: 'Interactive Timeline',
     icon: '⏰',
     description: 'Professional journey visualization'
   },
-  'language-proficiency': {
-    id: 'language-proficiency',
-    name: 'Language Proficiency',
-    icon: '🌍',
-    description: 'Language skills assessment'
+  
+  // Multimedia Features
+  'generatePodcast': {
+    id: 'generate-podcast',
+    name: 'Career Podcast',
+    icon: '🎙️',
+    description: 'AI-generated career story'
   },
-  'portfolio-gallery': {
-    id: 'portfolio-gallery',
-    name: 'Portfolio Gallery',
-    icon: '🖼️',
-    description: 'Project showcase gallery'
-  },
-  'video-introduction': {
+  'videoIntroduction': {
     id: 'video-introduction',
     name: 'Video Introduction',
     icon: '🎥',
     description: 'Personal video introduction'
   },
-  'generate-podcast': {
-    id: 'generate-podcast',
-    name: 'Career Podcast',
-    icon: '🎙️',
-    description: 'AI-generated career story'
+  'portfolioGallery': {
+    id: 'portfolio-gallery',
+    name: 'Portfolio Gallery',
+    icon: '🖼️',
+    description: 'Project showcase gallery'
+  },
+  
+  // Professional Features
+  'certificationBadges': {
+    id: 'certification-badges',
+    name: 'Certification Badges',
+    icon: '🏆',
+    description: 'Professional certification displays'
+  },
+  'languageProficiency': {
+    id: 'language-proficiency',
+    name: 'Language Proficiency',
+    icon: '🌍',
+    description: 'Language skills assessment'
+  },
+  'achievementsShowcase': {
+    id: 'achievements-showcase',
+    name: 'Achievements Showcase',
+    icon: '🎯',
+    description: 'Top achievements highlighting'
+  },
+  
+  // Contact & Integration Features
+  'contactForm': {
+    id: 'contact-form',
+    name: 'Contact Form',
+    icon: '📧',
+    description: 'Interactive contact functionality'
+  },
+  'socialMediaLinks': {
+    id: 'social-media-links',
+    name: 'Social Media Links',
+    icon: '🔗',
+    description: 'Professional social media integration'
+  },
+  'availabilityCalendar': {
+    id: 'availability-calendar',
+    name: 'Availability Calendar',
+    icon: '📅',
+    description: 'Scheduling and availability integration'
+  },
+  'testimonialsCarousel': {
+    id: 'testimonials-carousel',
+    name: 'Testimonials Carousel',
+    icon: '💬',
+    description: 'Professional testimonials showcase'
+  },
+  
+  // Technical Features
+  'embedQRCode': {
+    id: 'embed-qr-code',
+    name: 'QR Code Integration',
+    icon: '📱',
+    description: 'Quick access QR code'
+  },
+  'privacyMode': {
+    id: 'privacy-mode',
+    name: 'Privacy Protection',
+    icon: '🔒',
+    description: 'Personal information protection'
   }
 };
 
@@ -227,12 +298,20 @@ export const FinalResultsPage = () => {
 
   // Set up feature queue based on selected features
   const setupFeatureQueue = (selectedFeatures: string[]) => {
+    console.log('🔍 [FEATURE QUEUE DEBUG] Input features:', selectedFeatures);
+    console.log('🔍 [FEATURE QUEUE DEBUG] Available FEATURE_CONFIGS keys:', Object.keys(FEATURE_CONFIGS));
+    
     const queue = selectedFeatures
-      .filter(featureId => FEATURE_CONFIGS[featureId])
+      .filter(featureId => {
+        const hasConfig = !!FEATURE_CONFIGS[featureId];
+        console.log(`🔍 [FEATURE QUEUE DEBUG] Feature ${featureId}: ${hasConfig ? 'FOUND' : 'MISSING'} in FEATURE_CONFIGS`);
+        return hasConfig;
+      })
       .map(featureId => FEATURE_CONFIGS[featureId]);
     
     setFeatureQueue(queue);
     console.log('🎯 [DEBUG] Feature queue set up:', queue.map(f => f.name));
+    console.log('🎯 [DEBUG] Feature queue length:', queue.length);
     
     // Initialize progress state
     const initialProgress: ProgressState = {};
@@ -246,23 +325,39 @@ export const FinalResultsPage = () => {
   };
 
   // Set up real-time progress tracking
-  const setupProgressTracking = (jobId: string) => {
+  const setupProgressTracking = (jobId: string, trackingFeatures: FeatureConfig[]) => {
     console.log('📡 [DEBUG] Setting up progress tracking for job:', jobId);
+    console.log('📡 [DEBUG] Tracking features:', trackingFeatures.map(f => ({ id: f.id, name: f.name })));
     
     const jobRef = doc(db, 'jobs', jobId);
     const unsubscribe = onSnapshot(jobRef, (doc) => {
-      if (!doc.exists() || !isMountedRef.current) return;
+      if (!doc.exists() || !isMountedRef.current) {
+        console.log('📡 [DEBUG] Document does not exist or component unmounted');
+        return;
+      }
       
       const data = doc.data();
-      const enhancedFeatures = data.enhancedFeatures || {};
+      console.log('📡 [DEBUG] Full document data keys:', Object.keys(data || {}));
       
-      console.log('📡 [DEBUG] Progress update received:', enhancedFeatures);
+      const enhancedFeatures = data.enhancedFeatures || {};
+      console.log('📡 [DEBUG] Enhanced features keys:', Object.keys(enhancedFeatures));
+      console.log('📡 [DEBUG] Enhanced features content:', enhancedFeatures);
+      
+      // Check if we have any enhanced features at all
+      if (Object.keys(enhancedFeatures).length === 0) {
+        console.log('⚠️ [DEBUG] No enhanced features found in document - backend may not have written yet');
+      }
       
       // Update progress state
       const newProgressState: ProgressState = {};
-      featureQueue.forEach(feature => {
+      let updatedFeatures = 0;
+      
+      trackingFeatures.forEach(feature => {
         const featureData = enhancedFeatures[feature.id];
+        console.log(`📡 [DEBUG] Feature ${feature.id}:`, featureData ? 'FOUND' : 'NOT FOUND');
+        
         if (featureData) {
+          updatedFeatures++;
           newProgressState[feature.id] = {
             status: featureData.status || 'pending',
             progress: featureData.progress || 0,
@@ -271,6 +366,7 @@ export const FinalResultsPage = () => {
             htmlFragment: featureData.htmlFragment,
             processedAt: featureData.processedAt
           };
+          console.log(`📡 [DEBUG] Updated ${feature.id}:`, newProgressState[feature.id]);
         } else {
           newProgressState[feature.id] = {
             status: 'pending',
@@ -278,6 +374,9 @@ export const FinalResultsPage = () => {
           };
         }
       });
+      
+      console.log(`📡 [DEBUG] Progress update summary: ${updatedFeatures}/${trackingFeatures.length} features have data`);
+      console.log('📡 [DEBUG] New progress state:', newProgressState);
       
       setProgressState(newProgressState);
       
@@ -358,10 +457,44 @@ export const FinalResultsPage = () => {
           await loadBaseHTML(jobData);
           
           // Set up feature queue if features are selected
+          console.log('🔍 [DEBUG] Checking for features in generatedCV:', {
+            hasGeneratedCV: !!jobData.generatedCV,
+            hasFeatures: !!(jobData.generatedCV?.features),
+            featuresLength: jobData.generatedCV?.features?.length || 0,
+            features: jobData.generatedCV?.features
+          });
+          
           if (jobData.generatedCV?.features && jobData.generatedCV.features.length > 0) {
+            console.log('✅ [DEBUG] Features found, setting up queue');
+            const queue = jobData.generatedCV.features
+              .filter(featureId => !!FEATURE_CONFIGS[featureId])
+              .map(featureId => FEATURE_CONFIGS[featureId]);
             setupFeatureQueue(jobData.generatedCV.features);
             setIsProcessingFeatures(true);
-            setupProgressTracking(jobId);
+            setupProgressTracking(jobId, queue);
+          } else {
+            console.log('⚠️ [DEBUG] No features found in generatedCV, checking session storage');
+            
+            // Fallback: try to load features from session storage
+            try {
+              const storedConfig = sessionStorage.getItem(`generation-config-${jobId}`);
+              if (storedConfig) {
+                const config = JSON.parse(storedConfig);
+                console.log('🔍 [DEBUG] Found stored generation config:', config);
+                
+                if (config.features && config.features.length > 0) {
+                  console.log('✅ [DEBUG] Using features from session storage');
+                  const queue = config.features
+                    .filter((featureId: string) => !!FEATURE_CONFIGS[featureId])
+                    .map((featureId: string) => FEATURE_CONFIGS[featureId]);
+                  setupFeatureQueue(config.features);
+                  setIsProcessingFeatures(true);
+                  setupProgressTracking(jobId, queue);
+                }
+              }
+            } catch (error) {
+              console.error('❌ [DEBUG] Error loading features from session storage:', error);
+            }
           }
         }
       } catch (err: any) {
@@ -392,7 +525,7 @@ export const FinalResultsPage = () => {
         setLoading(false);
       }
       
-      // Define all available features for quick create
+      // Define all available features for quick create (kebab-case for backend)
       const allFeatures = [
         'generate-podcast',
         'video-introduction',
@@ -403,6 +536,18 @@ export const FinalResultsPage = () => {
         'certification-badges',
         'language-proficiency'
       ];
+      
+      // Map kebab-case to camelCase for frontend tracking
+      const kebabToCamelMap: Record<string, string> = {
+        'generate-podcast': 'generatePodcast',
+        'video-introduction': 'videoIntroduction',
+        'skills-visualization': 'skillsVisualization',
+        'interactive-timeline': 'interactiveTimeline',
+        'portfolio-gallery': 'portfolioGallery',
+        'calendar-integration': 'availabilityCalendar',
+        'certification-badges': 'certificationBadges',
+        'language-proficiency': 'languageProficiency'
+      };
       
       console.log('🔥 [DEBUG] Quick Create: Calling generateCV with ALL features:', allFeatures);
       const result = await generateCV(jobData.id, 'modern', allFeatures);
@@ -442,9 +587,15 @@ export const FinalResultsPage = () => {
       await loadBaseHTML(updatedJob);
       
       if (allFeatures.length > 0) {
-        setupFeatureQueue(allFeatures);
+        // Convert kebab-case features to camelCase for frontend
+        const camelCaseFeatures = allFeatures.map(f => kebabToCamelMap[f]).filter(f => f);
+        const queue = camelCaseFeatures
+          .filter(featureId => !!FEATURE_CONFIGS[featureId])
+          .map(featureId => FEATURE_CONFIGS[featureId]);
+        
+        setupFeatureQueue(camelCaseFeatures);
         setIsProcessingFeatures(true);
-        setupProgressTracking(jobData.id);
+        setupProgressTracking(jobData.id, queue);
       }
       
       console.log('✅ Quick Create: Full workflow completed successfully');
@@ -475,17 +626,39 @@ export const FinalResultsPage = () => {
         setLoading(false);
       }
       
-      // Use stored config or defaults
+      // Use stored config or defaults - ALWAYS load from session storage
       let selectedTemplate = 'modern';
       let selectedFeatures: string[] = [];
       let privacyModeEnabled = false;
       let podcastGeneration = false;
       
-      if (generationConfig) {
-        selectedTemplate = generationConfig.template || 'modern';
-        selectedFeatures = Object.keys(generationConfig.features || {}).filter(key => generationConfig.features[key]);
-        privacyModeEnabled = generationConfig.features?.privacyMode || false;
-        podcastGeneration = generationConfig.features?.generatePodcast || false;
+      console.log('🔍 [DEBUG] Current generationConfig:', generationConfig);
+      
+      // Try to load from session storage if generationConfig is not available
+      let configToUse = generationConfig;
+      if (!configToUse) {
+        console.log('⚠️ [DEBUG] No generationConfig, loading from session storage...');
+        const storedConfig = sessionStorage.getItem(`generation-config-${jobData.id}`);
+        if (storedConfig) {
+          try {
+            configToUse = JSON.parse(storedConfig);
+            console.log('✅ [DEBUG] Loaded config from session storage:', configToUse);
+          } catch (error) {
+            console.error('❌ [DEBUG] Error parsing stored config:', error);
+          }
+        } else {
+          console.log('⚠️ [DEBUG] No session storage config found');
+        }
+      }
+      
+      if (configToUse) {
+        selectedTemplate = configToUse.template || 'modern';
+        selectedFeatures = Object.keys(configToUse.features || {}).filter(key => configToUse.features[key]);
+        privacyModeEnabled = configToUse.features?.privacyMode || false;
+        podcastGeneration = configToUse.features?.generatePodcast || false;
+        console.log('✅ [DEBUG] Using config - features:', selectedFeatures);
+      } else {
+        console.log('⚠️ [DEBUG] No configuration available, using defaults');
       }
 
       // Generate CV with privacy mode handling
@@ -530,9 +703,12 @@ export const FinalResultsPage = () => {
       await loadBaseHTML(updatedJob);
       
       if (selectedFeatures.length > 0) {
+        const queue = selectedFeatures
+          .filter(featureId => !!FEATURE_CONFIGS[featureId])
+          .map(featureId => FEATURE_CONFIGS[featureId]);
         setupFeatureQueue(selectedFeatures);
         setIsProcessingFeatures(true);
-        setupProgressTracking(jobData.id);
+        setupProgressTracking(jobData.id, queue);
       }
       
       console.log('✅ CV generation completed successfully');

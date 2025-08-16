@@ -176,19 +176,44 @@ export class SectionGenerators {
     collapsedSections: Record<string, boolean>,
     generateFeaturePreview: (featureId: string, isEnabled: boolean, isCollapsed: boolean) => string
   ): string {
+    // Map feature IDs to their camelCase equivalents in selectedFeatures
+    const featureMapping = {
+      'language-proficiency': 'languageProficiency',
+      'certification-badges': 'certificationBadges',
+      'social-media-links': 'socialMediaLinks',
+      'achievements-showcase': 'achievementsShowcase',
+      'interactive-timeline': 'interactiveTimeline',
+      'skills-chart': 'skillsChart',
+      'video-introduction': 'videoIntroduction',
+      'portfolio-gallery': 'portfolioGallery',
+      'contact-form': 'contactForm'
+    };
+
     const features = [
       'language-proficiency',
       'certification-badges', 
       'social-media-links',
-      'achievements-showcase'
+      'achievements-showcase',
+      'interactive-timeline',
+      'skills-chart',
+      'video-introduction',
+      'portfolio-gallery',
+      'contact-form'
     ];
 
     return features
-      .map(featureId => generateFeaturePreview(
-        featureId, 
-        selectedFeatures[featureId.replace(/-/g, '')], 
-        collapsedSections[featureId]
-      ))
+      .map(featureId => {
+        const camelCaseKey = featureMapping[featureId as keyof typeof featureMapping];
+        const isEnabled = selectedFeatures[camelCaseKey] || false;
+        
+        console.log(`🔍 [FEATURE PREVIEW] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);
+        
+        return generateFeaturePreview(
+          featureId, 
+          isEnabled, 
+          collapsedSections[featureId]
+        );
+      })
       .join('');
   }
 }

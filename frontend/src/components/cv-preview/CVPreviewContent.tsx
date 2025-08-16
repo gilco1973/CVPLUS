@@ -112,17 +112,69 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   useEffect(() => {
     if (!previewRef.current) return;
 
+    // Map feature IDs to their camelCase equivalents in selectedFeatures
+    const featureMapping: Record<string, string> = {
+      // Core Enhancement Features
+      'ats-optimization': 'atsOptimization',
+      'keyword-enhancement': 'keywordEnhancement',
+      'achievement-highlighting': 'achievementHighlighting',
+      
+      // Interactive Features
+      'skills-visualization': 'skillsVisualization',
+      'skills-chart': 'skillsChart',
+      'interactive-timeline': 'interactiveTimeline',
+      
+      // Multimedia Features
+      'generate-podcast': 'generatePodcast',
+      'video-introduction': 'videoIntroduction',
+      'portfolio-gallery': 'portfolioGallery',
+      
+      // Professional Features
+      'certification-badges': 'certificationBadges',
+      'language-proficiency': 'languageProficiency',
+      'achievements-showcase': 'achievementsShowcase',
+      
+      // Contact & Integration Features
+      'contact-form': 'contactForm',
+      'social-media-links': 'socialMediaLinks',
+      'availability-calendar': 'availabilityCalendar',
+      'testimonials-carousel': 'testimonialsCarousel',
+      
+      // Technical Features
+      'embed-qr-code': 'embedQRCode',
+      'privacy-mode': 'privacyMode'
+    };
+
+    console.log('🔄 [DYNAMIC UPDATE] selectedFeatures changed:', selectedFeatures);
+    console.log('🔄 [DYNAMIC UPDATE] Available selectedFeatures keys:', Object.keys(selectedFeatures));
+    
     // Smoothly update only feature previews when selectedFeatures changes
     const featurePreviews = previewRef.current.querySelectorAll('.feature-preview');
-    featurePreviews.forEach(preview => {
+    console.log(`🔄 [DYNAMIC UPDATE] Found ${featurePreviews.length} feature previews in DOM`);
+    
+    featurePreviews.forEach((preview, index) => {
       const featureId = preview.getAttribute('data-feature');
       if (featureId) {
-        const isEnabled = selectedFeatures[featureId.replace(/-/g, '')];
-        if (isEnabled) {
-          preview.classList.remove('opacity-50');
+        const camelCaseKey = featureMapping[featureId];
+        const isEnabled = camelCaseKey ? selectedFeatures[camelCaseKey] : false;
+        
+        console.log(`🔄 [DYNAMIC UPDATE #${index + 1}] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);
+        
+        // Handle both direct key match and camelCase mapping
+        const directMatch = selectedFeatures[featureId];
+        const finalEnabled = isEnabled || directMatch;
+        
+        if (finalEnabled) {
+          preview.classList.remove('opacity-50', 'grayscale');
+          preview.classList.add('animate-fade-in-up');
+          (preview as HTMLElement).style.transform = 'scale(1)';
         } else {
-          preview.classList.add('opacity-50');
+          preview.classList.add('opacity-50', 'grayscale');
+          preview.classList.remove('animate-fade-in-up');
+          (preview as HTMLElement).style.transform = 'scale(0.95)';
         }
+      } else {
+        console.warn(`🔄 [DYNAMIC UPDATE] Preview element ${index + 1} missing data-feature attribute`);
       }
     });
   }, [selectedFeatures]);

@@ -151,6 +151,126 @@ export const useFeaturePreviews = (previewData: any) => {
             </div>
           </div>
         `;
+
+      case 'interactive-timeline':
+        return `
+          <div class="timeline-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📋 Preview: Interactive timeline of your career journey</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              📅 Career Timeline
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="timeline-container">
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-content">
+                    <h4>Senior Software Engineer</h4>
+                    <p>2023 - Present</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-content">
+                    <h4>Software Engineer</h4>
+                    <p>2021 - 2023</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'skills-chart':
+        return `
+          <div class="skills-chart-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📋 Preview: Visual skills proficiency chart</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              📊 Skills Chart
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="skills-chart">
+                <div class="skill-bar">
+                  <span>JavaScript</span>
+                  <div class="progress"><div class="fill" style="width: 90%"></div></div>
+                </div>
+                <div class="skill-bar">
+                  <span>Python</span>
+                  <div class="progress"><div class="fill" style="width: 85%"></div></div>
+                </div>
+                <div class="skill-bar">
+                  <span>React</span>
+                  <div class="progress"><div class="fill" style="width: 88%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'video-introduction':
+        return `
+          <div class="video-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📋 Preview: AI-generated video introduction</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              🎥 Video Introduction
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="video-placeholder">
+                <div class="play-button">▶</div>
+                <p>AI-generated professional introduction</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'portfolio-gallery':
+        return `
+          <div class="portfolio-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📋 Preview: Portfolio gallery with project showcases</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              🎨 Portfolio Gallery
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="portfolio-grid">
+                <div class="portfolio-item">Project 1</div>
+                <div class="portfolio-item">Project 2</div>
+                <div class="portfolio-item">Project 3</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'contact-form':
+        return `
+          <div class="contact-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📋 Preview: Interactive contact form</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              📧 Contact Form
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <form class="contact-form">
+                <input type="text" placeholder="Your Name" />
+                <input type="email" placeholder="Your Email" />
+                <textarea placeholder="Your Message"></textarea>
+                <button type="button">Send Message</button>
+              </form>
+            </div>
+          </div>
+        `;
       
       default:
         return '';

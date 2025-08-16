@@ -295,12 +295,12 @@ export const ResultsPage = () => {
         )}
 
         {/* Feature Selection Guide */}
-        <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-700/50 rounded-lg p-4 mb-6">
+        <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
           <div className="flex items-center gap-3">
             <Wand2 className="w-5 h-5 text-cyan-400" />
             <div>
-              <h4 className="font-semibold text-cyan-300">Select Interactive Features</h4>
-              <p className="text-sm text-cyan-200/80">
+              <h1 className="text-2xl font-bold text-gray-100 mb-2">Select Interactive Features</h1>
+              <p className="text-gray-400">
                 Choose the interactive features to enhance your CV. Currently selected: {Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length} features
               </p>
             </div>

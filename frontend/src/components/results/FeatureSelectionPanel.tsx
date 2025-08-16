@@ -27,21 +27,25 @@ export const FeatureSelectionPanel = ({
   const totalFeatures = Object.keys(selectedFeatures).length;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
-          <span className="text-2xl">✨</span>
-          Enhanced Features
-          <span className="text-sm text-cyan-400 font-normal">({selectedCount}/{totalFeatures})</span>
-        </h4>
-        <div className="flex gap-2">
+    <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <span className="text-2xl">✨</span>
+            Enhanced Features
+          </h3>
+          <p className="text-sm text-gray-400 mt-1">
+            Select features to include in your CV. {selectedCount} of {totalFeatures} selected.
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
           <button
             onClick={() => {
               const allSelected = Object.keys(selectedFeatures).reduce((acc, key) => ({ ...acc, [key]: true }), {} as SelectedFeatures);
               console.log('🔍 [FEATURE SELECTION] Selecting all features:', allSelected);
               setSelectedFeatures(allSelected);
             }}
-            className="text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-900/20 hover:bg-cyan-900/40 px-2 py-1 rounded transition-colors"
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Select All
           </button>
@@ -51,14 +55,14 @@ export const FeatureSelectionPanel = ({
               console.log('🔍 [FEATURE SELECTION] Deselecting all features:', noneSelected);
               setSelectedFeatures(noneSelected);
             }}
-            className="text-xs text-gray-400 hover:text-gray-300 bg-gray-700/50 hover:bg-gray-700/70 px-2 py-1 rounded transition-colors"
+            className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
           >
             Clear All
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <FeatureCheckbox
           feature="atsOptimization"
           label="ATS Optimization"

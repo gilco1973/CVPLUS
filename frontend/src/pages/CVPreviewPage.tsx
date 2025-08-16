@@ -317,7 +317,7 @@ export const CVPreviewPage = () => {
           <CVPreview
             job={job}
             selectedTemplate={selectedTemplate}
-            selectedFeatures={{}}
+            selectedFeatures={{}} // CVPreviewPage shows text improvements only, no feature selection
             appliedImprovements={appliedImprovements}
             onUpdate={handleJobUpdate}
           />

@@ -15,37 +15,35 @@ export const TemplateSelection = ({ selectedTemplate, setSelectedTemplate }: Tem
   ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+    <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
           <span className="text-2xl">🎯</span>
           CV Template
-        </h4>
-        <span className="text-xs text-gray-500 bg-gray-700/50 px-3 py-1 rounded-full">
-          Choose your style
-        </span>
+        </h3>
+        <p className="text-sm text-gray-400">
+          Choose your preferred template style
+        </p>
       </div>
       
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {templates.map((template) => (
           <button
             key={template.id}
             onClick={() => setSelectedTemplate(template.id)}
-            className={`p-4 rounded-xl transition-all text-center ${
+            className={`p-3 rounded-lg border-2 text-left transition-all ${
               selectedTemplate === template.id
-                ? 'bg-cyan-600/20 border-2 border-cyan-500/50 ring-2 ring-cyan-500/20'
-                : 'bg-gray-700/30 border-2 border-gray-700/30 hover:bg-gray-700/50'
+                ? 'border-blue-400 bg-blue-900/30 text-blue-300'
+                : 'border-gray-600 hover:border-gray-500 text-gray-300 bg-gray-700/50'
             }`}
           >
-            <span className="text-2xl block mb-2">{template.emoji}</span>
-            <span className={`block text-sm font-medium transition-colors ${
-              selectedTemplate === template.id ? 'text-cyan-300' : 'text-gray-200'
-            }`}>
-              {template.name}
-            </span>
-            <span className="block text-xs text-gray-400 mt-1">
-              {template.description}
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{template.emoji}</span>
+              <div>
+                <div className="font-medium text-sm">{template.name}</div>
+                <div className="text-xs text-gray-400">{template.description}</div>
+              </div>
+            </div>
           </button>
         ))}
       </div>

@@ -15,15 +15,15 @@ export const FormatSelectionPanel = ({ selectedFormats, setSelectedFormats }: Fo
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+    <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
           <span className="text-2xl">📄</span>
           Export Formats
-        </h4>
-        <span className="text-xs text-gray-500 bg-gray-700/50 px-3 py-1 rounded-full">
-          Select all that apply
-        </span>
+        </h3>
+        <p className="text-sm text-gray-400">
+          Choose the file formats for download
+        </p>
       </div>
       
       <div className="grid grid-cols-3 gap-3">

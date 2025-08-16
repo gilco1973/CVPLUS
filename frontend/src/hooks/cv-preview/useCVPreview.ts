@@ -15,6 +15,9 @@ export const useCVPreview = (
   const [isEditing, setIsEditing] = useState(false);
   const [showFeaturePreviews, setShowFeaturePreviews] = useState(true);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  
+  // Debug logging for feature previews state
+  console.log(`🔍 [CV PREVIEW STATE] showFeaturePreviews: ${showFeaturePreviews}, jobId: ${job.id}`);
   const [isEditingQRCode, setIsEditingQRCode] = useState(false);
   const [showPreviewBanner, setShowPreviewBanner] = useState(true);
   const [showPlaceholderBanner, setShowPlaceholderBanner] = useState(true);

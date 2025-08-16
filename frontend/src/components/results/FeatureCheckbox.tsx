@@ -18,10 +18,12 @@ export const FeatureCheckbox = ({
   
   return (
     <div className={`relative ${className}`}>
-      <label className={`flex items-start gap-3 p-3 rounded-lg transition-all cursor-pointer group border ${
+      <label className={`flex items-start gap-3 p-4 rounded-lg transition-all cursor-pointer group border-2 ${
         isDisabled 
-          ? 'bg-gray-800/50 border-gray-700/50 opacity-60 cursor-not-allowed' 
-          : 'bg-gray-700/30 hover:bg-gray-700/50 border-gray-700/30'
+          ? 'bg-gray-800/50 border-gray-600 opacity-60 cursor-not-allowed' 
+          : checked
+          ? 'border-blue-400 bg-blue-900/30 text-blue-300'
+          : 'border-gray-600 hover:border-gray-500 text-gray-300 bg-gray-700/50 hover:bg-gray-600/50'
       }`}>
         <input 
           type="checkbox" 
@@ -38,7 +40,9 @@ export const FeatureCheckbox = ({
           <span className={`font-medium transition-colors ${
             isDisabled 
               ? 'text-gray-500' 
-              : 'text-gray-200 group-hover:text-cyan-400'
+              : checked
+              ? 'text-blue-300'
+              : 'text-gray-200 group-hover:text-gray-100'
           }`}>
             {label}
           </span>
