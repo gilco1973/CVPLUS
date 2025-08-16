@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { LLMIntegrationWrapperService, LLMIntegrationConfig } from './llm-integration-wrapper.service';
 import { llmVerificationConfig } from '../config/llm-verification.config';
 import { VerifiedCVParsingService, VerifiedParsingResult } from './verified-cv-parser.service';
@@ -201,7 +202,7 @@ export class EnhancedCVParsingService {
     try {
       await this.db.collection('jobs').doc(jobId).update({
         parsedData,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
     } catch (error) {
       console.error('Error updating parsed CV:', error);
@@ -222,7 +223,7 @@ export class EnhancedCVParsingService {
         parsedData: result,
         verificationDetails: result.verificationDetails,
         auditInfo: result.verificationDetails,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       };
       
       if (metrics) {

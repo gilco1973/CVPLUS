@@ -1,7 +1,9 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { calendarIntegrationService, CalendarIntegrationService } from '../services/calendar-integration.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generateCalendarEvents = onCall(
   {
@@ -31,28 +33,79 @@ export const generateCalendarEvents = onCall(
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
 
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.calendarIntegration.status': 'processing',
+          'enhancedFeatures.calendarIntegration.progress': 25,
+          'enhancedFeatures.calendarIntegration.currentStep': 'Analyzing career timeline...',
+          'enhancedFeatures.calendarIntegration.startedAt': FieldValue.serverTimestamp()
+        });
+
       // Generate calendar events
       const events = await calendarIntegrationService.generateCalendarEvents(
         jobData.parsedData,
         jobId
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.calendarIntegration.progress': 75,
+          'enhancedFeatures.calendarIntegration.currentStep': 'Creating calendar events...'
+        });
+
+      const summary = {
+        totalEvents: events.length,
+        workAnniversaries: events.filter(e => e.type === 'work').length,
+        educationMilestones: events.filter(e => e.type === 'education').length,
+        certifications: events.filter(e => e.type === 'certification').length,
+        reminders: events.filter(e => e.type === 'reminder').length
+      };
+
+      const calendarData = { events, summary };
+
       // Store events
-      await calendarIntegrationService.storeCalendarData(jobId, { events });
+      await calendarIntegrationService.storeCalendarData(jobId, calendarData);
+
+      // Generate HTML fragment for progressive enhancement
+      const htmlFragment = HTMLFragmentGeneratorService.generateCalendarIntegrationHTML(calendarData);
+
+      // Update with final results
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.calendarIntegration.status': 'completed',
+          'enhancedFeatures.calendarIntegration.progress': 100,
+          'enhancedFeatures.calendarIntegration.data': calendarData,
+          'enhancedFeatures.calendarIntegration.htmlFragment': htmlFragment,
+          'enhancedFeatures.calendarIntegration.processedAt': FieldValue.serverTimestamp()
+        });
 
       return {
         success: true,
         events,
-        summary: {
-          totalEvents: events.length,
-          workAnniversaries: events.filter(e => e.type === 'work').length,
-          educationMilestones: events.filter(e => e.type === 'education').length,
-          certifications: events.filter(e => e.type === 'certification').length,
-          reminders: events.filter(e => e.type === 'reminder').length
-        }
+        summary,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating calendar events:', error);
+      
+      // Update status to failed
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.calendarIntegration.status': 'failed',
+          'enhancedFeatures.calendarIntegration.error': error.message,
+          'enhancedFeatures.calendarIntegration.processedAt': FieldValue.serverTimestamp()
+        });
+      
       throw new Error(`Failed to generate calendar events: ${error.message}`);
     }
   });
@@ -103,7 +156,7 @@ export const syncToGoogleCalendar = onCall(
           'enhancedFeatures.calendar.integrations.google': {
             status: accessToken ? 'synced' : 'pending_auth',
             syncUrl: integration.syncUrl,
-            syncedAt: accessToken ? admin.firestore.FieldValue.serverTimestamp() : null
+            syncedAt: accessToken ? FieldValue.serverTimestamp() : null
           }
         });
 
@@ -163,7 +216,7 @@ export const syncToOutlook = onCall(
           'enhancedFeatures.calendar.integrations.outlook': {
             status: accessToken ? 'synced' : 'pending_auth',
             syncUrl: integration.syncUrl,
-            syncedAt: accessToken ? admin.firestore.FieldValue.serverTimestamp() : null
+            syncedAt: accessToken ? FieldValue.serverTimestamp() : null
           }
         });
 
@@ -221,7 +274,7 @@ export const downloadICalFile = onCall(
         .update({
           'enhancedFeatures.calendar.integrations.ical': {
             downloadUrl: integration.downloadUrl,
-            generatedAt: admin.firestore.FieldValue.serverTimestamp()
+            generatedAt: FieldValue.serverTimestamp()
           }
         });
 

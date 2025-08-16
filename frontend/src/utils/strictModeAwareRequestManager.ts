@@ -8,9 +8,9 @@ export class StrictModeAwareRequestManager {
   private static instance: StrictModeAwareRequestManager;
   
   // Core tracking
-  private activeRequests = new Map<string, Promise<any>>();
+  private activeRequests = new Map<string, Promise<unknown>>();
   private requestTimestamps = new Map<string, number>();
-  private requestResults = new Map<string, { result: any; timestamp: number }>();
+  private requestResults = new Map<string, { result: unknown; timestamp: number }>();
   
   // StrictMode detection and handling
   private strictModeThreshold = 100; // ms - requests within this window are likely StrictMode duplicates
@@ -108,7 +108,7 @@ export class StrictModeAwareRequestManager {
             wasFromCache: true,
             wasStrictModeDuplicate: true
           };
-        } catch (error) {
+        } catch {
           // If active request failed, clean up and continue
           this.activeRequests.delete(key);
           console.log(`[StrictModeAware] Active request failed, proceeding with new request`);
@@ -130,7 +130,7 @@ export class StrictModeAwareRequestManager {
           wasFromCache: true,
           wasStrictModeDuplicate: false
         };
-      } catch (error) {
+      } catch {
         // Clean up failed request and continue
         this.activeRequests.delete(key);
         this.requestTimestamps.delete(key);
@@ -279,7 +279,7 @@ export const strictModeAwareRequestManager = StrictModeAwareRequestManager.getIn
 
 // Add global debug access
 if (typeof window !== 'undefined') {
-  (window as any).strictModeAwareRequestManager = {
+  (window as Record<string, unknown>).strictModeAwareRequestManager = {
     getDebugInfo: () => strictModeAwareRequestManager.getDebugInfo(),
     clearKey: (key: string) => strictModeAwareRequestManager.clearKey(key)
   };

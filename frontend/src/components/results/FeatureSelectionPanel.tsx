@@ -17,8 +17,14 @@ export const FeatureSelectionPanel = ({
   featureAvailability 
 }: FeatureSelectionPanelProps) => {
   const updateFeature = (feature: keyof SelectedFeatures, value: boolean) => {
-    setSelectedFeatures({ ...selectedFeatures, [feature]: value });
+    console.log(`🔍 [FEATURE SELECTION] ${feature} toggled to:`, value);
+    const newFeatures = { ...selectedFeatures, [feature]: value };
+    console.log('🔍 [FEATURE SELECTION] New state will be:', newFeatures);
+    setSelectedFeatures(newFeatures);
   };
+
+  const selectedCount = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length;
+  const totalFeatures = Object.keys(selectedFeatures).length;
 
   return (
     <div>
@@ -26,10 +32,30 @@ export const FeatureSelectionPanel = ({
         <h4 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
           <span className="text-2xl">✨</span>
           Enhanced Features
+          <span className="text-sm text-cyan-400 font-normal">({selectedCount}/{totalFeatures})</span>
         </h4>
-        <span className="text-xs text-gray-500 bg-gray-700/50 px-3 py-1 rounded-full">
-          Select features to include
-        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const allSelected = Object.keys(selectedFeatures).reduce((acc, key) => ({ ...acc, [key]: true }), {} as SelectedFeatures);
+              console.log('🔍 [FEATURE SELECTION] Selecting all features:', allSelected);
+              setSelectedFeatures(allSelected);
+            }}
+            className="text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-900/20 hover:bg-cyan-900/40 px-2 py-1 rounded transition-colors"
+          >
+            Select All
+          </button>
+          <button
+            onClick={() => {
+              const noneSelected = Object.keys(selectedFeatures).reduce((acc, key) => ({ ...acc, [key]: false }), {} as SelectedFeatures);
+              console.log('🔍 [FEATURE SELECTION] Deselecting all features:', noneSelected);
+              setSelectedFeatures(noneSelected);
+            }}
+            className="text-xs text-gray-400 hover:text-gray-300 bg-gray-700/50 hover:bg-gray-700/70 px-2 py-1 rounded transition-colors"
+          >
+            Clear All
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

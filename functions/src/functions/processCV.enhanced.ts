@@ -1,5 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { CVParser } from '../services/cvParser';
 import { PIIDetector } from '../services/piiDetector';
 import { EnhancedCVParsingService } from '../services/cvParsing.service.enhanced';
@@ -74,10 +75,10 @@ export const processCVEnhanced = onCall(
         .doc(jobId)
         .update({
           status: 'processing',
-          processingStartTime: admin.firestore.FieldValue.serverTimestamp(),
+          processingStartTime: FieldValue.serverTimestamp(),
           verificationEnabled: serviceStatus.verificationEnabled,
           verificationAvailable: serviceStatus.verificationAvailable,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // Get job data to retrieve user instructions
@@ -248,7 +249,7 @@ export const processCVEnhanced = onCall(
         },
         privacyVersion: piiResult.maskedData,
         processingMetrics: verificationMetrics,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       };
 
       // Add verification details if available
@@ -281,8 +282,8 @@ export const processCVEnhanced = onCall(
           .doc(jobId)
           .update({
             status: 'generating',
-            generationStartTime: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            generationStartTime: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp()
           });
         
         const generatedCV = {
@@ -297,8 +298,8 @@ export const processCVEnhanced = onCall(
           .update({
             status: 'completed',
             generatedCV,
-            completionTime: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            completionTime: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp()
           });
       }
 
@@ -350,7 +351,7 @@ export const processCVEnhanced = onCall(
           fallbackUsed: verificationMetrics.fallbackUsed,
           auditId: verificationMetrics.auditId || null
         },
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       };
 
       await admin.firestore()

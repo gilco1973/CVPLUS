@@ -27,6 +27,7 @@ export interface Job {
   };
   privacyVersion?: any;
   quickCreate?: boolean;
+  quickCreateReady?: boolean;
   settings?: {
     applyAllEnhancements: boolean;
     generateAllFormats: boolean;
@@ -35,6 +36,9 @@ export interface Job {
     useRecommendedTemplate: boolean;
   };
   error?: string;
+  appliedRecommendations?: any[];
+  transformationSummary?: any;
+  improvedCV?: any;
   createdAt: any;
   updatedAt: any;
 }

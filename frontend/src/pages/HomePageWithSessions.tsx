@@ -91,7 +91,7 @@ export const HomePage = () => {
       await session.updateStep('processing');
       
       // Sign in anonymously if not authenticated
-      let currentUser = user;
+      const currentUser = user;
       if (!currentUser) {
         try {
           await signInAnonymous();
@@ -148,7 +148,7 @@ export const HomePage = () => {
       await session.updateStep('processing');
       
       // Sign in anonymously if not authenticated
-      let currentUser = user;
+      const currentUser = user;
       if (!currentUser) {
         await signInAnonymous();
         // Wait a bit for the auth state to update

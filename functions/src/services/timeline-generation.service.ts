@@ -5,6 +5,7 @@
 
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface TimelineEvent {
   id: string;
@@ -533,7 +534,7 @@ export class TimelineGenerationService {
           enabled: true,
           status: 'completed',
           data: timelineData,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp()
+          generatedAt: FieldValue.serverTimestamp()
         }
       });
   }

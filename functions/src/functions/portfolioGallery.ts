@@ -1,7 +1,9 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { portfolioGalleryService } from '../services/portfolio-gallery.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generatePortfolioGallery = onCall(
   {
@@ -32,15 +34,51 @@ export const generatePortfolioGallery = onCall(
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
 
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.portfolioGallery.status': 'processing',
+          'enhancedFeatures.portfolioGallery.progress': 25,
+          'enhancedFeatures.portfolioGallery.currentStep': 'Analyzing portfolio content...',
+          'enhancedFeatures.portfolioGallery.startedAt': FieldValue.serverTimestamp()
+        });
+
       // Generate portfolio gallery
       const gallery = await portfolioGalleryService.generatePortfolioGallery(
         jobData.parsedData,
         jobId
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.portfolioGallery.progress': 75,
+          'enhancedFeatures.portfolioGallery.currentStep': 'Creating portfolio gallery...'
+        });
+
+      // Generate HTML fragment for progressive enhancement
+      const htmlFragment = HTMLFragmentGeneratorService.generatePortfolioGalleryHTML(gallery);
+
+      // Update with final results
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.portfolioGallery.status': 'completed',
+          'enhancedFeatures.portfolioGallery.progress': 100,
+          'enhancedFeatures.portfolioGallery.data': gallery,
+          'enhancedFeatures.portfolioGallery.htmlFragment': htmlFragment,
+          'enhancedFeatures.portfolioGallery.processedAt': FieldValue.serverTimestamp()
+        });
+
       return {
         success: true,
-        gallery
+        gallery,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating portfolio gallery:', error);
@@ -50,9 +88,9 @@ export const generatePortfolioGallery = onCall(
         .collection('jobs')
         .doc(jobId)
         .update({
-          'enhancedFeatures.portfolio.status': 'failed',
-          'enhancedFeatures.portfolio.error': error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.portfolioGallery.status': 'failed',
+          'enhancedFeatures.portfolioGallery.error': error.message,
+          'enhancedFeatures.portfolioGallery.processedAt': FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate portfolio gallery: ${error.message}`);
@@ -110,7 +148,7 @@ export const updatePortfolioItem = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.portfolio.data': portfolio,
-          'enhancedFeatures.portfolio.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.portfolio.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -188,7 +226,7 @@ export const addPortfolioItem = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.portfolio.data': portfolio,
-          'enhancedFeatures.portfolio.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.portfolio.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -254,7 +292,7 @@ export const deletePortfolioItem = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.portfolio.data': portfolio,
-          'enhancedFeatures.portfolio.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.portfolio.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -350,7 +388,7 @@ export const uploadPortfolioMedia = onCall(
           .doc(jobId)
           .update({
             'enhancedFeatures.portfolio.data': portfolio,
-            'enhancedFeatures.portfolio.lastModified': admin.firestore.FieldValue.serverTimestamp()
+            'enhancedFeatures.portfolio.lastModified': FieldValue.serverTimestamp()
           });
       }
 

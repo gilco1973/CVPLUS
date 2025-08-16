@@ -5,6 +5,7 @@
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { CVParser } from '../services/cvParser';
 import { AchievementsAnalysisService } from '../services/achievements-analysis.service';
 import { SkillsProficiencyService } from '../services/skills-proficiency.service';
@@ -201,7 +202,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
         userId: 'test-user',
         status: 'uploaded',
         cvContent: GIL_KLAINERT_CV_TEXT,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
         quickCreate: true
       });
 
@@ -213,7 +214,7 @@ describe('CVPlus CV Processing Integration Tests', () => {
       await jobRef.update({
         status: 'analyzed',
         parsedData: parsedCV,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
 
       // Verify job was updated correctly

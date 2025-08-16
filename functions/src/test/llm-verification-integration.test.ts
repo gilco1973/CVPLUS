@@ -2,6 +2,7 @@ import { EnhancedCVParsingService } from '../services/cvParsing.service.enhanced
 // import { VerifiedCVParsingService } from '../services/verified-cv-parser.service'; // Commented out unused import
 import { llmVerificationConfig } from '../config/llm-verification.config';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -614,7 +615,7 @@ class LLMVerificationIntegrationTest {
         userId: 'test-user',
         status: 'pending',
         userInstructions: 'Parse this CV thoroughly and extract all relevant information',
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       };
       
       await admin.firestore().collection('jobs').doc(testJobId).set(jobData);

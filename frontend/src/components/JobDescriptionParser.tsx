@@ -22,7 +22,6 @@ interface KeywordResults {
 
 export const JobDescriptionParser: React.FC<JobDescriptionParserProps> = ({
   onKeywordsExtracted,
-  jobId: _jobId,
   className = ''
 }) => {
   const [jobDescription, setJobDescription] = useState('');
@@ -43,12 +42,14 @@ export const JobDescriptionParser: React.FC<JobDescriptionParserProps> = ({
 
     try {
       const result = await generateATSKeywords(jobDescription, undefined, targetRole);
-      const keywordData = (result as any).keywords || result;
+      const keywordData = (result && typeof result === 'object' && 'keywords' in result) 
+        ? (result as { keywords: ExtractedKeywords }).keywords 
+        : result as ExtractedKeywords;
       
       setKeywords(keywordData);
       onKeywordsExtracted(keywordData);
-    } catch (err: any) {
-      setError(err.message || 'Failed to analyze job description');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to analyze job description');
       console.error('Job description analysis failed:', err);
     } finally {
       setLoading(false);

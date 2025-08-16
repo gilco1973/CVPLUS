@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CVPreview } from '../components/CVPreview';
-import { FeatureSelectionPanel } from '../components/FeatureSelectionPanel';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
@@ -25,21 +24,8 @@ export const CVPreviewPage = () => {
     }
   }, []);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
-  const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({
-    atsOptimized: true,
-    keywordOptimization: true,
-    achievementsShowcase: true,
-    embedQRCode: true,
-    languageProficiency: false,
-    certificationBadges: false,
-    socialMediaLinks: false,
-    skillsVisualization: false,
-    personalityInsights: false,
-    careerTimeline: false,
-    portfolioGallery: false
-  });
   const [selectedRecommendations, setSelectedRecommendations] = useState<string[]>([]);
-  const [appliedImprovements, setAppliedImprovements] = useState<any>(null);
+  const [appliedImprovements, setAppliedImprovements] = useState<object | null>(null);
 
   useEffect(() => {
     if (!jobId) {
@@ -53,7 +39,7 @@ export const CVPreviewPage = () => {
     if (storedRecommendations) {
       try {
         setSelectedRecommendations(JSON.parse(storedRecommendations));
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse stored recommendations');
       }
     }
@@ -63,7 +49,7 @@ export const CVPreviewPage = () => {
     if (storedImprovements) {
       try {
         setAppliedImprovements(JSON.parse(storedImprovements));
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse stored improvements');
       }
     }
@@ -111,13 +97,6 @@ export const CVPreviewPage = () => {
     return () => unsubscribe();
   }, [jobId, navigate, user]);
 
-  const handleFeatureToggle = (feature: string, enabled: boolean) => {
-    setSelectedFeatures(prev => ({
-      ...prev,
-      [feature]: enabled
-    }));
-  };
-
   const handleJobUpdate = (updates: Partial<Job['parsedData']>) => {
     if (job) {
       setJob(prev => prev ? {
@@ -127,52 +106,19 @@ export const CVPreviewPage = () => {
     }
   };
 
-  const handleSelectAllFeatures = () => {
-    setSelectedFeatures({
-      atsOptimized: true,
-      keywordOptimization: true,
-      achievementsShowcase: true,
-      embedQRCode: true,
-      languageProficiency: true,
-      certificationBadges: true,
-      socialMediaLinks: true,
-      skillsVisualization: true,
-      personalityInsights: true,
-      careerTimeline: true,
-      portfolioGallery: true
-    });
-  };
-
-  const handleSelectNoFeatures = () => {
-    setSelectedFeatures({
-      atsOptimized: false,
-      keywordOptimization: false,
-      achievementsShowcase: false,
-      embedQRCode: false,
-      languageProficiency: false,
-      certificationBadges: false,
-      socialMediaLinks: false,
-      skillsVisualization: false,
-      personalityInsights: false,
-      careerTimeline: false,
-      portfolioGallery: false
-    });
-  };
-
-  const handleContinueToGeneration = () => {
+  const handleContinueToFeatures = () => {
     if (!jobId) return;
 
-    // Store selected options for the generation process
-    const generationConfig = {
+    // Store selected template for the next step
+    const previewConfig = {
       template: selectedTemplate,
-      features: selectedFeatures,
       recommendations: selectedRecommendations
     };
     
-    sessionStorage.setItem(`generation-config-${jobId}`, JSON.stringify(generationConfig));
+    sessionStorage.setItem(`preview-config-${jobId}`, JSON.stringify(previewConfig));
     
-    // Navigate to final results page
-    navigate(`/final-results/${jobId}`);
+    // Navigate to feature selection page (ResultsPage) for feature selection
+    navigate(`/results/${jobId}`);
   };
 
   const handleBackToAnalysis = () => {
@@ -269,8 +215,8 @@ export const CVPreviewPage = () => {
       <Header 
         currentPage="preview" 
         jobId={jobId}
-        title="CV Preview & Customization"
-        subtitle="Customize your enhanced CV with premium features"
+        title="CV Text Improvements Preview"
+        subtitle="Review your enhanced CV content before selecting features"
         variant="dark"
       />
       
@@ -280,13 +226,13 @@ export const CVPreviewPage = () => {
         <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-100 mb-2">CV Preview & Customization</h1>
+              <h1 className="text-2xl font-bold text-gray-100 mb-2">CV Text Improvements Preview</h1>
               <p className="text-gray-400">
                 {appliedImprovements ? 
-                  `Review your enhanced CV with ${selectedRecommendations.length} applied improvements. ` :
-                  'Customize your CV with advanced features and templates. '
+                  `Review your enhanced CV with ${selectedRecommendations.length} applied text improvements. ` :
+                  'Preview your enhanced CV content with applied text improvements. '
                 }
-                Make final adjustments before generation.
+                Choose a template style before proceeding to feature selection.
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -297,10 +243,10 @@ export const CVPreviewPage = () => {
                 Back to Analysis
               </button>
               <button
-                onClick={handleContinueToGeneration}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors flex items-center space-x-2 shadow-lg"
+                onClick={handleContinueToFeatures}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg"
               >
-                <span>Generate Final CV</span>
+                <span>Continue to Features</span>
               </button>
             </div>
           </div>
@@ -338,62 +284,43 @@ export const CVPreviewPage = () => {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Feature Selection Panel */}
-          <div className="xl:col-span-1">
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 sticky top-6 border border-gray-700">
-              <FeatureSelectionPanel
-                selectedFeatures={selectedFeatures}
-                onFeatureToggle={handleFeatureToggle}
-                onSelectAll={handleSelectAllFeatures}
-                onSelectNone={handleSelectNoFeatures}
-                compact={false}
-              />
-              
-              {/* Improvements Applied Notice */}
-              {appliedImprovements && selectedRecommendations.length > 0 && (
-                <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-green-900">Improvements Applied</h4>
-                      <p className="text-xs text-green-700 mt-1">
-                        Your CV content has been enhanced with {selectedRecommendations.length} AI improvements.
-                      </p>
-                      <ul className="text-xs text-green-600 mt-2 space-y-1">
-                        {selectedRecommendations.slice(0, 3).map((rec, index) => (
-                          <li key={index} className="flex items-center space-x-1">
-                            <span className="w-1 h-1 bg-green-500 rounded-full"></span>
-                            <span>{rec.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                          </li>
-                        ))}
-                        {selectedRecommendations.length > 3 && (
-                          <li className="text-green-500">...and {selectedRecommendations.length - 3} more</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
+        {/* Applied Improvements Notice */}
+        {appliedImprovements && selectedRecommendations.length > 0 && (
+          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-6 mb-6">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-green-200">Text Improvements Applied</h4>
+                <p className="text-xs text-green-300 mt-1">
+                  Your CV content has been enhanced with {selectedRecommendations.length} AI-powered text improvements.
+                </p>
+                <ul className="text-xs text-green-300 mt-2 space-y-1">
+                  {selectedRecommendations.slice(0, 3).map((rec, index) => (
+                    <li key={index} className="flex items-center space-x-1">
+                      <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+                      <span>{rec.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    </li>
+                  ))}
+                  {selectedRecommendations.length > 3 && (
+                    <li className="text-green-400">...and {selectedRecommendations.length - 3} more</li>
+                  )}
+                </ul>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* CV Preview */}
-          <div className="xl:col-span-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <CVPreview
-                job={job}
-                selectedTemplate={selectedTemplate}
-                selectedFeatures={selectedFeatures}
-                appliedImprovements={appliedImprovements}
-                onUpdate={handleJobUpdate}
-                onFeatureToggle={handleFeatureToggle}
-              />
-            </div>
-          </div>
+        {/* CV Preview */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <CVPreview
+            job={job}
+            selectedTemplate={selectedTemplate}
+            selectedFeatures={{}}
+            appliedImprovements={appliedImprovements}
+            onUpdate={handleJobUpdate}
+          />
         </div>
 
         {/* Bottom Actions */}
@@ -401,23 +328,23 @@ export const CVPreviewPage = () => {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               <p>
-                Your CV preview shows {selectedRecommendations.length} applied improvements.
+                Your CV preview shows enhanced content with {selectedRecommendations.length} applied text improvements.
               </p>
-              <p className="mt-1">Ready to generate the final version?</p>
+              <p className="mt-1">Ready to select interactive features for your final CV?</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleBackToAnalysis}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
-                Modify Improvements
+                Modify Text Improvements
               </button>
               <button
-                onClick={handleContinueToGeneration}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
+                onClick={handleContinueToFeatures}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
-                <span>Generate Final CV</span>
-                <span className="text-xs bg-green-500 px-2 py-1 rounded-full">
+                <span>Continue to Features</span>
+                <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">
                   Step 4
                 </span>
               </button>

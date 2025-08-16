@@ -50,6 +50,18 @@ export const ResultsPage = () => {
     achievementsShowcase: true,
   });
 
+  // Save feature selection to session storage whenever it changes
+  useEffect(() => {
+    if (jobId) {
+      try {
+        sessionStorage.setItem(`feature-selection-${jobId}`, JSON.stringify(selectedFeatures));
+        console.log('📾 [PHASE 3 PERSIST] Saved feature selection:', selectedFeatures);
+      } catch (e) {
+        console.warn('Failed to save feature selection:', e);
+      }
+    }
+  }, [selectedFeatures, jobId]);
+
   const [selectedFormats, setSelectedFormats] = useState<SelectedFormats>({
     pdf: true,
     docx: true,
@@ -65,6 +77,18 @@ export const ResultsPage = () => {
   useEffect(() => {
     if (jobId) {
       loadJob();
+      
+      // Load saved feature selection from session storage
+      try {
+        const savedFeatures = sessionStorage.getItem(`feature-selection-${jobId}`);
+        if (savedFeatures) {
+          const features = JSON.parse(savedFeatures);
+          console.log('📾 [PHASE 3 INIT] Loaded saved features:', features);
+          setSelectedFeatures(features);
+        }
+      } catch (e) {
+        console.warn('Failed to load saved feature selection:', e);
+      }
     }
   }, [jobId]);
 
@@ -106,10 +130,37 @@ export const ResultsPage = () => {
     try {
       setIsGenerating(true);
       
+      // Enhanced Debug: Check what features are selected
+      const selectedFeatureKeys = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]);
+      const selectedFeatureCount = selectedFeatureKeys.length;
+      
+      console.log('🔍 [PHASE 3 FEATURE DEBUG] Full selectedFeatures state:', selectedFeatures);
+      console.log('🔍 [PHASE 3 FEATURE DEBUG] Keys that are true:', selectedFeatureKeys);
+      console.log('🔍 [PHASE 3 FEATURE DEBUG] Total selected count:', selectedFeatureCount);
+      console.log('🔍 [PHASE 3 FEATURE DEBUG] Template:', selectedTemplate);
+      
+      // Store generation config in session storage for debugging
+      const generationConfig = {
+        jobId: job.id,
+        templateId: selectedTemplate,
+        features: selectedFeatureKeys,
+        featureCount: selectedFeatureCount,
+        timestamp: new Date().toISOString()
+      };
+      
+      try {
+        sessionStorage.setItem(`generation-config-${job.id}`, JSON.stringify(generationConfig));
+        console.log('💾 [PHASE 3 SESSION] Stored generation config:', generationConfig);
+      } catch (e) {
+        console.warn('Failed to store generation config in session storage:', e);
+      }
+      
+      console.log('🚀 [PHASE 3 API CALL] Calling generateCV with:', generationConfig);
+      
       const result = await generateCV(
         job.id, 
         selectedTemplate, 
-        Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures])
+        selectedFeatureKeys
       );
 
       // Check if component is still mounted before updating state
@@ -206,6 +257,19 @@ export const ResultsPage = () => {
           </div>
         )}
 
+        {/* Feature Selection Guide */}
+        <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-700/50 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <Wand2 className="w-5 h-5 text-cyan-400" />
+            <div>
+              <h4 className="font-semibold text-cyan-300">Select Interactive Features</h4>
+              <p className="text-sm text-cyan-200/80">
+                Choose the interactive features to enhance your CV. Currently selected: {Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length} features
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Configuration */}
@@ -240,7 +304,7 @@ export const ResultsPage = () => {
               ) : (
                 <>
                   <Wand2 className="w-5 h-5" />
-                  Generate Enhanced CV
+                  Generate CV with {Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length} Features
                 </>
               )}
             </button>

@@ -285,7 +285,7 @@ export const KeywordManager: React.FC<KeywordManagerProps> = ({
                 {/* Priority Selector */}
                 <select
                   value={keyword.priority}
-                  onChange={(e) => updateKeyword(keyword.id, { priority: e.target.value as any })}
+                  onChange={(e) => updateKeyword(keyword.id, { priority: e.target.value as Keyword['priority'] })}
                   className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-300"
                 >
                   <option value="high">High</option>

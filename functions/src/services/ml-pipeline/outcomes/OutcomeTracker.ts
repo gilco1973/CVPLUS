@@ -6,6 +6,7 @@
  */
 
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { UserOutcome } from '../../../types/phase2-models';
 
 export class OutcomeTracker {
@@ -20,7 +21,7 @@ export class OutcomeTracker {
         .doc(outcome.outcomeId)
         .set({
           ...outcome,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
           dataVersion: '2.1',
           source: 'modular-architecture'
         });

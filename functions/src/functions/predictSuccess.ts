@@ -11,6 +11,7 @@ import { PredictionModelService, PredictionRequest } from '../services/predictio
 // import { MLPipelineService } from '../services/ml-pipeline.service';
 import { corsOptions } from '../config/cors';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Initialize admin if not already done
 if (!admin.apps.length) {
@@ -296,10 +297,10 @@ export const updatePredictionOutcome = onCall(
           timeToResult: actualOutcome.timeToResult,
           salaryOffered: actualOutcome.salaryOffered,
           feedback: actualOutcome.feedback,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         },
         predictionAccuracy: calculatePredictionAccuracy(prediction, actualOutcome),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
 
       // Queue for model retraining data
@@ -313,7 +314,7 @@ export const updatePredictionOutcome = onCall(
         },
         actual: actualOutcome,
         features: prediction.features,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       });
 
       return {
@@ -454,7 +455,7 @@ async function logPredictionRequest(userId: string, request: PredictionRequest, 
     await db.collection('analytics_events').add({
       eventType: 'prediction_request',
       userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       data: {
         predictionId: prediction.predictionId,
         jobTitle: request.jobData.title,
@@ -475,7 +476,7 @@ async function logBatchPredictionRequest(userId: string, jobCount: number, predi
     await db.collection('analytics_events').add({
       eventType: 'batch_prediction_request',
       userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       data: {
         jobCount,
         successCount: predictions.filter(p => p.success).length,
@@ -492,8 +493,8 @@ async function updateUserUsageStats(userId: string): Promise<void> {
     const statsRef = db.collection('user_stats').doc(userId);
     await statsRef.set({
       totalPredictions: admin.firestore.FieldValue.increment(1),
-      lastPredictionDate: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      lastPredictionDate: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
   } catch (error) {
     console.error('Failed to update user usage stats:', error);

@@ -1,7 +1,9 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { languageProficiencyService } from '../services/language-proficiency.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generateLanguageVisualization = onCall(
   {
@@ -32,15 +34,51 @@ export const generateLanguageVisualization = onCall(
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
 
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.languageProficiency.status': 'processing',
+          'enhancedFeatures.languageProficiency.progress': 25,
+          'enhancedFeatures.languageProficiency.currentStep': 'Analyzing language skills...',
+          'enhancedFeatures.languageProficiency.startedAt': FieldValue.serverTimestamp()
+        });
+
       // Generate language visualization
       const visualization = await languageProficiencyService.generateLanguageVisualization(
         jobData.parsedData,
         jobId
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.languageProficiency.progress': 75,
+          'enhancedFeatures.languageProficiency.currentStep': 'Creating proficiency visualization...'
+        });
+
+      // Generate HTML fragment for progressive enhancement
+      const htmlFragment = HTMLFragmentGeneratorService.generateLanguageProficiencyHTML(visualization);
+
+      // Update with final results
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.languageProficiency.status': 'completed',
+          'enhancedFeatures.languageProficiency.progress': 100,
+          'enhancedFeatures.languageProficiency.data': visualization,
+          'enhancedFeatures.languageProficiency.htmlFragment': htmlFragment,
+          'enhancedFeatures.languageProficiency.processedAt': FieldValue.serverTimestamp()
+        });
+
       return {
         success: true,
-        visualization
+        visualization,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating language visualization:', error);
@@ -52,7 +90,7 @@ export const generateLanguageVisualization = onCall(
         .update({
           'enhancedFeatures.languageProficiency.status': 'failed',
           'enhancedFeatures.languageProficiency.error': error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.languageProficiency.processedAt': FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate language visualization: ${error.message}`);
@@ -160,7 +198,7 @@ export const addLanguageProficiency = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.languageProficiency.data': visualization,
-          'enhancedFeatures.languageProficiency.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.languageProficiency.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -222,7 +260,7 @@ export const removeLanguageProficiency = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.languageProficiency.data': visualization,
-          'enhancedFeatures.languageProficiency.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.languageProficiency.lastModified': FieldValue.serverTimestamp()
         });
 
       return {

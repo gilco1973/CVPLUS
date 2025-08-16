@@ -1,5 +1,6 @@
 // @ts-nocheck
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { ParsedCV } from './cvParsing.service';
 
@@ -205,7 +206,7 @@ export class SocialMediaService {
       // Store in Firestore
       await this.db.collection('jobs').doc(jobId).collection('features').doc('social-media').set({
         integration,
-        generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        generatedAt: FieldValue.serverTimestamp(),
         status: 'completed'
       });
 

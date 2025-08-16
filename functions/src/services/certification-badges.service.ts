@@ -5,6 +5,7 @@
 
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
 
@@ -576,7 +577,7 @@ export class CertificationBadgesService {
           enabled: true,
           status: 'completed',
           data: collection,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp()
+          generatedAt: FieldValue.serverTimestamp()
         }
       });
   }
@@ -628,7 +629,7 @@ export class CertificationBadgesService {
       .doc(jobId)
       .update({
         'enhancedFeatures.certificationBadges.data': collection,
-        'enhancedFeatures.certificationBadges.lastModified': admin.firestore.FieldValue.serverTimestamp()
+        'enhancedFeatures.certificationBadges.lastModified': FieldValue.serverTimestamp()
       });
     
     return collection.badges[badgeIndex];

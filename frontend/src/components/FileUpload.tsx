@@ -20,7 +20,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false }) => {
   const [error, setError] = useState<string | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: { file: File; errors: { code: string; message: string }[] }[]) => {
     setError(null);
 
     if (rejectedFiles.length > 0) {

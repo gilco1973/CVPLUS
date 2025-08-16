@@ -7,6 +7,7 @@
  */
 
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { SuccessPrediction, FeatureVector, MLModelMetadata, PredictiveRecommendation, UserOutcome } from '../types/phase2-models';
 import { ParsedCV } from '../types/job';
 
@@ -738,7 +739,7 @@ export class PredictionModelService {
     try {
       await db.collection('predictions').doc(prediction.predictionId).set({
         ...prediction,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
         modelVersion: prediction.modelMetadata.modelVersion
       });
     } catch (error) {

@@ -5,11 +5,8 @@ import {
   GitCompare, 
   ChevronRight, 
   Filter,
-  CheckCircle2,
   Plus,
-  Edit3,
-  TrendingUp,
-  Smartphone
+  TrendingUp
 } from 'lucide-react';
 import { 
   useCVComparison, 
@@ -18,11 +15,15 @@ import {
 } from '../../hooks/cv-preview/useCVComparison';
 import { SideBySideDiff, DiffStats, CompactDiff } from './DiffRenderer';
 import { MobileComparisonView, MobileComparisonToggle } from './MobileComparisonView';
-import { getSectionDisplayName } from '../../utils/cv-comparison/diffUtils';
+import { getSectionDisplayName, CVComparison, SectionComparison } from '../../utils/cv-comparison/diffUtils';
+import { ComparisonStats } from '../../types/cv-preview';
+
+// CV Data structure - using unknown for safety
+type CVData = unknown;
 
 export interface CVComparisonViewProps {
-  originalData: any;
-  improvedData: any | null;
+  originalData: CVData;
+  improvedData: CVData | null;
   children: React.ReactNode; // The actual CV preview content
   className?: string;
 }
@@ -163,7 +164,7 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
  */
 interface ComparisonControlsProps {
   viewMode: ComparisonViewMode;
-  stats: any;
+  stats: ComparisonStats | null;
   showOnlyChanged: boolean;
   onViewModeChange: (mode: ComparisonViewMode) => void;
   onToggleFilter: () => void;
@@ -262,8 +263,8 @@ const ComparisonControls: React.FC<ComparisonControlsProps> = ({
  * Comparison Summary
  */
 interface ComparisonSummaryProps {
-  comparison: any;
-  stats: any;
+  comparison: CVComparison | null;
+  stats: ComparisonStats | null;
 }
 
 const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
@@ -337,7 +338,7 @@ const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
  * Individual Section Comparison
  */
 interface SectionComparisonProps {
-  section: any;
+  section: SectionComparison;
   isSelected: boolean;
   onSelect: () => void;
 }

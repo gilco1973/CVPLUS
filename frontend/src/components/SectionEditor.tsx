@@ -1,10 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 
+// Define proper types for CV sections
+interface PersonalInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+}
+
+interface Experience {
+  position?: string;
+  company?: string;
+  duration?: string;
+  description?: string;
+  achievements?: string[];
+}
+
+interface Education {
+  degree?: string;
+  institution?: string;
+  year?: string;
+}
+
+interface Skills {
+  technical?: string[];
+  soft?: string[];
+}
+
+type CVSectionData = PersonalInfo | string | Experience[] | Education[] | Skills;
+
 interface SectionEditorProps {
   section: string;
-  data: any;
-  onSave: (section: string, newValue: any) => void;
+  data: CVSectionData;
+  onSave: (section: string, newValue: CVSectionData) => void;
   onCancel: () => void;
 }
 
@@ -43,87 +72,133 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [editingData, onSave, onCancel, section]);
 
-  const handleInputChange = (field: string, value: any) => {
-    setEditingData((prev: any) => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleInputChange = (field: string, value: string) => {
+    setEditingData((prev: CVSectionData) => {
+      if (typeof prev === 'object' && prev !== null && !Array.isArray(prev)) {
+        return {
+          ...prev,
+          [field]: value
+        };
+      }
+      return prev;
+    });
   };
 
 
   const handleArrayAdd = (arrayPath: string) => {
-    const pathArray = arrayPath.split('.');
-    setEditingData((prev: any) => {
-      const newData = { ...prev };
-      let current = newData;
-      
-      for (let i = 0; i < pathArray.length - 1; i++) {
-        if (!current[pathArray[i]]) current[pathArray[i]] = [];
-        current = current[pathArray[i]];
-      }
-      
-      const arrayKey = pathArray[pathArray.length - 1];
-      if (!current[arrayKey]) current[arrayKey] = [];
-      
-      if (section === 'experience') {
-        current[arrayKey].push({
+    setEditingData((prev: CVSectionData) => {
+      if (section === 'experience' && Array.isArray(prev)) {
+        const newData = [...prev] as Experience[];
+        newData.push({
           position: '',
           company: '',
           duration: '',
           description: '',
           achievements: []
         });
-      } else if (section === 'education') {
-        current[arrayKey].push({
+        return newData;
+      } else if (section === 'education' && Array.isArray(prev)) {
+        const newData = [...prev] as Education[];
+        newData.push({
           degree: '',
           institution: '',
           year: ''
         });
-      } else if (arrayKey === 'achievements') {
-        current[arrayKey].push('');
-      } else {
-        current[arrayKey].push('');
+        return newData;
+      } else if (section === 'skills' && typeof prev === 'object' && prev !== null && !Array.isArray(prev)) {
+        const skillsData = prev as Skills;
+        if (arrayPath === 'technical') {
+          return {
+            ...skillsData,
+            technical: [...(skillsData.technical || []), '']
+          };
+        } else if (arrayPath === 'soft') {
+          return {
+            ...skillsData,
+            soft: [...(skillsData.soft || []), '']
+          };
+        }
       }
-      
-      return newData;
+      return prev;
     });
   };
 
   const handleArrayRemove = (arrayPath: string, index: number) => {
-    const pathArray = arrayPath.split('.');
-    setEditingData((prev: any) => {
-      const newData = { ...prev };
-      let current = newData;
-      
-      for (let i = 0; i < pathArray.length - 1; i++) {
-        current = current[pathArray[i]];
+    setEditingData((prev: CVSectionData) => {
+      if (section === 'experience' && Array.isArray(prev)) {
+        const newData = [...prev] as Experience[];
+        newData.splice(index, 1);
+        return newData;
+      } else if (section === 'education' && Array.isArray(prev)) {
+        const newData = [...prev] as Education[];
+        newData.splice(index, 1);
+        return newData;
+      } else if (section === 'skills' && typeof prev === 'object' && prev !== null && !Array.isArray(prev)) {
+        const skillsData = prev as Skills;
+        if (arrayPath === 'technical') {
+          const newTechnical = [...(skillsData.technical || [])];
+          newTechnical.splice(index, 1);
+          return {
+            ...skillsData,
+            technical: newTechnical
+          };
+        } else if (arrayPath === 'soft') {
+          const newSoft = [...(skillsData.soft || [])];
+          newSoft.splice(index, 1);
+          return {
+            ...skillsData,
+            soft: newSoft
+          };
+        }
       }
-      
-      const arrayKey = pathArray[pathArray.length - 1];
-      current[arrayKey].splice(index, 1);
-      
-      return newData;
+      return prev;
     });
   };
 
-  const handleArrayItemChange = (arrayPath: string, index: number, field: string | null, value: any) => {
-    const pathArray = arrayPath.split('.');
-    setEditingData((prev: any) => {
-      const newData = { ...prev };
-      let current = newData;
-      
-      for (let i = 0; i < pathArray.length - 1; i++) {
-        current = current[pathArray[i]];
+  const handleArrayItemChange = (arrayPath: string, index: number, field: string | null, value: string | string[]) => {
+    setEditingData((prev: CVSectionData) => {
+      if (section === 'experience' && Array.isArray(prev)) {
+        const newData = [...prev] as Experience[];
+        if (field && typeof value === 'string') {
+          newData[index] = {
+            ...newData[index],
+            [field]: value
+          };
+        } else if (field === 'achievements' && Array.isArray(value)) {
+          newData[index] = {
+            ...newData[index],
+            achievements: value
+          };
+        }
+        return newData;
+      } else if (section === 'education' && Array.isArray(prev)) {
+        const newData = [...prev] as Education[];
+        if (field && typeof value === 'string') {
+          newData[index] = {
+            ...newData[index],
+            [field]: value
+          };
+        }
+        return newData;
+      } else if (section === 'skills' && typeof prev === 'object' && prev !== null && !Array.isArray(prev)) {
+        const skillsData = prev as Skills;
+        if (arrayPath === 'technical' && typeof value === 'string') {
+          const newTechnical = [...(skillsData.technical || [])];
+          newTechnical[index] = value;
+          return {
+            ...skillsData,
+            technical: newTechnical
+          };
+        } else if (arrayPath === 'soft' && typeof value === 'string') {
+          const newSoft = [...(skillsData.soft || [])];
+          newSoft[index] = value;
+          return {
+            ...skillsData,
+            soft: newSoft
+          };
+        }
       }
-      
-      const arrayKey = pathArray[pathArray.length - 1];
-      if (field) {
-        current[arrayKey][index][field] = value;
-      } else {
-        current[arrayKey][index] = value;
-      }
-      
-      return newData;
+      return prev;
     });
   };
 
@@ -133,7 +208,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
         <input
           type="text"
-          value={editingData?.name || ''}
+          value={(editingData as PersonalInfo)?.name || ''}
           onChange={(e) => handleInputChange('name', e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
@@ -142,7 +217,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
         <input
           type="email"
-          value={editingData?.email || ''}
+          value={(editingData as PersonalInfo)?.email || ''}
           onChange={(e) => handleInputChange('email', e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
@@ -151,7 +226,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <label className="block text-sm font-medium text-gray-300 mb-1">Phone</label>
         <input
           type="tel"
-          value={editingData?.phone || ''}
+          value={(editingData as PersonalInfo)?.phone || ''}
           onChange={(e) => handleInputChange('phone', e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
@@ -160,7 +235,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
         <input
           type="text"
-          value={editingData?.location || ''}
+          value={(editingData as PersonalInfo)?.location || ''}
           onChange={(e) => handleInputChange('location', e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
@@ -172,7 +247,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-1">Professional Summary</label>
       <textarea
-        value={editingData || ''}
+        value={(editingData as string) || ''}
         onChange={(e) => setEditingData(e.target.value)}
         rows={6}
         className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-vertical"
@@ -194,7 +269,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         </button>
       </div>
       
-      {(editingData || []).map((exp: any, index: number) => (
+      {((editingData as Experience[]) || []).map((exp: Experience, index: number) => (
         <div key={index} className="border border-gray-600 rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h5 className="font-medium text-gray-200">Position {index + 1}</h5>
@@ -305,7 +380,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
         </button>
       </div>
       
-      {(editingData || []).map((edu: any, index: number) => (
+      {((editingData as Education[]) || []).map((edu: Education, index: number) => (
         <div key={index} className="border border-gray-600 rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h5 className="font-medium text-gray-200">Education {index + 1}</h5>
@@ -364,7 +439,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             <Plus className="w-4 h-4" />
           </button>
         </div>
-        {(editingData?.technical || []).map((skill: string, index: number) => (
+        {((editingData as Skills)?.technical || []).map((skill: string, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-2">
             <input
               type="text"
@@ -392,7 +467,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             <Plus className="w-4 h-4" />
           </button>
         </div>
-        {(editingData?.soft || []).map((skill: string, index: number) => (
+        {((editingData as Skills)?.soft || []).map((skill: string, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-2">
             <input
               type="text"

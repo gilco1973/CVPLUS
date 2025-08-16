@@ -1,7 +1,9 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { videoGenerationService } from '../services/video-generation.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generateVideoIntroduction = onCall(
   {
@@ -25,15 +27,6 @@ export const generateVideoIntroduction = onCall(
     } = request.data;
 
     try {
-      // Update status to generating
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          videoStatus: 'generating',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
       // Get the job data with parsed CV
       const jobDoc = await admin.firestore()
         .collection('jobs')
@@ -49,6 +42,19 @@ export const generateVideoIntroduction = onCall(
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
 
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.videoIntroduction.status': 'processing',
+          'enhancedFeatures.videoIntroduction.progress': 25,
+          'enhancedFeatures.videoIntroduction.currentStep': 'Generating video script...',
+          'enhancedFeatures.videoIntroduction.startedAt': FieldValue.serverTimestamp(),
+          videoStatus: 'generating',
+          updatedAt: FieldValue.serverTimestamp()
+        });
+
       // Generate video introduction
       const videoResult = await videoGenerationService.generateVideoIntroduction(
         jobData.parsedData,
@@ -63,11 +69,28 @@ export const generateVideoIntroduction = onCall(
         }
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.videoIntroduction.progress': 75,
+          'enhancedFeatures.videoIntroduction.currentStep': 'Finalizing video...'
+        });
+
+      // Generate HTML fragment for progressive enhancement
+      const htmlFragment = HTMLFragmentGeneratorService.generateVideoIntroductionHTML(videoResult);
+
       // Update job with video completion
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
         .update({
+          'enhancedFeatures.videoIntroduction.status': 'completed',
+          'enhancedFeatures.videoIntroduction.progress': 100,
+          'enhancedFeatures.videoIntroduction.data': videoResult,
+          'enhancedFeatures.videoIntroduction.htmlFragment': htmlFragment,
+          'enhancedFeatures.videoIntroduction.processedAt': FieldValue.serverTimestamp(),
           videoStatus: 'completed',
           video: {
             url: videoResult.videoUrl,
@@ -76,7 +99,7 @@ export const generateVideoIntroduction = onCall(
             script: videoResult.script,
             subtitles: videoResult.subtitles,
             metadata: videoResult.metadata,
-            generatedAt: admin.firestore.FieldValue.serverTimestamp()
+            generatedAt: FieldValue.serverTimestamp()
           },
           'enhancedFeatures.video': {
             enabled: true,
@@ -87,12 +110,13 @@ export const generateVideoIntroduction = onCall(
               duration: videoResult.duration
             }
           },
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       return {
         success: true,
-        video: videoResult
+        video: videoResult,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating video introduction:', error);
@@ -102,9 +126,12 @@ export const generateVideoIntroduction = onCall(
         .collection('jobs')
         .doc(jobId)
         .update({
+          'enhancedFeatures.videoIntroduction.status': 'failed',
+          'enhancedFeatures.videoIntroduction.error': error.message,
+          'enhancedFeatures.videoIntroduction.processedAt': FieldValue.serverTimestamp(),
           videoStatus: 'failed',
           videoError: error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate video introduction: ${error.message}`);
@@ -150,7 +177,7 @@ export const regenerateVideoIntroduction = onCall(
         .doc(jobId)
         .update({
           videoStatus: 'regenerating',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
 
       // If custom script provided, create video with that script
@@ -182,9 +209,9 @@ export const regenerateVideoIntroduction = onCall(
               url: videoData.videoUrl,
               thumbnailUrl,
               script: customScript,
-              regeneratedAt: admin.firestore.FieldValue.serverTimestamp()
+              regeneratedAt: FieldValue.serverTimestamp()
             },
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
           });
 
         return {
@@ -219,9 +246,9 @@ export const regenerateVideoIntroduction = onCall(
             video: {
               ...jobData?.video,
               ...videoResult,
-              regeneratedAt: admin.firestore.FieldValue.serverTimestamp()
+              regeneratedAt: FieldValue.serverTimestamp()
             },
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
           });
 
         return {
@@ -238,7 +265,7 @@ export const regenerateVideoIntroduction = onCall(
         .update({
           videoStatus: 'failed',
           videoError: error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to regenerate video: ${error.message}`);

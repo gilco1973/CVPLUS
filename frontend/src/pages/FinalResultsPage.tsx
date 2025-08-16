@@ -339,6 +339,16 @@ export const FinalResultsPage = () => {
           return;
         }
 
+        // Check if this is a quickCreate job that needs full workflow
+        if (jobData.quickCreateReady && !hasTriggeredGeneration.current) {
+          console.log('🚀 [DEBUG] Quick Create detected - triggering full workflow with all features');
+          hasTriggeredGeneration.current = true;
+          setTimeout(async () => {
+            await triggerQuickCreateWorkflow(jobData);
+          }, 100);
+          return;
+        }
+
         console.log('✅ [DEBUG] CV already generated, setting up progressive enhancement');
 
         if (isMountedRef.current) {
@@ -348,7 +358,7 @@ export const FinalResultsPage = () => {
           await loadBaseHTML(jobData);
           
           // Set up feature queue if features are selected
-          if (jobData.generatedCV?.features?.length > 0) {
+          if (jobData.generatedCV?.features && jobData.generatedCV.features.length > 0) {
             setupFeatureQueue(jobData.generatedCV.features);
             setIsProcessingFeatures(true);
             setupProgressTracking(jobId);
@@ -368,6 +378,89 @@ export const FinalResultsPage = () => {
 
     loadJob();
   }, [jobId, user]);
+
+  const triggerQuickCreateWorkflow = async (jobData: Job) => {
+    console.log('🎯 [DEBUG] triggerQuickCreateWorkflow started - generating with ALL features');
+    
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    try {
+      if (isMountedRef.current) {
+        setIsGenerating(true);
+        setLoading(false);
+      }
+      
+      // Define all available features for quick create
+      const allFeatures = [
+        'generate-podcast',
+        'video-introduction',
+        'skills-visualization', 
+        'interactive-timeline',
+        'portfolio-gallery',
+        'calendar-integration',
+        'certification-badges',
+        'language-proficiency'
+      ];
+      
+      console.log('🔥 [DEBUG] Quick Create: Calling generateCV with ALL features:', allFeatures);
+      const result = await generateCV(jobData.id, 'modern', allFeatures);
+      console.log('✅ [DEBUG] Quick Create: generateCV service returned:', result);
+      
+      // Generate podcast for quick create
+      if (isMountedRef.current) {
+        try {
+          console.log('🎙️ Quick Create: Generating podcast');
+          await generateEnhancedPodcast(jobData.id, 'professional');
+          toast.success('Full CV with podcast generation completed!');
+        } catch (podcastError) {
+          console.error('Podcast generation failed:', podcastError);
+          toast.success('CV generated successfully! Podcast generation in progress...');
+        }
+      }
+      
+      if (!isMountedRef.current) return;
+
+      // Update job with generated CV including all features
+      const updatedJob = { 
+        ...jobData, 
+        generatedCV: {
+          html: result.generatedCV.html,
+          htmlUrl: result.generatedCV.htmlUrl,
+          pdfUrl: result.generatedCV.pdfUrl,
+          docxUrl: result.generatedCV.docxUrl,
+          template: 'modern',
+          features: allFeatures
+        },
+        quickCreateReady: false // Mark as completed
+      };
+      
+      setJob(updatedJob);
+      
+      // Load base HTML and set up progressive enhancement
+      await loadBaseHTML(updatedJob);
+      
+      if (allFeatures.length > 0) {
+        setupFeatureQueue(allFeatures);
+        setIsProcessingFeatures(true);
+        setupProgressTracking(jobData.id);
+      }
+      
+      console.log('✅ Quick Create: Full workflow completed successfully');
+      toast.success('Complete CV with all enhancements ready!');
+    } catch (error: any) {
+      console.error('❌ [DEBUG] Error in triggerQuickCreateWorkflow:', error);
+      if (isMountedRef.current) {
+        setError('Failed to generate enhanced CV. Please try again.');
+        toast.error(error?.message || 'Failed to generate enhanced CV');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
+    }
+  };
 
   const triggerCVGeneration = async (jobData: Job) => {
     console.log('🎯 [DEBUG] triggerCVGeneration started');

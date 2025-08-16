@@ -2,11 +2,6 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  FileText, 
-  BarChart3, 
-  Eye, 
-  Palette, 
-  CheckCircle, 
   ArrowLeft, 
   ArrowRight,
   Save,
@@ -29,7 +24,6 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentStep,
-  jobId,
   onPrevious,
   onNext,
   onSave,
@@ -77,14 +71,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
   };
 
-  const getTextClasses = () => {
-    switch (variant) {
-      case 'dark':
-        return 'text-gray-300';
-      default:
-        return 'text-gray-600';
-    }
-  };
 
   const getActiveClasses = () => {
     switch (variant) {

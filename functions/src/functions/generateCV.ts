@@ -144,7 +144,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         // For now, mark the feature as processed in the job
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.skillsVisualization.status': 'processing',
-          'enhancedFeatures.skillsVisualization.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.skillsVisualization.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Skills visualization marked for processing');
       } catch (error) {
@@ -157,7 +157,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy generateCertificationBadges function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.certificationBadges.status': 'processing',
-          'enhancedFeatures.certificationBadges.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Certification badges marked for processing');
       } catch (error) {
@@ -170,7 +170,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy calendar integration function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.calendarIntegration.status': 'processing',
-          'enhancedFeatures.calendarIntegration.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.calendarIntegration.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Calendar integration marked for processing');
       } catch (error) {
@@ -183,7 +183,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy generateTimeline function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.interactiveTimeline.status': 'processing',
-          'enhancedFeatures.interactiveTimeline.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.interactiveTimeline.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Interactive timeline marked for processing');
       } catch (error) {
@@ -196,7 +196,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy generateLanguageVisualization function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.languageProficiency.status': 'processing',
-          'enhancedFeatures.languageProficiency.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.languageProficiency.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Language proficiency marked for processing');
       } catch (error) {
@@ -209,7 +209,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy generatePortfolioGallery function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.portfolioGallery.status': 'processing',
-          'enhancedFeatures.portfolioGallery.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.portfolioGallery.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Portfolio gallery marked for processing');
       } catch (error) {
@@ -222,7 +222,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
         console.log('Calling legacy generateVideoIntroduction function...');
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.videoIntroduction.status': 'processing',
-          'enhancedFeatures.videoIntroduction.triggeredAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.videoIntroduction.triggeredAt': FieldValue.serverTimestamp()
         });
         console.log('Video introduction marked for processing');
       } catch (error) {

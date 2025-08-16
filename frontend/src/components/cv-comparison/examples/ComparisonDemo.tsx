@@ -107,7 +107,35 @@ const improvedCV = {
 export const ComparisonDemo: React.FC = () => {
   const [demoMode, setDemoMode] = useState<'original' | 'improved' | 'comparison'>('comparison');
 
-  const SimpleCV = ({ data }: { data: any }) => (
+  // Define a simple CV data structure for demo purposes
+  interface DemoCVData {
+    personalInfo: {
+      name: string;
+      email: string;
+      phone: string;
+      location: string;
+    };
+    summary: string;
+    experience: Array<{
+      position: string;
+      company: string;
+      duration: string;
+      description: string;
+    }>;
+    skills: string[];
+    education: Array<{
+      degree: string;
+      institution: string;
+      year: string;
+    }>;
+    certifications?: Array<{
+      name: string;
+      issuer: string;
+      date: string;
+    }>;
+  }
+
+  const SimpleCV = ({ data }: { data: DemoCVData }) => (
     <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 space-y-6">
       {/* Header */}
       <div className="border-b pb-4">
@@ -131,7 +159,7 @@ export const ComparisonDemo: React.FC = () => {
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Experience</h2>
         <div className="space-y-4">
-          {data.experience.map((exp: any, index: number) => (
+          {data.experience.map((exp, index: number) => (
             <div key={index} className="border-l-2 border-blue-200 pl-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -171,7 +199,7 @@ export const ComparisonDemo: React.FC = () => {
       {/* Education */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-3">Education</h2>
-        {data.education.map((edu: any, index: number) => (
+        {data.education.map((edu, index: number) => (
           <div key={index}>
             <h3 className="font-semibold text-gray-900">{edu.degree}</h3>
             <p className="text-blue-600">{edu.institution}</p>
@@ -193,7 +221,7 @@ export const ComparisonDemo: React.FC = () => {
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">Certifications</h2>
           <div className="space-y-2">
-            {data.certifications.map((cert: any, index: number) => (
+            {data.certifications.map((cert, index: number) => (
               <div key={index} className="flex justify-between">
                 <span className="font-medium text-gray-900">{cert.name}</span>
                 <span className="text-gray-600">{cert.issuer} - {cert.date}</span>

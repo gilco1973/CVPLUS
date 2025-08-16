@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useStepNavigation, usePullToRefresh } from '../hooks/useSwipeGestures';
-import { MobileBottomNav, MobileBottomNavSpacer } from './MobileBottomNav';
+import { MobileBottomNav } from './MobileBottomNav';
 import { RefreshCw } from 'lucide-react';
 
 interface MobilePageWrapperProps {

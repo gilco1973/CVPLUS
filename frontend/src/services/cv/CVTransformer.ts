@@ -6,11 +6,58 @@
 import { httpsCallable } from 'firebase/functions';
 import { functions, auth } from '../../lib/firebase';
 
+// Define interfaces for CV data structures
+interface ATSOptimizations {
+  keywords?: string[];
+  formatting?: Record<string, unknown>;
+  sections?: Record<string, unknown>;
+  recommendations?: string[];
+}
+
+interface SkillsUpdate {
+  skills?: string[];
+  categories?: Record<string, string[]>;
+  proficiencyLevels?: Record<string, number>;
+  endorsements?: Record<string, unknown>;
+}
+
+interface EndorserInfo {
+  name?: string;
+  company?: string;
+  position?: string;
+  relationship?: string;
+  linkedinProfile?: string;
+}
+
+interface TimelineEventUpdates {
+  title?: string;
+  date?: string | Date;
+  description?: string;
+  company?: string;
+  achievements?: string[];
+  skills?: string[];
+  type?: 'education' | 'experience' | 'certification' | 'project';
+}
+
+interface LanguageProficiencyUpdates {
+  proficiency?: 'beginner' | 'intermediate' | 'advanced' | 'native';
+  certifications?: string[];
+  testScores?: Record<string, number>;
+}
+
+interface LanguageProficiency {
+  language: string;
+  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native';
+  certifications?: string[];
+  testScores?: Record<string, number>;
+  native?: boolean;
+}
+
 export class CVTransformer {
   /**
    * Apply ATS optimizations to CV
    */
-  static async applyATSOptimizations(jobId: string, optimizations: any) {
+  static async applyATSOptimizations(jobId: string, optimizations: ATSOptimizations) {
     const applyATSFunction = httpsCallable(functions, 'applyATSOptimizations');
     const result = await applyATSFunction({
       jobId,
@@ -45,7 +92,7 @@ export class CVTransformer {
   /**
    * Update skills data
    */
-  static async updateSkillsData(jobId: string, skillsUpdate: any) {
+  static async updateSkillsData(jobId: string, skillsUpdate: SkillsUpdate) {
     const updateSkillsFunction = httpsCallable(functions, 'updateSkillsData');
     const result = await updateSkillsFunction({
       jobId,
@@ -57,7 +104,7 @@ export class CVTransformer {
   /**
    * Endorse a skill
    */
-  static async endorseSkill(jobId: string, skillName: string, endorserInfo?: any) {
+  static async endorseSkill(jobId: string, skillName: string, endorserInfo?: EndorserInfo) {
     const endorseFunction = httpsCallable(functions, 'endorseSkill');
     const result = await endorseFunction({
       jobId,
@@ -70,7 +117,7 @@ export class CVTransformer {
   /**
    * Update timeline event
    */
-  static async updateTimelineEvent(jobId: string, eventId: string, updates: any) {
+  static async updateTimelineEvent(jobId: string, eventId: string, updates: TimelineEventUpdates) {
     const updateFunction = httpsCallable(functions, 'updateTimelineEvent');
     const result = await updateFunction({
       jobId,
@@ -95,7 +142,7 @@ export class CVTransformer {
   /**
    * Update language proficiency
    */
-  static async updateLanguageProficiency(jobId: string, languageId: string, updates: any) {
+  static async updateLanguageProficiency(jobId: string, languageId: string, updates: LanguageProficiencyUpdates) {
     const updateFunction = httpsCallable(functions, 'updateLanguageProficiency');
     const result = await updateFunction({ jobId, languageId, updates });
     return result.data;
@@ -104,7 +151,7 @@ export class CVTransformer {
   /**
    * Add language proficiency
    */
-  static async addLanguageProficiency(jobId: string, language: any) {
+  static async addLanguageProficiency(jobId: string, language: LanguageProficiency) {
     const addFunction = httpsCallable(functions, 'addLanguageProficiency');
     const result = await addFunction({ jobId, language });
     return result.data;

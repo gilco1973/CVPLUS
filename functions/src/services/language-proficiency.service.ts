@@ -5,6 +5,7 @@
 
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
 
@@ -701,7 +702,7 @@ export class LanguageProficiencyService {
           enabled: true,
           status: 'completed',
           data: visualization,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp()
+          generatedAt: FieldValue.serverTimestamp()
         }
       });
   }
@@ -752,7 +753,7 @@ export class LanguageProficiencyService {
       .doc(jobId)
       .update({
         'enhancedFeatures.languageProficiency.data': visualization,
-        'enhancedFeatures.languageProficiency.lastModified': admin.firestore.FieldValue.serverTimestamp()
+        'enhancedFeatures.languageProficiency.lastModified': FieldValue.serverTimestamp()
       });
     
     return visualization.proficiencies[langIndex];

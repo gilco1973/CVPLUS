@@ -97,7 +97,6 @@ export interface SideBySideDiffProps {
 
 export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   beforeContent,
-  afterContent,
   changes,
   sectionName,
   className = ''
@@ -151,7 +150,6 @@ export interface CompactDiffProps {
 
 export const CompactDiff: React.FC<CompactDiffProps> = ({
   changes,
-  maxLength = 100,
   className = ''
 }) => {
   const addedCount = changes.filter(c => c.type === 'added').length;

@@ -5,6 +5,7 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { integrationsService } from '../services/integrations.service';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { EnhancedJob, PublicCVProfile, PrivacySettings } from '../types/enhanced-models';
 import { maskPII } from '../utils/privacy';
 import { corsOptions } from '../config/cors';
@@ -125,8 +126,8 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
         allowContactForm: true,
         qrCodeUrl,
         publicUrl,
-        createdAt: admin.firestore.FieldValue.serverTimestamp() as any,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp() as any,
+        createdAt: FieldValue.serverTimestamp() as any,
+        updatedAt: FieldValue.serverTimestamp() as any,
         analytics: {
           views: 0,
           qrScans: 0,
@@ -147,7 +148,7 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
           slug: publicSlug,
           url: publicUrl,
           qrCodeUrl,
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
+          createdAt: FieldValue.serverTimestamp()
         }
       });
 
@@ -196,7 +197,7 @@ export const getPublicProfile = onCall<GetPublicProfileRequest>(
       // Update analytics
       await profilesSnapshot.docs[0].ref.update({
         'analytics.views': admin.firestore.FieldValue.increment(1),
-        'analytics.lastViewedAt': admin.firestore.FieldValue.serverTimestamp()
+        'analytics.lastViewedAt': FieldValue.serverTimestamp()
       });
 
       // Remove sensitive data if not authenticated as owner
@@ -256,7 +257,7 @@ export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
         isPublic: settings.isPublic ?? profile.isPublic,
         allowContactForm: settings.allowContactForm ?? profile.allowContactForm,
         showAnalytics: settings.showAnalytics ?? profile.showAnalytics,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       };
 
       if (settings.customSlug && settings.customSlug !== profile.slug) {
@@ -349,7 +350,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
         senderPhone,
         company,
         message,
-        submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        submittedAt: FieldValue.serverTimestamp(),
         status: 'pending'
       };
 
@@ -427,7 +428,7 @@ export const trackQRScan = onCall<TrackQRScanRequest>(
         .collection('qrScans')
         .add({
           jobId,
-          scannedAt: admin.firestore.FieldValue.serverTimestamp(),
+          scannedAt: FieldValue.serverTimestamp(),
           userAgent: metadata?.userAgent,
           source: metadata?.source || 'qr',
           ip: request.rawRequest?.ip || 'unknown'

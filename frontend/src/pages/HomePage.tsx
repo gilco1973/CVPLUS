@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const { user, signInAnonymous, signInWithGoogle } = useAuth();
+  const { user, signInAnonymous, signInWithGoogle, error, clearError } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -25,17 +25,19 @@ export const HomePage = () => {
       setIsLoading(true);
       
       // Sign in anonymously if not authenticated
-      let currentUser = user;
+      const currentUser = user;
       if (!currentUser) {
         try {
+          clearError(); // Clear any previous auth errors
           await signInAnonymous();
           // Wait a bit for the auth state to update
           await new Promise(resolve => setTimeout(resolve, 100));
         } catch (authError: any) {
-          // If anonymous sign-in fails, show sign-in dialog
+          // If anonymous sign-in fails, show user-friendly error and sign-in dialog
           setIsLoading(false);
           setPendingAction({ type: 'file', data: { file, quickCreate } });
           setShowSignInDialog(true);
+          toast.error(authError.message || 'Authentication required. Please sign in to continue.');
           return;
         }
       }
@@ -59,7 +61,7 @@ export const HomePage = () => {
       setIsLoading(true);
       
       // Sign in anonymously if not authenticated
-      let currentUser = user;
+      const currentUser = user;
       if (!currentUser) {
         await signInAnonymous();
         // Wait a bit for the auth state to update
@@ -190,6 +192,29 @@ export const HomePage = () => {
             {/* Upload Options */}
             <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-fade-in-up animation-delay-600">
               <h2 className="text-2xl font-bold text-gray-100 mb-6">Start Your Transformation</h2>
+              
+              {/* Display auth errors */}
+              {error && (
+                <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-red-400 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-red-200 text-sm">{error}</p>
+                    </div>
+                    <button
+                      onClick={clearError}
+                      className="text-red-400 hover:text-red-200 ml-4 p-1"
+                      aria-label="Clear error"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-center mb-8">
                 <div className="inline-flex items-center gap-6">
                   <label className="text-sm font-medium text-gray-300">Upload Method:</label>

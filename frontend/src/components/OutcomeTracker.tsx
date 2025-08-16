@@ -48,6 +48,25 @@ interface OutcomeTrackerProps {
   onOutcomeTracked?: (outcomeId: string) => void;
 }
 
+interface UserStats {
+  totalApplications: number;
+  hired: number;
+  pending: number;
+  successRate: number;
+  averageTimeToResult: number;
+  averageAtsScore: number;
+}
+
+interface StatsResponse {
+  success: boolean;
+  data: UserStats;
+}
+
+interface OutcomeResponse {
+  success: boolean;
+  outcomeId: string;
+}
+
 interface ApplicationFormData {
   jobTitle: string;
   company: string;
@@ -76,7 +95,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
   const [activeTab, setActiveTab] = useState<'track' | 'update' | 'stats'>('track');
   const [loading, setLoading] = useState(false);
   const [outcomes, setOutcomes] = useState<UserOutcome[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
 
   // Form states
   const [applicationForm, setApplicationForm] = useState<ApplicationFormData>({
@@ -114,7 +133,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
     try {
       const getUserStats = httpsCallable(functions, 'getUserOutcomeStats');
       const result = await getUserStats();
-      const data = result.data as any;
+      const data = result.data as StatsResponse;
       
       if (data?.success) {
         setStats(data.data);
@@ -159,7 +178,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
         sessionId: Date.now().toString()
       });
 
-      const data = result.data as any;
+      const data = result.data as OutcomeResponse;
       if (data?.success) {
         setApplicationForm({
           jobTitle: '',
@@ -192,7 +211,20 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
     try {
       const updateOutcome = httpsCallable(functions, 'updateUserOutcome');
       
-      const updateData: any = {
+      const updateData: {
+        outcomeId: string;
+        sessionId: string;
+        event?: {
+          eventType: string;
+          stage: string;
+          details?: string;
+        };
+        finalResult?: {
+          status: string;
+          salaryOffered?: number;
+          feedback?: string;
+        };
+      } = {
         outcomeId: selectedOutcome,
         sessionId: Date.now().toString()
       };
@@ -216,7 +248,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
       }
 
       const result = await updateOutcome(updateData);
-      const data = result.data as any;
+      const data = result.data as OutcomeResponse;
 
       if (data?.success) {
         setUpdateForm({
@@ -361,7 +393,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
                   </label>
                   <select
                     value={applicationForm.applicationMethod}
-                    onChange={(e) => setApplicationForm({ ...applicationForm, applicationMethod: e.target.value as any })}
+                    onChange={(e) => setApplicationForm({ ...applicationForm, applicationMethod: e.target.value as ApplicationFormData['applicationMethod'] })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="direct">Company Website</option>
@@ -466,7 +498,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
                   </label>
                   <select
                     value={updateForm.eventType}
-                    onChange={(e) => setUpdateForm({ ...updateForm, eventType: e.target.value as any })}
+                    onChange={(e) => setUpdateForm({ ...updateForm, eventType: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="application_viewed">Application Viewed</option>
@@ -489,7 +521,7 @@ export const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
                   </label>
                   <select
                     value={updateForm.stage}
-                    onChange={(e) => setUpdateForm({ ...updateForm, stage: e.target.value as any })}
+                    onChange={(e) => setUpdateForm({ ...updateForm, stage: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="application">Application</option>

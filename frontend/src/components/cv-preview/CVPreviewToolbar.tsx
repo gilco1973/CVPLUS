@@ -49,89 +49,121 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({
         </div>
       )}
 
-      {/* Preview Controls */}
-      <div className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <Eye className="w-5 h-5 text-blue-600" />
-            Live Preview
-            {hasUnsavedChanges && (
-              <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full animate-pulse">
-                {autoSaveEnabled ? 'Auto-saving...' : 'Unsaved'}
-              </span>
-            )}
-            {lastSaved && !hasUnsavedChanges && (
-              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-                Saved {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-          </h3>
-          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full border border-blue-200">
-            {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} Template
-          </span>
+      {/* Live Preview Section - Enhanced Design */}
+      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-xl border border-slate-200/80 shadow-lg shadow-slate-500/5 mb-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Eye className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3">
+                  Live Preview
+                  {hasUnsavedChanges && (
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-gradient-to-r from-orange-400/20 to-amber-400/20 text-orange-600 px-3 py-1.5 rounded-full border border-orange-200 animate-pulse font-medium">
+                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" />
+                      {autoSaveEnabled ? 'Auto-saving...' : 'Unsaved'}
+                    </span>
+                  )}
+                  {lastSaved && !hasUnsavedChanges && (
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-gradient-to-r from-emerald-400/20 to-green-400/20 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-200 font-medium">
+                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                      Saved {lastSaved.toLocaleTimeString()}
+                    </span>
+                  )}
+                </h3>
+                <p className="text-sm text-slate-500 mt-0.5">Interactive preview of your enhanced CV</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 text-sm bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-200/60 font-medium shadow-sm">
+              <div className="w-2 h-2 bg-blue-500 rounded-full" />
+              {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} Template
+            </span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onToggleAutoSave}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${
-              autoSaveEnabled
-                ? 'bg-green-600/20 text-green-400 border border-green-600/30'
-                : 'bg-gray-100 text-gray-600 border border-gray-300'
-            }`}
-            title={autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled'}
-          >
-            <div className={`w-2 h-2 rounded-full ${autoSaveEnabled ? 'bg-green-400' : 'bg-gray-500'}`} />
-            Auto-save
-          </button>
-          
-          <div className="flex items-center gap-1">
+        {/* Controls Section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 pt-4">
+          {/* Secondary Controls Group */}
+          <div className="flex items-center gap-3">
+            {/* Auto-save Toggle */}
             <button
-              onClick={onExpandAllSections}
-              className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-l hover:bg-blue-600/30 transition-all"
-              title="Expand all sections"
+              onClick={onToggleAutoSave}
+              className={`inline-flex items-center gap-2 px-4 h-12 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                autoSaveEnabled
+                  ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-700 border border-emerald-300/50 shadow-sm hover:shadow-emerald-500/20'
+                  : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 hover:shadow-sm'
+              }`}
+              title={autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled'}
             >
-              ▼ All
+              <div className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                autoSaveEnabled ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-slate-400'
+              }`} />
+              Auto-save
             </button>
+            
+            {/* Section Controls */}
+            <div className="flex items-center h-12 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                onClick={onExpandAllSections}
+                className="flex items-center gap-1.5 px-4 h-full text-sm font-medium text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-all"
+                title="Expand all sections"
+              >
+                <span className="text-xs">▼</span>
+                All
+              </button>
+              <div className="w-px h-6 bg-slate-300" />
+              <button
+                onClick={onCollapseAllSections}
+                className="flex items-center gap-1.5 px-4 h-full text-sm font-medium text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-all"
+                title="Collapse all sections"
+              >
+                <span className="text-xs">▶</span>
+                All
+              </button>
+            </div>
+            
+            {/* Preview Toggle */}
             <button
-              onClick={onCollapseAllSections}
-              className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-r hover:bg-blue-600/30 transition-all"
-              title="Collapse all sections"
+              onClick={onToggleFeaturePreviews}
+              className={`inline-flex items-center gap-2 px-4 h-12 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                showFeaturePreviews
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300 hover:shadow-sm border border-slate-300'
+              }`}
             >
-              ▶ All
+              {showFeaturePreviews ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showFeaturePreviews ? 'Hide' : 'Show'} Previews
             </button>
           </div>
           
-          <button
-            onClick={onToggleFeaturePreviews}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              showFeaturePreviews
-                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/20'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {showFeaturePreviews ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            Previews
-          </button>
-          
+          {/* Primary Action - Edit CV Button */}
           <button
             onClick={onToggleEditing}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`inline-flex items-center gap-2.5 px-6 h-12 rounded-xl text-base font-semibold transition-all duration-200 hover:scale-105 transform ${
               isEditing
-                ? 'bg-green-600 text-white shadow-lg shadow-green-500/20'
-                : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700'
+                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:from-emerald-600 hover:to-green-600'
+                : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40 hover:from-blue-700 hover:to-cyan-700'
             }`}
           >
-            {isEditing ? (
-              <>
-                <Save className="w-4 h-4" />
-                Save Changes
-              </>
-            ) : (
-              <>
-                <Edit3 className="w-4 h-4" />
-                Edit CV
-              </>
+            <div className="relative">
+              {isEditing ? (
+                <>
+                  <Save className="w-5 h-5" />
+                  <div className="absolute inset-0 bg-white/20 rounded-full animate-ping" />
+                </>
+              ) : (
+                <Edit3 className="w-5 h-5" />
+              )}
+            </div>
+            {isEditing ? 'Save Changes' : 'Edit CV'}
+            {!isEditing && (
+              <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse" />
             )}
           </button>
         </div>

@@ -9,6 +9,7 @@
 import { VerifiedClaudeService, VerifiedMessageOptions } from './verified-claude.service';
 import { PIIDetector } from './piiDetector';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Import existing types from original CVParsingService
 export interface ParsedCV {
@@ -515,7 +516,7 @@ Parse accurately and return only valid JSON.`;
         parsedCV,
         parsingMetadata: {
           ...metadata,
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          timestamp: FieldValue.serverTimestamp(),
           parsingMethod: 'verified-claude',
           version: '2.0'
         }

@@ -8,10 +8,10 @@ import {
   GitCompare
 } from 'lucide-react';
 import { DiffRenderer, DiffStats } from './DiffRenderer';
-import { getSectionDisplayName } from '../../utils/cv-comparison/diffUtils';
+import { getSectionDisplayName, SectionComparison, DiffResult } from '../../utils/cv-comparison/diffUtils';
 
 export interface MobileComparisonViewProps {
-  sections: any[];
+  sections: SectionComparison[];
   className?: string;
 }
 
@@ -24,7 +24,7 @@ export const MobileComparisonView: React.FC<MobileComparisonViewProps> = ({
   sections,
   className = ''
 }) => {
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  // Remove unused state variables
   const [viewMode, setViewMode] = useState<MobileViewMode>('diff');
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
@@ -221,7 +221,7 @@ const BeforeView: React.FC<BeforeViewProps> = ({ content }) => (
  */
 interface AfterViewProps {
   content: string;
-  changes: any[];
+  changes: DiffResult[];
 }
 
 const AfterView: React.FC<AfterViewProps> = ({ content, changes }) => {
@@ -256,7 +256,7 @@ const AfterView: React.FC<AfterViewProps> = ({ content, changes }) => {
  * Diff view with highlighted changes
  */
 interface DiffViewProps {
-  changes: any[];
+  changes: DiffResult[];
   sectionName: string;
 }
 

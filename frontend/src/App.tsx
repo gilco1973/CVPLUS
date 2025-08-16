@@ -12,7 +12,6 @@ import { KeywordOptimization } from './pages/KeywordOptimization';
 import { FinalResultsPage } from './pages/FinalResultsPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
-import { testNavigationFix } from './utils/navigationTestScript';
 
 const router = createBrowserRouter([
   {

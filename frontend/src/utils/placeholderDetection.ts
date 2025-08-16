@@ -51,14 +51,14 @@ export const detectPlaceholdersInText = (text: string): string[] => {
  * @returns Array of placeholder matches with location information
  */
 export const detectPlaceholdersInObject = (
-  obj: any, 
+  obj: unknown, 
   section: string = 'unknown'
 ): PlaceholderMatch[] => {
   const matches: PlaceholderMatch[] = [];
   
   if (!obj) return matches;
   
-  const searchInValue = (value: any, location: string) => {
+  const searchInValue = (value: unknown, location: string) => {
     if (typeof value === 'string') {
       const placeholders = detectPlaceholdersInText(value);
       placeholders.forEach(placeholder => {
@@ -99,7 +99,7 @@ export const detectPlaceholdersInObject = (
  * @param cvData - The CV data object to search
  * @returns Array of all placeholder matches found
  */
-export const detectPlaceholdersInCV = (cvData: any): PlaceholderMatch[] => {
+export const detectPlaceholdersInCV = (cvData: unknown): PlaceholderMatch[] => {
   if (!cvData) return [];
   
   const allMatches: PlaceholderMatch[] = [];
@@ -173,7 +173,7 @@ export const getPlaceholderSummary = (matches: PlaceholderMatch[]) => {
  * @param cvData - The CV data to check
  * @returns True if placeholders are found, false otherwise
  */
-export const hasPlaceholders = (cvData: any): boolean => {
+export const hasPlaceholders = (cvData: unknown): boolean => {
   const matches = detectPlaceholdersInCV(cvData);
   return matches.length > 0;
 };

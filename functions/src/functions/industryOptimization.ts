@@ -10,6 +10,7 @@ import { CallableRequest } from 'firebase-functions/v2/https';
 import { IndustrySpecializationService, IndustryOptimizationRequest } from '../services/industry-specialization.service';
 import { corsOptions } from '../config/cors';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Initialize admin if not already done
 if (!admin.apps.length) {
@@ -405,7 +406,7 @@ async function logIndustryOptimization(
       industryScore: result.industryScore,
       industryFit: result.industryFit,
       recommendationsCount: result.recommendations.length,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       version: '2.0'
     });
 
@@ -413,7 +414,7 @@ async function logIndustryOptimization(
     await db.collection('analytics_events').add({
       eventType: 'industry_optimization',
       userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       data: {
         industry: request.targetIndustry,
         score: result.industryScore,
@@ -432,7 +433,7 @@ async function updateUserIndustryPreferences(userId: string, industry: string): 
     await userRef.set({
       industryPreferences: {
         lastOptimized: industry,
-        lastOptimizedDate: admin.firestore.FieldValue.serverTimestamp(),
+        lastOptimizedDate: FieldValue.serverTimestamp(),
         optimizedIndustries: admin.firestore.FieldValue.arrayUnion(industry)
       }
     }, { merge: true });
@@ -505,7 +506,7 @@ async function logIndustryComparison(userId: string, industries: string[], resul
       averageScore: results.length > 0 
         ? results.reduce((sum, r) => sum + (r.fitScore || 0), 0) / results.length 
         : 0,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
+      timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
     console.error('Failed to log industry comparison:', error);

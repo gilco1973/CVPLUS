@@ -44,7 +44,7 @@ export const CVMetadata = ({ job }: CVMetadataProps) => {
           <div>
             <p className="text-sm text-gray-400">Features Applied</p>
             <p className="font-semibold text-gray-100">
-              {job.generatedCV?.features?.length || 0} enhancements
+              {job.appliedRecommendations?.length || job.generatedCV?.features?.length || 0} enhancements
             </p>
           </div>
         </div>

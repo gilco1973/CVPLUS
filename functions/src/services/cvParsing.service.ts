@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export interface ParsedCV {
   personalInfo: {
@@ -90,7 +91,7 @@ export class CVParsingService {
     try {
       await this.db.collection('jobs').doc(jobId).update({
         parsedData,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
     } catch (error) {
       console.error('Error updating parsed CV:', error);

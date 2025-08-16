@@ -87,7 +87,7 @@ export const QRCodeEditor: React.FC<QRCodeEditorProps> = ({
     // Basic URL validation
     try {
       new URL(editingSettings.url);
-    } catch (error) {
+    } catch {
       // If it's not a valid URL, check if it's a mailto: or tel: link
       if (!editingSettings.url.startsWith('mailto:') && !editingSettings.url.startsWith('tel:')) {
         alert('Please enter a valid URL (e.g., https://example.com)');

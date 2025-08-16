@@ -178,7 +178,7 @@ export class RateLimiter {
 /**
  * Debounce function with rate limiting
  */
-export function createDebouncedFunction<T extends (...args: any[]) => any>(
+export function createDebouncedFunction<T extends (...args: never[]) => unknown>(
   fn: T,
   delay: number,
   rateLimiter?: RateLimiter,
@@ -186,7 +186,7 @@ export function createDebouncedFunction<T extends (...args: any[]) => any>(
 ): T {
   let timeoutId: NodeJS.Timeout | null = null;
 
-  return ((...args: any[]) => {
+  return ((...args: Parameters<T>) => {
     // Clear existing timeout
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -224,7 +224,7 @@ export function createDebouncedFunction<T extends (...args: any[]) => any>(
 /**
  * Throttle function with rate limiting
  */
-export function createThrottledFunction<T extends (...args: any[]) => any>(
+export function createThrottledFunction<T extends (...args: never[]) => unknown>(
   fn: T,
   delay: number,
   rateLimiter?: RateLimiter,
@@ -233,7 +233,7 @@ export function createThrottledFunction<T extends (...args: any[]) => any>(
   let lastExecution = 0;
   let timeoutId: NodeJS.Timeout | null = null;
 
-  return ((...args: any[]) => {
+  return ((...args: Parameters<T>) => {
     const now = Date.now();
     const timeSinceLastExecution = now - lastExecution;
 

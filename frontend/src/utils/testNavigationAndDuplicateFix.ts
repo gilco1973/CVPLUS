@@ -401,7 +401,7 @@ export class NavigationAndDuplicateFixTester {
     console.log('='.repeat(60));
     
     let passedCount = 0;
-    let totalCount = this.testResults.length;
+    const totalCount = this.testResults.length;
     
     this.testResults.forEach((result, index) => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';

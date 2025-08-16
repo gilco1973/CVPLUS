@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import QRCode from 'qrcode';
 
@@ -249,8 +250,8 @@ export class EnhancedQRService {
       await this.db.collection('jobs').doc(jobId).collection('qrcodes').doc(qrConfig.id).set({
         ...qrConfig,
         qrImageUrl,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       });
 
       return { ...qrConfig, qrImageUrl };
@@ -400,7 +401,7 @@ export class EnhancedQRService {
         .doc(scanEvent.id)
         .set({
           ...scanEvent,
-          timestamp: admin.firestore.FieldValue.serverTimestamp()
+          timestamp: FieldValue.serverTimestamp()
         });
 
       // Update analytics
@@ -446,7 +447,7 @@ export class EnhancedQRService {
       
       transaction.update(qrRef, {
         analytics,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
     });
   }
@@ -480,7 +481,7 @@ export class EnhancedQRService {
 
     await qrRef.update({
       ...updates,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     });
   }
 

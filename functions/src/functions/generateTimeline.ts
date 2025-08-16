@@ -1,5 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { timelineGenerationService } from '../services/timeline-generation.service';
 import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
@@ -49,7 +50,7 @@ export const generateTimeline = onCall(
           'enhancedFeatures.timeline.status': 'processing',
           'enhancedFeatures.timeline.progress': 25,
           'enhancedFeatures.timeline.currentStep': 'Analyzing career progression...',
-          'enhancedFeatures.timeline.startedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.timeline.startedAt': FieldValue.serverTimestamp()
         });
 
       // Generate timeline
@@ -80,7 +81,7 @@ export const generateTimeline = onCall(
           'enhancedFeatures.timeline.progress': 100,
           'enhancedFeatures.timeline.data': timelineData,
           'enhancedFeatures.timeline.htmlFragment': htmlFragment,
-          'enhancedFeatures.timeline.processedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
         });
 
       return {
@@ -98,7 +99,7 @@ export const generateTimeline = onCall(
         .update({
           'enhancedFeatures.timeline.status': 'failed',
           'enhancedFeatures.timeline.error': error.message,
-          'enhancedFeatures.timeline.processedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate timeline: ${error.message}`);
@@ -155,7 +156,7 @@ export const updateTimelineEvent = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.timeline.data': timeline,
-          'enhancedFeatures.timeline.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.timeline.lastModified': FieldValue.serverTimestamp()
         });
 
       return {

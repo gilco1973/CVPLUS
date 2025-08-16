@@ -1,13 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Home, FileText, BarChart3, Eye, Palette, CheckCircle, ChevronLeft, MoreHorizontal } from 'lucide-react';
-
-interface BreadcrumbItem {
-  label: string;
-  path?: string;
-  icon?: React.ReactNode;
-  current?: boolean;
-}
+import { ChevronRight, Home, MoreHorizontal, FileText, BarChart3, Eye, Palette, CheckCircle } from 'lucide-react';
+import { BreadcrumbItem } from '../utils/breadcrumbs';
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
@@ -16,6 +10,22 @@ interface BreadcrumbProps {
   mobile?: boolean;
   showStepIndicator?: boolean;
 }
+
+// Helper function to convert icon string names to React components
+const getIconComponent = (iconName?: string) => {
+  if (!iconName) return null;
+  
+  const iconProps = { className: "w-4 h-4" };
+  
+  switch (iconName) {
+    case 'FileText': return <FileText {...iconProps} />;
+    case 'BarChart3': return <BarChart3 {...iconProps} />;
+    case 'Eye': return <Eye {...iconProps} />;
+    case 'Palette': return <Palette {...iconProps} />;
+    case 'CheckCircle': return <CheckCircle {...iconProps} />;
+    default: return null;
+  }
+};
 
 export const Breadcrumb: React.FC<BreadcrumbProps> = ({ 
   items, 
@@ -131,7 +141,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
             
             {/* Breadcrumb Items */}
             <div className="flex items-center space-x-1 min-w-0 flex-1">
-              {(showFullBreadcrumb ? items : mobileBreadcrumb).map((item, index, array) => (
+              {(showFullBreadcrumb ? items : mobileBreadcrumb).map((item, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && (
                     <ChevronRight className={`w-3 h-3 flex-shrink-0 ${
@@ -145,7 +155,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
                         <span className={`flex-shrink-0 ${
                           variant === 'dark' ? 'text-blue-400' : 'text-blue-600'
                         }`}>
-                          {item.icon}
+                          {getIconComponent(item.icon)}
                         </span>
                       )}
                       <span className={`font-medium text-sm truncate ${
@@ -167,7 +177,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
                         <span className={`flex-shrink-0 ${
                           variant === 'dark' ? 'text-gray-400' : 'text-gray-600'
                         }`}>
-                          {item.icon}
+                          {getIconComponent(item.icon)}
                         </span>
                       )}
                       <span className="truncate">{item.label}</span>
@@ -211,7 +221,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
             <span className={`flex items-center space-x-1 font-medium ${
               variant === 'dark' ? 'text-gray-100' : 'text-gray-900'
             }`}>
-              {item.icon && <span className={variant === 'dark' ? 'text-blue-400' : 'text-blue-600'}>{item.icon}</span>}
+              {item.icon && <span className={variant === 'dark' ? 'text-blue-400' : 'text-blue-600'}>{getIconComponent(item.icon)}</span>}
               <span>{item.label}</span>
             </span>
           ) : (
@@ -223,7 +233,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
                   : 'text-gray-700 hover:text-blue-600'
               }`}
             >
-              {item.icon && <span className={variant === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{item.icon}</span>}
+              {item.icon && <span className={variant === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{getIconComponent(item.icon)}</span>}
               <span>{item.label}</span>
             </button>
           )}
@@ -233,78 +243,3 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
   );
 };
 
-// Helper function to generate breadcrumb items for different pages
-export const generateBreadcrumbs = (currentPage: string, jobId?: string): BreadcrumbItem[] => {
-
-  switch (currentPage) {
-    case 'processing':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', current: true, icon: <BarChart3 className="w-4 h-4" /> },
-      ];
-
-    case 'analysis':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', current: true, icon: <Eye className="w-4 h-4" /> },
-      ];
-
-    case 'preview':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
-        { label: 'Preview & Customize', current: true, icon: <Palette className="w-4 h-4" /> },
-      ];
-
-    case 'templates':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
-        { label: 'Template Selection', current: true, icon: <Palette className="w-4 h-4" /> },
-      ];
-
-    case 'results':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
-        { label: 'Feature Selection', current: true, icon: <CheckCircle className="w-4 h-4" /> },
-      ];
-
-    case 'final-results':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
-        { label: 'Final Results', current: true, icon: <CheckCircle className="w-4 h-4" /> },
-      ];
-
-    case 'keywords':
-      return [
-        { label: 'Upload CV', path: '/', icon: <FileText className="w-4 h-4" /> },
-        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: <BarChart3 className="w-4 h-4" /> },
-        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: <Eye className="w-4 h-4" /> },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: <Palette className="w-4 h-4" /> },
-        { label: 'Keyword Optimization', current: true, icon: <BarChart3 className="w-4 h-4" /> },
-      ];
-
-    case 'features':
-      return [
-        { label: 'Features', current: true, icon: <Palette className="w-4 h-4" /> },
-      ];
-
-    case 'about':
-      return [
-        { label: 'About', current: true, icon: <FileText className="w-4 h-4" /> },
-      ];
-
-    default:
-      return [];
-  }
-};

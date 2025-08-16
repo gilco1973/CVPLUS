@@ -5,6 +5,7 @@
 
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { google } from 'googleapis';
 import ical from 'ical-generator';
 import axios from 'axios';
@@ -603,7 +604,7 @@ export class CalendarIntegrationService {
           enabled: true,
           status: 'completed',
           data: calendarData,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp()
+          generatedAt: FieldValue.serverTimestamp()
         }
       });
   }

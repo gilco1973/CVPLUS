@@ -1,5 +1,6 @@
 import { ParsedCV } from './cvParsing.service';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface Testimonial {
   id: string;
@@ -95,7 +96,7 @@ export class TestimonialsService {
       // Store in Firestore
       await this.db.collection('jobs').doc(jobId).collection('features').doc('testimonials').set({
         carousel,
-        generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        generatedAt: FieldValue.serverTimestamp(),
         status: 'completed'
       });
 

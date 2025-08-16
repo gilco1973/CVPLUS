@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Header } from './Header';
 import { MobilePageWrapper } from './MobilePageWrapper';
-import { ResponsiveStepIndicator, CompactStepIndicator } from './ResponsiveStepIndicator';
+import { ResponsiveStepIndicator } from './ResponsiveStepIndicator';
 
 interface MobilePageLayoutProps {
   children: ReactNode;

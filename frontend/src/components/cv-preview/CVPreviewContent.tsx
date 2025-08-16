@@ -11,11 +11,7 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   showFeaturePreviews,
   collapsedSections,
   qrCodeSettings,
-  isEditing: _isEditing, // Not used in current implementation
-  editingSection: _editingSection, // Not used in current implementation
-  achievementAnalysis: _achievementAnalysis, // Not used in current implementation
   showPlaceholderBanner,
-  onSectionEdit: _onSectionEdit, // Not used in current implementation
   onToggleSection,
   onEditQRCode,
   onAnalyzeAchievements,
@@ -81,13 +77,20 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
     });
 
     // Add global functions for inline HTML calls
-    (window as any).toggleSection = onToggleSection;
-    (window as any).editSection = (section: string) => {
+    const windowWithFunctions = window as Window & {
+      toggleSection?: typeof onToggleSection;
+      editSection?: (section: string) => void;
+      editQRCode?: typeof onEditQRCode;
+      handleAchievementAnalysis?: typeof onAnalyzeAchievements;
+    };
+    
+    windowWithFunctions.toggleSection = onToggleSection;
+    windowWithFunctions.editSection = (section: string) => {
       // This should trigger the section editing in the parent component
       console.log('Edit section requested:', section);
     };
-    (window as any).editQRCode = onEditQRCode;
-    (window as any).handleAchievementAnalysis = onAnalyzeAchievements;
+    windowWithFunctions.editQRCode = onEditQRCode;
+    windowWithFunctions.handleAchievementAnalysis = onAnalyzeAchievements;
 
     // Add smooth animations for feature previews
     const featurePreviews = previewRef.current.querySelectorAll('.feature-preview');
@@ -98,10 +101,10 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
 
     return () => {
       // Clean up global functions
-      delete (window as any).toggleSection;
-      delete (window as any).editSection;
-      delete (window as any).editQRCode;
-      delete (window as any).handleAchievementAnalysis;
+      delete windowWithFunctions.toggleSection;
+      delete windowWithFunctions.editSection;
+      delete windowWithFunctions.editQRCode;
+      delete windowWithFunctions.handleAchievementAnalysis;
     };
   }, [onToggleSection, onEditQRCode, onAnalyzeAchievements, previewData]);
 

@@ -5,6 +5,7 @@
 
 import { ParsedCV } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import OpenAI from 'openai';
 // import axios from 'axios'; // Commented out unused import
 import { config } from '../config/environment';
@@ -731,7 +732,7 @@ Return empty array if no specific projects found.`;
           enabled: true,
           status: 'completed',
           data: gallery,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp()
+          generatedAt: FieldValue.serverTimestamp()
         }
       });
   }

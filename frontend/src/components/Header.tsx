@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 import { UserMenu } from './UserMenu';
-import { Breadcrumb, generateBreadcrumbs } from './Breadcrumb';
-import { Menu, X, ChevronLeft } from 'lucide-react';
+import { Breadcrumb } from './Breadcrumb';
+import { generateBreadcrumbs } from '../utils/breadcrumbs';
+import { ChevronLeft } from 'lucide-react';
 
 interface HeaderProps {
   currentPage?: string;

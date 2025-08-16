@@ -13,6 +13,7 @@ import {
 } from '../services/advanced-predictions.service';
 import { corsOptions } from '../config/cors';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Initialize admin if not already done
 if (!admin.apps.length) {
@@ -600,7 +601,7 @@ async function logAdvancedPrediction(
       industry: request.jobData.industry,
       location: request.jobData.location,
       result: JSON.stringify(result),
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       version: '2.0'
     });
 
@@ -608,7 +609,7 @@ async function logAdvancedPrediction(
     await db.collection('analytics_events').add({
       eventType: 'advanced_prediction',
       userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       data: {
         predictionType,
         jobTitle: request.jobData.title,

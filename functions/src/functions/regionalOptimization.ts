@@ -10,6 +10,7 @@ import { CallableRequest } from 'firebase-functions/v2/https';
 import { RegionalLocalizationService, RegionalOptimizationRequest } from '../services/regional-localization.service';
 import { corsOptions } from '../config/cors';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Initialize admin if not already done
 if (!admin.apps.length) {
@@ -464,7 +465,7 @@ async function logRegionalOptimization(
       culturalFit: result.culturalFit,
       legalCompliance: result.legalCompliance.compliant,
       recommendationsCount: result.localizedRecommendations.length,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       version: '2.0'
     });
 
@@ -472,7 +473,7 @@ async function logRegionalOptimization(
     await db.collection('analytics_events').add({
       eventType: 'regional_optimization',
       userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       data: {
         region: request.targetRegion,
         country: request.targetCountry,
@@ -493,7 +494,7 @@ async function updateUserRegionalPreferences(userId: string, region: string, cou
       regionalPreferences: {
         lastOptimizedRegion: region,
         lastOptimizedCountry: country,
-        lastOptimizedDate: admin.firestore.FieldValue.serverTimestamp(),
+        lastOptimizedDate: FieldValue.serverTimestamp(),
         optimizedRegions: admin.firestore.FieldValue.arrayUnion(region)
       }
     }, { merge: true });
@@ -608,7 +609,7 @@ async function logComplianceCheck(userId: string, region: string, country: strin
       compliant: result.compliant,
       issuesCount: result.issues.length,
       riskLevel: result.riskLevel,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
+      timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
     console.error('Failed to log compliance check:', error);
@@ -625,7 +626,7 @@ async function logRegionalComparison(userId: string, regions: string[], results:
       averageScore: results.length > 0 
         ? results.reduce((sum, r) => sum + (r.regionScore || 0), 0) / results.length 
         : 0,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
+      timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
     console.error('Failed to log regional comparison:', error);

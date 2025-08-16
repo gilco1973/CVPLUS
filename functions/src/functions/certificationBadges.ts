@@ -1,5 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { certificationBadgesService } from '../services/certification-badges.service';
 import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
@@ -41,7 +42,7 @@ export const generateCertificationBadges = onCall(
           'enhancedFeatures.certificationBadges.status': 'processing',
           'enhancedFeatures.certificationBadges.progress': 25,
           'enhancedFeatures.certificationBadges.currentStep': 'Analyzing certifications...',
-          'enhancedFeatures.certificationBadges.startedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.startedAt': FieldValue.serverTimestamp()
         });
 
       // Generate certification badges
@@ -72,7 +73,7 @@ export const generateCertificationBadges = onCall(
           'enhancedFeatures.certificationBadges.progress': 100,
           'enhancedFeatures.certificationBadges.data': badgesCollection,
           'enhancedFeatures.certificationBadges.htmlFragment': htmlFragment,
-          'enhancedFeatures.certificationBadges.processedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
         });
 
       return {
@@ -90,7 +91,7 @@ export const generateCertificationBadges = onCall(
         .update({
           'enhancedFeatures.certificationBadges.status': 'failed',
           'enhancedFeatures.certificationBadges.error': error.message,
-          'enhancedFeatures.certificationBadges.processedAt': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate certification badges: ${error.message}`);
@@ -174,7 +175,7 @@ export const updateBadgeDisplayOptions = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.certificationBadges.data.displayOptions': displayOptions,
-          'enhancedFeatures.certificationBadges.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -255,7 +256,7 @@ export const addCustomCertification = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.certificationBadges.data': collection,
-          'enhancedFeatures.certificationBadges.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.lastModified': FieldValue.serverTimestamp()
         });
 
       return {
@@ -335,7 +336,7 @@ export const removeCertificationBadge = onCall(
         .doc(jobId)
         .update({
           'enhancedFeatures.certificationBadges.data': collection,
-          'enhancedFeatures.certificationBadges.lastModified': admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.lastModified': FieldValue.serverTimestamp()
         });
 
       return {

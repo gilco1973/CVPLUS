@@ -4,9 +4,9 @@
  * Handles help actions and business logic
  */
 
-import type { HelpUserPreferences, HelpAnalytics, HelpContent, HelpTour } from '../../types/help';
+import type { HelpUserPreferences, HelpAnalytics, HelpContent, HelpTour, HelpContextState } from '../../types/help';
 import { HelpContentService } from '../helpContentService';
-import { HelpStateUtils } from './HelpStateManager';
+import { HelpStateUtils, type HelpAction } from './HelpStateManager';
 
 export interface HelpContextActions {
   setContext: (context: string) => void;
@@ -24,17 +24,17 @@ export interface HelpContextActions {
 }
 
 export class HelpActionManager {
-  private dispatch: (action: any) => void;
+  private dispatch: (action: HelpAction) => void;
   private sessionId: string;
   private helpService: HelpContentService;
 
-  constructor(dispatch: (action: any) => void, sessionId: string) {
+  constructor(dispatch: (action: HelpAction) => void, sessionId: string) {
     this.dispatch = dispatch;
     this.sessionId = sessionId;
     this.helpService = HelpContentService.getInstance();
   }
 
-  createActions(state: any): HelpContextActions {
+  createActions(state: HelpContextState): HelpContextActions {
     return {
       setContext: (context: string) => {
         this.dispatch({ type: 'SET_CONTEXT', payload: context });

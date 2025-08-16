@@ -233,7 +233,7 @@ export class RetryMechanism {
     config: RetryConfig
   ): number {
     // Use error-specific delay if available
-    let baseDelay = error.retryDelay || config.initialDelay;
+    const baseDelay = error.retryDelay || config.initialDelay;
 
     // Apply exponential backoff
     let delay = Math.min(

@@ -144,16 +144,16 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       try {
         recommendationsData = await CVServiceCore.getRecommendations(job.id);
         console.log(`[CVAnalysisResults] Raw API response received:`, recommendationsData);
-      } catch (apiError: any) {
+      } catch (apiError: unknown) {
         console.error(`[CVAnalysisResults] API call failed:`, apiError);
         console.error(`[CVAnalysisResults] Error details:`, {
-          message: apiError.message,
-          code: apiError.code,
-          stack: apiError.stack
+          message: apiError instanceof Error ? apiError.message : 'Unknown error',
+          code: apiError && typeof apiError === 'object' && 'code' in apiError ? apiError.code : 'Unknown code',
+          stack: apiError instanceof Error ? apiError.stack : 'No stack trace'
         });
         
         // Check if the error is a timeout - use fallback recommendations
-        if (apiError.message && apiError.message.includes('Timeout after')) {
+        if (apiError instanceof Error && apiError.message.includes('Timeout after')) {
           console.log(`[CVAnalysisResults] Timeout detected, using fallback mock recommendations for testing`);
           
           // Create realistic mock recommendations for fallback
@@ -251,7 +251,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       });
       
       // Transform backend recommendations to frontend format
-      let backendRecs: any[] | null = null;
+      let backendRecs: unknown[] | null = null;
       
       console.log('🔍 [DATA PARSING] Starting comprehensive data structure analysis...');
       
@@ -297,29 +297,37 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         }
       });
       
-      if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
-        const validBackendRecs = backendRecs as any[];
+      if (backendRecs && Array.isArray(backendRecs) && backendRecs.length > 0) {
+        const validBackendRecs = backendRecs;
         console.log(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
         console.log('First 3 recommendations:', validBackendRecs.slice(0, 3));
-        const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: any) => {
+        const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: unknown) => {
+          // Type guard to ensure rec is an object
+          if (!rec || typeof rec !== 'object') {
+            throw new Error('Invalid recommendation data structure');
+          }
+          const recommendation = rec as Record<string, unknown>;
           // Map backend impact to frontend priority
           let frontendPriority: 'high' | 'medium' | 'low';
-          if (rec.impact === 'high' || rec.priority >= 8) {
+          if (recommendation.impact === 'high' || (typeof recommendation.priority === 'number' && recommendation.priority >= 8)) {
             frontendPriority = 'high';
-          } else if (rec.impact === 'medium' || rec.priority >= 5) {
+          } else if (recommendation.impact === 'medium' || (typeof recommendation.priority === 'number' && recommendation.priority >= 5)) {
             frontendPriority = 'medium';
           } else {
             frontendPriority = 'low';
           }
           
           return {
-            id: rec.id,
-            title: rec.title || 'CV Improvement',
-            description: rec.description || 'Enhance your CV content',
+            id: typeof recommendation.id === 'string' ? recommendation.id : `rec-${Math.random()}`,
+            title: typeof recommendation.title === 'string' ? recommendation.title : 'CV Improvement',
+            description: typeof recommendation.description === 'string' ? recommendation.description : 'Enhance your CV content',
             priority: frontendPriority,
-            category: rec.category || rec.section || 'General',
-            impact: rec.description || `${rec.impact || 'medium'} impact improvement`,
-            estimatedImprovement: rec.estimatedScoreImprovement || 5,
+            category: typeof recommendation.category === 'string' ? recommendation.category : 
+                     typeof recommendation.section === 'string' ? recommendation.section : 'General',
+            impact: typeof recommendation.description === 'string' ? recommendation.description : 
+                   `${recommendation.impact || 'medium'} impact improvement`,
+            estimatedImprovement: typeof recommendation.estimatedScoreImprovement === 'number' ? 
+                                 recommendation.estimatedScoreImprovement : 5,
             selected: frontendPriority === 'high' // Auto-select high priority items
           };
         });
@@ -442,7 +450,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         isCurrentlyLoading: isLoading
       });
     }
-  }, [job.id]); // Keep dependency simple - enhanced logic handles StrictMode
+  }, [job.id, isLoading, loadAnalysisAndRecommendations, loadedJobId]); // Keep dependency simple - enhanced logic handles StrictMode
 
   const toggleRecommendation = (id: string) => {
     setRecommendations(prev =>
@@ -523,8 +531,11 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       const result = await applyImprovements(job.id, magicSelectedRecs);
       
       // Store the improved content for the preview page
-      if (result && (result as any).data?.improvedCV) {
-        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).data.improvedCV));
+      if (result && result && typeof result === 'object' && 'data' in result) {
+        const resultData = result.data as Record<string, unknown>;
+        if (resultData && 'improvedCV' in resultData) {
+          sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify(resultData.improvedCV));
+        }
       }
       
       // Store selected recommendations
@@ -619,9 +630,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         setIsMagicTransforming(false);
       }, 200);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('💥 [DEBUG] Magic transform error:', error);
-      toast.error(error.message || 'Failed to apply magic transformation. Please try manual selection.');
+      toast.error(error instanceof Error ? error.message : 'Failed to apply magic transformation. Please try manual selection.');
       setIsMagicTransforming(false);
     }
   };
@@ -1006,17 +1017,22 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                       const result = await applyImprovements(job.id, selectedRecommendationIds);
                       
                       // Store the improved content for the preview page
-                      if (result && (result as any).data?.improvedCV) {
-                        sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify((result as any).data.improvedCV));
+                      if (result && result && typeof result === 'object' && 'data' in result) {
+                        const resultData = result.data as Record<string, unknown>;
+                        if (resultData && 'improvedCV' in resultData) {
+                          sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify(resultData.improvedCV));
+                        }
                       }
                       
                       toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       console.error('❌ [DEBUG] Apply improvements error:', error);
-                      toast.error(error.message || 'Failed to apply some improvements. Continuing to preview...');
+                      toast.error(error instanceof Error ? error.message : 'Failed to apply some improvements. Continuing to preview...');
                       // Continue anyway - don't let this stop navigation
                     }
                   } else {
+                    // No recommendations selected - just continue to preview
+                    console.log('No recommendations selected, proceeding to preview');
                   }
                   
                   // Store recommendations for preview page
@@ -1126,7 +1142,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   
                   // Navigation feedback handled in strategies above
                   
-                } catch (error: any) {
+                } catch (error: unknown) {
                   console.error('💥 [DEBUG] Unexpected error:', error);
                   toast.error('Unexpected error occurred. Navigating to preview anyway...');
                   
