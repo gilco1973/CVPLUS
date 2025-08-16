@@ -13,6 +13,7 @@ import { DownloadActions } from '../components/final-results/DownloadActions';
 import { PodcastPlayer } from '../components/PodcastPlayer';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { kebabToCamelCase } from '../utils/featureUtils';
 
 // Progressive Enhancement Types
 interface FeatureProgress {
@@ -297,11 +298,30 @@ export const FinalResultsPage = () => {
   };
 
   // Set up feature queue based on selected features
-  const setupFeatureQueue = (selectedFeatures: string[]) => {
+  const setupFeatureQueue = (selectedFeatures: string[], jobId: string) => {
     console.log('🔍 [FEATURE QUEUE DEBUG] Input features:', selectedFeatures);
     console.log('🔍 [FEATURE QUEUE DEBUG] Available FEATURE_CONFIGS keys:', Object.keys(FEATURE_CONFIGS));
     
-    const queue = selectedFeatures
+    // Convert kebab-case features to camelCase for FEATURE_CONFIGS lookup
+    // First normalize any malformed kebab-case features and handle special cases
+    const normalizedFeatures = selectedFeatures.map(feature => {
+      if (feature === 'embed-q-r-code') {
+        return 'embed-qr-code';
+      }
+      return feature;
+    });
+    
+    const camelCaseFeatures = normalizedFeatures.map(feature => {
+      // Special case: embed-qr-code should become embedQRCode (not embedQrCode)
+      if (feature === 'embed-qr-code') {
+        return 'embedQRCode';
+      }
+      return kebabToCamelCase(feature);
+    });
+    console.log('🔄 [FEATURE QUEUE DEBUG] Normalized features:', normalizedFeatures);
+    console.log('🔄 [FEATURE QUEUE DEBUG] Converted to camelCase:', camelCaseFeatures);
+    
+    const queue = camelCaseFeatures
       .filter(featureId => {
         const hasConfig = !!FEATURE_CONFIGS[featureId];
         console.log(`🔍 [FEATURE QUEUE DEBUG] Feature ${featureId}: ${hasConfig ? 'FOUND' : 'MISSING'} in FEATURE_CONFIGS`);
@@ -322,6 +342,9 @@ export const FinalResultsPage = () => {
       };
     });
     setProgressState(initialProgress);
+    
+    // Set up progress tracking with the created queue
+    setupProgressTracking(jobId, queue);
   };
 
   // Set up real-time progress tracking
@@ -466,12 +489,8 @@ export const FinalResultsPage = () => {
           
           if (jobData.generatedCV?.features && jobData.generatedCV.features.length > 0) {
             console.log('✅ [DEBUG] Features found, setting up queue');
-            const queue = jobData.generatedCV.features
-              .filter(featureId => !!FEATURE_CONFIGS[featureId])
-              .map(featureId => FEATURE_CONFIGS[featureId]);
-            setupFeatureQueue(jobData.generatedCV.features);
+            setupFeatureQueue(jobData.generatedCV.features, jobId);
             setIsProcessingFeatures(true);
-            setupProgressTracking(jobId, queue);
           } else {
             console.log('⚠️ [DEBUG] No features found in generatedCV, checking session storage');
             
@@ -484,12 +503,8 @@ export const FinalResultsPage = () => {
                 
                 if (config.features && config.features.length > 0) {
                   console.log('✅ [DEBUG] Using features from session storage');
-                  const queue = config.features
-                    .filter((featureId: string) => !!FEATURE_CONFIGS[featureId])
-                    .map((featureId: string) => FEATURE_CONFIGS[featureId]);
-                  setupFeatureQueue(config.features);
+                  setupFeatureQueue(config.features, jobId);
                   setIsProcessingFeatures(true);
-                  setupProgressTracking(jobId, queue);
                 }
               }
             } catch (error) {
@@ -589,13 +604,8 @@ export const FinalResultsPage = () => {
       if (allFeatures.length > 0) {
         // Convert kebab-case features to camelCase for frontend
         const camelCaseFeatures = allFeatures.map(f => kebabToCamelMap[f]).filter(f => f);
-        const queue = camelCaseFeatures
-          .filter(featureId => !!FEATURE_CONFIGS[featureId])
-          .map(featureId => FEATURE_CONFIGS[featureId]);
-        
-        setupFeatureQueue(camelCaseFeatures);
+        setupFeatureQueue(camelCaseFeatures, jobData.id);
         setIsProcessingFeatures(true);
-        setupProgressTracking(jobData.id, queue);
       }
       
       console.log('✅ Quick Create: Full workflow completed successfully');
@@ -703,12 +713,8 @@ export const FinalResultsPage = () => {
       await loadBaseHTML(updatedJob);
       
       if (selectedFeatures.length > 0) {
-        const queue = selectedFeatures
-          .filter(featureId => !!FEATURE_CONFIGS[featureId])
-          .map(featureId => FEATURE_CONFIGS[featureId]);
-        setupFeatureQueue(selectedFeatures);
+        setupFeatureQueue(selectedFeatures, jobData.id);
         setIsProcessingFeatures(true);
-        setupProgressTracking(jobData.id, queue);
       }
       
       console.log('✅ CV generation completed successfully');

@@ -181,6 +181,12 @@ export class CVParser {
       throw new Error('User must be authenticated to generate CV. Please sign in and try again.');
     }
 
+    // Import the feature conversion utility
+    const { convertFeaturesToKebabCase } = await import('../../utils/featureUtils');
+    
+    // Convert camelCase features to kebab-case for backend
+    const kebabCaseFeatures = convertFeaturesToKebabCase(features);
+
     const generateCVFunction = httpsCallable(functions, 'generateCV');
     
     // Create timeout promise for hanging Firebase calls
@@ -194,7 +200,8 @@ export class CVParser {
       console.log('🚀 Calling Firebase generateCV function with:', {
         jobId,
         templateId,
-        features,
+        originalFeatures: features,
+        convertedFeatures: kebabCaseFeatures,
         timestamp: new Date().toISOString()
       });
       
@@ -203,7 +210,7 @@ export class CVParser {
         generateCVFunction({
           jobId,
           templateId,
-          features
+          features: kebabCaseFeatures
         }),
         timeoutPromise
       ]) as any;

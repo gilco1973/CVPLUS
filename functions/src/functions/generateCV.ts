@@ -139,10 +139,10 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
   console.log('🚀 [PROGRESSIVE ENHANCEMENT] Processing features for job:', jobId);
   console.log('🚀 [PROGRESSIVE ENHANCEMENT] Features to process:', features);
   
-  // Map camelCase feature names to their processing functions
+  // Map kebab-case feature names (received from frontend) to their processing functions
   const legacyFeatureMap: Record<string, () => Promise<void>> = {
     // Core Enhancement Features
-    'atsOptimization': async () => {
+    'ats-optimization': async () => {
       try {
         console.log('✨ Processing ATS Optimization...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -158,7 +158,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'keywordEnhancement': async () => {
+    'keyword-enhancement': async () => {
       try {
         console.log('✨ Processing Keyword Enhancement...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -173,7 +173,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'achievementHighlighting': async () => {
+    'achievement-highlighting': async () => {
       try {
         console.log('✨ Processing Achievement Highlighting...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -189,7 +189,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
     },
     
     // Interactive Features
-    'skillsVisualization': async () => {
+    'skills-visualization': async () => {
       try {
         console.log('✨ Processing Skills Visualization...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -204,7 +204,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'skillsChart': async () => {
+    'skills-chart': async () => {
       try {
         console.log('✨ Processing Skills Chart...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -219,7 +219,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'interactiveTimeline': async () => {
+    'interactive-timeline': async () => {
       try {
         console.log('✨ Processing Interactive Timeline...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -235,7 +235,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
     },
     
     // Multimedia Features
-    'generatePodcast': async () => {
+    'generate-podcast': async () => {
       try {
         console.log('✨ Processing Career Podcast...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -250,7 +250,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'videoIntroduction': async () => {
+    'video-introduction': async () => {
       try {
         console.log('✨ Processing Video Introduction...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -265,7 +265,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'portfolioGallery': async () => {
+    'portfolio-gallery': async () => {
       try {
         console.log('✨ Processing Portfolio Gallery...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -281,7 +281,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
     },
     
     // Professional Features
-    'certificationBadges': async () => {
+    'certification-badges': async () => {
       try {
         console.log('✨ Processing Certification Badges...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -296,7 +296,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'languageProficiency': async () => {
+    'language-proficiency': async () => {
       try {
         console.log('✨ Processing Language Proficiency...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -311,7 +311,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'achievementsShowcase': async () => {
+    'achievements-showcase': async () => {
       try {
         console.log('✨ Processing Achievements Showcase...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -327,7 +327,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
     },
     
     // Contact & Integration Features
-    'contactForm': async () => {
+    'contact-form': async () => {
       try {
         console.log('✨ Processing Contact Form...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -342,7 +342,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'socialMediaLinks': async () => {
+    'social-media-links': async () => {
       try {
         console.log('✨ Processing Social Media Links...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -357,7 +357,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'availabilityCalendar': async () => {
+    'availability-calendar': async () => {
       try {
         console.log('✨ Processing Availability Calendar...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -372,7 +372,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'testimonialsCarousel': async () => {
+    'testimonials-carousel': async () => {
       try {
         console.log('✨ Processing Testimonials Carousel...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -388,7 +388,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
     },
     
     // Technical Features
-    'embedQRCode': async () => {
+    'embed-qr-code': async () => {
       try {
         console.log('✨ Processing QR Code Integration...');
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -403,7 +403,7 @@ async function processLegacyFeatures(jobId: string, userId: string, features: st
       }
     },
     
-    'privacyMode': async () => {
+    'privacy-mode': async () => {
       try {
         console.log('✨ Processing Privacy Protection...');
         await admin.firestore().collection('jobs').doc(jobId).update({
