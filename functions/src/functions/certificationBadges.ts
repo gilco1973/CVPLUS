@@ -2,6 +2,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
 import { certificationBadgesService } from '../services/certification-badges.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generateCertificationBadges = onCall(
   {
@@ -32,15 +33,52 @@ export const generateCertificationBadges = onCall(
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
 
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.certificationBadges.status': 'processing',
+          'enhancedFeatures.certificationBadges.progress': 25,
+          'enhancedFeatures.certificationBadges.currentStep': 'Analyzing certifications...',
+          'enhancedFeatures.certificationBadges.startedAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+
       // Generate certification badges
       const badgesCollection = await certificationBadgesService.generateCertificationBadges(
         jobData.parsedData,
         jobId
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.certificationBadges.progress': 75,
+          'enhancedFeatures.certificationBadges.currentStep': 'Creating badge visualizations...'
+        });
+
+      // Generate HTML fragment for progressive enhancement
+      const certifications = jobData.parsedData.certifications || [];
+      const htmlFragment = HTMLFragmentGeneratorService.generateCertificationBadgesHTML(certifications);
+
+      // Update with final results
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.certificationBadges.status': 'completed',
+          'enhancedFeatures.certificationBadges.progress': 100,
+          'enhancedFeatures.certificationBadges.data': badgesCollection,
+          'enhancedFeatures.certificationBadges.htmlFragment': htmlFragment,
+          'enhancedFeatures.certificationBadges.processedAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+
       return {
         success: true,
-        badges: badgesCollection
+        badges: badgesCollection,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating certification badges:', error);
@@ -52,7 +90,7 @@ export const generateCertificationBadges = onCall(
         .update({
           'enhancedFeatures.certificationBadges.status': 'failed',
           'enhancedFeatures.certificationBadges.error': error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.certificationBadges.processedAt': admin.firestore.FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate certification badges: ${error.message}`);

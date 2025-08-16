@@ -1,7 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles, Loader2, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { ref, getDownloadURL } from 'firebase/storage';
 import { getJob, generateCV, generateEnhancedPodcast } from '../services/cvService';
+import { db, storage } from '../lib/firebase';
 import type { Job } from '../types/cv';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import { Header } from '../components/Header';
@@ -11,10 +14,153 @@ import { PodcastPlayer } from '../components/PodcastPlayer';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
+// Progressive Enhancement Types
+interface FeatureProgress {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  currentStep?: string;
+  error?: string;
+  htmlFragment?: string;
+  processedAt?: any;
+}
+
+interface ProgressState {
+  [featureId: string]: FeatureProgress;
+}
+
+interface FeatureConfig {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+}
+
+// Feature Configuration
+const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
+  'skills-visualization': {
+    id: 'skills-visualization',
+    name: 'Skills Visualization',
+    icon: '📊',
+    description: 'Interactive charts and skill assessments'
+  },
+  'certification-badges': {
+    id: 'certification-badges',
+    name: 'Certification Badges',
+    icon: '🏆',
+    description: 'Professional certification displays'
+  },
+  'calendar-integration': {
+    id: 'calendar-integration',
+    name: 'Calendar Integration',
+    icon: '📅',
+    description: 'Availability and scheduling'
+  },
+  'interactive-timeline': {
+    id: 'interactive-timeline',
+    name: 'Interactive Timeline',
+    icon: '⏰',
+    description: 'Professional journey visualization'
+  },
+  'language-proficiency': {
+    id: 'language-proficiency',
+    name: 'Language Proficiency',
+    icon: '🌍',
+    description: 'Language skills assessment'
+  },
+  'portfolio-gallery': {
+    id: 'portfolio-gallery',
+    name: 'Portfolio Gallery',
+    icon: '🖼️',
+    description: 'Project showcase gallery'
+  },
+  'video-introduction': {
+    id: 'video-introduction',
+    name: 'Video Introduction',
+    icon: '🎥',
+    description: 'Personal video introduction'
+  },
+  'generate-podcast': {
+    id: 'generate-podcast',
+    name: 'Career Podcast',
+    icon: '🎙️',
+    description: 'AI-generated career story'
+  }
+};
+
+// Feature Progress Card Component
+const FeatureProgressCard: React.FC<{
+  feature: FeatureConfig;
+  progress: FeatureProgress;
+}> = ({ feature, progress }) => {
+  const getStatusIcon = () => {
+    switch (progress.status) {
+      case 'completed':
+        return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case 'processing':
+        return <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />;
+      case 'failed':
+        return <AlertCircle className="w-5 h-5 text-red-400" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (progress.status) {
+      case 'completed':
+        return 'border-green-500 bg-green-500/10';
+      case 'processing':
+        return 'border-blue-500 bg-blue-500/10';
+      case 'failed':
+        return 'border-red-500 bg-red-500/10';
+      default:
+        return 'border-gray-600 bg-gray-800/50';
+    }
+  };
+
+  return (
+    <div className={`rounded-lg border p-4 ${getStatusColor()}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{feature.icon}</span>
+          <h3 className="font-medium text-gray-100">{feature.name}</h3>
+        </div>
+        {getStatusIcon()}
+      </div>
+      
+      <p className="text-sm text-gray-400 mb-3">{feature.description}</p>
+      
+      {progress.status === 'processing' && (
+        <div className="space-y-2">
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress.progress || 0}%` }}
+            />
+          </div>
+          {progress.currentStep && (
+            <p className="text-xs text-gray-400">{progress.currentStep}</p>
+          )}
+        </div>
+      )}
+      
+      {progress.status === 'failed' && progress.error && (
+        <p className="text-sm text-red-400">{progress.error}</p>
+      )}
+      
+      {progress.status === 'completed' && (
+        <p className="text-sm text-green-400">Enhancement complete!</p>
+      )}
+    </div>
+  );
+};
+
 export const FinalResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Original states
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,28 +168,132 @@ export const FinalResultsPage = () => {
   const [generationConfig, setGenerationConfig] = useState<any>(null);
   const isMountedRef = useRef(true);
   const hasTriggeredGeneration = useRef(false);
+  
+  // Progressive Enhancement states
+  const [baseHTML, setBaseHTML] = useState<string>('');
+  const [enhancedHTML, setEnhancedHTML] = useState<string>('');
+  const [progressState, setProgressState] = useState<ProgressState>({});
+  const [featureQueue, setFeatureQueue] = useState<FeatureConfig[]>([]);
+  const [isProcessingFeatures, setIsProcessingFeatures] = useState(false);
+  const [progressUnsubscribe, setProgressUnsubscribe] = useState<(() => void) | null>(null);
 
   useEffect(() => {
-    // Ensure mounted state is true when component mounts
     isMountedRef.current = true;
-    console.log('🏗️ [DEBUG] FinalResultsPage component mounted, isMountedRef.current set to:', isMountedRef.current);
+    console.log('🏗️ [DEBUG] Progressive FinalResultsPage mounted');
     
-    // Cleanup function to prevent memory leaks
     return () => {
-      console.log('🧹 [DEBUG] FinalResultsPage component unmounting, setting isMountedRef.current to false');
+      console.log('🧹 [DEBUG] Progressive FinalResultsPage unmounting');
       isMountedRef.current = false;
+      if (progressUnsubscribe) {
+        progressUnsubscribe();
+      }
     };
   }, []);
+
+  // Load base HTML from Firebase Storage
+  const loadBaseHTML = async (job: Job) => {
+    try {
+      if (job.generatedCV?.htmlUrl) {
+        console.log('📄 [DEBUG] Loading base HTML from Storage URL:', job.generatedCV.htmlUrl);
+        
+        // For Firebase Storage URLs, we need to fetch the content
+        if (job.generatedCV.htmlUrl.includes('firebasestorage') || job.generatedCV.htmlUrl.includes('localhost:9199')) {
+          const response = await fetch(job.generatedCV.htmlUrl);
+          if (response.ok) {
+            const htmlContent = await response.text();
+            setBaseHTML(htmlContent);
+            setEnhancedHTML(htmlContent);
+            console.log('✅ [DEBUG] Base HTML loaded successfully');
+            return;
+          }
+        }
+      }
+      
+      // Fallback to inline HTML if available
+      if (job.generatedCV?.html) {
+        console.log('📄 [DEBUG] Using inline HTML content');
+        setBaseHTML(job.generatedCV.html);
+        setEnhancedHTML(job.generatedCV.html);
+      }
+    } catch (error) {
+      console.error('❌ [DEBUG] Error loading base HTML:', error);
+      // Use inline HTML as fallback
+      if (job.generatedCV?.html) {
+        setBaseHTML(job.generatedCV.html);
+        setEnhancedHTML(job.generatedCV.html);
+      }
+    }
+  };
+
+  // Set up feature queue based on selected features
+  const setupFeatureQueue = (selectedFeatures: string[]) => {
+    const queue = selectedFeatures
+      .filter(featureId => FEATURE_CONFIGS[featureId])
+      .map(featureId => FEATURE_CONFIGS[featureId]);
+    
+    setFeatureQueue(queue);
+    console.log('🎯 [DEBUG] Feature queue set up:', queue.map(f => f.name));
+    
+    // Initialize progress state
+    const initialProgress: ProgressState = {};
+    queue.forEach(feature => {
+      initialProgress[feature.id] = {
+        status: 'pending',
+        progress: 0
+      };
+    });
+    setProgressState(initialProgress);
+  };
+
+  // Set up real-time progress tracking
+  const setupProgressTracking = (jobId: string) => {
+    console.log('📡 [DEBUG] Setting up progress tracking for job:', jobId);
+    
+    const jobRef = doc(db, 'jobs', jobId);
+    const unsubscribe = onSnapshot(jobRef, (doc) => {
+      if (!doc.exists() || !isMountedRef.current) return;
+      
+      const data = doc.data();
+      const enhancedFeatures = data.enhancedFeatures || {};
+      
+      console.log('📡 [DEBUG] Progress update received:', enhancedFeatures);
+      
+      // Update progress state
+      const newProgressState: ProgressState = {};
+      featureQueue.forEach(feature => {
+        const featureData = enhancedFeatures[feature.id];
+        if (featureData) {
+          newProgressState[feature.id] = {
+            status: featureData.status || 'pending',
+            progress: featureData.progress || 0,
+            currentStep: featureData.currentStep,
+            error: featureData.error,
+            htmlFragment: featureData.htmlFragment,
+            processedAt: featureData.processedAt
+          };
+        } else {
+          newProgressState[feature.id] = {
+            status: 'pending',
+            progress: 0
+          };
+        }
+      });
+      
+      setProgressState(newProgressState);
+      
+      // Update HTML if new fragments are available
+      // This would be implemented in Phase 2 with HTML merging
+      
+    }, (error) => {
+      console.error('❌ [DEBUG] Progress tracking error:', error);
+    });
+    
+    setProgressUnsubscribe(() => unsubscribe);
+  };
 
   useEffect(() => {
     const loadJob = async () => {
       if (!jobId || !isMountedRef.current) {
-        return;
-      }
-
-      if (!jobId) {
-        setError('Job ID is required');
-        setLoading(false);
         return;
       }
 
@@ -70,36 +320,39 @@ export const FinalResultsPage = () => {
           return;
         }
 
-        // Debug: Check the state of generatedCV
-        console.log('🔍 [DEBUG] FinalResultsPage - Job data check:', {
+        console.log('🔍 [DEBUG] Progressive FinalResultsPage - Job data check:', {
           hasGeneratedCV: !!jobData.generatedCV,
           hasHtml: !!(jobData.generatedCV?.html),
-          generatedCVKeys: jobData.generatedCV ? Object.keys(jobData.generatedCV) : null,
-          generatedCV: jobData.generatedCV,
-          hasTriggeredGeneration: hasTriggeredGeneration.current
+          hasHtmlUrl: !!(jobData.generatedCV?.htmlUrl),
+          generatedCVKeys: jobData.generatedCV ? Object.keys(jobData.generatedCV) : null
         });
 
         // Check if CV has been generated, if not trigger generation
-        if (!jobData.generatedCV || !jobData.generatedCV.html) {
-          console.log('🚀 [DEBUG] FinalResultsPage - Triggering CV generation');
-          console.log('⏰ [DEBUG] About to trigger generation - isMountedRef.current:', isMountedRef.current);
-          // Only trigger generation once
+        if (!jobData.generatedCV || (!jobData.generatedCV.html && !jobData.generatedCV.htmlUrl)) {
+          console.log('🚀 [DEBUG] Triggering CV generation');
           if (!hasTriggeredGeneration.current) {
             hasTriggeredGeneration.current = true;
-            
-            // Small delay to ensure component is fully mounted
             setTimeout(async () => {
-              console.log('⏰ [DEBUG] After timeout - isMountedRef.current:', isMountedRef.current);
               await triggerCVGeneration(jobData);
             }, 100);
           }
           return;
         }
 
-        console.log('✅ [DEBUG] FinalResultsPage - CV already generated, displaying results');
+        console.log('✅ [DEBUG] CV already generated, setting up progressive enhancement');
 
         if (isMountedRef.current) {
           setJob(jobData);
+          
+          // Load base HTML immediately
+          await loadBaseHTML(jobData);
+          
+          // Set up feature queue if features are selected
+          if (jobData.generatedCV?.features?.length > 0) {
+            setupFeatureQueue(jobData.generatedCV.features);
+            setIsProcessingFeatures(true);
+            setupProgressTracking(jobId);
+          }
         }
       } catch (err: any) {
         console.error('Error loading job:', err);
@@ -117,17 +370,16 @@ export const FinalResultsPage = () => {
   }, [jobId, user]);
 
   const triggerCVGeneration = async (jobData: Job) => {
-    console.log('🎯 [DEBUG] triggerCVGeneration started - isMounted:', isMountedRef.current, 'jobData:', jobData?.id, 'generationConfig:', generationConfig);
+    console.log('🎯 [DEBUG] triggerCVGeneration started');
     
     if (!isMountedRef.current) {
-      console.log('❌ [DEBUG] Component not mounted, returning early');
       return;
     }
     
     try {
       if (isMountedRef.current) {
         setIsGenerating(true);
-        setLoading(false); // Stop general loading, show generation state
+        setLoading(false);
       }
       
       // Use stored config or defaults
@@ -136,34 +388,21 @@ export const FinalResultsPage = () => {
       let privacyModeEnabled = false;
       let podcastGeneration = false;
       
-      console.log('⚙️ [DEBUG] Setting up generation config - has generationConfig:', !!generationConfig);
-      
       if (generationConfig) {
         selectedTemplate = generationConfig.template || 'modern';
         selectedFeatures = Object.keys(generationConfig.features || {}).filter(key => generationConfig.features[key]);
         privacyModeEnabled = generationConfig.features?.privacyMode || false;
         podcastGeneration = generationConfig.features?.generatePodcast || false;
-        console.log('✅ [DEBUG] Using stored config');
-      } else {
-        console.log('⚠️ [DEBUG] No generationConfig found, using defaults');
       }
-
-      console.log('🎨 [DEBUG] FinalResultsPage - Generating CV with config:', {
-        jobId: jobData.id,
-        template: selectedTemplate,
-        features: selectedFeatures,
-        privacyMode: privacyModeEnabled,
-        podcast: podcastGeneration
-      });
 
       // Generate CV with privacy mode handling
       if (privacyModeEnabled) {
         selectedFeatures.push('privacy-mode');
       }
 
-      console.log('🔥 [DEBUG] FinalResultsPage - Calling generateCV service');
+      console.log('🔥 [DEBUG] Calling generateCV service with features:', selectedFeatures);
       const result = await generateCV(jobData.id, selectedTemplate, selectedFeatures);
-      console.log('✅ [DEBUG] FinalResultsPage - generateCV service returned:', result);
+      console.log('✅ [DEBUG] generateCV service returned:', result);
       
       // Generate podcast separately if selected
       if (podcastGeneration && isMountedRef.current) {
@@ -193,22 +432,25 @@ export const FinalResultsPage = () => {
       };
       
       setJob(updatedJob);
+      
+      // Load base HTML and set up progressive enhancement
+      await loadBaseHTML(updatedJob);
+      
+      if (selectedFeatures.length > 0) {
+        setupFeatureQueue(selectedFeatures);
+        setIsProcessingFeatures(true);
+        setupProgressTracking(jobData.id);
+      }
+      
       console.log('✅ CV generation completed successfully');
-      toast.success('CV generated successfully!');
+      toast.success('CV generated successfully! Adding enhanced features...');
     } catch (error: any) {
       console.error('❌ [DEBUG] Error in triggerCVGeneration:', error);
-      console.error('❌ [DEBUG] Error details:', {
-        message: error?.message,
-        code: error?.code,
-        stack: error?.stack,
-        name: error?.name
-      });
       if (isMountedRef.current) {
         setError('Failed to generate CV. Please try again.');
         toast.error(error?.message || 'Failed to generate CV');
       }
     } finally {
-      console.log('🏁 [DEBUG] Generation process finished, cleaning up...');
       if (isMountedRef.current) {
         setIsGenerating(false);
       }
@@ -218,7 +460,6 @@ export const FinalResultsPage = () => {
   const handleGenerateAnother = () => {
     navigate('/');
   };
-
 
   if (loading || isGenerating) {
     return (
@@ -284,14 +525,40 @@ export const FinalResultsPage = () => {
         currentPage="final-results" 
         jobId={jobId}
         title="Your Enhanced CV"
-        subtitle="Download your professionally enhanced CV in multiple formats"
+        subtitle={isProcessingFeatures ? 
+          "Your CV is ready! We're adding enhanced features..." : 
+          "Download your professionally enhanced CV in multiple formats"
+        }
         variant="dark"
       />
       
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Progressive Enhancement Status */}
+        {featureQueue.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-cyan-400" />
+                <h2 className="text-lg font-semibold text-gray-100">
+                  {isProcessingFeatures ? 'Adding Enhanced Features' : 'Enhanced Features Complete'}
+                </h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {featureQueue.map(feature => (
+                  <FeatureProgressCard
+                    key={feature.id}
+                    feature={feature}
+                    progress={progressState[feature.id] || { status: 'pending', progress: 0 }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Content Section */}
         <div className="mb-8">
-
           {/* CV Metadata */}
           <CVMetadata job={job} />
 
@@ -306,12 +573,31 @@ export const FinalResultsPage = () => {
           </div>
         )}
 
-        {/* CV Display */}
+        {/* CV Display - Show base HTML immediately, then enhanced */}
         <div className="mb-8">
-          <GeneratedCVDisplay 
-            job={job}
-            className="rounded-lg shadow-lg overflow-hidden"
-          />
+          {baseHTML ? (
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-100">Your CV</h2>
+                {isProcessingFeatures && (
+                  <div className="flex items-center gap-2 text-sm text-cyan-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Adding enhancements...
+                  </div>
+                )}
+              </div>
+              
+              {/* HTML Content Display */}
+              <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
+                <div dangerouslySetInnerHTML={{ __html: enhancedHTML }} />
+              </div>
+            </div>
+          ) : (
+            <GeneratedCVDisplay 
+              job={job}
+              className="rounded-lg shadow-lg overflow-hidden"
+            />
+          )}
         </div>
 
         {/* Action Buttons */}

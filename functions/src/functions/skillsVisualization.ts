@@ -5,6 +5,7 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { skillsVisualizationService } from '../services/skills-visualization.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 import { EnhancedJob, ParsedCV } from '../types/enhanced-models';
 import { corsOptions } from '../config/cors';
 
@@ -76,6 +77,16 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
         throw new HttpsError('permission-denied', 'Unauthorized access to job');
       }
 
+      // Update status to processing
+      await jobDoc.ref.update({
+        'enhancedFeatures.skillsVisualization': {
+          status: 'processing',
+          progress: 25,
+          currentStep: 'Analyzing skills and expertise...',
+          startedAt: new Date()
+        }
+      });
+
       // Generate skills visualization
       const visualization = await skillsVisualizationService.generateVisualization(
         job.parsedData!,
@@ -86,19 +97,31 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
         }
       );
 
-      // Update job with visualization data
+      // Update progress
+      await jobDoc.ref.update({
+        'enhancedFeatures.skillsVisualization.progress': 75,
+        'enhancedFeatures.skillsVisualization.currentStep': 'Generating interactive visualization...'
+      });
+
+      // Generate HTML fragment for progressive enhancement
+      const htmlFragment = HTMLFragmentGeneratorService.generateSkillsVisualizationHTML(visualization);
+
+      // Update job with visualization data and HTML fragment
       await jobDoc.ref.update({
         'enhancedFeatures.skillsVisualization': {
           enabled: true,
           data: visualization,
+          htmlFragment: htmlFragment,
           status: 'completed',
+          progress: 100,
           processedAt: new Date()
         }
       });
 
       return {
         success: true,
-        visualization
+        visualization,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating skills visualization:', error);
@@ -106,7 +129,8 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
         'enhancedFeatures.skillsVisualization.status': 'failed',
-        'enhancedFeatures.skillsVisualization.error': error.message
+        'enhancedFeatures.skillsVisualization.error': error.message,
+        'enhancedFeatures.skillsVisualization.processedAt': new Date()
       });
       
       throw new HttpsError('internal', 'Failed to generate skills visualization');

@@ -2,6 +2,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
 import { timelineGenerationService } from '../services/timeline-generation.service';
+import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
 
 export const generateTimeline = onCall(
   {
@@ -35,9 +36,21 @@ export const generateTimeline = onCall(
       if (jobData.enhancedFeatures?.timeline?.data) {
         return {
           success: true,
-          timeline: jobData.enhancedFeatures.timeline.data
+          timeline: jobData.enhancedFeatures.timeline.data,
+          htmlFragment: jobData.enhancedFeatures.timeline.htmlFragment
         };
       }
+
+      // Update status to processing
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.timeline.status': 'processing',
+          'enhancedFeatures.timeline.progress': 25,
+          'enhancedFeatures.timeline.currentStep': 'Analyzing career progression...',
+          'enhancedFeatures.timeline.startedAt': admin.firestore.FieldValue.serverTimestamp()
+        });
 
       // Generate timeline
       const timelineData = await timelineGenerationService.generateTimeline(
@@ -45,9 +58,35 @@ export const generateTimeline = onCall(
         jobId
       );
 
+      // Update progress
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.timeline.progress': 75,
+          'enhancedFeatures.timeline.currentStep': 'Creating interactive timeline...'
+        });
+
+      // Generate HTML fragment for progressive enhancement
+      const experience = jobData.parsedData.experience || [];
+      const htmlFragment = HTMLFragmentGeneratorService.generateTimelineHTML(experience);
+
+      // Update with final results
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          'enhancedFeatures.timeline.status': 'completed',
+          'enhancedFeatures.timeline.progress': 100,
+          'enhancedFeatures.timeline.data': timelineData,
+          'enhancedFeatures.timeline.htmlFragment': htmlFragment,
+          'enhancedFeatures.timeline.processedAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+
       return {
         success: true,
-        timeline: timelineData
+        timeline: timelineData,
+        htmlFragment
       };
     } catch (error: any) {
       console.error('Error generating timeline:', error);
@@ -59,7 +98,7 @@ export const generateTimeline = onCall(
         .update({
           'enhancedFeatures.timeline.status': 'failed',
           'enhancedFeatures.timeline.error': error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          'enhancedFeatures.timeline.processedAt': admin.firestore.FieldValue.serverTimestamp()
         });
       
       throw new Error(`Failed to generate timeline: ${error.message}`);
