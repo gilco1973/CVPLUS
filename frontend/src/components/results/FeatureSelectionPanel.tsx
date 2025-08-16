@@ -170,6 +170,60 @@ export const FeatureSelectionPanel = ({
           onChange={(checked) => updateFeature('certificationBadges', checked)}
           featureAvailability={featureAvailability}
         />
+        
+        <FeatureCheckbox
+          feature="achievementsShowcase"
+          label="Achievements Showcase"
+          description="Highlight your top achievements and accomplishments"
+          checked={selectedFeatures.achievementsShowcase}
+          onChange={(checked) => updateFeature('achievementsShowcase', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="testimonialsCarousel"
+          label="Testimonials Carousel"
+          description="Add testimonials and recommendations from colleagues"
+          checked={selectedFeatures.testimonialsCarousel}
+          onChange={(checked) => updateFeature('testimonialsCarousel', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="contactForm"
+          label="Contact Form"
+          description="Add an integrated contact form for easy communication"
+          checked={selectedFeatures.contactForm}
+          onChange={(checked) => updateFeature('contactForm', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="socialMediaLinks"
+          label="Social Media Links"
+          description="Link to your professional social media profiles"
+          checked={selectedFeatures.socialMediaLinks}
+          onChange={(checked) => updateFeature('socialMediaLinks', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="availabilityCalendar"
+          label="Availability Calendar"
+          description="Allow potential employers to book meetings with you"
+          checked={selectedFeatures.availabilityCalendar}
+          onChange={(checked) => updateFeature('availabilityCalendar', checked)}
+          featureAvailability={featureAvailability}
+        />
+        
+        <FeatureCheckbox
+          feature="privacyMode"
+          label="Privacy Mode"
+          description="Enable privacy protection for sensitive information"
+          checked={selectedFeatures.privacyMode}
+          onChange={(checked) => updateFeature('privacyMode', checked)}
+          featureAvailability={featureAvailability}
+        />
       </div>
     </div>
   );
