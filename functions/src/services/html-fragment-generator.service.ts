@@ -2154,4 +2154,7 @@ function addToPlaylist() {
 }
 
 // Export singleton instance
-export const HTMLFragmentGeneratorService = new HTMLFragmentGeneratorServiceClass();
+export const htmlFragmentGenerator = new HTMLFragmentGeneratorServiceClass();
+
+// Also export the class for backwards compatibility
+export const HTMLFragmentGeneratorService = htmlFragmentGenerator;

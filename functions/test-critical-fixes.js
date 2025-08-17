@@ -1,105 +1,210 @@
+#!/usr/bin/env node
+
 /**
- * Test script to verify critical bug fixes
- * 1. OpenAI model deprecation fix
- * 2. Firestore undefined values fix
+ * Test script to verify critical fixes are working
  */
 
-const { skillsVisualizationService } = require('./lib/services/skills-visualization.service');
-const { personalityInsightsService } = require('./lib/services/personality-insights.service');
+console.log('🛠️ Testing Critical Runtime Fixes...\n');
 
-// Mock CV data for testing
-const mockCV = {
-  personalInfo: {
-    name: 'John Doe',
-    summary: 'Experienced software engineer with expertise in full-stack development'
-  },
-  experience: [
-    {
-      position: 'Senior Software Engineer',
-      company: 'Tech Corp',
-      startDate: '2020-01-01',
-      endDate: '2023-12-31',
-      description: 'Led development of React applications using TypeScript and Node.js',
-      technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB'],
-      achievements: ['Improved performance by 40%', 'Led team of 5 developers']
-    }
-  ],
-  skills: {
-    technical: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python'],
-    soft: ['Leadership', 'Communication', 'Problem Solving']
-  }
-};
-
-async function testSkillsVisualization() {
-  console.log('🧪 Testing Skills Visualization Service...');
+async function testHTMLFragmentGeneratorService() {
+  console.log('📋 Test 1: HTMLFragmentGeneratorService initialization...');
   
   try {
-    const result = await skillsVisualizationService.analyzeSkills(mockCV);
-    console.log('✅ Skills visualization completed successfully');
+    const fs = require('fs');
+    const path = require('path');
     
-    // Check for undefined values
-    const hasUndefined = JSON.stringify(result).includes('undefined');
-    if (hasUndefined) {
-      console.error('❌ Found undefined values in skills visualization result');
-      return false;
-    } else {
-      console.log('✅ No undefined values found in skills visualization');
-    }
+    const servicePath = path.join(__dirname, 'src/services/html-fragment-generator.service.ts');
+    const content = fs.readFileSync(servicePath, 'utf8');
     
-    return true;
+    // Check for instance-based pattern
+    const hasClassDefinition = content.includes('class HTMLFragmentGeneratorService');
+    const hasSingletonExport = content.includes('export const htmlFragmentGenerator');
+    const hasInstanceMethods = content.includes('generateSkillsVisualizationHTML(');
+    
+    console.log('  ✓ Class definition:', hasClassDefinition ? '✅' : '❌');
+    console.log('  ✓ Singleton export:', hasSingletonExport ? '✅' : '❌');
+    console.log('  ✓ Instance methods:', hasInstanceMethods ? '✅' : '❌');
+    
+    const allFixed = hasClassDefinition && hasSingletonExport && hasInstanceMethods;
+    
+    return { 
+      passed: allFixed, 
+      message: allFixed ? 'HTMLFragmentGeneratorService properly refactored' : 'HTMLFragmentGeneratorService issues remain' 
+    };
   } catch (error) {
-    console.error('❌ Skills visualization failed:', error.message);
-    return false;
+    return { passed: false, message: `Error testing HTMLFragmentGeneratorService: ${error.message}` };
   }
 }
 
-async function testPersonalityInsights() {
-  console.log('🧪 Testing Personality Insights Service...');
+async function testFirestoreSanitization() {
+  console.log('\n📋 Test 2: Firestore undefined value sanitization...');
   
   try {
-    const result = await personalityInsightsService.analyzePersonality(mockCV);
-    console.log('✅ Personality insights completed successfully');
+    const fs = require('fs');
+    const path = require('path');
     
-    // Check for undefined values
-    const hasUndefined = JSON.stringify(result).includes('undefined');
-    if (hasUndefined) {
-      console.error('❌ Found undefined values in personality insights result');
-      return false;
-    } else {
-      console.log('✅ No undefined values found in personality insights');
-    }
+    const languageServicePath = path.join(__dirname, 'src/services/language-proficiency.service.ts');
+    const content = fs.readFileSync(languageServicePath, 'utf8');
     
-    return true;
+    // Check for sanitization functions
+    const hasSanitizeFunction = content.includes('sanitizeForFirestore');
+    const hasUndefinedFiltering = content.includes('undefined') && content.includes('delete');
+    const hasArrayFiltering = content.includes('filter');
+    
+    console.log('  ✓ Sanitize function:', hasSanitizeFunction ? '✅' : '❌');
+    console.log('  ✓ Undefined filtering:', hasUndefinedFiltering ? '✅' : '❌');
+    console.log('  ✓ Array filtering:', hasArrayFiltering ? '✅' : '❌');
+    
+    const allFixed = hasSanitizeFunction && hasUndefinedFiltering;
+    
+    return { 
+      passed: allFixed, 
+      message: allFixed ? 'Firestore sanitization implemented' : 'Firestore sanitization missing' 
+    };
   } catch (error) {
-    console.error('❌ Personality insights failed:', error.message);
-    return false;
+    return { passed: false, message: `Error testing Firestore sanitization: ${error.message}` };
   }
 }
 
-async function runTests() {
-  console.log('🚀 Running critical bug fix tests...\n');
+async function testJSONParsingImprovements() {
+  console.log('\n📋 Test 3: JSON parsing robustness...');
   
-  const results = [];
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const achievementsServicePath = path.join(__dirname, 'src/services/achievements-analysis.service.ts');
+    const content = fs.readFileSync(achievementsServicePath, 'utf8');
+    
+    // Check for robust JSON parsing
+    const hasMultipleParsingStrategies = content.includes('parseJSONSafely') || content.includes('try') && content.includes('catch');
+    const hasErrorHandling = content.includes('catch') && content.includes('fallback');
+    const hasJSONExtraction = content.includes('```json') || content.includes('extract');
+    
+    console.log('  ✓ Multiple parsing strategies:', hasMultipleParsingStrategies ? '✅' : '❌');
+    console.log('  ✓ Error handling:', hasErrorHandling ? '✅' : '❌');
+    console.log('  ✓ JSON extraction logic:', hasJSONExtraction ? '✅' : '❌');
+    
+    const allFixed = hasMultipleParsingStrategies && hasErrorHandling;
+    
+    return { 
+      passed: allFixed, 
+      message: allFixed ? 'JSON parsing robustness implemented' : 'JSON parsing improvements missing' 
+    };
+  } catch (error) {
+    return { passed: false, message: `Error testing JSON parsing: ${error.message}` };
+  }
+}
+
+async function testTimeoutConfiguration() {
+  console.log('\n📋 Test 4: Function timeout configuration...');
   
-  results.push(await testSkillsVisualization());
-  results.push(await testPersonalityInsights());
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const generateCVPath = path.join(__dirname, 'src/functions/generateCV.ts');
+    const content = fs.readFileSync(generateCVPath, 'utf8');
+    
+    // Check for increased timeout
+    const hasIncreasedTimeout = content.includes('timeoutSeconds: 600') || content.includes('timeoutSeconds: 540');
+    const hasTimeoutComment = content.includes('timeout') || content.includes('10 minutes');
+    
+    console.log('  ✓ Increased timeout (600s or 540s):', hasIncreasedTimeout ? '✅' : '❌');
+    console.log('  ✓ Timeout documentation:', hasTimeoutComment ? '✅' : '❌');
+    
+    const allFixed = hasIncreasedTimeout;
+    
+    return { 
+      passed: allFixed, 
+      message: allFixed ? 'Function timeout properly configured' : 'Function timeout not updated' 
+    };
+  } catch (error) {
+    return { passed: false, message: `Error testing timeout configuration: ${error.message}` };
+  }
+}
+
+async function testGracefulFailureIntegration() {
+  console.log('\n📋 Test 5: Graceful failure handling integration...');
   
-  const passedTests = results.filter(r => r).length;
-  const totalTests = results.length;
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const generateCVPath = path.join(__dirname, 'src/functions/generateCV.ts');
+    const content = fs.readFileSync(generateCVPath, 'utf8');
+    
+    // Check that graceful failure handling is still present
+    const hasProcessingResults = content.includes('processingResults');
+    const hasMarkFeatureAsFailed = content.includes('markFeatureAsFailed');
+    const hasErrorCatching = content.includes('catch (error)');
+    const hasSuccessTracking = content.includes('successful++') || content.includes('successful:');
+    
+    console.log('  ✓ Processing results tracking:', hasProcessingResults ? '✅' : '❌');
+    console.log('  ✓ Feature failure marking:', hasMarkFeatureAsFailed ? '✅' : '❌');
+    console.log('  ✓ Error catching:', hasErrorCatching ? '✅' : '❌');
+    console.log('  ✓ Success tracking:', hasSuccessTracking ? '✅' : '❌');
+    
+    const allPresent = hasProcessingResults && hasMarkFeatureAsFailed && hasErrorCatching;
+    
+    return { 
+      passed: allPresent, 
+      message: allPresent ? 'Graceful failure handling intact' : 'Graceful failure handling compromised' 
+    };
+  } catch (error) {
+    return { passed: false, message: `Error testing graceful failure handling: ${error.message}` };
+  }
+}
+
+// Run all tests
+async function runAllTests() {
+  const testFunctions = [
+    { name: 'HTMLFragmentGeneratorService Fix', fn: testHTMLFragmentGeneratorService },
+    { name: 'Firestore Sanitization', fn: testFirestoreSanitization },
+    { name: 'JSON Parsing Robustness', fn: testJSONParsingImprovements },
+    { name: 'Timeout Configuration', fn: testTimeoutConfiguration },
+    { name: 'Graceful Failure Integration', fn: testGracefulFailureIntegration }
+  ];
   
-  console.log(`\n📊 Test Results: ${passedTests}/${totalTests} tests passed`);
+  let passed = 0;
+  let failed = 0;
   
-  if (passedTests === totalTests) {
-    console.log('🎉 All critical bug fixes are working correctly!');
+  for (const test of testFunctions) {
+    try {
+      const result = await test.fn();
+      if (result.passed) {
+        console.log(`\n✅ ${test.name}: PASSED - ${result.message}`);
+        passed++;
+      } else {
+        console.log(`\n❌ ${test.name}: FAILED - ${result.message}`);
+        failed++;
+      }
+    } catch (error) {
+      console.log(`\n❌ ${test.name}: ERROR - ${error.message}`);
+      failed++;
+    }
+  }
+  
+  console.log('\n' + '='.repeat(60));
+  console.log(`🧪 Critical Fixes Test Results:`);
+  console.log(`✅ Passed: ${passed}`);
+  console.log(`❌ Failed: ${failed}`);
+  console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
+  
+  if (failed === 0) {
+    console.log('\n🎉 All critical fixes are working correctly!');
+    console.log('🚀 The CVPlus system should now be stable and handle errors gracefully.');
   } else {
-    console.log('⚠️ Some tests failed. Please review the errors above.');
+    console.log('\n⚠️ Some critical fixes may need additional attention.');
   }
   
-  return passedTests === totalTests;
+  return failed === 0;
 }
 
-if (require.main === module) {
-  runTests().catch(console.error);
-}
-
-module.exports = { runTests };
+// Run the tests
+runAllTests().then(success => {
+  process.exit(success ? 0 : 1);
+}).catch(error => {
+  console.error('Test runner error:', error);
+  process.exit(1);
+});

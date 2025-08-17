@@ -377,6 +377,12 @@ export class LanguageProficiencyService {
     if (typeof obj === 'object') {
       const sanitized: any = {};
       for (const [key, value] of Object.entries(obj)) {
+        // Explicitly check for undefined values and delete them
+        if (value === undefined) {
+          delete sanitized[key];
+          continue;
+        }
+        
         const sanitizedValue = this.sanitizeForFirestore(value);
         if (sanitizedValue !== null && sanitizedValue !== undefined) {
           sanitized[key] = sanitizedValue;
