@@ -97,7 +97,7 @@ export class SkillsVisualizationService {
             name: skill,
             level: this.assessSkillLevel(skill, cv),
             yearsOfExperience: this.estimateYearsOfExperience(skill, cv),
-            lastUsed: this.findLastUsed(skill, cv),
+            lastUsed: this.findLastUsed(skill, cv) || null, // Ensure no undefined values for Firestore
             endorsed: false // Can be updated based on external data
           };
           categorySkills.push(skillData);
@@ -294,14 +294,19 @@ ${experienceText}
 
 Technical skills only (languages, frameworks, tools, platforms):`;
 
-      const response = await this.getOpenAI().completions.create({
-        model: 'text-davinci-003',
-        prompt,
+      const response = await this.getOpenAI().chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         max_tokens: 200,
         temperature: 0.3
       });
       
-      const skills = response.choices[0].text
+      const skills = response.choices[0].message?.content
         ?.trim()
         .split(',')
         .map(s => s.trim())
@@ -425,8 +430,8 @@ Technical skills only (languages, frameworks, tools, platforms):`;
   /**
    * Find when skill was last used
    */
-  private findLastUsed(skill: string, cv: ParsedCV): Date | undefined {
-    if (!cv.experience) return undefined;
+  private findLastUsed(skill: string, cv: ParsedCV): Date | null {
+    if (!cv.experience) return null;
     
     const skillLower = skill.toLowerCase();
     
@@ -440,7 +445,7 @@ Technical skills only (languages, frameworks, tools, platforms):`;
       }
     }
     
-    return undefined;
+    return null; // Return null instead of undefined for Firestore compatibility
   }
   
   /**

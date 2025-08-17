@@ -353,8 +353,11 @@ export class ContentOptimizationService {
   private extractRecommendedKeywords(recommendations: PrioritizedRecommendation[]): string[] {
     const keywords: string[] = [];
     
-    recommendations.forEach(rec => {
-      if (rec.category === 'keywords' && rec.issue?.includes('Missing')) {
+    // Ensure recommendations is an array
+    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    
+    safeRecommendations.forEach(rec => {
+      if (rec && rec.category === 'keywords' && rec.issue?.includes('Missing')) {
         // Extract keywords from issue description
         const matches = rec.issue?.match(/Missing.*?:(.*?)(?:\.|$)/);
         if (matches && matches[1]) {

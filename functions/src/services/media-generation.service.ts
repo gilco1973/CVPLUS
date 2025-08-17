@@ -143,14 +143,19 @@ Write in first person, as if the professional is speaking. Include:
 Keep it exactly ${targetWords} words.`;
 
     try {
-      const response = await this.getOpenAI().completions.create({
-        model: 'text-davinci-003',
-        prompt,
+      const response = await this.getOpenAI().chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         max_tokens: targetWords * 2,
         temperature: 0.7
       });
       
-      return response.choices[0].text?.trim() || this.generateDefaultIntroScript(cv, targetWords);
+      return response.choices[0].message?.content?.trim() || this.generateDefaultIntroScript(cv, targetWords);
     } catch (error) {
       console.error('Error generating intro script:', error);
       return this.generateDefaultIntroScript(cv, targetWords);
@@ -444,14 +449,19 @@ Style: Concise, impactful, third-person narrative.`;
    */
   private async generateSegment(prompt: string, targetWords: number): Promise<string> {
     try {
-      const response = await this.getOpenAI().completions.create({
-        model: 'text-davinci-003',
-        prompt,
+      const response = await this.getOpenAI().chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         max_tokens: targetWords * 2,
         temperature: 0.7
       });
       
-      return response.choices[0].text?.trim() || '';
+      return response.choices[0].message?.content?.trim() || '';
     } catch (error) {
       console.error('Error generating segment:', error);
       return '';

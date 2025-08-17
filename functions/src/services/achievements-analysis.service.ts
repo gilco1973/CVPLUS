@@ -33,24 +33,45 @@ export class AchievementsAnalysisService {
   async extractKeyAchievements(cv: ParsedCV): Promise<Achievement[]> {
     const achievements: Achievement[] = [];
 
-    // Extract from work experience
-    if (cv.experience && cv.experience.length > 0) {
-      for (const job of cv.experience) {
-        const jobAchievements = await this.extractFromExperience(job);
-        achievements.push(...jobAchievements);
+    try {
+      // Extract from work experience
+      if (cv.experience && cv.experience.length > 0) {
+        for (const job of cv.experience) {
+          try {
+            const jobAchievements = await this.extractFromExperience(job);
+            achievements.push(...jobAchievements);
+          } catch (error) {
+            console.error(`Failed to extract achievements from job at ${job.company}:`, error);
+            // Continue with next job rather than failing completely
+          }
+        }
       }
-    }
 
-    // Extract from description/summary
-    if (cv.personalInfo?.summary) {
-      const summaryAchievements = await this.extractFromSummary(cv.personalInfo.summary);
-      achievements.push(...summaryAchievements);
-    }
+      // Extract from description/summary
+      if (cv.personalInfo?.summary) {
+        try {
+          const summaryAchievements = await this.extractFromSummary(cv.personalInfo.summary);
+          achievements.push(...summaryAchievements);
+        } catch (error) {
+          console.error('Failed to extract achievements from summary:', error);
+          // Continue with existing achievements
+        }
+      }
 
-    // Sort by significance and return top achievements
-    return achievements
-      .sort((a, b) => b.significance - a.significance)
-      .slice(0, 5); // Return top 5 achievements
+      // Sort by significance and return top achievements
+      const sortedAchievements = achievements
+        .filter(achievement => achievement && achievement.title) // Filter out invalid achievements
+        .sort((a, b) => b.significance - a.significance)
+        .slice(0, 5); // Return top 5 achievements
+
+      console.log(`Successfully extracted ${sortedAchievements.length} achievements from CV`);
+      return sortedAchievements;
+
+    } catch (error) {
+      console.error('Error in extractKeyAchievements:', error);
+      // Return empty array rather than throwing to allow graceful degradation
+      return [];
+    }
   }
 
   /**
@@ -63,6 +84,8 @@ export class AchievementsAnalysisService {
 
     try {
       const prompt = `
+IMPORTANT: You MUST respond with valid JSON only. Do not include any explanatory text or markdown formatting.
+
 Analyze this work experience and extract specific, quantifiable achievements. Focus on REAL accomplishments with measurable impact.
 
 Position: ${experience.position}
@@ -78,7 +101,7 @@ Extract achievements that show:
 4. Team development
 5. Process improvements
 
-Return in this JSON format:
+REQUIRED JSON FORMAT (no additional text):
 {
   "achievements": [
     {
@@ -86,12 +109,14 @@ Return in this JSON format:
       "description": "Detailed description of what was accomplished",
       "impact": "Specific impact or benefit delivered",
       "metrics": ["quantifiable results if any"],
-      "category": "leadership|technical|business|innovation|team|project",
-      "significance": 1-10
+      "category": "leadership",
+      "significance": 8
     }
   ]
 }
 
+Category must be one of: leadership, technical, business, innovation, team, project
+Significance must be a number from 1-10
 Only include real, substantive achievements. Skip generic responsibilities.
 `;
 
@@ -102,13 +127,25 @@ Only include real, substantive achievements. Skip generic responsibilities.
         max_tokens: 1000
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{"achievements": []}');
+      const responseContent = response.choices[0].message.content || '';
+      const result = this.parseAIResponse(responseContent, 'experience extraction');
       
-      return result.achievements.map((ach: any) => ({
-        ...ach,
-        company: experience.company,
-        timeframe: experience.duration || `${experience.startDate} - ${experience.endDate || 'Present'}`
-      }));
+      if (!result || !Array.isArray(result.achievements)) {
+        console.warn('Invalid AI response structure for experience extraction, using fallback');
+        return this.fallbackExperienceExtraction(experience);
+      }
+      
+      // Validate and clean each achievement
+      const validAchievements = result.achievements
+        .map((ach: any) => this.validateAndCleanAchievement(ach))
+        .filter((ach: Achievement | null) => ach !== null)
+        .map((ach: any) => ({
+          ...ach,
+          company: experience.company,
+          timeframe: experience.duration || `${experience.startDate} - ${experience.endDate || 'Present'}`
+        }));
+
+      return validAchievements;
 
     } catch (error) {
       console.error('Error extracting achievements from experience:', error);
@@ -126,6 +163,8 @@ Only include real, substantive achievements. Skip generic responsibilities.
 
     try {
       const prompt = `
+IMPORTANT: You MUST respond with valid JSON only. Do not include any explanatory text or markdown formatting.
+
 Analyze this professional summary and extract key career achievements:
 
 Summary: ${summary}
@@ -137,19 +176,21 @@ Extract high-level achievements that demonstrate:
 - Industry impact
 - Notable accomplishments
 
-Return in JSON format:
+REQUIRED JSON FORMAT (no additional text):
 {
   "achievements": [
     {
       "title": "Achievement title",
       "description": "What was accomplished", 
       "impact": "The result or benefit",
-      "category": "leadership|technical|business|innovation|team|project",
-      "significance": 1-10
+      "category": "leadership",
+      "significance": 7
     }
   ]
 }
 
+Category must be one of: leadership, technical, business, innovation, team, project
+Significance must be a number from 1-10
 Focus on concrete achievements, not generic statements.
 `;
 
@@ -160,17 +201,191 @@ Focus on concrete achievements, not generic statements.
         max_tokens: 600
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{"achievements": []}');
+      const responseContent = response.choices[0].message.content || '';
+      const result = this.parseAIResponse(responseContent, 'summary extraction');
       
-      return result.achievements.map((ach: any) => ({
-        ...ach,
-        company: 'Career Overview',
-        timeframe: 'Career span'
-      }));
+      if (!result || !Array.isArray(result.achievements)) {
+        console.warn('Invalid AI response structure for summary extraction, skipping');
+        return [];
+      }
+      
+      // Validate and clean each achievement
+      const validAchievements = result.achievements
+        .map((ach: any) => this.validateAndCleanAchievement(ach))
+        .filter((ach: Achievement | null) => ach !== null)
+        .map((ach: any) => ({
+          ...ach,
+          company: 'Career Overview',
+          timeframe: 'Career span'
+        }));
+
+      return validAchievements;
 
     } catch (error) {
       console.error('Error extracting achievements from summary:', error);
       return [];
+    }
+  }
+
+  /**
+   * Validate and clean an achievement object
+   */
+  private validateAndCleanAchievement(ach: any): Achievement | null {
+    if (!ach || typeof ach !== 'object') {
+      console.warn('Invalid achievement object:', ach);
+      return null;
+    }
+
+    // Required fields validation
+    if (!ach.title || typeof ach.title !== 'string') {
+      console.warn('Achievement missing title:', ach);
+      return null;
+    }
+
+    if (!ach.description || typeof ach.description !== 'string') {
+      console.warn('Achievement missing description:', ach);
+      return null;
+    }
+
+    // Validate category
+    const validCategories: Achievement['category'][] = ['leadership', 'technical', 'business', 'innovation', 'team', 'project'];
+    const category = validCategories.includes(ach.category) ? ach.category : 'project';
+
+    // Validate significance
+    let significance = parseInt(ach.significance) || 5;
+    significance = Math.max(1, Math.min(10, significance));
+
+    // Clean and validate fields
+    return {
+      title: ach.title.trim().substring(0, 100), // Limit title length
+      description: ach.description.trim().substring(0, 500), // Limit description length
+      impact: (ach.impact || 'Contributed to organizational objectives').trim().substring(0, 300),
+      company: ach.company || 'Unknown Company',
+      timeframe: ach.timeframe || 'Not specified',
+      category,
+      metrics: Array.isArray(ach.metrics) ? ach.metrics.filter(m => typeof m === 'string') : [],
+      significance
+    };
+  }
+
+  /**
+   * Safely parse AI response with proper error handling and validation
+   */
+  private parseAIResponse(responseContent: string, context: string): any {
+    if (!responseContent || typeof responseContent !== 'string') {
+      console.warn(`Empty or invalid response content for ${context}`);
+      return null;
+    }
+
+    // Clean the response content - remove any markdown formatting
+    let cleanContent = responseContent.trim();
+    
+    // Remove markdown code blocks if present
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    // Handle malformed responses that start with text before JSON
+    // Look for common AI response patterns like "The provided..." or "Based on..."
+    if (cleanContent.match(/^(The provided|Based on|Here is|Here are|I'll analyze)/i)) {
+      // Try to find JSON pattern in the text
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanContent = jsonMatch[0];
+        console.log(`Extracted JSON from text response for ${context}`);
+      } else {
+        console.warn(`No JSON found in AI text response for ${context}. Response starts with: "${responseContent.substring(0, 100)}..."`);
+        return null;
+      }
+    }
+
+    // Try to extract JSON from text if the response is not pure JSON
+    if (!cleanContent.startsWith('{') && !cleanContent.startsWith('[')) {
+      // Look for JSON pattern in the text with more flexible matching
+      const jsonPatterns = [
+        /\{[\s\S]*?\}/g,  // Multiple JSON objects
+        /\[[\s\S]*?\]/g,  // JSON arrays
+        /\{[^}]*"achievements"[^}]*\}/g  // JSON with achievements key
+      ];
+      
+      let found = false;
+      for (const pattern of jsonPatterns) {
+        const matches = cleanContent.match(pattern);
+        if (matches && matches.length > 0) {
+          // Use the longest match which is likely the most complete
+          cleanContent = matches.reduce((longest, current) => 
+            current.length > longest.length ? current : longest
+          );
+          found = true;
+          break;
+        }
+      }
+      
+      if (!found) {
+        console.warn(`No JSON found in AI response for ${context}. Response starts with: "${responseContent.substring(0, 50)}..."`);
+        return null;
+      }
+    }
+
+    // Additional cleaning for common JSON issues
+    cleanContent = cleanContent
+      .replace(/,\s*}/g, '}')  // Remove trailing commas before closing braces
+      .replace(/,\s*]/g, ']')  // Remove trailing commas before closing brackets
+      .replace(/\n/g, ' ')     // Replace newlines with spaces
+      .replace(/\s+/g, ' ');   // Normalize whitespace
+
+    try {
+      const parsed = JSON.parse(cleanContent);
+      
+      // Validate the structure
+      if (typeof parsed !== 'object' || parsed === null) {
+        console.warn(`Invalid JSON structure for ${context}: not an object`);
+        return null;
+      }
+
+      // Ensure achievements array exists
+      if (!parsed.achievements) {
+        parsed.achievements = [];
+      }
+
+      // Validate achievements array structure
+      if (!Array.isArray(parsed.achievements)) {
+        console.warn(`Achievements is not an array for ${context}, converting to array`);
+        parsed.achievements = [];
+      }
+
+      return parsed;
+    } catch (parseError) {
+      console.error(`JSON parsing failed for ${context}:`, {
+        error: parseError instanceof Error ? parseError.message : 'Unknown error',
+        contentStart: cleanContent.substring(0, 200),
+        originalStart: responseContent.substring(0, 200)
+      });
+      
+      // Try one more time with more aggressive cleaning
+      try {
+        // Remove any non-JSON characters at the beginning and end
+        const jsonStartIndex = cleanContent.indexOf('{');
+        const jsonEndIndex = cleanContent.lastIndexOf('}');
+        
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+          const finalAttempt = cleanContent.substring(jsonStartIndex, jsonEndIndex + 1);
+          const lastAttemptParsed = JSON.parse(finalAttempt);
+          
+          if (!lastAttemptParsed.achievements) {
+            lastAttemptParsed.achievements = [];
+          }
+          
+          console.log(`Successfully parsed JSON on final attempt for ${context}`);
+          return lastAttemptParsed;
+        }
+      } catch (finalError) {
+        console.error(`Final JSON parsing attempt failed for ${context}:`, finalError);
+      }
+      
+      return null;
     }
   }
 

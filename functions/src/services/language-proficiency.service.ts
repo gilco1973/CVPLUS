@@ -141,10 +141,13 @@ export class LanguageProficiencyService {
       }
     };
     
-    // Store in Firestore
-    await this.storeVisualization(jobId, visualization);
+    // Sanitize the entire visualization before storing
+    const sanitizedVisualization = this.sanitizeForFirestore(visualization);
     
-    return visualization;
+    // Store in Firestore
+    await this.storeVisualization(jobId, sanitizedVisualization);
+    
+    return sanitizedVisualization;
   }
   
   /**
@@ -358,6 +361,34 @@ export class LanguageProficiencyService {
   }
   
   /**
+   * Sanitize data for Firestore compatibility
+   */
+  private sanitizeForFirestore(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj
+        .map(item => this.sanitizeForFirestore(item))
+        .filter(item => item !== null && item !== undefined);
+    }
+    
+    if (typeof obj === 'object') {
+      const sanitized: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        const sanitizedValue = this.sanitizeForFirestore(value);
+        if (sanitizedValue !== null && sanitizedValue !== undefined) {
+          sanitized[key] = sanitizedValue;
+        }
+      }
+      return sanitized;
+    }
+    
+    return obj;
+  }
+
+  /**
    * Generate visualizations for language proficiencies
    */
   private generateVisualizations(
@@ -486,7 +517,8 @@ export class LanguageProficiencyService {
       }
     });
     
-    return visualizations;
+    // Sanitize all visualizations to prevent undefined values in Firestore
+    return this.sanitizeForFirestore(visualizations);
   }
   
   /**

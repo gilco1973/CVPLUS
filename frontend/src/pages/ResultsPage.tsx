@@ -191,38 +191,26 @@ export const ResultsPage = () => {
       
       console.log('🚀 [PHASE 3 API CALL] Calling generateCV with:', generationConfig);
       
-      const result = await generateCV(
+      // CRITICAL FIX: Navigate IMMEDIATELY to show real-time progress
+      // Don't wait for generateCV to complete
+      console.log('🚀 [NAVIGATION FIX] Navigating immediately to FinalResultsPage for real-time progress');
+      navigate(`/final-results/${jobId}`);
+      
+      // Start CV generation in background (FinalResultsPage will handle the progress)
+      generateCV(
         job.id, 
         selectedTemplate, 
         selectedFeatureKeys
-      );
-
-      // Enhanced check if component is still mounted before updating state
-      if (!isMountedRef.current) {
-        console.warn('Component unmounted during CV generation, but this might be a false positive');
-        console.warn('CV generation completed successfully, attempting to update state anyway');
-        // Reset the ref to true since we have a valid result
-        isMountedRef.current = true;
-      }
-
-      setJob({ 
-        ...job, 
-        generatedCV: result as {
-          html: string;
-          htmlUrl?: string;
-          pdfUrl: string;
-          docxUrl: string;
-          template?: string;
-          features?: string[];
-        }
+      ).then((result) => {
+        console.log('✅ [BACKGROUND] CV generation completed:', result);
+        toast.success('CV generated successfully!');
+      }).catch((error) => {
+        console.error('❌ [BACKGROUND] CV generation error:', error);
+        // Error will be handled by FinalResultsPage
       });
-      
-      toast.success('CV generated successfully!');
-      
-      // Navigate to final results page
-      navigate(`/final-results/${jobId}`);
+
     } catch (error: any) {
-      console.error('Error generating CV:', error);
+      console.error('Error starting CV generation:', error);
       
       // Enhanced check if component is still mounted before showing error
       if (!isMountedRef.current) {
@@ -232,7 +220,7 @@ export const ResultsPage = () => {
       }
 
       // Show user-friendly error message based on error type
-      const errorMessage = error?.message || 'Failed to generate CV';
+      const errorMessage = error?.message || 'Failed to start CV generation';
       toast.error(errorMessage);
     } finally {
       // Always reset loading state, regardless of mount status

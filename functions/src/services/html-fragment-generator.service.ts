@@ -5,12 +5,12 @@
 
 import { SkillsVisualization, SkillCategory, LanguageSkill, Certification } from '../types/enhanced-models';
 
-export class HTMLFragmentGeneratorService {
+class HTMLFragmentGeneratorServiceClass {
   
   /**
    * Generate Skills Visualization HTML Fragment
    */
-  static generateSkillsVisualizationHTML(visualization: SkillsVisualization): string {
+  generateSkillsVisualizationHTML(visualization: SkillsVisualization): string {
     const technicalSkillsHTML = this.generateSkillCategoriesHTML(visualization.technical, 'technical');
     const softSkillsHTML = this.generateSkillCategoriesHTML(visualization.soft, 'soft');
     const languagesHTML = this.generateLanguageSkillsHTML(visualization.languages);
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate HTML for skill categories
    */
-  private static generateSkillCategoriesHTML(categories: SkillCategory[], type: 'technical' | 'soft'): string {
+  private generateSkillCategoriesHTML(categories: SkillCategory[], type: 'technical' | 'soft'): string {
     if (!categories || categories.length === 0) return '';
 
     const icon = type === 'technical' ? '⚡' : '🧠';
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate HTML for language skills
    */
-  private static generateLanguageSkillsHTML(languages: LanguageSkill[]): string {
+  private generateLanguageSkillsHTML(languages: LanguageSkill[]): string {
     if (!languages || languages.length === 0) return '';
 
     return `
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate HTML for certifications
    */
-  private static generateCertificationsHTML(certifications: Certification[]): string {
+  private generateCertificationsHTML(certifications: Certification[]): string {
     if (!certifications || certifications.length === 0) return '';
 
     return `
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate Certification Badges HTML Fragment
    */
-  static generateCertificationBadgesHTML(certifications: Certification[]): string {
+  generateCertificationBadgesHTML(certifications: Certification[]): string {
     if (!certifications || certifications.length === 0) {
       return '<div class="no-certifications">No certifications available</div>';
     }
@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate Calendar Integration HTML Fragment
    */
-  static generateCalendarIntegrationHTML(calendarData: any): string {
+  generateCalendarIntegrationHTML(calendarData: any): string {
     if (!calendarData || !calendarData.events || calendarData.events.length === 0) {
       return '<div class="no-calendar">No calendar events available</div>';
     }
@@ -613,7 +613,7 @@ function syncToOutlook() {
   /**
    * Generate Language Proficiency HTML Fragment
    */
-  static generateLanguageProficiencyHTML(languageData: any): string {
+  generateLanguageProficiencyHTML(languageData: any): string {
     if (!languageData || !languageData.proficiencies || languageData.proficiencies.length === 0) {
       return '<div class="no-languages">No language proficiency data available</div>';
     }
@@ -837,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Generate Portfolio Gallery HTML Fragment
    */
-  static generatePortfolioGalleryHTML(portfolioData: any): string {
+  generatePortfolioGalleryHTML(portfolioData: any): string {
     if (!portfolioData || !portfolioData.items || portfolioData.items.length === 0) {
       return '<div class="no-portfolio">No portfolio items available</div>';
     }
@@ -1124,7 +1124,7 @@ function openPortfolioItem(itemId) {
   /**
    * Generate Timeline HTML Fragment
    */
-  static generateTimelineHTML(experience: any[]): string {
+  generateTimelineHTML(experience: any[]): string {
     if (!experience || experience.length === 0) {
       return '<div class="no-timeline">No experience data available</div>';
     }
@@ -1274,7 +1274,7 @@ function openPortfolioItem(itemId) {
   }
 
   // Helper methods
-  private static formatProficiency(proficiency: string): string {
+  private formatProficiency(proficiency: string): string {
     const proficiencyMap: Record<string, string> = {
       'native': 'Native',
       'fluent': 'Fluent',
@@ -1285,7 +1285,7 @@ function openPortfolioItem(itemId) {
     return proficiencyMap[proficiency] || proficiency;
   }
 
-  private static getCertificationIcon(certName: string): string {
+  private getCertificationIcon(certName: string): string {
     const name = certName.toLowerCase();
     if (name.includes('aws')) return '☁️';
     if (name.includes('microsoft') || name.includes('azure')) return '💼';
@@ -1297,17 +1297,17 @@ function openPortfolioItem(itemId) {
     return '🏆';
   }
 
-  private static getCertificationStatus(cert: Certification): string {
+  private getCertificationStatus(cert: Certification): string {
     if (!cert.expiryDate) return 'valid';
     return new Date(cert.expiryDate) > new Date() ? 'valid' : 'expired';
   }
 
-  private static getCertificationStatusText(cert: Certification): string {
+  private getCertificationStatusText(cert: Certification): string {
     if (!cert.expiryDate) return 'Valid';
     return new Date(cert.expiryDate) > new Date() ? 'Valid' : 'Expired';
   }
 
-  private static formatDateRange(startDate: string, endDate?: string): string {
+  private formatDateRange(startDate: string, endDate?: string): string {
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : null;
     
@@ -1322,7 +1322,7 @@ function openPortfolioItem(itemId) {
     return `${startFormatted} - ${endFormatted}`;
   }
 
-  private static formatEventDate(date: string | Date): string {
+  private formatEventDate(date: string | Date): string {
     const eventDate = new Date(date);
     return eventDate.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -1331,7 +1331,7 @@ function openPortfolioItem(itemId) {
     });
   }
 
-  private static formatEventType(type: string): string {
+  private formatEventType(type: string): string {
     const typeMap: Record<string, string> = {
       'work': 'Work Anniversary',
       'education': 'Education Milestone',
@@ -1341,7 +1341,7 @@ function openPortfolioItem(itemId) {
     return typeMap[type] || type;
   }
 
-  private static formatPortfolioType(type: string): string {
+  private formatPortfolioType(type: string): string {
     const typeMap: Record<string, string> = {
       'project': 'Project',
       'website': 'Website',
@@ -1353,7 +1353,7 @@ function openPortfolioItem(itemId) {
     return typeMap[type] || type;
   }
 
-  private static getPortfolioIcon(type: string): string {
+  private getPortfolioIcon(type: string): string {
     const iconMap: Record<string, string> = {
       'project': '💼',
       'website': '🌐',
@@ -1368,7 +1368,7 @@ function openPortfolioItem(itemId) {
   /**
    * Generate Video Introduction HTML Fragment
    */
-  static generateVideoIntroductionHTML(videoData: any): string {
+  generateVideoIntroductionHTML(videoData: any): string {
     if (!videoData || !videoData.videoUrl) {
       return '<div class="no-video">No video introduction available</div>';
     }
@@ -1670,7 +1670,7 @@ document.querySelector('.video-player').addEventListener('pause', function() {
 `;
   }
 
-  private static formatDuration(duration: number | string): string {
+  private formatDuration(duration: number | string): string {
     if (typeof duration === 'string') {
       return duration;
     }
@@ -1683,7 +1683,7 @@ document.querySelector('.video-player').addEventListener('pause', function() {
   /**
    * Generate Podcast HTML Fragment
    */
-  static generatePodcastHTML(podcastData: any): string {
+  generatePodcastHTML(podcastData: any): string {
     if (!podcastData || !podcastData.audioUrl) {
       return '<div class="no-podcast">No podcast available</div>';
     }
@@ -2153,4 +2153,5 @@ function addToPlaylist() {
   }
 }
 
-export const htmlFragmentGeneratorService = new HTMLFragmentGeneratorService();
+// Export singleton instance
+export const HTMLFragmentGeneratorService = new HTMLFragmentGeneratorServiceClass();

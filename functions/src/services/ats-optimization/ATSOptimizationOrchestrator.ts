@@ -96,13 +96,16 @@ export class ATSOptimizationOrchestrator {
         competitorBenchmark
       });
 
+      // Ensure recommendations is always an array
+      const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+
       // Update the advanced score with recommendations
-      advancedScore.recommendations = recommendations;
+      advancedScore.recommendations = safeRecommendations;
 
       // Step 4: Dual-LLM verification of results
       const verifiedResults = await this.verificationService.verifyResultsWithDualLLM({
         advancedScore,
-        recommendations,
+        recommendations: safeRecommendations,
         parsedCV
       });
 
@@ -121,18 +124,18 @@ export class ATSOptimizationOrchestrator {
         },
         issues: [
           ...systemSimulations.flatMap((sim: any) => sim.identifiedIssues || []),
-          ...recommendations
+          ...safeRecommendations
             .filter(rec => rec.priority === 1 || rec.priority === 2)
             .map(rec => ({ type: 'warning' as const, description: rec.description || 'Optimization needed', severity: rec.priority === 1 ? 'critical' : 'high' }))
         ],
-        suggestions: recommendations.map(rec => ({
+        suggestions: safeRecommendations.map(rec => ({
           section: rec.section || 'general',
           original: rec.currentContent || '',
           suggested: rec.suggestedContent || rec.description || 'Apply recommended improvement',
           reason: rec.description || 'Optimization needed',
           impact: rec.impact || 'medium'
         })),
-        recommendations: recommendations.map(rec => rec.description || 'Optimization needed'),
+        recommendations: safeRecommendations.map(rec => rec.description || 'Optimization needed'),
         keywords: {
           found: semanticAnalysis?.matchedKeywords?.map((kw: any) => kw.keyword || kw) || [],
           missing: semanticAnalysis?.missingKeywords || [],

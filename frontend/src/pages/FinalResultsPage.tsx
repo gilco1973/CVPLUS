@@ -221,7 +221,12 @@ const FeatureProgressCard: React.FC<{
       )}
       
       {progress.status === 'completed' && (
-        <p className="text-sm text-green-400">Enhancement complete!</p>
+        <p className="text-sm text-green-400">
+          {progress.processedAt ? 
+            `Enhancement complete! (${new Date(progress.processedAt.seconds * 1000).toLocaleTimeString()})` : 
+            'Enhancement complete!'
+          }
+        </p>
       )}
     </div>
   );
@@ -381,7 +386,8 @@ export const FinalResultsPage = () => {
         
         if (featureData) {
           updatedFeatures++;
-          newProgressState[feature.id] = {
+          // Safe handling of featureData to prevent forEach errors
+          const safeFeatureData = {
             status: featureData.status || 'pending',
             progress: featureData.progress || 0,
             currentStep: featureData.currentStep,
@@ -389,6 +395,15 @@ export const FinalResultsPage = () => {
             htmlFragment: featureData.htmlFragment,
             processedAt: featureData.processedAt
           };
+          
+          // Ensure no arrays are mishandled as objects
+          if (Array.isArray(featureData)) {
+            console.warn(`⚠️ [DEBUG] Feature ${feature.id} data is unexpectedly an array:`, featureData);
+            safeFeatureData.status = 'failed';
+            safeFeatureData.error = 'Invalid data structure received';
+          }
+          
+          newProgressState[feature.id] = safeFeatureData;
           console.log(`📡 [DEBUG] Updated ${feature.id}:`, newProgressState[feature.id]);
         } else {
           newProgressState[feature.id] = {
@@ -451,8 +466,73 @@ export const FinalResultsPage = () => {
 
         // Check if CV has been generated, if not trigger generation
         if (!jobData.generatedCV || (!jobData.generatedCV.html && !jobData.generatedCV.htmlUrl)) {
-          console.log('🚀 [DEBUG] Triggering CV generation');
+          console.log('🚀 [DEBUG] CV not ready, checking if generation is in progress...');
+          
+          // Check if generation is already in progress (from ResultsPage immediate navigation)
+          const storedConfig = sessionStorage.getItem(`generation-config-${jobId}`);
+          if (storedConfig && !hasTriggeredGeneration.current) {
+            console.log('🚀 [DEBUG] Found generation config, CV generation likely in progress from ResultsPage');
+            hasTriggeredGeneration.current = true;
+            
+            // Show loading state while CV generates in background
+            setIsGenerating(true);
+            setLoading(false);
+            
+            // Set up real-time tracking for CV generation progress
+            const config = JSON.parse(storedConfig);
+            if (config.features && config.features.length > 0) {
+              console.log('✅ [DEBUG] Setting up feature tracking for ongoing generation');
+              setupFeatureQueue(config.features, jobId);
+              setIsProcessingFeatures(true);
+            }
+            
+            // Poll for CV completion
+            const pollForCompletion = async () => {
+              let attempts = 0;
+              const maxAttempts = 60; // 2 minutes max
+              
+              const poll = async () => {
+                attempts++;
+                try {
+                  const updatedJob = await getJob(jobId!);
+                  if (updatedJob?.generatedCV?.html || updatedJob?.generatedCV?.htmlUrl) {
+                    console.log('✅ [DEBUG] CV generation completed, updating job data');
+                    if (isMountedRef.current) {
+                      setJob(updatedJob);
+                      await loadBaseHTML(updatedJob);
+                      setIsGenerating(false);
+                      toast.success('CV generated successfully! Adding enhanced features...');
+                    }
+                  } else if (attempts < maxAttempts) {
+                    setTimeout(poll, 2000); // Poll every 2 seconds
+                  } else {
+                    console.error('❌ [DEBUG] CV generation timeout');
+                    if (isMountedRef.current) {
+                      setError('CV generation timed out. Please try again.');
+                      setIsGenerating(false);
+                    }
+                  }
+                } catch (pollError) {
+                  console.error('❌ [DEBUG] Error polling for CV completion:', pollError);
+                  if (attempts >= maxAttempts && isMountedRef.current) {
+                    setError('Failed to check CV generation status. Please refresh the page.');
+                    setIsGenerating(false);
+                  } else {
+                    setTimeout(poll, 2000);
+                  }
+                }
+              };
+              
+              poll();
+            };
+            
+            pollForCompletion();
+            return;
+          }
+          
+          // No stored config found, trigger generation manually
           if (!hasTriggeredGeneration.current) {
+            console.log('🚀 [DEBUG] No generation config found, triggering manual generation');
             hasTriggeredGeneration.current = true;
             setTimeout(async () => {
               await triggerCVGeneration(jobData);

@@ -4,6 +4,13 @@ import { CVTransformationService, CVRecommendation } from '../services/cv-transf
 import { ParsedCV } from '../types/job';
 import { corsOptions } from '../config/cors';
 
+// Request deduplication cache to prevent duplicate calls from React StrictMode
+const activeRequests = new Map<string, Promise<any>>();
+
+// Cache for recent recommendation results (5 minute cache)
+const recommendationCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const applyImprovements = onCall(
   {
     timeoutSeconds: 180,
@@ -157,126 +164,68 @@ export const getRecommendations = onCall(
     const userId = request.auth.uid;
     const startTime = Date.now();
 
+    // Create request key for deduplication
+    const requestKey = `${jobId}-${userId}-${targetRole || 'no-role'}-${(industryKeywords || []).join(',')}-${forceRegenerate || false}`;
+
     try {
       console.log(`[getRecommendations] Starting for job ${jobId}`, {
         userId,
         targetRole,
         industryKeywords,
         forceRegenerate,
+        requestKey,
         timestamp: new Date().toISOString()
       });
 
-      // Get the job document
-      const jobDoc = await db.collection('jobs').doc(jobId).get();
-      if (!jobDoc.exists) {
-        throw new Error('Job not found');
+      // Check for in-flight request (prevent StrictMode duplicates)
+      if (activeRequests.has(requestKey)) {
+        console.log(`[getRecommendations] Returning cached in-flight request for ${requestKey}`);
+        return await activeRequests.get(requestKey);
       }
 
-      const jobData = jobDoc.data();
-      if (jobData?.userId !== userId) {
-        throw new Error('Unauthorized access to job');
-      }
-
-      const originalCV: ParsedCV = jobData?.parsedData;
-      if (!originalCV) {
-        throw new Error('No parsed CV found for this job');
-      }
-
-      // Update job status to processing
-      await db.collection('jobs').doc(jobId).update({
-        status: 'generating_recommendations',
-        processingStartTime: new Date().toISOString()
-      });
-
-      // Check if we have existing recommendations and don't need to regenerate
-      const existingRecommendations: CVRecommendation[] = jobData?.cvRecommendations || [];
-      const lastGeneration = jobData?.lastRecommendationGeneration;
-      const isRecentGeneration = lastGeneration && 
-        (new Date().getTime() - new Date(lastGeneration).getTime()) < 24 * 60 * 60 * 1000; // 24 hours
-
-      if (existingRecommendations.length > 0 && isRecentGeneration && !forceRegenerate) {
-        console.log(`[getRecommendations] Using cached recommendations (${existingRecommendations.length} items)`);
-        
-        // Update status back to analyzed
-        await db.collection('jobs').doc(jobId).update({
-          status: 'analyzed'
-        });
-        
-        return {
-          success: true,
-          data: {
-            recommendations: existingRecommendations,
-            cached: true,
-            generatedAt: lastGeneration
-          }
-        };
-      }
-
-      // Generate new recommendations with progress tracking
-      console.log(`[getRecommendations] Generating new recommendations for CV with ${JSON.stringify(originalCV).length} characters`);
-      
-      // Update progress status
-      await db.collection('jobs').doc(jobId).update({
-        processingProgress: 'Analyzing CV content...',
-        processingStage: 1,
-        totalStages: 3
-      });
-      
-      const transformationService = new CVTransformationService();
-      
-      // Add timeout wrapper with progress updates
-      const recommendations = await Promise.race([
-        generateRecommendationsWithProgress(
-          transformationService,
-          originalCV,
-          targetRole,
-          industryKeywords,
-          jobId,
-          db
-        ),
-        new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('Recommendation generation timed out after 4 minutes'));
-          }, 240000); // 4 minute timeout
-        })
-      ]);
-
-      // Final progress update
-      await db.collection('jobs').doc(jobId).update({
-        processingProgress: 'Finalizing recommendations...',
-        processingStage: 3,
-        totalStages: 3
-      });
-      
-      // Store the recommendations with metadata
-      const now = new Date().toISOString();
-      const processingTime = Date.now() - startTime;
-      
-      await db.collection('jobs').doc(jobId).update({
-        cvRecommendations: recommendations,
-        lastRecommendationGeneration: now,
-        status: 'analyzed',
-        processingTime: processingTime,
-        processingCompleted: now,
-        recommendationCount: recommendations.length,
-        // Clear progress fields
-        processingProgress: null,
-        processingStage: null,
-        totalStages: null,
-        processingStartTime: null
-      });
-
-      console.log(`[getRecommendations] Generated ${recommendations.length} recommendations in ${processingTime}ms`);
-
-      return {
-        success: true,
-        data: {
-          recommendations,
-          cached: false,
-          generatedAt: now,
-          processingTime: processingTime
+      // Check recommendation cache (5 minute cache)
+      const cachedResult = recommendationCache.get(requestKey);
+      if (cachedResult && !forceRegenerate) {
+        const isExpired = (Date.now() - cachedResult.timestamp) > CACHE_DURATION;
+        if (!isExpired) {
+          console.log(`[getRecommendations] Returning cached result for ${requestKey} (age: ${Date.now() - cachedResult.timestamp}ms)`);
+          return {
+            success: true,
+            data: {
+              ...cachedResult.data,
+              cached: true,
+              cacheAge: Date.now() - cachedResult.timestamp
+            }
+          };
+        } else {
+          // Remove expired cache entry
+          recommendationCache.delete(requestKey);
         }
-      };
+      }
+
+      // Create the actual execution promise and cache it to prevent duplicates
+      const executionPromise = executeRecommendationGeneration(
+        db, jobId, userId, targetRole, industryKeywords, forceRegenerate, startTime
+      );
+
+      // Store the in-flight request to prevent duplicates
+      activeRequests.set(requestKey, executionPromise);
+
+      // Execute and get the result
+      const result = await executionPromise;
+
+      // Cache the successful result (excluding the execution promise)
+      if (result.success) {
+        recommendationCache.set(requestKey, {
+          data: result.data,
+          timestamp: Date.now()
+        });
+      }
+
+      // Clean up the active request
+      activeRequests.delete(requestKey);
+
+      return result;
 
     } catch (error: any) {
       const processingTime = Date.now() - startTime;
@@ -284,24 +233,12 @@ export const getRecommendations = onCall(
         error: error.message,
         stack: error.stack,
         userId,
-        processingTime
+        processingTime,
+        requestKey
       });
       
-      // Update job status to reflect error with detailed info
-      try {
-        await db.collection('jobs').doc(jobId).update({
-          status: 'failed',
-          error: error.message,
-          lastError: new Date().toISOString(),
-          processingProgress: null,
-          processingStage: null,
-          totalStages: null,
-          processingStartTime: null,
-          failureReason: error.message.includes('timeout') ? 'timeout' : 'processing_error'
-        });
-      } catch (dbError) {
-        console.error('[getRecommendations] Failed to update job status:', dbError);
-      }
+      // Clean up the active request on error
+      activeRequests.delete(requestKey);
       
       // Throw appropriate error based on type
       if (error.message.includes('timeout')) {
@@ -314,6 +251,172 @@ export const getRecommendations = onCall(
     }
   }
 );
+
+/**
+ * Execute recommendation generation with all the original logic
+ */
+async function executeRecommendationGeneration(
+  db: FirebaseFirestore.Firestore,
+  jobId: string,
+  userId: string,
+  targetRole?: string,
+  industryKeywords?: string[],
+  forceRegenerate?: boolean,
+  startTime?: number
+): Promise<any> {
+  const executionStartTime = startTime || Date.now();
+  
+  try {
+    // Get the job document
+    const jobDoc = await db.collection('jobs').doc(jobId).get();
+    if (!jobDoc.exists) {
+      throw new Error('Job not found');
+    }
+
+    const jobData = jobDoc.data();
+    if (jobData?.userId !== userId) {
+      throw new Error('Unauthorized access to job');
+    }
+
+    const originalCV: ParsedCV = jobData?.parsedData;
+    if (!originalCV) {
+      throw new Error('No parsed CV found for this job');
+    }
+
+  // Update job status to processing
+  await db.collection('jobs').doc(jobId).update({
+    status: 'generating_recommendations',
+    processingStartTime: new Date().toISOString()
+  });
+
+  // Check if we have existing recommendations and don't need to regenerate
+  const existingRecommendations: CVRecommendation[] = jobData?.cvRecommendations || [];
+  const lastGeneration = jobData?.lastRecommendationGeneration;
+  const isRecentGeneration = lastGeneration && 
+    (new Date().getTime() - new Date(lastGeneration).getTime()) < 24 * 60 * 60 * 1000; // 24 hours
+
+  if (existingRecommendations.length > 0 && isRecentGeneration && !forceRegenerate) {
+    console.log(`[getRecommendations] Using cached recommendations (${existingRecommendations.length} items)`);
+    
+    // Update status back to analyzed
+    await db.collection('jobs').doc(jobId).update({
+      status: 'analyzed'
+    });
+    
+    return {
+      success: true,
+      data: {
+        recommendations: existingRecommendations,
+        cached: true,
+        generatedAt: lastGeneration
+      }
+    };
+  }
+
+  // Generate new recommendations with progress tracking
+  console.log(`[getRecommendations] Generating new recommendations for CV with ${JSON.stringify(originalCV).length} characters`);
+  
+  // Update progress status
+  await db.collection('jobs').doc(jobId).update({
+    processingProgress: 'Analyzing CV content...',
+    processingStage: 1,
+    totalStages: 3
+  });
+  
+  const transformationService = new CVTransformationService();
+  
+  // Add timeout wrapper with progress updates
+  const recommendations = await Promise.race([
+    generateRecommendationsWithProgress(
+      transformationService,
+      originalCV,
+      targetRole,
+      industryKeywords,
+      jobId,
+      db
+    ),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Recommendation generation timed out after 4 minutes'));
+      }, 240000); // 4 minute timeout
+    })
+  ]);
+
+  // Final progress update
+  await db.collection('jobs').doc(jobId).update({
+    processingProgress: 'Finalizing recommendations...',
+    processingStage: 3,
+    totalStages: 3
+  });
+  
+  // Store the recommendations with metadata
+  const now = new Date().toISOString();
+  const processingTime = startTime ? Date.now() - startTime : 0;
+  
+  await db.collection('jobs').doc(jobId).update({
+    cvRecommendations: recommendations,
+    lastRecommendationGeneration: now,
+    status: 'analyzed',
+    processingTime: processingTime,
+    processingCompleted: now,
+    recommendationCount: recommendations.length,
+    // Clear progress fields
+    processingProgress: null,
+    processingStage: null,
+    totalStages: null,
+    processingStartTime: null
+  });
+
+  console.log(`[getRecommendations] Generated ${recommendations.length} recommendations in ${processingTime}ms`);
+
+    return {
+      success: true,
+      data: {
+        recommendations,
+        cached: false,
+        generatedAt: now,
+        processingTime: processingTime
+      }
+    };
+  } catch (error: any) {
+    console.error(`[executeRecommendationGeneration] Error for job ${jobId}:`, {
+      error: error.message,
+      userId,
+      processingTime: Date.now() - executionStartTime
+    });
+    
+    // Update job status with error information
+    await handleRecommendationError(db, jobId, error, executionStartTime);
+    
+    // Re-throw the error for the main handler
+    throw error;
+  }
+}
+
+// Handle errors within the extracted function with proper job status updates
+async function handleRecommendationError(
+  db: FirebaseFirestore.Firestore,
+  jobId: string,
+  error: any,
+  startTime: number
+): Promise<void> {
+  const processingTime = Date.now() - startTime;
+  
+  try {
+    await db.collection('jobs').doc(jobId).update({
+      status: 'failed',
+      error: error.message,
+      lastError: new Date().toISOString(),
+      processingProgress: null,
+      processingStage: null,
+      totalStages: null,
+      processingStartTime: null,
+      failureReason: error.message.includes('timeout') ? 'timeout' : 'processing_error'
+    });
+  } catch (dbError) {
+    console.error('[executeRecommendationGeneration] Failed to update job status:', dbError);
+  }
+}
 
 /**
  * Generate recommendations with progress tracking

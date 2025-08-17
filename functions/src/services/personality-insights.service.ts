@@ -228,14 +228,19 @@ Rate these traits (0-10):
 
 Provide refined scores based on the context. Return only the scores in format: trait:score`;
 
-      const response = await this.getOpenAI().completions.create({
-        model: 'text-davinci-003',
-        prompt,
+      const response = await this.getOpenAI().chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         max_tokens: 200,
         temperature: 0.3
       });
       
-      const refinedScores = this.parseAIScores(response.choices[0].text || '');
+      const refinedScores = this.parseAIScores(response.choices[0].message?.content || '');
       
       // Merge AI scores with initial scores (weighted average)
       const finalTraits = { ...initialTraits };
@@ -468,14 +473,19 @@ Best Culture Fit: ${bestCulture} environment
 
 Make it positive and professional, focusing on strengths.`;
 
-      const response = await this.getOpenAI().completions.create({
-        model: 'text-davinci-003',
-        prompt,
+      const response = await this.getOpenAI().chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         max_tokens: 150,
         temperature: 0.7
       });
       
-      return response.choices[0].text?.trim() || this.generateDefaultSummary(topTraits, workStyle, bestCulture);
+      return response.choices[0].message?.content?.trim() || this.generateDefaultSummary(topTraits, workStyle, bestCulture);
     } catch (error) {
       console.error('Error generating personality summary:', error);
       return this.generateDefaultSummary(

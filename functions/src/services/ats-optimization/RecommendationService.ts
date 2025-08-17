@@ -21,31 +21,99 @@ export class RecommendationService {
    * Generate comprehensive prioritized recommendations
    */
   async generatePrioritizedRecommendations(params: RecommendationParams): Promise<PrioritizedRecommendation[]> {
-    const { parsedCV, advancedScore, semanticAnalysis, systemSimulations, competitorBenchmark } = params;
-    
-    console.log('🎯 Generating prioritized ATS recommendations...');
-    
-    const recommendations: PrioritizedRecommendation[] = [];
-    
-    // Generate different types of recommendations
-    const keywordRecs = this.generateKeywordRecommendations(semanticAnalysis, parsedCV);
-    const structureRecs = this.generateStructureRecommendations(parsedCV, advancedScore);
-    const contentRecs = this.generateContentRecommendations(parsedCV, advancedScore);
-    const systemRecs = this.generateSystemSpecificRecommendations(systemSimulations);
-    const competitiveRecs = this.generateCompetitiveRecommendations(competitorBenchmark, advancedScore);
-    
-    // Combine all recommendations
-    recommendations.push(...keywordRecs);
-    recommendations.push(...structureRecs);
-    recommendations.push(...contentRecs);
-    recommendations.push(...systemRecs);
-    recommendations.push(...competitiveRecs);
-    
-    // Sort by priority and impact
-    const prioritizedRecs = this.prioritizeRecommendations(recommendations, advancedScore);
-    
-    console.log(`✅ Generated ${prioritizedRecs.length} prioritized recommendations`);
-    return prioritizedRecs;
+    try {
+      const { parsedCV, advancedScore, semanticAnalysis, systemSimulations, competitorBenchmark } = params;
+      
+      console.log('🎯 Generating prioritized ATS recommendations...');
+      
+      const recommendations: PrioritizedRecommendation[] = [];
+      
+      // Generate different types of recommendations with safe error handling
+      const keywordRecs = this.safeGenerateRecommendations(() => 
+        this.generateKeywordRecommendations(semanticAnalysis, parsedCV));
+      const structureRecs = this.safeGenerateRecommendations(() => 
+        this.generateStructureRecommendations(parsedCV, advancedScore));
+      const contentRecs = this.safeGenerateRecommendations(() => 
+        this.generateContentRecommendations(parsedCV, advancedScore));
+      const systemRecs = this.safeGenerateRecommendations(() => 
+        this.generateSystemSpecificRecommendations(systemSimulations || []));
+      const competitiveRecs = this.safeGenerateRecommendations(() => 
+        this.generateCompetitiveRecommendations(competitorBenchmark, advancedScore));
+      
+      // Combine all recommendations
+      recommendations.push(...keywordRecs);
+      recommendations.push(...structureRecs);
+      recommendations.push(...contentRecs);
+      recommendations.push(...systemRecs);
+      recommendations.push(...competitiveRecs);
+      
+      // Sort by priority and impact
+      const prioritizedRecs = this.prioritizeRecommendations(recommendations, advancedScore);
+      
+      console.log(`✅ Generated ${prioritizedRecs.length} prioritized recommendations`);
+      return prioritizedRecs;
+    } catch (error) {
+      console.error('❌ Error generating recommendations:', error);
+      // Return basic fallback recommendations
+      return this.getFallbackRecommendations();
+    }
+  }
+
+  /**
+   * Safe wrapper for generating recommendations
+   */
+  private safeGenerateRecommendations(generator: () => PrioritizedRecommendation[]): PrioritizedRecommendation[] {
+    try {
+      const result = generator();
+      return Array.isArray(result) ? result : [];
+    } catch (error) {
+      console.warn('Warning: Failed to generate specific recommendations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fallback recommendations when main generation fails
+   */
+  private getFallbackRecommendations(): PrioritizedRecommendation[] {
+    return [
+      {
+        id: `fallback-structure-${Date.now()}`,
+        category: 'structure',
+        priority: 2,
+        title: 'Improve CV Structure',
+        description: 'Review and enhance the overall structure and organization of your CV',
+        impact: 'medium',
+        estimatedScoreImprovement: 10,
+        actionRequired: 'modify',
+        section: 'structure',
+        atsSystemsAffected: ['workday', 'greenhouse', 'lever']
+      },
+      {
+        id: `fallback-content-${Date.now()}`,
+        category: 'content',
+        priority: 2,
+        title: 'Enhance Content Quality',
+        description: 'Add more specific achievements and quantified results to your experience descriptions',
+        impact: 'high',
+        estimatedScoreImprovement: 15,
+        actionRequired: 'modify',
+        section: 'experience',
+        atsSystemsAffected: ['greenhouse', 'icims']
+      },
+      {
+        id: `fallback-keywords-${Date.now()}`,
+        category: 'keywords',
+        priority: 3,
+        title: 'Optimize Keywords',
+        description: 'Include more relevant industry keywords throughout your CV',
+        impact: 'medium',
+        estimatedScoreImprovement: 8,
+        actionRequired: 'modify',
+        section: 'content',
+        atsSystemsAffected: ['workday', 'bamboohr']
+      }
+    ];
   }
 
   /**
