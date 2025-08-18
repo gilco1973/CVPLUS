@@ -120,7 +120,7 @@ export class ErrorClassifier {
   /**
    * Analyzes the error to determine type and severity
    */
-  private analyzeError(error: any): { type: ErrorType; severity: ErrorSeverity } {
+  private analyzeError(error: unknown): { type: ErrorType; severity: ErrorSeverity } {
     const message = this.extractErrorMessage(error).toLowerCase();
     const code = error.code || error.status;
 
@@ -170,7 +170,7 @@ export class ErrorClassifier {
   /**
    * Determines recovery strategy based on error type
    */
-  private determineRecoveryStrategy(errorType: ErrorType, error: any): {
+  private determineRecoveryStrategy(errorType: ErrorType, error: unknown): {
     strategy: RecoveryStrategy;
     recoverable: boolean;
     retryable: boolean;
@@ -264,7 +264,7 @@ export class ErrorClassifier {
   /**
    * Error detection helpers
    */
-  private isNetworkError(error: any, message: string): boolean {
+  private isNetworkError(error: unknown, message: string): boolean {
     return !navigator.onLine ||
            message.includes('network') ||
            message.includes('fetch') ||
@@ -273,7 +273,7 @@ export class ErrorClassifier {
            error.name === 'NetworkError';
   }
 
-  private isAuthError(error: any, message: string, code: any): boolean {
+  private isAuthError(error: unknown, message: string, code: unknown): boolean {
     return message.includes('authentication') ||
            message.includes('unauthorized') ||
            message.includes('permission denied') ||
@@ -283,7 +283,7 @@ export class ErrorClassifier {
            error.code === 'unauthenticated';
   }
 
-  private isRateLimitError(error: any, message: string, code: any): boolean {
+  private isRateLimitError(error: unknown, message: string, code: unknown): boolean {
     return message.includes('rate limit') ||
            message.includes('too many requests') ||
            message.includes('quota') ||
@@ -291,21 +291,21 @@ export class ErrorClassifier {
            error.code === 'resource-exhausted';
   }
 
-  private isTimeoutError(error: any, message: string): boolean {
+  private isTimeoutError(error: unknown, message: string): boolean {
     return message.includes('timeout') ||
            message.includes('timed out') ||
            error.name === 'TimeoutError' ||
            error.code === 'TIMEOUT';
   }
 
-  private isStorageError(error: any, message: string): boolean {
+  private isStorageError(error: unknown, message: string): boolean {
     return message.includes('storage') ||
            message.includes('bucket') ||
            message.includes('file not found') ||
            error.code?.includes('storage');
   }
 
-  private isProcessingError(error: any, message: string): boolean {
+  private isProcessingError(error: unknown, message: string): boolean {
     return message.includes('processing') ||
            message.includes('parse') ||
            message.includes('transform') ||
@@ -313,14 +313,14 @@ export class ErrorClassifier {
            message.includes('ai');
   }
 
-  private isQuotaError(error: any, message: string, code: any): boolean {
+  private isQuotaError(error: unknown, message: string, code: unknown): boolean {
     return message.includes('quota exceeded') ||
            message.includes('billing') ||
            message.includes('limit exceeded') ||
            code === 402;
   }
 
-  private isValidationError(error: any, message: string): boolean {
+  private isValidationError(error: unknown, message: string): boolean {
     return message.includes('validation') ||
            message.includes('invalid') ||
            message.includes('missing required') ||
@@ -330,12 +330,12 @@ export class ErrorClassifier {
   /**
    * Helper methods
    */
-  private extractErrorMessage(error: any): string {
+  private extractErrorMessage(error: unknown): string {
     if (typeof error === 'string') return error;
     return error?.message || error?.error?.message || 'An unknown error occurred';
   }
 
-  private generateUserMessage(errorType: ErrorType, error: any): string {
+  private generateUserMessage(errorType: ErrorType, error: unknown): string {
     const baseMessages = {
       [ErrorType.NETWORK]: "Connection issue detected. Please check your internet connection and try again.",
       [ErrorType.API_RATE_LIMIT]: "Service is temporarily busy. We'll automatically retry in a moment.",
@@ -351,7 +351,7 @@ export class ErrorClassifier {
     return baseMessages[errorType] || baseMessages[ErrorType.UNKNOWN];
   }
 
-  private generateActionableSteps(errorType: ErrorType, error: any): string[] {
+  private generateActionableSteps(errorType: ErrorType, error: unknown): string[] {
     switch (errorType) {
       case ErrorType.NETWORK:
         return [
@@ -397,7 +397,7 @@ export class ErrorClassifier {
     }
   }
 
-  private extractTelemetryData(error: any, context: ErrorContext): Record<string, any> {
+  private extractTelemetryData(error: unknown, context: ErrorContext): Record<string, unknown> {
     return {
       errorName: error?.name,
       errorCode: error?.code,

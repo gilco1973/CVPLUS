@@ -19,9 +19,10 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
       await signInWithGoogle();
       toast.success('Signed in successfully!');
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Error is already handled by AuthContext, just show the user-friendly message
-      toast.error(error.message || 'Failed to sign in. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -30,9 +31,10 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
       await signInAnonymous();
       toast.success('Signed in anonymously!');
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Error is already handled by AuthContext, just show the user-friendly message
-      toast.error(error.message || 'Failed to sign in anonymously. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in anonymously. Please try again.';
+      toast.error(errorMessage);
     }
   };
 

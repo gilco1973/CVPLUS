@@ -1,4 +1,5 @@
 import { diffWords, diffSentences, Change } from 'diff';
+import type { CVParsedData, CVExperienceItem, CVEducationItem, CVCertificationItem, CVProjectItem, CVLanguageItem } from '../../types/cvData';
 
 export interface DiffResult {
   type: 'added' | 'removed' | 'unchanged';
@@ -79,7 +80,7 @@ export function createSentenceDiff(before: string, after: string): DiffResult[] 
 /**
  * Extracts comparable text content from CV data for a specific section
  */
-export function extractSectionText(data: any, sectionKey: string): string {
+export function extractSectionText(data: CVParsedData, sectionKey: string): string {
   if (!data) return '';
 
   switch (sectionKey) {
@@ -98,7 +99,7 @@ export function extractSectionText(data: any, sectionKey: string): string {
       return data.summary || '';
 
     case 'experience':
-      return (data.experience || []).map((exp: any) => 
+      return (data.experience || []).map((exp: CVExperienceItem) => 
         [
           exp.company || '',
           exp.position || exp.role || '',
@@ -110,7 +111,7 @@ export function extractSectionText(data: any, sectionKey: string): string {
       ).join('\n\n');
 
     case 'education':
-      return (data.education || []).map((edu: any) =>
+      return (data.education || []).map((edu: CVEducationItem) =>
         [
           edu.institution || '',
           edu.degree || '',
@@ -139,12 +140,12 @@ export function extractSectionText(data: any, sectionKey: string): string {
       return (data.achievements || []).join('\n');
 
     case 'certifications':
-      return (data.certifications || []).map((cert: any) =>
+      return (data.certifications || []).map((cert: CVCertificationItem) =>
         [cert.name, cert.issuer, cert.date].filter(Boolean).join(' - ')
       ).join('\n');
 
     case 'projects':
-      return (data.projects || []).map((proj: any) =>
+      return (data.projects || []).map((proj: CVProjectItem) =>
         [
           proj.name || '',
           proj.description || '',
@@ -154,7 +155,7 @@ export function extractSectionText(data: any, sectionKey: string): string {
       ).join('\n\n');
 
     case 'languages':
-      return (data.languages || []).map((lang: any) =>
+      return (data.languages || []).map((lang: CVLanguageItem) =>
         `${lang.language} (${lang.proficiency})`
       ).join(', ');
 
@@ -174,7 +175,7 @@ export function extractSectionText(data: any, sectionKey: string): string {
 /**
  * Compares two CV datasets and generates section-by-section comparisons
  */
-export function compareCV(originalData: any, improvedData: any): CVComparison {
+export function compareCV(originalData: CVParsedData, improvedData: CVParsedData): CVComparison {
   const sections: SectionComparison[] = [];
   const sectionsModified: string[] = [];
   const newSections: string[] = [];

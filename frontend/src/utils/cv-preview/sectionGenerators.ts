@@ -1,4 +1,5 @@
 import type { QRCodeSettings } from '../../types/cv-preview';
+import type { CVExperienceItem, CVEducationItem, CVSkillsData, CVPersonalInfo } from '../../types/cvData';
 import { createPreviewContent, hasPlaceholders } from '../placeholderReplacer';
 
 export class SectionGenerators {
@@ -54,7 +55,7 @@ export class SectionGenerators {
     `;
   }
 
-  static generateExperienceSection(experience: any[], collapsedSections: Record<string, boolean>, customSections?: Record<string, string>): string {
+  static generateExperienceSection(experience: CVExperienceItem[], collapsedSections: Record<string, boolean>, customSections?: Record<string, string>): string {
     return `
       <div class="section editable-section" data-section="experience">
         <div class="edit-overlay" onclick="editSection('experience')">✏️</div>
@@ -108,7 +109,7 @@ export class SectionGenerators {
     `;
   }
 
-  static generateEducationSection(education: any[], collapsedSections: Record<string, boolean>): string {
+  static generateEducationSection(education: CVEducationItem[], collapsedSections: Record<string, boolean>): string {
     return `
       <div class="section editable-section" data-section="education">
         <div class="edit-overlay" onclick="editSection('education')">✏️</div>
@@ -129,7 +130,7 @@ export class SectionGenerators {
     `;
   }
 
-  static generateSkillsSection(skills: any, collapsedSections: Record<string, boolean>): string {
+  static generateSkillsSection(skills: CVSkillsData, collapsedSections: Record<string, boolean>): string {
     if (!skills) return '';
     
     return `
@@ -157,7 +158,7 @@ export class SectionGenerators {
     `;
   }
 
-  static generateHeaderSection(personalInfo: any): string {
+  static generateHeaderSection(personalInfo: CVPersonalInfo): string {
     return `
       <div class="header-section editable-section" data-section="personalInfo">
         <div class="edit-overlay" onclick="editSection('personalInfo')">✏️</div>

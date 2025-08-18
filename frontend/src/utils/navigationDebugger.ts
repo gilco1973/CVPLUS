@@ -13,7 +13,7 @@ export interface NavigationDebugInfo {
   jobId?: string;
   success?: boolean;
   error?: string;
-  data?: any;
+  data?: unknown;
 }
 
 class NavigationDebugger {

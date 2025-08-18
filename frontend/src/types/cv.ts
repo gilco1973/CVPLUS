@@ -3,6 +3,9 @@
  * Extracted from cvService.ts for better modularity
  */
 
+import type { CVParsedData, CVPersonalInfo } from './cvData';
+import type { PrioritizedRecommendation } from './ats';
+
 export interface Job {
   id: string;
   userId: string;
@@ -11,7 +14,7 @@ export interface Job {
   mimeType?: string;
   isUrl?: boolean;
   userInstructions?: string;
-  parsedData?: any;
+  parsedData?: CVParsedData;
   generatedCV?: {
     html: string;
     htmlUrl?: string;
@@ -25,7 +28,7 @@ export interface Job {
     detectedTypes: string[];
     recommendations: string[];
   };
-  privacyVersion?: any;
+  privacyVersion?: number;
   quickCreate?: boolean;
   quickCreateReady?: boolean;
   settings?: {
@@ -36,11 +39,11 @@ export interface Job {
     useRecommendedTemplate: boolean;
   };
   error?: string;
-  appliedRecommendations?: any[];
-  transformationSummary?: any;
-  improvedCV?: any;
-  createdAt: any;
-  updatedAt: any;
+  appliedRecommendations?: PrioritizedRecommendation[];
+  transformationSummary?: Record<string, unknown>;
+  improvedCV?: CVParsedData;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface JobCreateParams {
@@ -62,7 +65,7 @@ export interface CVProcessParams {
 }
 
 export interface CVAnalysisParams {
-  parsedCV: any;
+  parsedCV: CVParsedData;
   targetRole?: string;
   jobDescription?: string;
   industryKeywords?: string[];

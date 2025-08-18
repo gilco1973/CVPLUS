@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { applyImprovements } from '../services/cvService';
@@ -6,7 +6,6 @@ import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
 import { robustNavigation } from '../utils/robustNavigation';
-import type { PrioritizedRecommendation } from '../types/ats';
 
 interface RecommendationItem {
   id: string;
@@ -85,7 +84,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   }, []);
 
   // Enhanced load function with StrictMode-aware duplicate prevention
-  const loadAnalysisAndRecommendations = useCallback(async () => {
+  const loadAnalysisAndRecommendations = async () => {
     // Enhanced duplicate prevention checks
     if (loadedJobId === job.id) {
       console.log(`[CVAnalysisResults] Already loaded for job ${job.id}`);
@@ -252,36 +251,36 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       });
       
       // Transform backend recommendations to frontend format
-      let backendRecs: PrioritizedRecommendation[] | null = null;
+      let backendRecs: any[] | null = null;
       
       console.log('🔍 [DATA PARSING] Starting comprehensive data structure analysis...');
       
       // Check multiple possible response structures with enhanced debugging
-      const structureChecks: Array<{name: string; condition: boolean; data: PrioritizedRecommendation[] | unknown}> = [
+      const structureChecks: Array<{name: string; condition: boolean; data: any}> = [
         {
           name: 'Firebase Callable Response (success + data.recommendations)',
           condition: recommendationsData?.success && recommendationsData?.data?.recommendations && Array.isArray(recommendationsData.data.recommendations),
-          data: recommendationsData?.data?.recommendations as PrioritizedRecommendation[]
+          data: recommendationsData?.data?.recommendations as any[]
         },
         {
           name: 'Direct data.recommendations',
           condition: recommendationsData?.data?.recommendations && Array.isArray(recommendationsData.data.recommendations),
-          data: recommendationsData?.data?.recommendations as PrioritizedRecommendation[]
+          data: recommendationsData?.data?.recommendations as any[]
         },
         {
           name: 'Direct recommendations array',
           condition: recommendationsData?.recommendations && Array.isArray(recommendationsData.recommendations),
-          data: recommendationsData?.recommendations as PrioritizedRecommendation[]
+          data: recommendationsData?.recommendations as any[]
         },
         {
           name: 'HTTP Response (result.data.recommendations)',
           condition: recommendationsData?.result?.data?.recommendations && Array.isArray(recommendationsData.result.data.recommendations),
-          data: recommendationsData?.result?.data?.recommendations as PrioritizedRecommendation[]
+          data: recommendationsData?.result?.data?.recommendations as any[]
         },
         {
           name: 'Nested data.data.recommendations',
           condition: recommendationsData?.data?.data?.recommendations && Array.isArray(recommendationsData.data.data.recommendations),
-          data: recommendationsData?.data?.data?.recommendations as PrioritizedRecommendation[]
+          data: recommendationsData?.data?.data?.recommendations as any[]
         }
       ];
       
@@ -294,12 +293,12 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         
         if (check.condition && !backendRecs) {
           console.log(`✅ MATCH! Using structure: ${check.name}`);
-          backendRecs = check.data as PrioritizedRecommendation[];
+          backendRecs = check.data as any[];
         }
       });
       
-      if (backendRecs && Array.isArray(backendRecs) && backendRecs.length > 0) {
-        const validBackendRecs: PrioritizedRecommendation[] = backendRecs;
+      if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
+        const validBackendRecs: any[] = backendRecs;
         console.log(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
         console.log('First 3 recommendations:', validBackendRecs.slice(0, 3));
         const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: unknown) => {
@@ -413,7 +412,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         setIsLoading(false);
       }
     }
-  }, [job.id, loadedJobId, isLoading]);
+  };
 
   // Load recommendations when job changes - Enhanced StrictMode-aware duplicate prevention
   useEffect(() => {

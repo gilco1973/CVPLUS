@@ -1,10 +1,11 @@
 import type { QRCodeSettings } from '../../types/cv-preview';
+import type { CVParsedData } from '../../types/cvData';
 import { CVTemplateStyles } from './templateStyles';
 import { SectionGenerators } from './sectionGenerators';
 
 export class CVTemplateGenerator {
   static generateHTML(
-    previewData: any,
+    previewData: CVParsedData,
     selectedTemplate: string,
     selectedFeatures: Record<string, boolean>,
     qrCodeSettings: QRCodeSettings,

@@ -10,6 +10,7 @@ admin.initializeApp();
 export { processCV } from './functions/processCV';
 export { generatePodcast } from './functions/generatePodcast';
 export { generateCV } from './functions/generateCV';
+export { initiateCVGeneration } from './functions/initiateCVGeneration';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
 export { cleanupTempFiles as cleanupOldFiles } from './functions/cleanupTempFiles';

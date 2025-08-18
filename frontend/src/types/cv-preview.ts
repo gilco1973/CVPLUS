@@ -1,10 +1,11 @@
 import type { Job } from '../services/cvService';
+import type { CVParsedData, CVPersonalInfo, CVExperienceItem, CVEducationItem, CVSkillsData } from './cvData';
 
 export interface CVPreviewProps {
   job: Job;
   selectedTemplate: string;
   selectedFeatures: Record<string, boolean>;
-  appliedImprovements?: any; // LLM-improved content from analysis step
+  appliedImprovements?: CVParsedData; // LLM-improved content from analysis step
   onUpdate?: (updates: Partial<Job['parsedData']>) => void;
   onFeatureToggle?: (feature: string, enabled: boolean) => void;
   className?: string;
@@ -17,7 +18,7 @@ export interface CVPreviewState {
   isEditingQRCode: boolean;
   showPreviewBanner: boolean;
   showPlaceholderBanner: boolean;
-  previewData: any;
+  previewData: CVParsedData;
   hasUnsavedChanges: boolean;
   autoSaveEnabled: boolean;
   lastSaved: Date | null;
@@ -41,7 +42,7 @@ export interface AchievementAnalysis {
 }
 
 export interface FeaturePreviewData {
-  [key: string]: any;
+  [key: string]: unknown;
   languages?: Array<{ name: string; level: string }>;
   certifications?: Array<{ name: string; issuer: string; year: string; verified: boolean }>;
   socialLinks?: Record<string, string>;
@@ -49,17 +50,17 @@ export interface FeaturePreviewData {
 }
 
 export interface SectionData {
-  personalInfo?: any;
+  personalInfo?: CVPersonalInfo;
   summary?: string;
-  experience?: any[];
-  education?: any[];
-  skills?: any;
+  experience?: CVExperienceItem[];
+  education?: CVEducationItem[];
+  skills?: CVSkillsData;
 }
 
 export interface EditableSectionProps {
   section: string;
-  data: any;
-  onEdit: (section: string, newValue: any) => void;
+  data: unknown;
+  onEdit: (section: string, newValue: unknown) => void;
   isEditing: boolean;
   className?: string;
 }
@@ -81,7 +82,7 @@ export interface CVPreviewToolbarProps {
   lastSaved: Date | null;
   selectedTemplate: string;
   showPreviewBanner: boolean;
-  appliedImprovements: any;
+  appliedImprovements: CVParsedData;
   onToggleEditing: () => void;
   onToggleFeaturePreviews: () => void;
   onToggleAutoSave: () => void;
@@ -91,7 +92,7 @@ export interface CVPreviewToolbarProps {
 }
 
 export interface CVPreviewContentProps {
-  previewData: any;
+  previewData: CVParsedData;
   selectedTemplate: string;
   selectedFeatures: Record<string, boolean>;
   showFeaturePreviews: boolean;
@@ -101,7 +102,7 @@ export interface CVPreviewContentProps {
   editingSection: string | null;
   achievementAnalysis: AchievementAnalysis | null;
   showPlaceholderBanner: boolean;
-  onSectionEdit: (section: string, newValue: any) => void;
+  onSectionEdit: (section: string, newValue: unknown) => void;
   onToggleSection: (sectionId: string) => void;
   onEditQRCode: () => void;
   onAnalyzeAchievements: () => void;
@@ -110,12 +111,12 @@ export interface CVPreviewContentProps {
 }
 
 export interface MockDataGenerator {
-  generateMockData(featureId: string, realData?: any): FeaturePreviewData;
+  generateMockData(featureId: string, realData?: CVParsedData): FeaturePreviewData;
 }
 
 export interface TemplateGenerator {
   generateHTML(
-    data: any, 
+    data: CVParsedData, 
     template: string, 
     features: Record<string, boolean>, 
     settings: { 
@@ -130,10 +131,10 @@ export interface TemplateGenerator {
 export type ComparisonViewMode = 'single' | 'comparison';
 
 export interface CVComparisonData {
-  originalData: any;
-  improvedData: any;
+  originalData: CVParsedData;
+  improvedData: CVParsedData;
   hasComparison: boolean;
-  comparisonResult?: any;
+  comparisonResult?: unknown;
 }
 
 export interface ComparisonStats {
