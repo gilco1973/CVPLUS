@@ -16,7 +16,14 @@ import {
 } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { db, storage, functions, auth } from '../../lib/firebase';
-import type { Job, JobCreateParams, FileUploadParams, CVProcessParams } from '../../types/cv';
+import type { 
+  Job, 
+  JobCreateParams, 
+  FileUploadParams, 
+  CVProcessParams,
+  AsyncCVGenerationResponse,
+  AsyncCVGenerationParams
+} from '../../types/cv';
 
 export class CVParser {
   /**
@@ -172,9 +179,114 @@ export class CVParser {
   }
 
   /**
-   * Generate CV with template
+   * Check if async CV generation is enabled via environment variable
+   */
+  private static isAsyncCVGenerationEnabled(): boolean {
+    return import.meta.env.VITE_ENABLE_ASYNC_CV_GENERATION === 'true';
+  }
+
+  /**
+   * Initiate async CV generation (returns immediately with job tracking info)
+   */
+  static async initiateCVGeneration(params: AsyncCVGenerationParams): Promise<AsyncCVGenerationResponse> {
+    const { jobId, templateId, features } = params;
+    
+    // Ensure user is authenticated before making the call
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to generate CV. Please sign in and try again.');
+    }
+
+    // Import the feature conversion utility
+    const { convertFeaturesToKebabCase } = await import('../../utils/featureUtils');
+    
+    // Convert camelCase features to kebab-case for backend
+    const kebabCaseFeatures = convertFeaturesToKebabCase(features);
+
+    const initiateCVGenerationFunction = httpsCallable(functions, 'initiateCVGeneration');
+    
+    try {
+      console.log('🚀 Calling Firebase initiateCVGeneration function with:', {
+        jobId,
+        templateId,
+        originalFeatures: features,
+        convertedFeatures: kebabCaseFeatures,
+        timestamp: new Date().toISOString()
+      });
+      
+      const result = await initiateCVGenerationFunction({
+        jobId,
+        templateId,
+        features: kebabCaseFeatures
+      }) as any;
+      
+      console.log('✅ Firebase initiateCVGeneration function completed:', {
+        hasResult: !!result,
+        hasData: !!result?.data,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!result || typeof result.data === 'undefined') {
+        throw new Error('Invalid response from CV generation service');
+      }
+      
+      return result.data;
+    } catch (error: any) {
+      console.error('❌ Firebase initiateCVGeneration function failed:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Enhanced Firebase error handling
+      if (error?.code === 'functions/unauthenticated') {
+        throw new Error('Authentication required. Please sign in and try again.');
+      } else if (error?.code === 'functions/permission-denied') {
+        throw new Error('You do not have permission to generate CVs. Please check your account.');
+      } else if (error?.code === 'functions/resource-exhausted') {
+        throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
+      } else if (error?.code === 'functions/invalid-argument') {
+        throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
+      } else if (error?.code === 'functions/unavailable') {
+        throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
+      } else if (error?.message?.includes('network')) {
+        throw new Error('Network error occurred. Please check your connection and try again.');
+      } else {
+        // Re-throw with a user-friendly message for unknown errors
+        throw new Error(`Failed to initiate CV generation: ${error.message || 'Unknown error occurred'}`);
+      }
+    }
+  }
+
+  /**
+   * Generate CV with template (smart wrapper that chooses sync or async mode)
    */
   static async generateCV(jobId: string, templateId: string, features: string[]) {
+    // Check if async mode is enabled
+    const isAsyncEnabled = this.isAsyncCVGenerationEnabled();
+    
+    console.log(`🎯 CV Generation Mode: ${isAsyncEnabled ? 'ASYNC' : 'SYNC'}`, {
+      envVar: import.meta.env.VITE_ENABLE_ASYNC_CV_GENERATION,
+      isAsyncEnabled,
+      jobId,
+      templateId,
+      features
+    });
+
+    if (isAsyncEnabled) {
+      // Use new async approach
+      return this.initiateCVGeneration({ jobId, templateId, features });
+    } else {
+      // Use original synchronous approach
+      return this._generateCVSync(jobId, templateId, features);
+    }
+  }
+
+  /**
+   * Original synchronous CV generation (kept for backward compatibility)
+   */
+  private static async _generateCVSync(jobId: string, templateId: string, features: string[]) {
     // Ensure user is authenticated before making the call
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -197,7 +309,7 @@ export class CVParser {
     });
 
     try {
-      console.log('🚀 Calling Firebase generateCV function with:', {
+      console.log('🚀 Calling Firebase generateCV function (SYNC) with:', {
         jobId,
         templateId,
         originalFeatures: features,
@@ -215,7 +327,7 @@ export class CVParser {
         timeoutPromise
       ]) as any;
       
-      console.log('✅ Firebase generateCV function completed:', {
+      console.log('✅ Firebase generateCV function (SYNC) completed:', {
         hasResult: !!result,
         hasData: !!result?.data,
         timestamp: new Date().toISOString()
@@ -227,7 +339,7 @@ export class CVParser {
       
       return result.data;
     } catch (error: any) {
-      console.error('❌ Firebase generateCV function failed:', {
+      console.error('❌ Firebase generateCV function (SYNC) failed:', {
         error: error.message,
         code: error.code,
         details: error.details,

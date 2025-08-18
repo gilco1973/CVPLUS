@@ -9,5 +9,7 @@ export default defineConfig({
   },
   preview: {
     port: 3000,
-  }
+  },
+  // Environment variable prefixes that should be exposed to the client
+  envPrefix: ['VITE_']
 })

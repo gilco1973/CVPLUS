@@ -17,7 +17,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   selectedFeatures,
   appliedImprovements,
   onUpdate,
-  onFeatureToggle: _onFeatureToggle, // Not used in current implementation
+  // onFeatureToggle functionality not implemented yet
   className = ''
 }) => {
   // Main CV preview state management
@@ -70,7 +70,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   }, [handleKeyDown]);
 
   // Handle section editing with auto-save
-  const handleSectionEdit = (section: string, newValue: any) => {
+  const handleSectionEdit = (section: string, newValue: string | object) => {
     actions.handleSectionEdit(section, newValue);
     
     if (state.autoSaveEnabled) {

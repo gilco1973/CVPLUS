@@ -8,7 +8,7 @@ import {
 } from '../../utils/placeholderDetection';
 
 export interface PlaceholderBannerProps {
-  cvData: any;
+  cvData: unknown;
   onDismiss?: () => void;
   onStartEditing?: () => void;
   className?: string;
@@ -25,7 +25,7 @@ export const PlaceholderBanner: React.FC<PlaceholderBannerProps> = ({
   const [isVisible, setIsVisible] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [placeholderMatches, setPlaceholderMatches] = useState<PlaceholderMatch[]>([]);
-  const [placeholderSummary, setPlaceholderSummary] = useState<any>(null);
+  const [placeholderSummary, setPlaceholderSummary] = useState<ReturnType<typeof getPlaceholderSummary> | null>(null);
 
   // Detect placeholders when CV data changes
   useEffect(() => {
@@ -51,7 +51,7 @@ export const PlaceholderBanner: React.FC<PlaceholderBannerProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [autoHideAfter, placeholderMatches.length]);
+  }, [autoHideAfter, placeholderMatches.length, handleDismiss]);
 
   const handleDismiss = () => {
     setIsVisible(false);

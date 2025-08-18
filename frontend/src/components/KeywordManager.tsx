@@ -84,7 +84,7 @@ export const KeywordManager: React.FC<KeywordManagerProps> = ({
       setKeywords(newKeywords);
       onKeywordsChange(newKeywords);
     }
-  }, [extractedKeywords]);
+  }, [extractedKeywords, onKeywordsChange]);
 
   const addKeyword = () => {
     if (!newKeyword.trim()) return;

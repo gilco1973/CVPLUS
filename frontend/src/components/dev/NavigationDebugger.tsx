@@ -14,7 +14,7 @@ export const NavigationDebugger: React.FC<NavigationDebuggerProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
-  const [storageData, setStorageData] = useState<Record<string, any>>({});
+  const [storageData, setStorageData] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!enabled) return;

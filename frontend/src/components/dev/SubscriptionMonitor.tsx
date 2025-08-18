@@ -23,7 +23,6 @@ interface SubscriptionStats {
 export const SubscriptionMonitor: React.FC = () => {
   const [stats, setStats] = useState<SubscriptionStats | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Only show in development
@@ -39,7 +38,6 @@ export const SubscriptionMonitor: React.FC = () => {
       }
     }, 2000);
 
-    setRefreshInterval(interval);
 
     return () => {
       if (interval) {

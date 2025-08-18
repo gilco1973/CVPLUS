@@ -77,3 +77,24 @@ export interface TemplateGenerationParams {
   templateId: string;
   features: string[];
 }
+
+/**
+ * Response format for async CV generation initiation
+ */
+export interface AsyncCVGenerationResponse {
+  success: true;
+  jobId: string;
+  status: 'initiated';
+  selectedFeatures: string[];
+  estimatedTime: number; // seconds
+  message: string;
+}
+
+/**
+ * Parameters for initiating async CV generation
+ */
+export interface AsyncCVGenerationParams {
+  jobId: string;
+  templateId: string;
+  features: string[];
+}

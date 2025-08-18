@@ -67,7 +67,7 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
   // Update iframes when HTML changes
   useEffect(() => {
     updateIframes();
-  }, [previewState.baseHtml, previewState.currentHtml, previewScale]);
+  }, [previewState.baseHtml, previewState.currentHtml, previewScale, updateIframes]);
 
   // Handle iframe message events
   useEffect(() => {

@@ -30,7 +30,7 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
         clearInterval(checkInterval);
       }
     };
-  }, [jobId]);
+  }, [jobId, checkInterval, checkPodcastStatus]);
 
   const checkPodcastStatus = async () => {
     try {

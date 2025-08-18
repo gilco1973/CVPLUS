@@ -21,7 +21,9 @@ import type {
   JobCreateParams, 
   FileUploadParams, 
   CVProcessParams,
-  CVAnalysisParams 
+  CVAnalysisParams,
+  AsyncCVGenerationResponse,
+  AsyncCVGenerationParams
 } from '../../types/cv';
 
 /**
@@ -43,6 +45,20 @@ export class CVServiceCore {
 
   static async generateCV(jobId: string, templateId: string, features: string[]) {
     return CVParser.generateCV(jobId, templateId, features);
+  }
+
+  /**
+   * Initiate async CV generation (returns immediately with job tracking info)
+   */
+  static async initiateCVGeneration(params: AsyncCVGenerationParams): Promise<AsyncCVGenerationResponse> {
+    return CVParser.initiateCVGeneration(params);
+  }
+
+  /**
+   * Check if async CV generation mode is enabled
+   */
+  static isAsyncCVGenerationEnabled(): boolean {
+    return import.meta.env.VITE_ENABLE_ASYNC_CV_GENERATION === 'true';
   }
 
   // Job management
@@ -215,5 +231,19 @@ export const generateATSKeywords = CVServiceCore.generateATSKeywords;
 // Feature services - direct exports for complex operations
 export { MediaService, VisualizationService, IntegrationService, ProfileService };
 
+// Legacy compatibility exports for new async functionality
+export const initiateCVGeneration = (jobId: string, templateId: string, features: string[]) =>
+  CVServiceCore.initiateCVGeneration({ jobId, templateId, features });
+
+export const isAsyncCVGenerationEnabled = CVServiceCore.isAsyncCVGenerationEnabled;
+
 // Type exports
-export type { Job, JobCreateParams, FileUploadParams, CVProcessParams, CVAnalysisParams };
+export type { 
+  Job, 
+  JobCreateParams, 
+  FileUploadParams, 
+  CVProcessParams, 
+  CVAnalysisParams,
+  AsyncCVGenerationResponse,
+  AsyncCVGenerationParams
+};
