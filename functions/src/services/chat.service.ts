@@ -39,8 +39,7 @@ export class ChatService {
       const relevantChunks = await embeddingService.querySimilarChunks(
         message,
         vectorNamespace,
-        5, // Top 5 most relevant chunks
-        { jobId: ragProfile.jobId }
+        5 // Top 5 most relevant chunks
       );
       
       // 2. Build context from retrieved chunks
@@ -269,8 +268,7 @@ Important guidelines:
     const chunks = await embeddingService.querySimilarChunks(
       'experience skills projects achievements',
       vectorNamespace,
-      10,
-      { jobId }
+      10
     );
     
     const suggestions: string[] = [];

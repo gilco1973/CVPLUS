@@ -53,6 +53,8 @@ export interface UseProgressiveEnhancementOptions {
 }
 
 // Legacy Firebase Functions mapping
+// NOTE: contact-form and social-media-links are generated server-side during CV generation
+// and should NOT be processed through progressive enhancement
 const LEGACY_FUNCTIONS: Record<string, string> = {
   'skills-visualization': 'generateSkillsVisualization',
   'certification-badges': 'generateCertificationBadges',
@@ -67,6 +69,7 @@ const LEGACY_FUNCTIONS: Record<string, string> = {
 };
 
 // Feature display names
+// NOTE: contact-form and social-media-links are server-side generated and not included here
 const FEATURE_NAMES: Record<string, string> = {
   'skills-visualization': 'Skills Visualization',
   'certification-badges': 'Certification Badges',
@@ -107,12 +110,25 @@ export function useProgressiveEnhancement({
 
   // Initialize feature progress tracking - stable memoization
   const initializeFeatures = useCallback(() => {
-    const features: FeatureProgress[] = memoizedSelectedFeatures.map(featureId => ({
+    // Filter out server-side generated features that don't need progressive enhancement
+    const SERVER_SIDE_FEATURES = ['contact-form', 'social-media-links'];
+    const clientSideFeatures = memoizedSelectedFeatures.filter(
+      featureId => !SERVER_SIDE_FEATURES.includes(featureId)
+    );
+
+    const features: FeatureProgress[] = clientSideFeatures.map(featureId => ({
       id: featureId,
       name: FEATURE_NAMES[featureId] || featureId,
       status: 'pending',
       progress: 0
     }));
+
+    // Log filtered features for debugging
+    if (SERVER_SIDE_FEATURES.some(f => memoizedSelectedFeatures.includes(f))) {
+      const serverSideSelected = memoizedSelectedFeatures.filter(f => SERVER_SIDE_FEATURES.includes(f));
+      console.log(`🏗️ Server-side features detected and excluded from progressive enhancement: ${serverSideSelected.join(', ')}`);
+      console.log(`🔄 Client-side features for progressive enhancement: ${clientSideFeatures.map(id => FEATURE_NAMES[id] || id).join(', ')}`);
+    }
 
     setState(prev => ({
       ...prev,
@@ -655,6 +671,38 @@ export function useProgressiveEnhancement({
       return;
     }
     
+    // Check if all selected features are server-side generated
+    const SERVER_SIDE_FEATURES = ['contact-form', 'social-media-links'];
+    const clientSideFeatures = memoizedSelectedFeatures.filter(
+      featureId => !SERVER_SIDE_FEATURES.includes(featureId)
+    );
+    
+    if (clientSideFeatures.length === 0) {
+      console.log('🏗️ [useProgressiveEnhancement] All selected features are server-side generated, skipping progressive enhancement');
+      
+      // Still fetch and display the base HTML which already contains the server-side features
+      try {
+        const baseHtml = await fetchBaseHtml();
+        setState(prev => ({
+          ...prev,
+          baseHtml,
+          currentHtml: baseHtml,
+          isLoading: false,
+          isComplete: true,
+          overallProgress: 100
+        }));
+        console.log('✅ [useProgressiveEnhancement] Server-side generated CV loaded successfully');
+      } catch (error) {
+        console.error('❌ Error loading base HTML:', error);
+        setState(prev => ({
+          ...prev,
+          error: error.message,
+          isLoading: false
+        }));
+      }
+      return;
+    }
+    
     console.log('🔥 [useProgressiveEnhancement] startEnhancement called for job:', jobId);
 
     try {
@@ -692,8 +740,8 @@ export function useProgressiveEnhancement({
         const priorityContext = {
           userId: user.uid,
           jobId,
-          selectedFeatures: memoizedSelectedFeatures,
-          totalTimeEstimate: memoizedSelectedFeatures.length * 5, // rough estimate
+          selectedFeatures: clientSideFeatures, // Use filtered client-side features
+          totalTimeEstimate: clientSideFeatures.length * 5, // rough estimate
           currentSystemLoad: 0.5, // would get from performance monitoring
           previousSuccessRates: {}, // would load from historical data
           userPreferences: await featurePriorityService.getUserPreferences(user.uid)
@@ -722,8 +770,8 @@ export function useProgressiveEnhancement({
         
       } catch (priorityError) {
         console.warn('⚠️ Priority calculation failed, falling back to original order:', priorityError.message);
-        // Fallback to original order when priority service fails
-        orderedFeatureIds = [...memoizedSelectedFeatures];
+        // Fallback to original order when priority service fails  
+        orderedFeatureIds = [...clientSideFeatures]; // Use filtered client-side features
         console.log('🚀 Processing features in original order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
         toast('Processing features in default order', { duration: 3000 });
       }

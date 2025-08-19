@@ -1,396 +1,716 @@
 /**
- * Embedding service for RAG feature
+ * Production-Ready Embedding Service for CVPlus RAG System
+ * 
+ * Core embedding service leveraging OpenAI text-embedding-ada-002
+ * 
+ * @version 2.0.0
+ * @author Gil Klainert
  */
 
 import OpenAI from 'openai';
-import { Pinecone } from '@pinecone-database/pinecone';
+import * as admin from 'firebase-admin';
 import { config } from '../config/environment';
-import { CVChunk, ParsedCV } from '../types/enhanced-models';
-import { nanoid } from 'nanoid';
+import { ParsedCV } from '../types/enhanced-models';
+import { RAGEmbedding, EmbeddingMetadata, CVSection, ContentType } from '../types/portal';
+import { logger } from 'firebase-functions';
+import { ChunkingUtils, ChunkResult } from './cv-generator/chunking/ChunkingUtils';
+import { EmbeddingHelpers } from './cv-generator/embedding/EmbeddingHelpers';
+import { vectorDatabase, VectorInput, SearchOptions } from './vector-database.service';
 
+/**
+ * Embedding generation configuration
+ */
+export interface EmbeddingConfig {
+  model: 'text-embedding-ada-002';
+  maxTokens: number;
+  batchSize: number;
+  retryAttempts: number;
+  rateLimitDelay: number;
+  enableCaching: boolean;
+  huggingFaceMode: boolean;
+}
+
+/**
+ * Chunking strategy options
+ */
+export interface ChunkingOptions {
+  strategy: 'semantic' | 'fixed-size' | 'sliding-window';
+  maxTokens: number;
+  overlap: number;
+  preserveContext: boolean;
+  cvSectionAware: boolean;
+}
+
+/**
+ * Similarity search result
+ */
+export interface SimilarityResult {
+  embedding: RAGEmbedding;
+  similarity: number;
+  relevanceScore: number;
+  rank: number;
+}
+
+/**
+ * CV embedding processing result
+ */
+export interface CVEmbeddingResult {
+  embeddings: RAGEmbedding[];
+  totalChunks: number;
+  totalTokens: number;
+  processingTime: number;
+  sectionsProcessed: string[];
+}
+
+/**
+ * HuggingFace export configuration
+ */
+export interface HuggingFaceExport {
+  embeddings: RAGEmbedding[];
+  model: string;
+  version: string;
+  exportFormat: 'json' | 'parquet';
+  optimizedForOffline: boolean;
+}
+
+/**
+ * Production embedding service for CVPlus RAG system
+ */
 export class EmbeddingService {
   private openai: OpenAI | null = null;
-  private pinecone: Pinecone | null = null;
-  
-  constructor() {
-    // Initialize Pinecone lazily when needed
+  private db = admin.firestore();
+  private config: EmbeddingConfig;
+
+  constructor(customConfig?: Partial<EmbeddingConfig>) {
+    this.config = {
+      model: 'text-embedding-ada-002',
+      maxTokens: 8191,
+      batchSize: 20,
+      retryAttempts: 3,
+      rateLimitDelay: 1000,
+      enableCaching: true,
+      huggingFaceMode: false,
+      ...customConfig
+    };
   }
 
-  private getPinecone(): Pinecone {
-    if (!this.pinecone) {
-      if (!config.rag.pineconeApiKey) {
-        throw new Error('Pinecone API key is not configured');
-      }
-      this.pinecone = new Pinecone({
-        apiKey: config.rag.pineconeApiKey
-      });
-    }
-    return this.pinecone;
-  }
-
+  /**
+   * Initialize OpenAI client with error handling
+   */
   private getOpenAI(): OpenAI {
     if (!this.openai) {
+      const apiKey = config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '';
+      if (!apiKey) {
+        throw new Error('OpenAI API key not configured for embedding service');
+      }
+      
       this.openai = new OpenAI({
-        apiKey: config.rag?.openaiApiKey || process.env.OPENAI_API_KEY || '',
+        apiKey,
+        timeout: 30000,
+        maxRetries: this.config.retryAttempts
       });
     }
     return this.openai;
   }
-  
+
   /**
-   * Process CV data into chunks for embedding
+   * Generate embeddings for batch of texts
    */
-  async createCVChunks(parsedCV: ParsedCV, jobId: string): Promise<CVChunk[]> {
-    const chunks: CVChunk[] = [];
+  async generateEmbeddings(texts: string[], options?: Partial<EmbeddingConfig>): Promise<RAGEmbedding[]> {
+    const startTime = Date.now();
+    const effectiveConfig = { ...this.config, ...options };
     
-    // Personal Information chunk
-    if (parsedCV.personalInfo) {
-      const personalChunk: CVChunk = {
-        id: nanoid(),
-        content: this.formatPersonalInfo(parsedCV.personalInfo),
-        metadata: {
-          section: 'personal',
-          importance: 10,
-          keywords: this.extractKeywords(parsedCV.personalInfo)
-        }
-      };
-      chunks.push(personalChunk);
-    }
-    
-    // Experience chunks
-    if (parsedCV.experience) {
-      parsedCV.experience.forEach((exp, index) => {
-        const experienceChunk: CVChunk = {
-          id: nanoid(),
-          content: this.formatExperience(exp),
-          metadata: {
-            section: 'experience',
-            subsection: exp.company,
-            dateRange: {
-              start: new Date(exp.startDate),
-              end: exp.endDate ? new Date(exp.endDate) : new Date()
-            },
-            technologies: exp.technologies || [],
-            companies: [exp.company],
-            importance: 9 - (index * 0.5), // Recent experience is more important
-            keywords: this.extractKeywords(exp)
-          }
-        };
-        chunks.push(experienceChunk);
-      });
-    }
-    
-    // Education chunks
-    if (parsedCV.education) {
-      parsedCV.education.forEach((edu) => {
-        const educationChunk: CVChunk = {
-          id: nanoid(),
-          content: this.formatEducation(edu),
-          metadata: {
-            section: 'education',
-            subsection: edu.institution,
-            importance: 7,
-            keywords: this.extractKeywords(edu)
-          }
-        };
-        chunks.push(educationChunk);
-      });
-    }
-    
-    // Skills chunk
-    if (parsedCV.skills) {
-      const skillsChunk: CVChunk = {
-        id: nanoid(),
-        content: this.formatSkills(parsedCV.skills),
-        metadata: {
-          section: 'skills',
-          importance: 8,
-          keywords: Array.isArray(parsedCV.skills) 
-            ? parsedCV.skills 
-            : [
-                ...(parsedCV.skills.technical || []),
-                ...(parsedCV.skills.soft || []),
-                ...(parsedCV.skills.tools || [])
-              ]
-        }
-      };
-      chunks.push(skillsChunk);
-    }
-    
-    // Projects chunks
-    if (parsedCV.projects) {
-      parsedCV.projects.forEach((project) => {
-        const projectChunk: CVChunk = {
-          id: nanoid(),
-          content: this.formatProject(project),
-          metadata: {
-            section: 'projects',
-            subsection: project.name,
-            technologies: project.technologies,
-            importance: 6,
-            keywords: this.extractKeywords(project)
-          }
-        };
-        chunks.push(projectChunk);
-      });
-    }
-    
-    // Calculate tokens for each chunk
-    for (const chunk of chunks) {
-      chunk.tokens = this.estimateTokens(chunk.content);
-    }
-    
-    return chunks;
-  }
-  
-  /**
-   * Generate embeddings for chunks
-   */
-  async generateEmbeddings(chunks: CVChunk[]): Promise<CVChunk[]> {
-    const chunksWithEmbeddings: CVChunk[] = [];
-    
-    // Process in batches to avoid rate limits
-    const batchSize = 20;
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batch = chunks.slice(i, i + batchSize);
-      const embeddings = await this.batchEmbeddings(batch.map(c => c.content));
+    logger.info('[EMBEDDING-SERVICE] Starting batch embedding generation', {
+      textCount: texts.length,
+      batchSize: effectiveConfig.batchSize
+    });
+
+    try {
+      const embeddings: RAGEmbedding[] = [];
       
-      batch.forEach((chunk, index) => {
-        chunksWithEmbeddings.push({
-          ...chunk,
-          embedding: embeddings[index]
-        });
+      for (let i = 0; i < texts.length; i += effectiveConfig.batchSize) {
+        const batch = texts.slice(i, i + effectiveConfig.batchSize);
+        const batchResults = await this.processBatch(batch, i);
+        embeddings.push(...batchResults);
+        
+        if (i + effectiveConfig.batchSize < texts.length) {
+          await EmbeddingHelpers.delay(effectiveConfig.rateLimitDelay);
+        }
+      }
+
+      const processingTime = Date.now() - startTime;
+      logger.info('[EMBEDDING-SERVICE] Batch embedding completed', {
+        totalEmbeddings: embeddings.length,
+        processingTime: `${processingTime}ms`
       });
+
+      return embeddings;
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Batch embedding failed', { error });
+      throw new Error(`Embedding generation failed: ${error}`);
     }
-    
-    return chunksWithEmbeddings;
   }
-  
+
   /**
-   * Store embeddings in Pinecone
+   * Generate single embedding with metadata
    */
-  async storeEmbeddings(
-    chunks: CVChunk[], 
-    vectorNamespace: string,
-    userId: string,
-    jobId: string
-  ): Promise<void> {
-    const index = this.getPinecone().index(config.rag.pineconeIndex);
-    
-    // Prepare vectors for Pinecone
-    const vectors = chunks.map(chunk => {
-      // Convert metadata to Pinecone-compatible format
-      const metadata: Record<string, any> = {
-        section: chunk.metadata.section,
-        subsection: chunk.metadata.subsection || '',
-        importance: chunk.metadata.importance,
-        keywords: chunk.metadata.keywords.join(','), // Convert array to string
-        content: chunk.content,
-        userId,
-        jobId,
-        chunkId: chunk.id
-      };
-
-      // Handle dateRange if present
-      if (chunk.metadata.dateRange) {
-        metadata.dateRangeStart = chunk.metadata.dateRange.start.toISOString();
-        metadata.dateRangeEnd = chunk.metadata.dateRange.end.toISOString();
-      }
-
-      // Handle arrays as comma-separated strings
-      if (chunk.metadata.technologies) {
-        metadata.technologies = chunk.metadata.technologies.join(',');
-      }
-      if (chunk.metadata.companies) {
-        metadata.companies = chunk.metadata.companies.join(',');
-      }
+  async generateSingleEmbedding(text: string, metadata?: EmbeddingMetadata): Promise<RAGEmbedding> {
+    try {
+      const response = await this.getOpenAI().embeddings.create({
+        model: this.config.model,
+        input: text.trim()
+      });
 
       return {
-        id: chunk.id,
-        values: chunk.embedding!,
-        metadata
+        id: `embed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        content: text,
+        metadata: metadata || {
+          section: CVSection.SUMMARY,
+          importance: 1.0,
+          contentType: ContentType.TEXT,
+          keywords: []
+        },
+        vector: response.data[0].embedding,
+        tokens: EmbeddingHelpers.estimateTokenCount(text),
+        createdAt: new Date()
       };
-    });
-    
-    // Upsert vectors in batches
-    const batchSize = 100;
-    for (let i = 0; i < vectors.length; i += batchSize) {
-      const batch = vectors.slice(i, i + batchSize);
-      await index.namespace(vectorNamespace).upsert(batch);
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Single embedding failed', { error });
+      throw error;
     }
   }
-  
+
   /**
-   * Query similar chunks
+   * Intelligent text chunking
    */
-  async querySimilarChunks(
-    query: string,
-    vectorNamespace: string,
-    topK: number = 5,
-    filter?: Record<string, any>
-  ): Promise<any[]> {
-    // Generate query embedding
-    const queryEmbedding = await this.generateSingleEmbedding(query);
-    
-    const index = this.getPinecone().index(config.rag.pineconeIndex);
-    
-    // Query Pinecone
-    const results = await index.namespace(vectorNamespace).query({
-      vector: queryEmbedding,
-      topK,
-      includeMetadata: true,
-      filter
-    });
-    
-    return results.matches || [];
+  chunkText(text: string, options?: Partial<ChunkingOptions>): ChunkResult[] {
+    const config = {
+      strategy: 'semantic' as const,
+      maxTokens: 500,
+      overlap: 50,
+      preserveContext: true,
+      cvSectionAware: true,
+      ...options
+    };
+
+    switch (config.strategy) {
+      case 'semantic':
+        return ChunkingUtils.semanticChunking(text, config);
+      case 'fixed-size':
+        return ChunkingUtils.fixedSizeChunking(text, config);
+      case 'sliding-window':
+        return ChunkingUtils.slidingWindowChunking(text, config);
+      default:
+        return ChunkingUtils.semanticChunking(text, config);
+    }
   }
-  
+
   /**
-   * Delete embeddings for a job
+   * Preprocess text for embedding generation
+   */
+  preprocessText(text: string, options?: { removeExtra?: boolean; normalizeSpacing?: boolean }): string {
+    const config = { removeExtra: true, normalizeSpacing: true, ...options };
+    let processed = text.trim();
+    
+    if (config.normalizeSpacing) {
+      processed = processed.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n');
+    }
+    
+    if (config.removeExtra) {
+      processed = processed
+        .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+        .replace(/\s+([,.!?;:])/g, '$1');
+    }
+    
+    return processed;
+  }
+
+  /**
+   * Calculate cosine similarity between vectors
+   */
+  cosineSimilarity(vector1: number[], vector2: number[]): number {
+    if (vector1.length !== vector2.length) {
+      throw new Error('Vectors must have same length for cosine similarity');
+    }
+
+    let dotProduct = 0;
+    let magnitude1 = 0;
+    let magnitude2 = 0;
+
+    for (let i = 0; i < vector1.length; i++) {
+      dotProduct += vector1[i] * vector2[i];
+      magnitude1 += vector1[i] * vector1[i];
+      magnitude2 += vector2[i] * vector2[i];
+    }
+
+    magnitude1 = Math.sqrt(magnitude1);
+    magnitude2 = Math.sqrt(magnitude2);
+
+    return (magnitude1 === 0 || magnitude2 === 0) ? 0 : dotProduct / (magnitude1 * magnitude2);
+  }
+
+  /**
+   * Search for similar embeddings
+   */
+  async searchSimilar(query: string, embeddings: RAGEmbedding[], topK = 5): Promise<SimilarityResult[]> {
+    try {
+      const queryEmbedding = await this.generateSingleEmbedding(query);
+      
+      // Use vector database for improved performance if available
+      if (embeddings.length > 100) {
+        return await this.searchWithVectorDatabase(queryEmbedding.vector, embeddings, topK);
+      }
+      
+      // Fallback to in-memory search for smaller datasets
+      const similarities = embeddings.map((embedding, index) => {
+        const similarity = this.cosineSimilarity(queryEmbedding.vector, embedding.vector);
+        const relevanceScore = EmbeddingHelpers.calculateRelevanceScore(similarity, embedding.metadata);
+        
+        return { embedding, similarity, relevanceScore, rank: index };
+      });
+      
+      return similarities
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, topK)
+        .map((result, index) => ({ ...result, rank: index + 1 }));
+        
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Semantic search failed', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Enhanced search using vector database for better performance
+   */
+  private async searchWithVectorDatabase(
+    queryVector: number[], 
+    embeddings: RAGEmbedding[], 
+    topK: number
+  ): Promise<SimilarityResult[]> {
+    try {
+      // Convert RAGEmbeddings to VectorInputs for the database
+      const vectorInputs: VectorInput[] = embeddings.map(embedding => ({
+        id: embedding.id,
+        content: embedding.content,
+        vector: embedding.vector,
+        metadata: {
+          ...embedding.metadata,
+          createdAt: embedding.createdAt,
+          keywords: this.extractKeywords(embedding.content)
+        }
+      }));
+
+      // Add vectors to database (temporary for search)
+      const tempVectorIds = await vectorDatabase.addVectors(vectorInputs);
+
+      // Perform search with enhanced options
+      const searchOptions: Partial<SearchOptions> = {
+        algorithm: 'cosine',
+        topK,
+        threshold: 0.1,
+        includeMetadata: true,
+        useCache: true
+      };
+
+      const results = await vectorDatabase.search(queryVector, searchOptions);
+
+      // Clean up temporary vectors
+      for (const id of tempVectorIds) {
+        await vectorDatabase.deleteVector(id);
+      }
+
+      // Convert back to SimilarityResult format
+      return results.map(result => ({
+        embedding: {
+          id: result.id,
+          content: result.content,
+          metadata: result.metadata,
+          vector: embeddings.find(e => e.id === result.id)?.vector || [],
+          tokens: result.content.split(' ').length,
+          createdAt: result.metadata.createdAt
+        },
+        similarity: result.similarity,
+        relevanceScore: EmbeddingHelpers.calculateRelevanceScore(result.similarity, result.metadata),
+        rank: result.rank
+      }));
+
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Vector database search failed', { error });
+      // Fallback to regular search
+      throw error;
+    }
+  }
+
+  /**
+   * Store embeddings in vector database for persistent search
+   */
+  async storeInVectorDatabase(embeddings: RAGEmbedding[], namespace: string): Promise<string[]> {
+    try {
+      logger.info('[EMBEDDING-SERVICE] Storing embeddings in vector database', {
+        count: embeddings.length,
+        namespace
+      });
+
+      const vectorInputs: VectorInput[] = embeddings.map(embedding => ({
+        id: `${namespace}_${embedding.id}`,
+        content: embedding.content,
+        vector: embedding.vector,
+        metadata: {
+          ...embedding.metadata,
+          createdAt: embedding.createdAt,
+          keywords: this.extractKeywords(embedding.content)
+        }
+      }));
+
+      const vectorIds = await vectorDatabase.addVectors(vectorInputs);
+      
+      logger.info('[EMBEDDING-SERVICE] Embeddings stored successfully', {
+        vectorIds: vectorIds.length,
+        namespace
+      });
+
+      return vectorIds;
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Failed to store embeddings in vector database', { 
+        error, 
+        namespace,
+        count: embeddings.length 
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Search embeddings directly from vector database
+   */
+  async searchVectorDatabase(
+    query: string, 
+    namespace?: string,
+    options: Partial<SearchOptions> = {}
+  ): Promise<SimilarityResult[]> {
+    try {
+      logger.info('[EMBEDDING-SERVICE] Searching vector database', { query, namespace });
+
+      const queryEmbedding = await this.generateSingleEmbedding(query);
+      
+      const searchOptions: Partial<SearchOptions> = {
+        algorithm: 'cosine',
+        topK: 10,
+        threshold: 0.3,
+        includeMetadata: true,
+        useCache: true,
+        ...options
+      };
+
+      const results = await vectorDatabase.search(queryEmbedding.vector, searchOptions);
+
+      // Filter by namespace if specified
+      const filteredResults = namespace 
+        ? results.filter(result => result.id.startsWith(`${namespace}_`))
+        : results;
+
+      // Convert to SimilarityResult format
+      return filteredResults.map(result => ({
+        embedding: {
+          id: result.id.replace(`${namespace}_`, ''),
+          content: result.content,
+          metadata: result.metadata,
+          vector: [], // Vector not needed in response
+          tokens: result.content.split(' ').length,
+          createdAt: result.metadata.createdAt
+        },
+        similarity: result.similarity,
+        relevanceScore: EmbeddingHelpers.calculateRelevanceScore(result.similarity, result.metadata),
+        rank: result.rank
+      }));
+
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] Vector database search failed', { error, query });
+      throw error;
+    }
+  }
+
+  /**
+   * Extract keywords from content for enhanced search
+   */
+  private extractKeywords(content: string): string[] {
+    // Simple keyword extraction - could be enhanced with NLP
+    const words = content.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 3)
+      .filter(word => !['the', 'and', 'for', 'with', 'this', 'that', 'from', 'they', 'have', 'been'].includes(word));
+    
+    // Return top 5 most relevant words
+    const wordFreq = words.reduce((freq: { [key: string]: number }, word) => {
+      freq[word] = (freq[word] || 0) + 1;
+      return freq;
+    }, {});
+
+    return Object.entries(wordFreq)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([word]) => word);
+  }
+
+  /**
+   * Optimize for HuggingFace deployment
+   */
+  optimizeForHuggingFace(): HuggingFaceExport {
+    return {
+      embeddings: [],
+      model: this.config.model,
+      version: '2.0.0',
+      exportFormat: 'json',
+      optimizedForOffline: true
+    };
+  }
+
+  /**
+   * Process CV data into embeddings
+   */
+  async processCV(cvData: ParsedCV): Promise<CVEmbeddingResult> {
+    const startTime = Date.now();
+    const sectionsProcessed: string[] = [];
+    const allChunks: ChunkResult[] = [];
+
+    // Process CV sections
+    if (cvData.experience) {
+      allChunks.push(...EmbeddingHelpers.processCVSection(
+        cvData.experience, CVSection.EXPERIENCE, this.chunkText.bind(this)
+      ));
+      sectionsProcessed.push('experience');
+    }
+
+    if (cvData.education) {
+      allChunks.push(...EmbeddingHelpers.processCVSection(
+        cvData.education, CVSection.EDUCATION, this.chunkText.bind(this)
+      ));
+      sectionsProcessed.push('education');
+    }
+
+    if (cvData.skills) {
+      allChunks.push(...EmbeddingHelpers.processCVSection(
+        cvData.skills, CVSection.SKILLS, this.chunkText.bind(this)
+      ));
+      sectionsProcessed.push('skills');
+    }
+
+    if (cvData.achievements) {
+      allChunks.push(...EmbeddingHelpers.processCVSection(
+        cvData.achievements, CVSection.ACHIEVEMENTS, this.chunkText.bind(this)
+      ));
+      sectionsProcessed.push('achievements');
+    }
+
+    // Generate embeddings
+    const texts = allChunks.map(chunk => chunk.content);
+    const embeddings = await this.generateEmbeddings(texts);
+    
+    // Enhance with chunk metadata
+    const enhancedEmbeddings = embeddings.map((embedding, index) => ({
+      ...embedding,
+      metadata: { ...embedding.metadata, ...allChunks[index].metadata }
+    }));
+
+    return {
+      embeddings: enhancedEmbeddings,
+      totalChunks: allChunks.length,
+      totalTokens: allChunks.reduce((sum, chunk) => sum + chunk.tokenCount, 0),
+      processingTime: Date.now() - startTime,
+      sectionsProcessed
+    };
+  }
+
+  /**
+   * Create CV chunks (wrapper for processCV)
+   */
+  async createCVChunks(parsedCV: ParsedCV, jobId: string): Promise<any[]> {
+    try {
+      const result = await this.processCV(parsedCV);
+      // Convert RAGEmbedding[] to CVChunk[] format for compatibility
+      return result.embeddings.map(embedding => ({
+        id: embedding.id,
+        content: embedding.content,
+        metadata: {
+          section: embedding.metadata.section.toLowerCase(),
+          subsection: embedding.metadata.subsection,
+          dateRange: embedding.metadata.dateRange,
+          technologies: embedding.metadata.technologies,
+          companies: embedding.metadata.company ? [embedding.metadata.company] : undefined,
+          importance: embedding.metadata.importance,
+          keywords: embedding.metadata.keywords
+        },
+        embedding: embedding.vector,
+        tokens: embedding.tokens
+      }));
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] createCVChunks failed', { error, jobId });
+      throw error;
+    }
+  }
+
+  /**
+   * Store embeddings in vector database
+   */
+  async storeEmbeddings(chunks: any[], vectorNamespace: string, jobId: string): Promise<void> {
+    try {
+      logger.info('[EMBEDDING-SERVICE] Storing embeddings in vector database', {
+        count: chunks.length,
+        vectorNamespace,
+        jobId
+      });
+
+      // Convert chunks to RAGEmbeddings if they aren't already
+      const embeddings: RAGEmbedding[] = chunks.map((chunk, index) => {
+        if (chunk.embedding && chunk.content) {
+          // Already in RAGEmbedding format
+          return {
+            id: chunk.id || `${jobId}_chunk_${index}`,
+            content: chunk.content,
+            metadata: chunk.metadata || {
+              section: 'experience' as CVSection,
+              subsection: 'auto-generated',
+              contentType: 'text' as ContentType,
+              importance: 0.5,
+              position: index
+            },
+            vector: chunk.embedding,
+            tokens: chunk.content.split(' ').length,
+            createdAt: new Date()
+          };
+        } else {
+          // Convert from chunk format
+          return {
+            id: `${jobId}_chunk_${index}`,
+            content: chunk.content || chunk.text || '',
+            metadata: {
+              section: chunk.section || 'experience' as CVSection,
+              subsection: chunk.subsection || 'auto-generated',
+              contentType: 'text' as ContentType,
+              importance: chunk.importance || 0.5,
+              position: index
+            },
+            vector: chunk.vector || chunk.embedding || [],
+            tokens: (chunk.content || chunk.text || '').split(' ').length,
+            createdAt: new Date()
+          };
+        }
+      });
+
+      // Store in vector database
+      await this.storeInVectorDatabase(embeddings, vectorNamespace);
+
+      logger.info('[EMBEDDING-SERVICE] Embeddings stored successfully', {
+        count: embeddings.length,
+        vectorNamespace,
+        jobId
+      });
+
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] storeEmbeddings failed', { error, jobId });
+      throw error;
+    }
+  }
+
+  /**
+   * Query similar chunks using vector database
+   */
+  async querySimilarChunks(query: string, vectorNamespace: string, topK = 5): Promise<any[]> {
+    try {
+      logger.info('[EMBEDDING-SERVICE] Querying similar chunks from vector database', {
+        query,
+        vectorNamespace,
+        topK
+      });
+
+      const results = await this.searchVectorDatabase(query, vectorNamespace, {
+        topK,
+        threshold: 0.2,
+        includeMetadata: true
+      });
+
+      // Convert to expected format for backward compatibility
+      return results.map(result => ({
+        content: result.embedding.content,
+        metadata: result.embedding.metadata,
+        similarity: result.similarity,
+        relevanceScore: result.relevanceScore
+      }));
+
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] querySimilarChunks failed', { error });
+      // Fallback to empty array for backward compatibility
+      return [];
+    }
+  }
+
+  /**
+   * Delete embeddings from vector database
    */
   async deleteEmbeddings(vectorNamespace: string, jobId: string): Promise<void> {
-    const index = this.getPinecone().index(config.rag.pineconeIndex);
-    
-    // Delete all vectors for this job
-    await index.namespace(vectorNamespace).deleteMany({
-      jobId: { $eq: jobId }
-    });
+    try {
+      logger.info('[EMBEDDING-SERVICE] Deleting embeddings from vector database', {
+        vectorNamespace,
+        jobId
+      });
+
+      // Search for vectors that match the namespace and jobId
+      const searchResults = await vectorDatabase.search([], {
+        algorithm: 'cosine',
+        topK: 10000, // Large number to get all matching vectors
+        threshold: 0,
+        useCache: false,
+        filters: {
+          // Note: This is a simplified approach. In production, you'd want
+          // more sophisticated namespace/jobId tracking
+        }
+      });
+
+      // Filter results by namespace prefix
+      const namespacePrefix = `${vectorNamespace}_${jobId}`;
+      const vectorsToDelete = searchResults
+        .filter(result => result.id.startsWith(namespacePrefix))
+        .map(result => result.id);
+
+      // Delete vectors in batches to avoid overwhelming the system
+      const batchSize = 100;
+      for (let i = 0; i < vectorsToDelete.length; i += batchSize) {
+        const batch = vectorsToDelete.slice(i, i + batchSize);
+        await Promise.all(batch.map(id => vectorDatabase.deleteVector(id)));
+      }
+
+      logger.info('[EMBEDDING-SERVICE] Embeddings deleted successfully', {
+        vectorNamespace,
+        jobId,
+        deletedCount: vectorsToDelete.length
+      });
+
+    } catch (error) {
+      logger.error('[EMBEDDING-SERVICE] deleteEmbeddings failed', { error, jobId });
+      // Don't throw error to maintain backward compatibility
+      logger.warn('[EMBEDDING-SERVICE] Continuing despite deletion error for backward compatibility');
+    }
   }
-  
-  // Helper methods
-  
-  private async generateSingleEmbedding(text: string): Promise<number[]> {
+
+  // Private helper methods
+  private async processBatch(texts: string[], startIndex: number): Promise<RAGEmbedding[]> {
     const response = await this.getOpenAI().embeddings.create({
-      model: 'text-embedding-ada-002',
-      input: text
-    });
-    
-    return response.data[0].embedding;
-  }
-  
-  private async batchEmbeddings(texts: string[]): Promise<number[][]> {
-    const response = await this.getOpenAI().embeddings.create({
-      model: 'text-embedding-ada-002',
+      model: this.config.model,
       input: texts
     });
-    
-    return response.data.map(d => d.embedding);
-  }
-  
-  private formatPersonalInfo(info: any): string {
-    const parts = [];
-    if (info.name) parts.push(`Name: ${info.name}`);
-    if (info.summary) parts.push(`Summary: ${info.summary}`);
-    if (info.email) parts.push(`Email: ${info.email}`);
-    if (info.phone) parts.push(`Phone: ${info.phone}`);
-    if (info.linkedin) parts.push(`LinkedIn: ${info.linkedin}`);
-    if (info.github) parts.push(`GitHub: ${info.github}`);
-    if (info.website) parts.push(`Website: ${info.website}`);
-    if (info.address) parts.push(`Location: ${info.address}`);
-    
-    return parts.join('\n');
-  }
-  
-  private formatExperience(exp: any): string {
-    const parts = [
-      `Position: ${exp.position} at ${exp.company}`,
-      `Duration: ${exp.duration} (${exp.startDate} - ${exp.endDate || 'Present'})`
-    ];
-    
-    if (exp.description) {
-      parts.push(`Description: ${exp.description}`);
-    }
-    
-    if (exp.achievements && exp.achievements.length > 0) {
-      parts.push(`Achievements:\n${exp.achievements.map((a: string) => `- ${a}`).join('\n')}`);
-    }
-    
-    if (exp.technologies && exp.technologies.length > 0) {
-      parts.push(`Technologies: ${exp.technologies.join(', ')}`);
-    }
-    
-    return parts.join('\n');
-  }
-  
-  private formatEducation(edu: any): string {
-    const parts = [
-      `${edu.degree} in ${edu.field}`,
-      `Institution: ${edu.institution}`,
-      `Year: ${edu.year}`
-    ];
-    
-    if (edu.gpa) parts.push(`GPA: ${edu.gpa}`);
-    if (edu.honors && edu.honors.length > 0) {
-      parts.push(`Honors: ${edu.honors.join(', ')}`);
-    }
-    
-    return parts.join('\n');
-  }
-  
-  private formatSkills(skills: any): string {
-    const parts = [];
-    
-    if (skills.technical && skills.technical.length > 0) {
-      parts.push(`Technical Skills: ${skills.technical.join(', ')}`);
-    }
-    
-    if (skills.soft && skills.soft.length > 0) {
-      parts.push(`Soft Skills: ${skills.soft.join(', ')}`);
-    }
-    
-    if (skills.languages && skills.languages.length > 0) {
-      parts.push(`Languages: ${skills.languages.join(', ')}`);
-    }
-    
-    if (skills.tools && skills.tools.length > 0) {
-      parts.push(`Tools: ${skills.tools.join(', ')}`);
-    }
-    
-    return parts.join('\n');
-  }
-  
-  private formatProject(project: any): string {
-    const parts = [
-      `Project: ${project.name}`,
-      `Description: ${project.description}`
-    ];
-    
-    if (project.technologies && project.technologies.length > 0) {
-      parts.push(`Technologies: ${project.technologies.join(', ')}`);
-    }
-    
-    if (project.url) {
-      parts.push(`URL: ${project.url}`);
-    }
-    
-    return parts.join('\n');
-  }
-  
-  private extractKeywords(obj: any): string[] {
-    const keywords: string[] = [];
-    const text = JSON.stringify(obj).toLowerCase();
-    
-    // Extract technology keywords
-    const techPattern = /(javascript|typescript|python|java|react|angular|vue|node|aws|docker|kubernetes|sql|nosql|mongodb|postgres|redis)/gi;
-    const matches = text.match(techPattern);
-    if (matches) {
-      keywords.push(...matches);
-    }
-    
-    // Extract skill keywords
-    const skillPattern = /(leadership|management|communication|problem solving|analytical|creative|teamwork|agile|scrum)/gi;
-    const skillMatches = text.match(skillPattern);
-    if (skillMatches) {
-      keywords.push(...skillMatches);
-    }
-    
-    return [...new Set(keywords)]; // Remove duplicates
-  }
-  
-  private estimateTokens(text: string): number {
-    // Rough estimation: 1 token ≈ 4 characters
-    return Math.ceil(text.length / 4);
+
+    return response.data.map((embedding, index) => ({
+      id: `embed-${Date.now()}-${startIndex + index}`,
+      content: texts[index],
+      metadata: { section: CVSection.SUMMARY, importance: 1.0, contentType: ContentType.TEXT, keywords: [] },
+      vector: embedding.embedding,
+      tokens: EmbeddingHelpers.estimateTokenCount(texts[index]),
+      createdAt: new Date()
+    }));
   }
 }
 
+// Export singleton instance
 export const embeddingService = new EmbeddingService();

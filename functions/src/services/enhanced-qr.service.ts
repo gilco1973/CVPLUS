@@ -1,7 +1,8 @@
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import QRCode from 'qrcode';
+import * as QRCode from 'qrcode';
+import { PortalUrls } from '../types/portal';
 
 interface QRCodeTemplate {
   id: string;
@@ -34,7 +35,7 @@ interface QRCodeTemplate {
 interface QRCodeConfig {
   id: string;
   jobId: string;
-  type: 'profile' | 'contact' | 'portfolio' | 'resume-download' | 'linkedin' | 'custom';
+  type: 'profile' | 'contact' | 'portfolio' | 'resume-download' | 'linkedin' | 'custom' | 'portal-primary' | 'portal-chat' | 'portal-contact' | 'portal-download' | 'portal-menu';
   data: string;
   template: QRCodeTemplate;
   qrImageUrl?: string;
@@ -203,6 +204,125 @@ export class EnhancedQRService {
         font: 'Inter, sans-serif',
         color: '#1e40af'
       }
+    },
+    {
+      id: 'portal-primary',
+      name: 'Portal Primary',
+      description: 'Main portal QR code with premium branding',
+      style: {
+        foregroundColor: '#1e293b',
+        backgroundColor: '#ffffff',
+        margin: 3,
+        errorCorrectionLevel: 'H',
+        width: 300,
+        borderRadius: 12,
+        gradientType: 'linear',
+        gradientColors: ['#0ea5e9', '#3b82f6', '#6366f1']
+      },
+      frame: {
+        type: 'rounded',
+        color: '#0ea5e9',
+        width: 3
+      },
+      callToAction: {
+        text: 'View My Portfolio',
+        position: 'bottom',
+        font: 'system-ui, sans-serif',
+        color: '#1e293b'
+      }
+    },
+    {
+      id: 'portal-chat',
+      name: 'Chat Direct',
+      description: 'Direct access to AI chat functionality',
+      style: {
+        foregroundColor: '#059669',
+        backgroundColor: '#f0fdf4',
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        width: 256,
+        borderRadius: 8
+      },
+      frame: {
+        type: 'square',
+        color: '#059669',
+        width: 2
+      },
+      callToAction: {
+        text: 'Chat with AI',
+        position: 'bottom',
+        font: 'system-ui, sans-serif',
+        color: '#059669'
+      }
+    },
+    {
+      id: 'portal-menu',
+      name: 'Multi-Purpose Menu',
+      description: 'Landing page with multiple options',
+      style: {
+        foregroundColor: '#7c3aed',
+        backgroundColor: '#faf5ff',
+        margin: 4,
+        errorCorrectionLevel: 'M',
+        width: 280,
+        borderRadius: 16,
+        gradientType: 'radial',
+        gradientColors: ['#a855f7', '#7c3aed']
+      },
+      frame: {
+        type: 'circle',
+        color: '#7c3aed',
+        width: 3
+      },
+      callToAction: {
+        text: 'Explore Options',
+        position: 'bottom',
+        font: 'Inter, sans-serif',
+        color: '#7c3aed'
+      }
+    },
+    {
+      id: 'portal-contact',
+      name: 'Contact Form Direct',
+      description: 'Direct access to contact form',
+      style: {
+        foregroundColor: '#dc2626',
+        backgroundColor: '#fef2f2',
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        width: 240,
+        borderRadius: 6
+      },
+      frame: {
+        type: 'square',
+        color: '#dc2626',
+        width: 2
+      },
+      callToAction: {
+        text: 'Contact Me',
+        position: 'bottom',
+        font: 'Arial, sans-serif',
+        color: '#dc2626'
+      }
+    },
+    {
+      id: 'portal-download',
+      name: 'CV Download Direct',
+      description: 'Direct CV download access',
+      style: {
+        foregroundColor: '#ea580c',
+        backgroundColor: '#fff7ed',
+        margin: 2,
+        errorCorrectionLevel: 'L',
+        width: 220,
+        borderRadius: 4
+      },
+      callToAction: {
+        text: 'Download CV',
+        position: 'top',
+        font: 'monospace',
+        color: '#ea580c'
+      }
     }
   ];
 
@@ -300,6 +420,21 @@ export class EnhancedQRService {
       
       case 'linkedin':
         return profileData.linkedin || `https://linkedin.com/in/${profileData.name?.toLowerCase().replace(' ', '-') || 'professional'}`;
+      
+      case 'portal-primary':
+        return profileData.portalUrl || `${profileData.profileUrl}/portal`;
+      
+      case 'portal-chat':
+        return profileData.chatUrl || `${profileData.profileUrl}/chat`;
+      
+      case 'portal-contact':
+        return profileData.contactUrl || `${profileData.profileUrl}/contact`;
+      
+      case 'portal-download':
+        return profileData.downloadUrl || `${profileData.profileUrl}/download`;
+      
+      case 'portal-menu':
+        return profileData.qrMenuUrl || `${profileData.profileUrl}/menu`;
       
       default:
         return profileData.profileUrl || 'https://cvplus.web.app';
@@ -573,5 +708,337 @@ export class EnhancedQRService {
 
   getDefaultTemplates(): QRCodeTemplate[] {
     return this.defaultTemplates;
+  }
+
+  // ============================================================================
+  // PORTAL INTEGRATION METHODS
+  // ============================================================================
+
+  /**
+   * Generate a complete set of QR codes for portal integration
+   * Creates QR codes for all portal features (main, chat, contact, download, menu)
+   */
+  async generatePortalQRCodes(jobId: string, portalURLs: PortalUrls): Promise<QRCodeConfig[]> {
+    try {
+      logger.info(`Generating portal QR codes for job ${jobId}`);
+      
+      const qrCodes: QRCodeConfig[] = [];
+      const portalTemplates = this.getPortalTemplates();
+      
+      // Generate QR code for each portal URL
+      const qrConfigs = [
+        {
+          type: 'portal-primary' as const,
+          data: portalURLs.portal,
+          template: portalTemplates.find(t => t.id === 'portal-primary')!,
+          metadata: {
+            title: 'Main Portfolio Portal',
+            description: 'Access to complete professional portfolio',
+            tags: ['portal', 'portfolio', 'main'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-chat' as const,
+          data: portalURLs.chat,
+          template: portalTemplates.find(t => t.id === 'portal-chat')!,
+          metadata: {
+            title: 'AI Chat Access',
+            description: 'Direct access to AI-powered chat',
+            tags: ['portal', 'chat', 'ai'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-contact' as const,
+          data: portalURLs.contact,
+          template: portalTemplates.find(t => t.id === 'portal-contact')!,
+          metadata: {
+            title: 'Contact Form',
+            description: 'Direct access to contact form',
+            tags: ['portal', 'contact', 'form'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-download' as const,
+          data: portalURLs.download,
+          template: portalTemplates.find(t => t.id === 'portal-download')!,
+          metadata: {
+            title: 'CV Download',
+            description: 'Direct CV download access',
+            tags: ['portal', 'download', 'cv'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-menu' as const,
+          data: portalURLs.qrMenu,
+          template: portalTemplates.find(t => t.id === 'portal-menu')!,
+          metadata: {
+            title: 'Options Menu',
+            description: 'Landing page with multiple options',
+            tags: ['portal', 'menu', 'options'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        }
+      ];
+      
+      // Generate each QR code
+      for (const config of qrConfigs) {
+        const qrCode = await this.generateQRCode(jobId, config);
+        qrCodes.push(qrCode);
+      }
+      
+      logger.info(`Successfully generated ${qrCodes.length} portal QR codes for job ${jobId}`);
+      return qrCodes;
+      
+    } catch (error) {
+      logger.error('Error generating portal QR codes:', error);
+      throw new Error('Failed to generate portal QR codes');
+    }
+  }
+
+  /**
+   * Update existing QR codes to point to portal URLs
+   * Maintains existing QR code IDs but updates their target URLs
+   */
+  async updateExistingQRCodesToPortal(jobId: string, portalURLs: PortalUrls): Promise<void> {
+    try {
+      logger.info(`Updating existing QR codes to portal URLs for job ${jobId}`);
+      
+      // Get all existing QR codes for the job
+      const existingQRCodes = await this.getQRCodes(jobId);
+      
+      // Map existing QR code types to portal URLs
+      const typeUrlMapping: Record<string, string> = {
+        'profile': portalURLs.portal,
+        'portfolio': portalURLs.portal,
+        'contact': portalURLs.contact,
+        'resume-download': portalURLs.download,
+        'custom': portalURLs.qrMenu
+      };
+      
+      // Update each QR code
+      for (const qrCode of existingQRCodes) {
+        const newUrl = typeUrlMapping[qrCode.type];
+        if (newUrl && newUrl !== qrCode.data) {
+          await this.updateQRCode(jobId, qrCode.id, {
+            data: newUrl,
+            metadata: {
+              ...qrCode.metadata,
+              description: `${qrCode.metadata.description} (Updated for portal)`,
+              tags: [...qrCode.metadata.tags, 'portal']
+            }
+          });
+          
+          logger.info(`Updated QR code ${qrCode.id} (${qrCode.type}) to point to portal`);
+        }
+      }
+      
+      logger.info(`Successfully updated existing QR codes for job ${jobId}`);
+      
+    } catch (error) {
+      logger.error('Error updating existing QR codes to portal:', error);
+      throw new Error('Failed to update existing QR codes to portal');
+    }
+  }
+
+  /**
+   * Create a complete QR code set for different portal features
+   * Returns configuration objects without saving to database
+   */
+  async createPortalQRCodeSet(portalURLs: PortalUrls): Promise<Partial<QRCodeConfig>[]> {
+    try {
+      const portalTemplates = this.getPortalTemplates();
+      
+      return [
+        {
+          type: 'portal-primary' as const,
+          data: portalURLs.portal,
+          template: portalTemplates.find(t => t.id === 'portal-primary')!,
+          metadata: {
+            title: 'Main Portfolio Portal',
+            description: 'Complete professional portfolio access',
+            tags: ['portal', 'portfolio', 'primary'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-chat' as const,
+          data: portalURLs.chat,
+          template: portalTemplates.find(t => t.id === 'portal-chat')!,
+          metadata: {
+            title: 'AI Chat Direct',
+            description: 'Instant access to AI-powered conversation',
+            tags: ['portal', 'chat', 'ai', 'direct'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-contact' as const,
+          data: portalURLs.contact,
+          template: portalTemplates.find(t => t.id === 'portal-contact')!,
+          metadata: {
+            title: 'Contact Form Direct',
+            description: 'Quick access to contact form',
+            tags: ['portal', 'contact', 'form', 'direct'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-download' as const,
+          data: portalURLs.download,
+          template: portalTemplates.find(t => t.id === 'portal-download')!,
+          metadata: {
+            title: 'CV Download Direct',
+            description: 'Immediate CV download access',
+            tags: ['portal', 'download', 'cv', 'direct'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        },
+        {
+          type: 'portal-menu' as const,
+          data: portalURLs.qrMenu,
+          template: portalTemplates.find(t => t.id === 'portal-menu')!,
+          metadata: {
+            title: 'Multi-Purpose Menu',
+            description: 'Landing page with all available options',
+            tags: ['portal', 'menu', 'options', 'landing'],
+            isActive: true,
+            trackingEnabled: true
+          }
+        }
+      ];
+      
+    } catch (error) {
+      logger.error('Error creating portal QR code set:', error);
+      throw new Error('Failed to create portal QR code set');
+    }
+  }
+
+  /**
+   * Get portal-specific QR code templates
+   * Returns templates optimized for portal features
+   */
+  getPortalTemplates(): QRCodeTemplate[] {
+    return this.defaultTemplates.filter(template => 
+      template.id.startsWith('portal-') || 
+      ['professional', 'modern', 'branded'].includes(template.id)
+    );
+  }
+
+  /**
+   * Generate QR codes with portal-optimized analytics tracking
+   * Includes enhanced tracking for portal-specific metrics
+   */
+  async generatePortalQRWithAnalytics(jobId: string, portalURLs: PortalUrls, trackingOptions?: {
+    enableGeofencing?: boolean;
+    enableTimeRestrictions?: boolean;
+    customTags?: string[];
+  }): Promise<QRCodeConfig[]> {
+    try {
+      const qrCodeConfigs = await this.createPortalQRCodeSet(portalURLs);
+      const enhancedQRCodes: QRCodeConfig[] = [];
+      
+      for (const config of qrCodeConfigs) {
+        // Enhance with portal-specific tracking
+        const enhancedConfig: Partial<QRCodeConfig> = {
+          ...config,
+          metadata: {
+            ...config.metadata,
+            tags: [...(config.metadata?.tags || []), ...(trackingOptions?.customTags || [])]
+          },
+          advanced: {
+            dynamicContent: true,
+            passwordProtected: false,
+            geofencing: trackingOptions?.enableGeofencing ? {
+              enabled: true,
+              locations: [] // Can be configured per use case
+            } : undefined,
+            timeRestrictions: trackingOptions?.enableTimeRestrictions ? {
+              enabled: true,
+              activeHours: {
+                start: '00:00',
+                end: '23:59'
+              },
+              activeDays: [0, 1, 2, 3, 4, 5, 6] // All days active
+            } : undefined
+          }
+        };
+        
+        const qrCode = await this.generateQRCode(jobId, enhancedConfig);
+        enhancedQRCodes.push(qrCode);
+      }
+      
+      return enhancedQRCodes;
+      
+    } catch (error) {
+      logger.error('Error generating portal QR codes with analytics:', error);
+      throw new Error('Failed to generate portal QR codes with enhanced analytics');
+    }
+  }
+
+  /**
+   * Batch update multiple QR codes for portal migration
+   * Efficiently updates multiple QR codes to point to portal URLs
+   */
+  async batchUpdateQRCodesForPortal(jobId: string, portalURLs: PortalUrls, qrCodeIds: string[]): Promise<void> {
+    try {
+      logger.info(`Batch updating ${qrCodeIds.length} QR codes for portal migration`);
+      
+      const batch = this.db.batch();
+      const timestamp = FieldValue.serverTimestamp();
+      
+      for (const qrCodeId of qrCodeIds) {
+        const qrRef = this.db.collection('jobs').doc(jobId).collection('qrcodes').doc(qrCodeId);
+        
+        // Get current QR code to determine appropriate portal URL
+        const qrDoc = await qrRef.get();
+        if (!qrDoc.exists) continue;
+        
+        const qrData = qrDoc.data() as QRCodeConfig;
+        let newUrl: string;
+        
+        // Map existing type to appropriate portal URL
+        switch (qrData.type) {
+          case 'profile':
+          case 'portfolio':
+            newUrl = portalURLs.portal;
+            break;
+          case 'contact':
+            newUrl = portalURLs.contact;
+            break;
+          case 'resume-download':
+            newUrl = portalURLs.download;
+            break;
+          default:
+            newUrl = portalURLs.qrMenu;
+        }
+        
+        batch.update(qrRef, {
+          data: newUrl,
+          'metadata.tags': FieldValue.arrayUnion('portal'),
+          'metadata.description': `${qrData.metadata.description} (Portal-enabled)`,
+          updatedAt: timestamp
+        });
+      }
+      
+      await batch.commit();
+      logger.info(`Successfully batch updated ${qrCodeIds.length} QR codes for portal`);
+      
+    } catch (error) {
+      logger.error('Error in batch update for portal:', error);
+      throw new Error('Failed to batch update QR codes for portal');
+    }
   }
 }

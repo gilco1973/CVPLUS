@@ -9,6 +9,9 @@ if (import.meta.env.DEV) {
   import('./utils/testRecommendationBlocking');
 }
 
+// Import component renderer to make it globally available
+import('./utils/componentRenderer');
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

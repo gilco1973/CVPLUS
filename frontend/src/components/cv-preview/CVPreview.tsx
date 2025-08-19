@@ -142,6 +142,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         editingSection={state.editingSection}
         achievementAnalysis={achievementAnalysis}
         showPlaceholderBanner={state.showPlaceholderBanner}
+        useBackendPreview={import.meta.env.VITE_USE_BACKEND_PREVIEW === 'true'}
+        jobId={job.id}
         onSectionEdit={handleSectionEdit}
         onToggleSection={actions.toggleSection}
         onEditQRCode={actions.startEditingQRCode}

@@ -1,5 +1,7 @@
 import { CVFeature } from '../types';
 import { ParsedCV } from '../../cvParser';
+import { CVPortalIntegrationService } from '../../portal-integration.service';
+import * as admin from 'firebase-admin';
 
 /**
  * Contact Form Feature - Generates interactive contact form for CV
@@ -8,11 +10,88 @@ export class ContactFormFeature implements CVFeature {
   
   async generate(cv: ParsedCV, jobId: string, options?: any): Promise<string> {
     const formId = `contact-form-${jobId}`;
-    const profileUrl = `${process.env.FUNCTIONS_EMULATOR ? 'http://localhost:5000' : 'https://us-central1-getmycv-ai.cloudfunctions.net'}/submitContactForm`;
-    
-    // Extract contact person name from CV
     const contactName = cv.personalInfo?.name || 'the CV owner';
     
+    // Check for portal integration
+    const portalUrls = await this.getPortalUrls(jobId);
+    
+    // Check if React component mode is enabled (via options or environment)
+    const useReactComponent = options?.useReactComponent || process.env.ENABLE_REACT_COMPONENTS === 'true';
+    
+    if (useReactComponent) {
+      // Generate React component placeholder with portal integration
+      return this.generateReactComponentPlaceholder(jobId, contactName, options, portalUrls);
+    }
+    
+    // Legacy HTML generation for backward compatibility with portal integration
+    return this.generateLegacyHTML(formId, jobId, contactName, portalUrls);
+  }
+  
+  /**
+   * Get portal URLs for integration
+   */
+  private async getPortalUrls(jobId: string): Promise<any> {
+    try {
+      const db = admin.firestore();
+      const portalDoc = await db
+        .collection('portal_configs')
+        .where('jobId', '==', jobId)
+        .limit(1)
+        .get();
+
+      if (!portalDoc.empty) {
+        const portalData = portalDoc.docs[0].data();
+        return portalData.urls || null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to get portal URLs:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate React component placeholder for modern CV rendering
+   */
+  private generateReactComponentPlaceholder(jobId: string, contactName: string, options?: any, portalUrls?: any): string {
+    const componentProps = {
+      profileId: jobId,
+      jobId: jobId,
+      contactName: contactName,
+      isEnabled: true,
+      customization: {
+        title: options?.title || 'Get in Touch',
+        buttonText: options?.buttonText || 'Send Message',
+        theme: options?.theme || 'auto',
+        showCompanyField: options?.showCompanyField !== false,
+        showPhoneField: options?.showPhoneField !== false
+      },
+      className: 'cv-contact-form',
+      portalUrls: portalUrls,
+      enablePortalIntegration: portalUrls !== null
+    };
+    
+    return `
+      <div class="react-component-placeholder" 
+           data-component="ContactForm" 
+           data-props='${JSON.stringify(componentProps)}'
+           id="contact-form-${jobId}">
+        <!-- React ContactForm component will be rendered here -->
+        <div class="component-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading contact form...</p>
+        </div>
+      </div>
+    `;
+  }
+  
+  /**
+   * Generate legacy HTML for backward compatibility
+   */
+  private generateLegacyHTML(formId: string, jobId: string, contactName: string, portalUrls?: any): string {
+    // Add portal integration section if portal exists
+    const portalSection = portalUrls ? this.generatePortalIntegrationSection(portalUrls) : '';
     return `
       <div class="contact-form-container" id="${formId}">
         <div class="contact-form-header">
@@ -20,7 +99,7 @@ export class ContactFormFeature implements CVFeature {
           <p>Interested in connecting with ${contactName}? Send a message!</p>
         </div>
         
-        <form class="contact-form" data-job-id="${jobId}">
+        <form class="contact-form" data-job-id="${jobId}" onsubmit="return false;">
           <div class="form-row">
             <div class="form-group">
               <label for="sender-name">Your Name *</label>
@@ -93,7 +172,7 @@ export class ContactFormFeature implements CVFeature {
           </div>
           
           <div class="form-actions">
-            <button type="submit" class="submit-btn">
+            <button type="button" class="submit-btn">
               <span class="btn-text">Send Message</span>
               <span class="btn-loading" style="display: none;">
                 <svg class="spinner" viewBox="0 0 24 24">
@@ -124,12 +203,104 @@ export class ContactFormFeature implements CVFeature {
             </div>
           </div>
         </form>
+        
+        ${portalSection}
+      </div>
+    `;
+  }
+
+  /**
+   * Generate portal integration section
+   */
+  private generatePortalIntegrationSection(portalUrls: any): string {
+    if (!portalUrls) return '';
+
+    return `
+      <div class="portal-integration-section">
+        <div class="portal-header">
+          <h4>🌐 Interactive Professional Portal</h4>
+          <p>Experience my professional profile in an interactive format</p>
+        </div>
+        
+        <div class="portal-actions">
+          ${portalUrls.portal ? `
+            <a href="${portalUrls.portal}" target="_blank" class="portal-btn primary">
+              <svg class="portal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              Visit Interactive Portal
+            </a>
+          ` : ''}
+          
+          ${portalUrls.chat ? `
+            <a href="${portalUrls.chat}" target="_blank" class="portal-btn secondary">
+              <svg class="portal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Chat with AI Assistant
+            </a>
+          ` : ''}
+        </div>
+        
+        <div class="portal-features">
+          <div class="feature-item">
+            <span class="feature-icon">🤖</span>
+            <span>AI-powered chat about my experience</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">📊</span>
+            <span>Interactive skills visualization</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">💼</span>
+            <span>Portfolio gallery with projects</span>
+          </div>
+        </div>
       </div>
     `;
   }
 
   getStyles(): string {
     return `
+      /* React Component Placeholder Styles */
+      .react-component-placeholder {
+        min-height: 400px;
+        position: relative;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 2rem 0;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      
+      .component-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+        color: #64748b;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #06b6d4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Legacy Contact Form Styles */
       .contact-form-container {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-radius: 16px;
@@ -343,6 +514,147 @@ export class ContactFormFeature implements CVFeature {
         .character-count {
           color: #6b7280;
         }
+        
+        /* Portal Integration Dark Mode */
+        .portal-integration-section {
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          border-color: #475569;
+        }
+        
+        .portal-header h4 {
+          color: #f1f5f9;
+        }
+        
+        .portal-header p {
+          color: #cbd5e1;
+        }
+        
+        .portal-btn.primary {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        
+        .portal-btn.secondary {
+          background: #374151;
+          border-color: #4b5563;
+          color: #e2e8f0;
+        }
+        
+        .feature-item span:not(.feature-icon) {
+          color: #cbd5e1;
+        }
+      }
+      
+      /* Portal Integration Styles */
+      .portal-integration-section {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #0ea5e9;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+      }
+      
+      .portal-header h4 {
+        color: #0c4a6e;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      
+      .portal-header p {
+        color: #075985;
+        font-size: 0.875rem;
+        margin: 0 0 1.5rem 0;
+      }
+      
+      .portal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+      
+      .portal-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+      }
+      
+      .portal-btn.primary {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: white;
+      }
+      
+      .portal-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px -4px rgba(14, 165, 233, 0.4);
+      }
+      
+      .portal-btn.secondary {
+        background: white;
+        border: 2px solid #0ea5e9;
+        color: #0ea5e9;
+      }
+      
+      .portal-btn.secondary:hover {
+        background: #f0f9ff;
+        transform: translateY(-1px);
+      }
+      
+      .portal-icon {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .portal-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid #bae6fd;
+      }
+      
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #075985;
+      }
+      
+      .feature-icon {
+        font-size: 1rem;
+      }
+      
+      /* Portal Integration Mobile Responsive */
+      @media (max-width: 768px) {
+        .portal-actions {
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .portal-btn {
+          width: 100%;
+          max-width: 250px;
+        }
+        
+        .portal-features {
+          grid-template-columns: 1fr;
+          text-align: left;
+        }
       }
     `;
   }
@@ -350,11 +662,66 @@ export class ContactFormFeature implements CVFeature {
   getScripts(): string {
     return `
       (function() {
+        // Check if React component system is available
+        function initReactComponents() {
+          const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="ContactForm"]');
+          
+          if (placeholders.length > 0 && typeof window.renderReactComponent === 'function') {
+            console.log('🔄 Rendering React ContactForm components...');
+            
+            placeholders.forEach(placeholder => {
+              try {
+                const props = JSON.parse(placeholder.dataset.props || '{}');
+                window.renderReactComponent('ContactForm', props, placeholder);
+              } catch (error) {
+                console.error('Failed to render React ContactForm:', error);
+                // Fall back to legacy form if React fails
+                initLegacyContactForms();
+              }
+            });
+            
+            return true; // React components initialized
+          }
+          
+          return false; // Fall back to legacy
+        }
+        
+        // Legacy contact form initialization
+        function initLegacyContactForms() {
+          waitForFirebase(initContactForm);
+        }
+        
+        // Wait for Firebase to be available before initializing contact forms
+        function waitForFirebase(callback, maxAttempts = 50) {
+          let attempts = 0;
+          
+          function checkFirebase() {
+            attempts++;
+            
+            if (typeof firebase !== 'undefined' && firebase.app) {
+              console.log('✅ Firebase is available, initializing contact forms...');
+              callback();
+            } else if (attempts < maxAttempts) {
+              console.log('⏳ Waiting for Firebase... (attempt ' + attempts + '/' + maxAttempts + ')');
+              setTimeout(checkFirebase, 100); // Check every 100ms
+            } else {
+              console.error('❌ Firebase failed to load after ' + maxAttempts + ' attempts');
+              console.log('⚠️ Proceeding without Firebase - contact form will show error message');
+              callback();
+            }
+          }
+          
+          checkFirebase();
+        }
+        
         // Initialize contact form functionality
         function initContactForm() {
+          console.log('Initializing contact forms...');
           const forms = document.querySelectorAll('.contact-form');
+          console.log('Found', forms.length, 'contact forms');
           
-          forms.forEach(form => {
+          forms.forEach((form, index) => {
+            console.log('Initializing form ' + (index + 1) + ':', form);
             const submitBtn = form.querySelector('.submit-btn');
             const btnText = form.querySelector('.btn-text');
             const btnLoading = form.querySelector('.btn-loading');
@@ -401,12 +768,21 @@ export class ContactFormFeature implements CVFeature {
               return errors;
             }
             
-            // Form submission
-            form.addEventListener('submit', async (e) => {
+            // Handle button click instead of form submit
+            submitBtn.addEventListener('click', async (e) => {
               e.preventDefault();
+              e.stopPropagation();
+              
+              console.log('Contact form submit button clicked - JavaScript handler called');
               
               const formData = new FormData(form);
               const jobId = form.dataset.jobId;
+              
+              console.log('Form data:', {
+                jobId,
+                senderName: formData.get('senderName'),
+                senderEmail: formData.get('senderEmail')
+              });
               
               // Validate form
               const errors = validateForm(formData);
@@ -422,34 +798,80 @@ export class ContactFormFeature implements CVFeature {
               statusEl.style.display = 'none';
               
               try {
-                // Submit to Firebase Function
-                const response = await fetch('/submitContactForm', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    profileId: jobId,
-                    senderName: formData.get('senderName'),
-                    senderEmail: formData.get('senderEmail'),
-                    senderPhone: formData.get('senderPhone') || undefined,
-                    company: formData.get('senderCompany') || undefined,
-                    subject: formData.get('subject'),
-                    message: formData.get('message')
-                  })
+                // Initialize Firebase if not already done
+                if (typeof firebase === 'undefined') {
+                  throw new Error('Firebase SDK not loaded');
+                }
+                
+                // Get or initialize Firebase Functions
+                let functions;
+                try {
+                  const app = firebase.app();
+                  functions = firebase.functions(app);
+                } catch (e) {
+                  // Firebase not initialized, try to initialize
+                  const firebaseConfig = {
+                    apiKey: "AIzaSyACBVGSO7rRsBqSZnB_oNnqhtyAKKhRJmE",
+                    authDomain: "getmycv-ai.firebaseapp.com",
+                    projectId: "getmycv-ai",
+                    storageBucket: "getmycv-ai.appspot.com",
+                    messagingSenderId: "819342411059",
+                    appId: "1:819342411059:web:40d1d8b28b0458a9c8a96a"
+                  };
+                  const app = firebase.initializeApp(firebaseConfig);
+                  functions = firebase.functions(app);
+                }
+                
+                // Use emulator in development
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                  functions.useEmulator('localhost', 5001);
+                }
+                
+                // Create callable function and call it
+                const submitContactForm = functions.httpsCallable('submitContactForm');
+                const result = await submitContactForm({
+                  profileId: jobId,
+                  senderName: formData.get('senderName'),
+                  senderEmail: formData.get('senderEmail'),
+                  senderPhone: formData.get('senderPhone') || undefined,
+                  company: formData.get('senderCompany') || undefined,
+                  subject: formData.get('subject'),
+                  message: formData.get('message')
                 });
                 
-                if (response.ok) {
+                if (result.data && result.data.success) {
                   showSuccess();
                   form.reset();
                   if (charCount) charCount.textContent = '0';
                 } else {
-                  const error = await response.json();
-                  showError(error.message || 'Failed to send message. Please try again.');
+                  showError('Failed to send message. Please try again.');
                 }
               } catch (error) {
                 console.error('Contact form error:', error);
-                showError('Network error. Please check your connection and try again.');
+                
+                // Handle Firebase Functions errors
+                if (error.code) {
+                  switch (error.code) {
+                    case 'functions/invalid-argument':
+                      showError(error.message || 'Please check your input and try again.');
+                      break;
+                    case 'functions/permission-denied':
+                      showError('Permission denied. Please try again.');
+                      break;
+                    case 'functions/unavailable':
+                      showError('Service temporarily unavailable. Please try again later.');
+                      break;
+                    case 'functions/unauthenticated':
+                      showError('Authentication required. Please refresh the page and try again.');
+                      break;
+                    default:
+                      showError('Failed to send message. Please try again.');
+                  }
+                } else if (error.message && error.message.includes('Firebase SDK not loaded')) {
+                  showError('Contact form requires Firebase. Please refresh the page and try again.');
+                } else {
+                  showError('Network error. Please check your connection and try again.');
+                }
               } finally {
                 // Reset button state
                 submitBtn.disabled = false;
@@ -473,12 +895,28 @@ export class ContactFormFeature implements CVFeature {
           });
         }
         
-        // Initialize when DOM is ready
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initContactForm);
-        } else {
-          initContactForm();
+        // Initialize components - try React first, then fallback to legacy
+        function startInitialization() {
+          // Try React component system first
+          if (!initReactComponents()) {
+            // Fall back to legacy contact forms
+            console.log('📄 Falling back to legacy contact form implementation...');
+            waitForFirebase(initContactForm);
+          }
         }
+        
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', startInitialization);
+        } else {
+          startInitialization();
+        }
+        
+        // Export for external access
+        window.ContactFormFeature = {
+          initReactComponents,
+          initLegacyContactForms
+        };
+        
       })();
     `;
   }

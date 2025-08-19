@@ -204,6 +204,86 @@ export class CVServiceEnhanced {
   }
 
   /**
+   * Generates CV preview using backend service with error recovery
+   */
+  public async generateCVPreview(
+    jobId: string, 
+    templateId?: string, 
+    features?: string[]
+  ): Promise<string> {
+    return this.recoveryManager.executeWithRecovery(
+      async () => {
+        const user = auth.currentUser;
+        if (!user) throw new Error('User not authenticated');
+        
+        const token = await user.getIdToken();
+        
+        try {
+          // First try the callable function
+          const generatePreviewFunction = httpsCallable(functions, 'generateCVPreview');
+          const result = await generatePreviewFunction({
+            jobId,
+            templateId,
+            features
+          });
+          
+          // Return the HTML content from the backend
+          return (result.data as { html: string }).html;
+        } catch (error: unknown) {
+          console.warn('Preview callable function failed, trying direct HTTP call:', error);
+          
+          // Fallback to direct HTTP call
+          const baseUrl = import.meta.env.DEV 
+            ? 'http://localhost:5001/getmycv-ai/us-central1'
+            : 'https://us-central1-getmycv-ai.cloudfunctions.net';
+          const response = await fetch(`${baseUrl}/generateCVPreview`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              data: {
+                jobId,
+                templateId,
+                features
+              }
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          return result.result.html;
+        }
+      },
+      {
+        operationName: 'cv_preview_generation',
+        jobId,
+        checkpointType: CheckpointType.GENERATION_STARTED,
+        checkpointData: { templateId, features }
+      },
+      {
+        enableCheckpointRestore: false, // Preview doesn't need checkpoint restore
+        enableAutoRetry: true,
+        maxRetries: 2,
+        customRetryConfig: {
+          initialDelay: 2000, // Short delay for preview
+          maxDelay: 10000
+        }
+      }
+    ).then(result => {
+      if (result.success) {
+        return result.data!;
+      } else {
+        throw result.error?.originalError || new Error('CV preview generation failed');
+      }
+    });
+  }
+
+  /**
    * Gets recommendations with error recovery
    */
   public async getRecommendations(
@@ -533,6 +613,7 @@ export const getRecommendations = cvServiceEnhanced.getRecommendations.bind(cvSe
 export const applyImprovements = cvServiceEnhanced.applyImprovements.bind(cvServiceEnhanced);
 export const generateEnhancedPodcast = cvServiceEnhanced.generateEnhancedPodcast.bind(cvServiceEnhanced);
 export const generateVideoIntroduction = cvServiceEnhanced.generateVideoIntroduction.bind(cvServiceEnhanced);
+export const generateCVPreview = cvServiceEnhanced.generateCVPreview.bind(cvServiceEnhanced);
 
 // Export the service instance
 export default cvServiceEnhanced;

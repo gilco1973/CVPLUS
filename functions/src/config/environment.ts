@@ -200,6 +200,8 @@ interface SecureConfig {
     user?: string;
     password?: string;
     from: string;
+    sendgridApiKey?: string;
+    resendApiKey?: string;
   };
   rag: {
     openaiApiKey?: string;
@@ -327,7 +329,9 @@ class SecureEnvironmentLoader {
       email: {
         user: EnvironmentValidator.validateEmail(process.env.EMAIL_USER),
         password: EnvironmentValidator.sanitizeString(process.env.EMAIL_PASSWORD),
-        from: EnvironmentValidator.validateEmail(process.env.EMAIL_FROM) || 'CVPlus <noreply@getmycv-ai.com>'
+        from: EnvironmentValidator.validateEmail(process.env.EMAIL_FROM) || 'CVPlus <noreply@getmycv-ai.com>',
+        sendgridApiKey: EnvironmentValidator.validateApiKey(process.env.SENDGRID_API_KEY, 'SENDGRID_API_KEY'),
+        resendApiKey: EnvironmentValidator.validateApiKey(process.env.RESEND_API_KEY, 'RESEND_API_KEY')
       },
       rag: {
         openaiApiKey: EnvironmentValidator.validateApiKey(process.env.OPENAI_API_KEY, 'OPENAI_API_KEY'),

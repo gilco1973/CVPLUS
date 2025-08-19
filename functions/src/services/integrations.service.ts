@@ -8,18 +8,68 @@ import * as nodemailer from 'nodemailer';
 import { config } from '../config/environment';
 
 export class IntegrationsService {
-  private emailTransporter: nodemailer.Transporter;
+  private emailTransporter: nodemailer.Transporter | null = null;
+  private emailProvider: 'gmail' | 'sendgrid' | 'resend' = 'gmail';
 
   constructor() {
-    // Initialize email transporter (using Gmail as example)
-    // In production, use SendGrid or similar service
-    this.emailTransporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: config.email?.user || process.env.EMAIL_USER,
-        pass: config.email?.password || process.env.EMAIL_PASSWORD
+    this.initializeEmailTransporter();
+  }
+
+  /**
+   * Initialize email transporter with fallback options
+   */
+  private initializeEmailTransporter(): void {
+    try {
+      // Check for SendGrid configuration first (recommended for production)
+      if (config.email?.sendgridApiKey || process.env.SENDGRID_API_KEY) {
+        this.emailProvider = 'sendgrid';
+        this.emailTransporter = nodemailer.createTransport({
+          service: 'SendGrid',
+          auth: {
+            user: 'apikey',
+            pass: config.email?.sendgridApiKey || process.env.SENDGRID_API_KEY
+          }
+        });
+        console.log('Email service initialized with SendGrid');
+        return;
       }
-    });
+
+      // Check for Resend configuration
+      if (config.email?.resendApiKey || process.env.RESEND_API_KEY) {
+        this.emailProvider = 'resend';
+        this.emailTransporter = nodemailer.createTransport({
+          host: 'smtp.resend.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: 'resend',
+            pass: config.email?.resendApiKey || process.env.RESEND_API_KEY
+          }
+        });
+        console.log('Email service initialized with Resend');
+        return;
+      }
+
+      // Fallback to Gmail if configured
+      if (config.email?.user && config.email?.password) {
+        this.emailProvider = 'gmail';
+        this.emailTransporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: config.email.user,
+            pass: config.email.password
+          }
+        });
+        console.log('Email service initialized with Gmail');
+        return;
+      }
+
+      console.warn('No email service configured. Email features will be disabled.');
+      this.emailTransporter = null;
+    } catch (error) {
+      console.error('Failed to initialize email transporter:', error);
+      this.emailTransporter = null;
+    }
   }
 
   /**
@@ -60,22 +110,96 @@ export class IntegrationsService {
   }
 
   /**
-   * Send email notification
+   * Send email notification with enhanced error handling
    */
   async sendEmail(options: {
     to: string;
     subject: string;
     html: string;
     from?: string;
-  }): Promise<void> {
-    const mailOptions = {
-      from: options.from || config.email?.from || 'CVPlus <noreply@cvplus.com>',
-      to: options.to,
-      subject: options.subject,
-      html: options.html
-    };
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!this.emailTransporter) {
+        console.warn('Email service not configured, skipping email send');
+        return {
+          success: false,
+          error: 'Email service not configured'
+        };
+      }
 
-    await this.emailTransporter.sendMail(mailOptions);
+      // Validate email address
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(options.to)) {
+        return {
+          success: false,
+          error: 'Invalid recipient email address'
+        };
+      }
+
+      const fromEmail = options.from || config.email?.from || 'CVPlus <noreply@getmycv-ai.com>';
+      const mailOptions = {
+        from: fromEmail,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        // Add headers for better deliverability
+        headers: {
+          'X-Mailer': 'CVPlus',
+          'X-Priority': '3',
+          'Importance': 'Normal'
+        }
+      };
+
+      const result = await this.emailTransporter.sendMail(mailOptions);
+      console.log(`Email sent successfully via ${this.emailProvider}:`, {
+        messageId: result.messageId,
+        to: options.to,
+        subject: options.subject
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Failed to send email:', {
+        error: error.message,
+        provider: this.emailProvider,
+        to: options.to,
+        subject: options.subject
+      });
+      
+      return {
+        success: false,
+        error: error.message || 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Test email configuration
+   */
+  async testEmailConfiguration(): Promise<{ success: boolean; provider: string; error?: string }> {
+    try {
+      if (!this.emailTransporter) {
+        return {
+          success: false,
+          provider: 'none',
+          error: 'No email transporter configured'
+        };
+      }
+
+      // Verify transporter connection
+      await this.emailTransporter.verify();
+      
+      return {
+        success: true,
+        provider: this.emailProvider
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        provider: this.emailProvider,
+        error: error.message
+      };
+    }
   }
 
   /**
@@ -86,8 +210,10 @@ export class IntegrationsService {
     senderEmail: string;
     senderPhone?: string;
     company?: string;
+    subject?: string;
     message: string;
     cvUrl: string;
+    profileOwnerName?: string;
   }): string {
     return `
       <!DOCTYPE html>
@@ -110,7 +236,7 @@ export class IntegrationsService {
         <div class="container">
           <div class="header">
             <h2>New Contact Form Submission</h2>
-            <p>Someone is interested in your CV!</p>
+            <p>${data.profileOwnerName ? `Hi ${data.profileOwnerName}, someone` : 'Someone'} is interested in your CV!</p>
           </div>
           
           <div class="content">
@@ -138,6 +264,13 @@ export class IntegrationsService {
             </div>
             ` : ''}
             
+            ${data.subject ? `
+            <div class="field">
+              <div class="label">Subject:</div>
+              <div class="value">${data.subject}</div>
+            </div>
+            ` : ''}
+            
             <div class="message">
               <div class="label">Message:</div>
               <p>${data.message.replace(/\n/g, '<br>')}</p>
@@ -150,7 +283,10 @@ export class IntegrationsService {
           
           <div class="footer">
             <p>This message was sent via your CVPlus public profile.</p>
-            <p>To manage your CV settings, visit <a href="https://cvplus.com">cvplus.com</a></p>
+            <p>To manage your CV settings, visit <a href="https://getmycv-ai.web.app">CVPlus Dashboard</a></p>
+            <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 11px; color: #999;">
+              Reply directly to this email to respond to ${data.senderName} at ${data.senderEmail}
+            </p>
           </div>
         </div>
       </body>

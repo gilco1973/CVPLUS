@@ -10,6 +10,7 @@ admin.initializeApp();
 export { processCV } from './functions/processCV';
 export { generatePodcast } from './functions/generatePodcast';
 export { generateCV } from './functions/generateCV';
+export { generateCVPreview } from './functions/generateCVPreview';
 export { initiateCVGeneration } from './functions/initiateCVGeneration';
 export { getTemplates } from './functions/getTemplates';
 export { analyzeCV } from './functions/analyzeCV';
@@ -54,7 +55,8 @@ export {
   getPublicProfile,
   updatePublicProfileSettings,
   submitContactForm,
-  trackQRScan
+  trackQRScan,
+  testEmailConfiguration
 } from './functions/publicProfile';
 
 // Export RAG chat functions
@@ -188,3 +190,34 @@ export {
   getJobDetails,
   getJobStats
 } from './functions/monitorJobs';
+
+// Export web portal generation function
+export { generateWebPortal } from './functions/generateWebPortal';
+
+// Export portal chat functions
+export {
+  portalChat,
+  portalChatPublic,
+  getPortalChatAnalytics
+} from './functions/portalChat';
+
+// Export CV-Portal integration functions
+export {
+  generatePortal,
+  getPortalStatus,
+  updatePortalPreferences,
+  retryPortalGeneration,
+  getUserPortalPreferences,
+  listUserPortals,
+  onCVCompletionTriggerPortal
+} from './functions/cvPortalIntegration';
+
+// Export QR Code enhancement functions
+export {
+  enhanceQRCodes,
+  getEnhancedQRCodes,
+  trackQRCodeScan,
+  getQRCodeAnalytics,
+  autoEnhanceQRCodes,
+  generateQRCodePreview
+} from './functions/qrCodeEnhancement';

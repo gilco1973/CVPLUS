@@ -4,7 +4,7 @@ import { ParsedCV } from '../cvParser';
  * Base interface for CV template generators
  */
 export interface CVTemplate {
-  generateHTML(cv: ParsedCV, jobId: string, features?: string[]): Promise<string>;
+  generateHTML(cv: ParsedCV, jobId: string, features?: string[], interactiveFeatures?: InteractiveFeatureResult): Promise<string>;
 }
 
 /**
@@ -86,7 +86,7 @@ export type FeatureType =
   | 'privacy-mode'
   | 'interactive-timeline'
   | 'skills-visualization'
-  | 'social-links'
+  | 'social-media-links'
   | 'contact-form'
   | 'calendar-integration'
   | 'language-proficiency'

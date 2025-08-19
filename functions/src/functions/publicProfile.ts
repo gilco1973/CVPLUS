@@ -418,31 +418,49 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
       // Send email notification if configured
       const contactEmail = job.interactiveData?.contactEmail || job.parsedData?.personalInfo?.email;
+      let emailResult: { success: boolean; error?: string } = { success: false, error: 'No email configured' };
+      
       if (contactEmail) {
-        await integrationsService.sendEmail({
-          to: contactEmail,
-          subject: `New contact from your CV profile - ${senderName}`,
-          html: `
-            <h2>New Contact Submission</h2>
-            <p><strong>From:</strong> ${senderName}</p>
-            <p><strong>Email:</strong> ${senderEmail}</p>
-            ${company ? `<p><strong>Company:</strong> ${company}</p>` : ''}
-            ${senderPhone ? `<p><strong>Phone:</strong> ${senderPhone}</p>` : ''}
-            <p><strong>Message:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
-            <hr>
-            <p><small>This message was sent through your public CV profile on CVPlus.</small></p>
-          `
-        }).catch(error => {
-          console.error('Failed to send email notification:', error);
-          // Don't throw - submission was still saved
+        // Get profile owner name for personalization
+        const profileOwnerName = job.parsedData?.personalInfo?.name || 
+                               'there';
+        
+        // Generate professional email template
+        const emailHtml = integrationsService.generateContactFormEmailTemplate({
+          senderName: sanitizedData.senderName,
+          senderEmail: sanitizedData.senderEmail,
+          senderPhone: sanitizedData.senderPhone,
+          company: sanitizedData.company,
+          subject: sanitizedData.subject,
+          message: sanitizedData.message,
+          cvUrl: profile.publicUrl,
+          profileOwnerName
         });
+
+        emailResult = await integrationsService.sendEmail({
+          to: contactEmail,
+          subject: `New contact from your CV profile - ${sanitizedData.subject || 'General Inquiry'}`,
+          html: emailHtml
+        });
+
+        // Log email result for monitoring
+        if (emailResult.success) {
+          console.log(`Email notification sent successfully to ${contactEmail}`);
+        } else {
+          console.warn(`Failed to send email notification to ${contactEmail}:`, emailResult.error);
+        }
+      } else {
+        console.warn('No contact email found for profile owner');
       }
 
       return {
         success: true,
         submissionId: submissionRef.id,
-        message: 'Your message has been sent successfully!'
+        message: 'Your message has been sent successfully!',
+        emailNotification: {
+          sent: emailResult.success,
+          error: emailResult.error
+        }
       };
     } catch (error: any) {
       console.error('Error submitting contact form:', error);
@@ -497,6 +515,78 @@ export const trackQRScan = onCall<TrackQRScanRequest>(
         success: false,
         message: 'Failed to track scan'
       };
+    }
+  }
+);
+
+/**
+ * Test email configuration (admin only)
+ */
+export const testEmailConfiguration = onCall(
+  {
+    timeoutSeconds: 30,
+    ...corsOptions
+  },
+  async (request: CallableRequest<{ testEmail?: string }>) => {
+    // Check authentication
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { testEmail } = request.data || {};
+    const targetEmail = testEmail || request.auth.token.email;
+
+    if (!targetEmail) {
+      throw new HttpsError('invalid-argument', 'No email address provided');
+    }
+
+    try {
+      // Test email service configuration
+      const configTest = await integrationsService.testEmailConfiguration();
+      
+      if (!configTest.success) {
+        return {
+          success: false,
+          message: 'Email service not configured',
+          details: {
+            provider: configTest.provider,
+            error: configTest.error
+          }
+        };
+      }
+
+      // Send test email
+      const testEmailHtml = integrationsService.generateContactFormEmailTemplate({
+        senderName: 'CVPlus Test System',
+        senderEmail: 'test@cvplus.com',
+        senderPhone: '+1-555-TEST',
+        company: 'CVPlus',
+        subject: 'Email Configuration Test',
+        message: 'This is a test message to verify your email configuration is working correctly. If you receive this email, your contact form notifications are properly set up!',
+        cvUrl: 'https://getmycv-ai.web.app',
+        profileOwnerName: request.auth.token.name || 'User'
+      });
+
+      const emailResult = await integrationsService.sendEmail({
+        to: targetEmail,
+        subject: 'CVPlus Email Configuration Test',
+        html: testEmailHtml
+      });
+
+      return {
+        success: emailResult.success,
+        message: emailResult.success 
+          ? `Test email sent successfully to ${targetEmail}` 
+          : 'Failed to send test email',
+        details: {
+          provider: configTest.provider,
+          emailSent: emailResult.success,
+          error: emailResult.error
+        }
+      };
+    } catch (error: any) {
+      console.error('Error testing email configuration:', error);
+      throw new HttpsError('internal', error.message || 'Failed to test email configuration');
     }
   }
 );
