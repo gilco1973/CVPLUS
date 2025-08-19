@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import { 
-  Award, Shield, CheckCircle, Plus, ExternalLink, 
-  Calendar, Clock, Grid3x3, List, Loader2,
-  Share2, AlertCircle, X, Trash2
-} from 'lucide-react';
+import { Shield, CheckCircle, Plus, ExternalLink, Calendar, Clock, Grid3x3, List, Loader2, Share2, AlertCircle, X, Trash2, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -66,11 +62,11 @@ interface CertificationBadgesCollection {
 interface CertificationBadgesProps {
   collection?: CertificationBadgesCollection;
   onGenerateBadges: () => Promise<CertificationBadgesCollection>;
-  onVerifyCertification: (badgeId: string, verificationData: any) => Promise<void>;
+  onVerifyCertification: (badgeId: string, verificationData: Record<string, unknown>) => Promise<void>;
   onUpdateDisplayOptions: (options: CertificationBadgesCollection['displayOptions']) => Promise<void>;
-  onAddCertification: (certification: any) => Promise<void>;
+  onAddCertification: (certification: Record<string, unknown>) => Promise<void>;
   onRemoveCertification: (badgeId: string) => Promise<void>;
-  onGenerateShareLink?: (badgeId: string) => Promise<any>;
+  onGenerateShareLink?: (badgeId: string) => Promise<{ shareUrl: string; expiresAt?: string }>;
 }
 
 export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
@@ -106,7 +102,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
     try {
       await onGenerateBadges();
       toast.success('Certification badges generated!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate certification badges');
     } finally {
       setIsGenerating(false);
@@ -621,7 +617,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                   <button
                     onClick={async () => {
                       const result = await onGenerateShareLink(selectedBadge.id);
-                      navigator.clipboard.writeText(result.shareableUrl);
+                      navigator.clipboard.writeText(result.shareUrl);
                       toast.success('Share link copied!');
                     }}
                     className="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"

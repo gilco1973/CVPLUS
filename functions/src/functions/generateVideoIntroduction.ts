@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { videoGenerationService } from '../services/video-generation.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generateVideoIntroduction = onCall(
   {
@@ -79,7 +79,7 @@ export const generateVideoIntroduction = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generateVideoIntroductionHTML(videoResult);
+      const htmlFragment = htmlFragmentGenerator.generateVideoIntroductionHTML(videoResult);
 
       // Update job with video completion
       await admin.firestore()

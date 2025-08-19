@@ -67,7 +67,7 @@ export class DerivedFeatureService {
           }
         ],
         skills: ['JavaScript', 'React', 'Node.js', 'Leadership'],
-        education: [{ institution: 'University', degree: 'Bachelor of Science', field: 'Computer Science', year: '2018' }]
+        education: [{ institution: 'University', degree: 'Bachelor of Science', field: 'Computer Science', graduationDate: '2018' }]
       };
       
       const testJobDescription = 'Senior Software Engineer position requiring 5+ years experience';

@@ -17,7 +17,7 @@ export const useAchievementAnalysis = (
     try {
       const result = await analyzeAchievements(jobId);
       setAchievementAnalysis({
-        keyAchievements: (result as any)?.keyAchievements || [],
+        keyAchievements: (result as unknown)?.keyAchievements || [],
         loading: false,
         error: null
       });
@@ -42,10 +42,10 @@ export const useAchievementAnalysis = (
 
   // Expose analysis function to window for inline HTML calls
   useEffect(() => {
-    (window as any).handleAchievementAnalysis = handleAchievementAnalysis;
+    (window as unknown).handleAchievementAnalysis = handleAchievementAnalysis;
     
     return () => {
-      delete (window as any).handleAchievementAnalysis;
+      delete (window as unknown).handleAchievementAnalysis;
     };
   }, [handleAchievementAnalysis]);
 

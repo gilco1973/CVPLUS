@@ -21,7 +21,7 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
   jobId,
   selectedFeatures,
   isEnhancing,
-  onFeatureToggle,
+  // onFeatureToggle, // Unused in current implementation
   onPreviewError
 }) => {
   const { user } = useAuth();
@@ -47,9 +47,10 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
           enableInteraction: false,
           updateInterval: 1000
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ Preview initialization failed:', error);
-        onPreviewError?.(error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        onPreviewError?.(errorMessage);
       }
     };
 
@@ -63,23 +64,6 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
       previewService.cleanup();
     };
   }, [user, jobId, selectedFeatures, isEnhancing, onPreviewError]);
-
-  // Update iframes when HTML changes
-  useEffect(() => {
-    updateIframes();
-  }, [previewState.baseHtml, previewState.currentHtml, previewScale, updateIframes]);
-
-  // Handle iframe message events
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'preview-loaded') {
-        console.log('📺 Preview iframe loaded successfully');
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
 
   const updateIframes = useCallback(() => {
     if (beforeIframeRef.current && previewState.baseHtml) {
@@ -100,6 +84,23 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
       afterIframeRef.current.srcdoc = scaledHtml;
     }
   }, [previewState.baseHtml, previewState.currentHtml, previewScale]);
+
+  // Update iframes when HTML changes
+  useEffect(() => {
+    updateIframes();
+  }, [previewState.baseHtml, previewState.currentHtml, previewScale, updateIframes]);
+
+  // Handle iframe message events
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'preview-loaded') {
+        console.log('📺 Preview iframe loaded successfully');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const getFeatureStatusIcon = (status: FeaturePreview['status']) => {
     switch (status) {
@@ -198,7 +199,7 @@ export const CVPreviewPanel: React.FC<CVPreviewPanelProps> = ({
             <label className="text-sm text-gray-700">View:</label>
             <select 
               value={viewMode}
-              onChange={(e) => setViewMode(e.target.value as any)}
+              onChange={(e) => setViewMode(e.target.value as 'split' | 'before' | 'after')}
               className="text-sm border border-gray-300 rounded px-2 py-1"
             >
               <option value="split">Split View</option>

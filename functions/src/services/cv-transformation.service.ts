@@ -1,5 +1,6 @@
 import { ParsedCV } from '../types/job';
 import { VerifiedClaudeService } from './verified-claude.service';
+import { PlaceholderManager, PlaceholderInfo } from './placeholder-manager.service';
 
 export interface CVRecommendation {
   id: string;
@@ -9,6 +10,9 @@ export interface CVRecommendation {
   description: string;
   currentContent?: string;
   suggestedContent?: string;
+  customizedContent?: string; // Content after user has filled placeholders
+  placeholders?: PlaceholderInfo[]; // Detected placeholders in suggestedContent
+  isCustomized?: boolean; // Whether user has customized placeholders
   impact: 'high' | 'medium' | 'low';
   priority: number;
   section: string;
@@ -114,12 +118,16 @@ Return a JSON array of recommendations following this exact structure:
           }
           
           const parsed = JSON.parse(cleanText);
-          return parsed.recommendations || [];
+          const recommendations = parsed.recommendations || [];
+          
+          // Process each recommendation to detect placeholders
+          return this.processRecommendationsWithPlaceholders(recommendations);
         } catch (parseError) {
           console.error('Failed to parse recommendations JSON:', parseError);
           console.error('Raw response text:', content.text);
           // Fallback: extract recommendations from text response
-          return this.extractRecommendationsFromText(content.text, parsedCV);
+          const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
+          return this.processRecommendationsWithPlaceholders(fallbackRecs);
         }
       }
 
@@ -127,7 +135,8 @@ Return a JSON array of recommendations following this exact structure:
     } catch (error) {
       console.error('Error generating recommendations:', error);
       // Return basic recommendations as fallback
-      return this.generateFallbackRecommendations(parsedCV);
+      const fallbackRecs = this.generateFallbackRecommendations(parsedCV);
+      return this.processRecommendationsWithPlaceholders(fallbackRecs);
     }
   }
 
@@ -155,6 +164,9 @@ Return a JSON array of recommendations following this exact structure:
     const comparisonReport: CVTransformationResult['comparisonReport'] = {
       beforeAfter: []
     };
+    
+    // Capture original content states for comparison
+    const originalContentStates = this.captureContentStates(originalCV);
 
     // Group recommendations by type for efficient processing
     const groupedRecommendations = this.groupRecommendationsByType(selectedRecommendations);
@@ -178,12 +190,7 @@ Return a JSON array of recommendations following this exact structure:
             transformationSummary.sectionsModified.push(rec.section);
           }
 
-          comparisonReport.beforeAfter.push({
-            section: rec.section,
-            before: rec.currentContent || '',
-            after: rec.suggestedContent || '',
-            improvement: rec.description
-          });
+          // Comparison will be generated after all transformations
           console.log(`Successfully applied content recommendation: ${rec.id}`);
         } else {
           console.error(`Failed to apply content recommendation ${rec.id}: ${result.error}`);
@@ -267,6 +274,14 @@ Return a JSON array of recommendations following this exact structure:
         console.warn(`  - ${rec.id}: "${rec.section}" (${rec.type})`);
       });
     }
+    
+    // Generate proper before/after comparisons after all transformations
+    const improvedContentStates = this.captureContentStates(improvedCV);
+    comparisonReport.beforeAfter = this.generateComparisonReport(
+      originalContentStates,
+      improvedContentStates, 
+      appliedRecommendations
+    );
     
     return {
       originalCV,
@@ -510,6 +525,7 @@ Generate specific recommendations with placeholder templates that users can cust
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const keywords = recommendation.keywords || [];
+      console.log(`Applying keyword optimization with keywords: ${keywords.join(', ')}`);
       
       // Add keywords to skills section
       if (!cv.skills) cv.skills = [];
@@ -522,6 +538,7 @@ Generate specific recommendations with placeholder templates that users can cust
           )
         );
         skillsArray.push(...relevantKeywords);
+        console.log(`Added ${relevantKeywords.length} new keywords to skills array`);
       } else {
         // Handle object-based skills
         const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
@@ -532,11 +549,19 @@ Generate specific recommendations with placeholder templates that users can cust
           )
         );
         skillsObj.technical.push(...relevantKeywords);
+        console.log(`Added ${relevantKeywords.length} new keywords to technical skills`);
       }
       
-      // Enhance summary with keywords
-      if (cv.summary && recommendation.suggestedContent) {
-        cv.summary = recommendation.suggestedContent;
+      // Enhance summary with keywords naturally integrated
+      if (cv.summary && keywords.length > 0) {
+        console.log('Integrating keywords naturally into summary');
+        const enhancedSummary = await this.integrateKeywordsNaturally(cv.summary, keywords);
+        if (enhancedSummary) {
+          cv.summary = enhancedSummary;
+          console.log('Successfully enhanced summary with keywords');
+        } else {
+          console.warn('Failed to enhance summary, keeping original');
+        }
       }
       
       return { success: true };
@@ -544,6 +569,170 @@ Generate specific recommendations with placeholder templates that users can cust
       console.error('Error applying keyword optimization:', error);
       return { success: false, error: (error as Error).message };
     }
+  }
+
+  /**
+   * Processes recommendations to detect and metadata for placeholders
+   */
+  private processRecommendationsWithPlaceholders(
+    recommendations: CVRecommendation[]
+  ): CVRecommendation[] {
+    return recommendations.map(rec => {
+      if (rec.suggestedContent) {
+        // Detect placeholders in the suggested content
+        const placeholders = PlaceholderManager.detectPlaceholders(rec.suggestedContent);
+        
+        if (placeholders.length > 0) {
+          console.log(`Found ${placeholders.length} placeholders in recommendation ${rec.id}:`, placeholders.map(p => p.key));
+          rec.placeholders = placeholders;
+          rec.isCustomized = false;
+        }
+      }
+      
+      return rec;
+    });
+  }
+
+  /**
+   * Naturally integrates keywords into existing content using AI
+   */
+  private async integrateKeywordsNaturally(
+    originalContent: string, 
+    keywords: string[]
+  ): Promise<string | null> {
+    try {
+      const prompt = `Enhance the following professional summary by naturally integrating these keywords: ${keywords.join(', ')}
+
+Original Summary:
+${originalContent}
+
+Requirements:
+1. Keep the original meaning and tone
+2. Integrate keywords naturally and contextually
+3. Maintain professional language
+4. Ensure the text flows smoothly
+5. Don't force keywords that don't fit
+6. Return only the enhanced summary text
+
+Enhanced Summary:`;
+
+      const response = await this.claudeService.createVerifiedMessage({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        temperature: 0.3,
+        system: 'You are an expert CV writer. Enhance the provided professional summary by naturally integrating the specified keywords while maintaining the original meaning and professional tone.',
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      });
+
+      const content = response.content[0];
+      if (content.type === 'text') {
+        return content.text.trim();
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error integrating keywords naturally:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Captures the current state of all CV content sections
+   */
+  private captureContentStates(cv: ParsedCV): Record<string, string> {
+    const states: Record<string, string> = {};
+    
+    // Capture summary
+    if (cv.summary) {
+      states['Professional Summary'] = cv.summary;
+    }
+    
+    // Capture experience sections  
+    if (cv.experience) {
+      cv.experience.forEach(exp => {
+        const key = `Experience - ${exp.company}`;
+        states[key] = exp.description || `${exp.position} at ${exp.company}`;
+      });
+    }
+    
+    // Capture skills
+    if (cv.skills) {
+      if (Array.isArray(cv.skills)) {
+        states['Skills'] = cv.skills.join(', ');
+      } else {
+        const skillsObj = cv.skills as any;
+        states['Skills'] = Object.values(skillsObj).flat().join(', ');
+      }
+    }
+    
+    // Capture achievements
+    if (cv.achievements && cv.achievements.length > 0) {
+      states['Key Achievements'] = cv.achievements.join('\n• ');
+    }
+    
+    // Capture custom sections
+    if (cv.customSections) {
+      Object.entries(cv.customSections).forEach(([key, value]) => {
+        states[key] = value;
+      });
+    }
+    
+    return states;
+  }
+  
+  /**
+   * Generates proper before/after comparison report
+   */
+  private generateComparisonReport(
+    originalStates: Record<string, string>,
+    improvedStates: Record<string, string>,
+    appliedRecommendations: CVRecommendation[]
+  ): Array<{
+    section: string;
+    before: string;
+    after: string;
+    improvement: string;
+  }> {
+    const comparisons: Array<{
+      section: string;
+      before: string;
+      after: string;
+      improvement: string;
+    }> = [];
+    
+    // Generate comparisons for each applied recommendation
+    appliedRecommendations.forEach(rec => {
+      let sectionKey = rec.section;
+      
+      // Map recommendation sections to content state keys
+      if (this.isSummarySection(rec.section)) {
+        sectionKey = 'Professional Summary';
+      } else if (this.isSkillsSection(rec.section)) {
+        sectionKey = 'Skills';
+      } else if (this.isAchievementsSection(rec.section)) {
+        sectionKey = 'Key Achievements';
+      } else if (rec.section.includes('Experience - ')) {
+        sectionKey = rec.section; // Already in correct format
+      }
+      
+      const beforeContent = originalStates[sectionKey] || originalStates[rec.section] || '';
+      const afterContent = improvedStates[sectionKey] || improvedStates[rec.section] || '';
+      
+      // Only add comparison if content actually changed
+      if (beforeContent !== afterContent && afterContent) {
+        comparisons.push({
+          section: rec.section,
+          before: beforeContent,
+          after: afterContent,
+          improvement: rec.description
+        });
+      }
+    });
+    
+    return comparisons;
   }
 
   // Section detection helper methods

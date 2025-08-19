@@ -23,7 +23,7 @@ interface PublicProfileProps {
     lastViewedAt?: Date;
   };
   onCreateProfile: () => Promise<void>;
-  onUpdateSettings: (settings: any) => Promise<void>;
+  onUpdateSettings: (settings: unknown) => Promise<void>;
 }
 
 export const PublicProfile = ({ 
@@ -78,7 +78,7 @@ export const PublicProfile = ({
     try {
       await onUpdateSettings(newSettings);
       toast.success('Settings updated');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update settings');
       setSettings(settings); // Revert on error
     }

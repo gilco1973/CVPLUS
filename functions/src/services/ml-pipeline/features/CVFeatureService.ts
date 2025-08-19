@@ -53,7 +53,7 @@ export class CVFeatureService {
           institution: 'Test University',
           degree: 'Bachelor of Science',
           field: 'Computer Science',
-          year: '2020'
+          graduationDate: '2020'
         }]
       };
       

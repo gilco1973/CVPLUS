@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { calendarIntegrationService, CalendarIntegrationService } from '../services/calendar-integration.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generateCalendarEvents = onCall(
   {
@@ -73,7 +73,7 @@ export const generateCalendarEvents = onCall(
       await calendarIntegrationService.storeCalendarData(jobId, calendarData);
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generateCalendarIntegrationHTML(calendarData);
+      const htmlFragment = htmlFragmentGenerator.generateCalendarIntegrationHTML(calendarData);
 
       // Update with final results
       await admin.firestore()

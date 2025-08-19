@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { podcastGenerationService } from '../services/podcast-generation.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generatePodcast = onCall(
   {
@@ -98,7 +98,7 @@ export const generatePodcast = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generatePodcastHTML(podcastResult);
+      const htmlFragment = htmlFragmentGenerator.generatePodcastHTML(podcastResult);
 
       // Update job with podcast completion
       await admin.firestore()

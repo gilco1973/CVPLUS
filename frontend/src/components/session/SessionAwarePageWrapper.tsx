@@ -14,7 +14,7 @@ interface SessionAwarePageWrapperProps {
   autoSaveInterval?: number;
   showSaveButton?: boolean;
   saveButtonVariant?: 'primary' | 'secondary' | 'minimal' | 'compact';
-  onSessionUpdate?: (session: any) => void;
+  onSessionUpdate?: (session: unknown) => void;
   onStepChange?: (newStep: CVStep) => void;
   className?: string;
 }

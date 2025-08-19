@@ -24,6 +24,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+logs/
+emulator-output.log
+refactoring-analysis.log
 
 # OS files
 .DS_Store

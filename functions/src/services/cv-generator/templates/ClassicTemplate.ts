@@ -192,7 +192,7 @@ export class ClassicTemplate implements CVTemplate {
             <div class="item-header">
                 <div class="position">${exp.position}</div>
                 <div class="company">${exp.company}</div>
-                <div class="duration">${exp.startDate} - ${exp.endDate || 'Present'}</div>
+                <div class="duration">${exp.duration}</div>
             </div>
             ${exp.description ? `<div class="description">${exp.description}</div>` : ''}
         </div>
@@ -214,7 +214,7 @@ export class ClassicTemplate implements CVTemplate {
             <div class="item-header">
                 <div class="degree">${edu.degree}</div>
                 <div class="institution">${edu.institution}</div>
-                <div class="duration">${edu.year}</div>
+                <div class="duration">${edu.graduationDate}</div>
             </div>
         </div>
     `).join('');

@@ -4,8 +4,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, Wand2, Clock } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
+import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../types/cv';
 import { PIIWarning } from '../components/PIIWarning';
 import { PodcastPlayer } from '../components/PodcastPlayer';
@@ -69,6 +70,8 @@ export const ResultsPage = () => {
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [asyncMode, setAsyncMode] = useState(CVServiceCore.isAsyncCVGenerationEnabled());
   const featureAvailability = useFeatureAvailability(job);
   
   // Track component mount state to prevent state updates after unmount
@@ -161,55 +164,83 @@ export const ResultsPage = () => {
     }
 
     try {
-      setIsGenerating(true);
-      isGeneratingRef.current = true;
-      
       // Enhanced Debug: Check what features are selected
       const selectedFeatureKeys = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]);
       const selectedFeatureCount = selectedFeatureKeys.length;
       
-      console.log('🔍 [PHASE 3 FEATURE DEBUG] Full selectedFeatures state:', selectedFeatures);
-      console.log('🔍 [PHASE 3 FEATURE DEBUG] Keys that are true:', selectedFeatureKeys);
-      console.log('🔍 [PHASE 3 FEATURE DEBUG] Total selected count:', selectedFeatureCount);
-      console.log('🔍 [PHASE 3 FEATURE DEBUG] Template:', selectedTemplate);
+      console.log('🔍 [FEATURE DEBUG] Full selectedFeatures state:', selectedFeatures);
+      console.log('🔍 [FEATURE DEBUG] Keys that are true:', selectedFeatureKeys);
+      console.log('🔍 [FEATURE DEBUG] Total selected count:', selectedFeatureCount);
+      console.log('🔍 [FEATURE DEBUG] Template:', selectedTemplate);
+      console.log('🔍 [FEATURE DEBUG] Async mode:', asyncMode);
       
-      // Store generation config in session storage for debugging
+      // Store generation config in session storage for FinalResultsPage
       const generationConfig = {
         jobId: job.id,
         templateId: selectedTemplate,
         features: selectedFeatureKeys,
         featureCount: selectedFeatureCount,
+        asyncMode,
         timestamp: new Date().toISOString()
       };
       
       try {
         sessionStorage.setItem(`generation-config-${job.id}`, JSON.stringify(generationConfig));
-        console.log('💾 [PHASE 3 SESSION] Stored generation config:', generationConfig);
+        console.log('💾 [SESSION] Stored generation config:', generationConfig);
       } catch (e) {
         console.warn('Failed to store generation config in session storage:', e);
       }
       
-      console.log('🚀 [PHASE 3 API CALL] Calling generateCV with:', generationConfig);
-      
-      // CRITICAL FIX: Navigate IMMEDIATELY to show real-time progress
-      // Don't wait for generateCV to complete
-      console.log('🚀 [NAVIGATION FIX] Navigating immediately to FinalResultsPage for real-time progress');
-      navigate(`/final-results/${jobId}`);
-      
-      // Start CV generation in background (FinalResultsPage will handle the progress)
-      generateCV(
-        job.id, 
-        selectedTemplate, 
-        selectedFeatureKeys
-      ).then((result) => {
-        console.log('✅ [BACKGROUND] CV generation completed:', result);
-        toast.success('CV generated successfully!');
-      }).catch((error) => {
-        console.error('❌ [BACKGROUND] CV generation error:', error);
-        // Error will be handled by FinalResultsPage
-      });
+      if (asyncMode) {
+        // Async mode: initiate CV generation and navigate immediately
+        console.log('🚀 [ASYNC MODE] Initiating CV generation with real-time progress');
+        setIsInitializing(true);
+        isGeneratingRef.current = true;
+        
+        const initResponse = await CVServiceCore.initiateCVGeneration({
+          jobId: job.id,
+          templateId: selectedTemplate,
+          features: selectedFeatureKeys
+        });
+        
+        // Update config with initialization response
+        generationConfig.initResponse = initResponse;
+        try {
+          sessionStorage.setItem(`generation-config-${job.id}`, JSON.stringify(generationConfig));
+          console.log('💾 [ASYNC] Updated config with init response:', generationConfig);
+        } catch (e) {
+          console.warn('Failed to update generation config:', e);
+        }
+        
+        toast.success('CV generation initiated! Redirecting to progress...');
+        
+        // Navigate immediately to show real-time progress
+        navigate(`/final-results/${jobId}`);
+        
+      } else {
+        // Sync mode: start generation and navigate immediately for existing progress tracking
+        console.log('🚀 [SYNC MODE] Starting CV generation with immediate navigation');
+        setIsGenerating(true);
+        isGeneratingRef.current = true;
+        
+        // Navigate immediately to show real-time progress (existing behavior)
+        navigate(`/final-results/${jobId}`);
+        
+        // Start CV generation in background (FinalResultsPage will handle the progress)
+        generateCV(
+          job.id, 
+          selectedTemplate, 
+          selectedFeatureKeys
+        ).then((result) => {
+          console.log('✅ [BACKGROUND] CV generation completed:', result);
+          toast.success('CV generated successfully!');
+        }).catch((error) => {
+          console.error('❌ [BACKGROUND] CV generation error:', error);
+          // Error will be handled by FinalResultsPage
+        });
+      }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error starting CV generation:', error);
       
       // Enhanced check if component is still mounted before showing error
@@ -225,6 +256,7 @@ export const ResultsPage = () => {
     } finally {
       // Always reset loading state, regardless of mount status
       // This prevents the button from staying in loading state
+      setIsInitializing(false);
       setIsGenerating(false);
       isGeneratingRef.current = false;
     }
@@ -323,10 +355,15 @@ export const ResultsPage = () => {
                 console.log('🔧 [MOUNT DEBUG] Button click - isMountedRef.current:', isMountedRef.current);
                 handleGenerateCV();
               }}
-              disabled={isGenerating}
+              disabled={isGenerating || isInitializing}
               className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg"
             >
-              {isGenerating ? (
+              {isInitializing ? (
+                <>
+                  <Clock className="w-5 h-5 animate-pulse" />
+                  Initializing CV Generation...
+                </>
+              ) : isGenerating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Generating Your Enhanced CV...
@@ -335,9 +372,19 @@ export const ResultsPage = () => {
                 <>
                   <Wand2 className="w-5 h-5" />
                   Generate CV with {Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length} Features
+                  {asyncMode && ' (Fast Track)'}
                 </>
               )}
             </button>
+            
+            {/* Mode Indicator */}
+            {asyncMode && (
+              <div className="text-center mt-3">
+                <p className="text-sm text-gray-400">
+                  ⚡ Fast Track Mode: Real-time progress tracking enabled
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Preview */}

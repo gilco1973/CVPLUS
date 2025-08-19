@@ -5,7 +5,10 @@ import {
   where,
   orderBy,
   limit as firestoreLimit,
-  getDocs
+  getDocs,
+  DocumentData,
+  Query,
+  CollectionReference
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import SessionManager from './sessionManager';
@@ -61,7 +64,7 @@ export class SessionService {
 
     try {
       const collectionRef = collection(db, 'users', auth.currentUser.uid, 'sessions');
-      let q: any = collectionRef;
+      let q: Query<DocumentData> = collectionRef as Query<DocumentData>;
       
       // Apply filters
       if (criteria.status?.length) {
@@ -93,13 +96,15 @@ export class SessionService {
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => {
-        const data = doc.data() as any;
+        const data = doc.data();
+        // Type assertion with proper object type check
+        const sessionData = (data && typeof data === 'object') ? data as Record<string, any> : {};
         return {
-          ...data,
+          ...sessionData,
           sessionId: doc.id,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          lastActiveAt: data.lastActiveAt?.toDate() || new Date(),
-          lastSyncAt: data.lastSyncAt?.toDate()
+          createdAt: sessionData.createdAt?.toDate() || new Date(),
+          lastActiveAt: sessionData.lastActiveAt?.toDate() || new Date(),
+          lastSyncAt: sessionData.lastSyncAt?.toDate()
         };
       }) as SessionState[];
     } catch (error) {

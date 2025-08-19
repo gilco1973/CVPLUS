@@ -82,11 +82,11 @@ export class PreviewService {
       }
 
       this.updateState({ isLoading: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error initializing preview:', error);
       this.updateState({ 
         isLoading: false, 
-        error: error.message || 'Failed to initialize preview' 
+        error: (error as Error)?.message || 'Failed to initialize preview' 
       });
     }
   }
@@ -111,7 +111,7 @@ export class PreviewService {
       });
 
       console.log('✅ Base HTML loaded for preview');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error loading base HTML:', error);
       throw new Error('Failed to load base CV content');
     }

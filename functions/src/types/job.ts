@@ -78,7 +78,7 @@ export interface ParsedCV {
     institution: string;
     degree: string;
     field: string;
-    year: string;
+    graduationDate: string;
     startDate?: string; // For compatibility with formatters
     endDate?: string; // For compatibility with formatters
     gpa?: string;

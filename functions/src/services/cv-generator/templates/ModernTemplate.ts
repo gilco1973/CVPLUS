@@ -207,7 +207,7 @@ export class ModernTemplate implements CVTemplate {
                     <div class="position">${exp.position}</div>
                     <div class="company">${exp.company}</div>
                 </div>
-                <div class="duration">${exp.startDate} - ${exp.endDate || 'Present'}</div>
+                <div class="duration">${exp.duration}</div>
             </div>
             ${exp.description ? `<p style="color: #555; line-height: 1.6; margin-top: 8px;">${exp.description}</p>` : ''}
         </div>
@@ -231,7 +231,7 @@ export class ModernTemplate implements CVTemplate {
                     <div class="degree">${edu.degree}</div>
                     <div class="institution">${edu.institution}</div>
                 </div>
-                <div class="duration">${edu.year}</div>
+                <div class="duration">${edu.graduationDate}</div>
             </div>
         </div>
     `).join('');

@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { certificationBadgesService } from '../services/certification-badges.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generateCertificationBadges = onCall(
   {
@@ -62,7 +62,7 @@ export const generateCertificationBadges = onCall(
 
       // Generate HTML fragment for progressive enhancement
       const certifications = jobData.parsedData.certifications || [];
-      const htmlFragment = HTMLFragmentGeneratorService.generateCertificationBadgesHTML(certifications);
+      const htmlFragment = htmlFragmentGenerator.generateCertificationBadgesHTML(certifications);
 
       // Update with final results
       await admin.firestore()

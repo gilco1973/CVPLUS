@@ -6,11 +6,7 @@
  */
 
 import { useState } from 'react';
-import { 
-  Globe, Languages, Award, Plus, 
-  BarChart3, PieChart, Grid3x3, CheckCircle, 
-  AlertCircle, Loader2, TrendingUp, Flag
-} from 'lucide-react';
+import { Globe, Languages, Plus, CheckCircle, Loader2, TrendingUp} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import type { 
@@ -40,7 +36,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
     try {
       await onGenerateVisualization();
       toast.success('Language visualization generated!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate language visualization');
     } finally {
       setIsGenerating(false);
@@ -52,7 +48,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
       await onAddLanguage(language);
       setShowAddForm(false);
       toast.success('Language added successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to add language');
     }
   };

@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { portfolioGalleryService } from '../services/portfolio-gallery.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generatePortfolioGallery = onCall(
   {
@@ -61,7 +61,7 @@ export const generatePortfolioGallery = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generatePortfolioGalleryHTML(gallery);
+      const htmlFragment = htmlFragmentGenerator.generatePortfolioGalleryHTML(gallery);
 
       // Update with final results
       await admin.firestore()

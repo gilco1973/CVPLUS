@@ -54,7 +54,7 @@ export const ChatInterface = ({
         content: "Hello! I'm here to answer questions about this CV. What would you like to know?",
         timestamp: new Date()
       }]);
-    } catch (error) {
+    } catch {
       toast.error('Failed to start chat session');
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ export const ChatInterface = ({
     if (!sessionId) {
       startNewSession();
     }
-  }, []);
+  }, [sessionId, startNewSession]);
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
@@ -97,7 +97,7 @@ export const ChatInterface = ({
       if (suggestedQuestions.length > 0) {
         setSuggestedQuestions([]);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message');
       // Remove the user message if sending failed
       setMessages(prev => prev.slice(0, -1));
@@ -121,7 +121,7 @@ export const ChatInterface = ({
       await onEndSession(sessionId, rating || undefined);
       toast.success('Thanks for your feedback!');
       setShowFeedback(false);
-    } catch (error) {
+    } catch {
       toast.error('Failed to submit feedback');
     }
   };

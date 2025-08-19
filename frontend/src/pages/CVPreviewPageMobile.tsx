@@ -140,14 +140,14 @@ export const CVPreviewPageMobile = () => {
         .map(([id]) => id);
       const result = await applyImprovements(jobId, recommendations);
       
-      const improvedCV = (result as any)?.data?.improvedCV;
+      const improvedCV = (result as unknown)?.data?.improvedCV;
       if (improvedCV) {
         setAppliedImprovements(improvedCV);
         sessionStorage.setItem(`improvements-${jobId}`, JSON.stringify(improvedCV));
       }
       
       toast.success('CV saved successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving CV:', error);
       toast.error('Failed to save CV');
     } finally {

@@ -18,7 +18,7 @@ export interface LanguageVisualization {
   proficiencies: LanguageProficiency[];
   visualizations: {
     type: 'circular' | 'bar' | 'radar' | 'flags' | 'matrix';
-    data: any;
+    data: unknown;
     config: {
       primaryColor: string;
       accentColor: string;

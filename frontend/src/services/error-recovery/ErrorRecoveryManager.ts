@@ -59,7 +59,7 @@ export class ErrorRecoveryManager {
       jobId?: string;
       sessionId?: string;
       checkpointType?: CheckpointType;
-      checkpointData?: Record<string, any>;
+      checkpointData?: Record<string, unknown>;
     },
     options: ErrorRecoveryOptions = {}
   ): Promise<RecoveryResult<T>> {
@@ -131,7 +131,7 @@ export class ErrorRecoveryManager {
         };
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Classify the error
       const classifiedError = this.errorClassifier.classify(error, {
         operation: context.operationName,
@@ -159,7 +159,7 @@ export class ErrorRecoveryManager {
   public async createCheckpoint(
     jobId: string,
     type: CheckpointType,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     metadata?: {
       description?: string;
       estimatedTimeRemaining?: number;
@@ -183,7 +183,7 @@ export class ErrorRecoveryManager {
   public async restoreFromCheckpoint(jobId: string): Promise<{
     success: boolean;
     checkpoint?: ProcessingCheckpoint;
-    data?: Record<string, any>;
+    data?: Record<string, unknown>;
     message: string;
   }> {
     const restoreResult = await this.checkpointManager.restoreFromLatestCheckpoint(jobId);
@@ -260,7 +260,7 @@ export class ErrorRecoveryManager {
   /**
    * Tracks a user action for context
    */
-  public trackUserAction(type: string, target: string, details?: Record<string, any>): void {
+  public trackUserAction(type: string, target: string, details?: Record<string, unknown>): void {
     this.errorReporting.trackUserAction(type, target, details);
   }
 

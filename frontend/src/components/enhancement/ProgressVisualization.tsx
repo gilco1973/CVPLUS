@@ -41,8 +41,21 @@ export const ProgressVisualization: React.FC<ProgressVisualizationProps> = ({
   compactMode = false
 }) => {
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats | null>(null);
-  const [cssStats, setCssStats] = useState<any>(null);
-  const [errorStats, setErrorStats] = useState<any>(null);
+  const [cssStats, setCssStats] = useState<{
+    totalFeatures: number;
+    totalOriginalSize: number;
+    totalOptimizedSize: number;
+    overallCompressionRatio: number;
+    totalDuplicatesRemoved: number;
+    averageCompressionRatio: number;
+  } | null>(null);
+  const [errorStats, setErrorStats] = useState<{
+    totalErrors: number;
+    errorsByType: Record<string, number>;
+    averageRecoveryTime: number;
+    overallSuccessRate: number;
+    mostCommonErrors: string[];
+  } | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'overview' | 'timeline' | 'analytics'>('overview');
 

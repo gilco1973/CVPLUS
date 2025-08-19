@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../utils/errorHandling';
 
 interface SignInDialogProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
       onSuccess();
     } catch (error: unknown) {
       // Error is already handled by AuthContext, just show the user-friendly message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in. Please try again.';
+      const errorMessage = getErrorMessage(error) || 'Failed to sign in. Please try again.';
       toast.error(errorMessage);
     }
   };
@@ -33,7 +34,7 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
       onSuccess();
     } catch (error: unknown) {
       // Error is already handled by AuthContext, just show the user-friendly message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in anonymously. Please try again.';
+      const errorMessage = getErrorMessage(error) || 'Failed to sign in anonymously. Please try again.';
       toast.error(errorMessage);
     }
   };

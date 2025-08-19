@@ -131,7 +131,7 @@ class NavigationFixTester {
         { input: 123, expected: false, description: 'Number' }
       ];
 
-      const safeForEach = (data: any, callback: (item: any) => void) => {
+      const safeForEach = (data: unknown, callback: (item: unknown) => void) => {
         if (Array.isArray(data)) {
           data.forEach(callback);
           return true;

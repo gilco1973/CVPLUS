@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-  Quote, Star, ChevronLeft, ChevronRight, 
-  Plus, Edit2, Trash2, Filter,
-  User, Building2, Calendar, Award, Loader2,
-  Grid3x3, Play, Pause
-} from 'lucide-react';
+import { Quote, Star, ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Filter, User, Building2, Calendar, Loader2, Grid3x3, Play, Pause, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -116,7 +111,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
     try {
       await onGenerateCarousel();
       toast.success('Testimonials carousel generated!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate testimonials carousel');
     } finally {
       setIsGenerating(false);
@@ -540,7 +535,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                   name: formData.get('name') as string,
                   title: formData.get('title') as string,
                   company: formData.get('company') as string,
-                  relationship: formData.get('relationship') as any,
+                  relationship: formData.get('relationship') as unknown,
                   content: formData.get('content') as string,
                   rating: Number(formData.get('rating'))
                 });

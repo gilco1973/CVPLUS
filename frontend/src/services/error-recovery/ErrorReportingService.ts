@@ -75,14 +75,14 @@ export interface UserAction {
   type: string;
   target: string;
   timestamp: Date;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface RecoveryAttempt {
   type: 'retry' | 'checkpoint_restore' | 'manual_intervention';
   timestamp: Date;
   result: 'success' | 'failure' | 'partial';
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   retryResult?: RetryResult<any>;
 }
 
@@ -168,7 +168,7 @@ export class ErrorReportingService {
       console.log(`Error reported with ID: ${reportId}`);
       return reportId;
 
-    } catch (reportingError: any) {
+    } catch (reportingError: unknown) {
       console.error('Failed to report error:', reportingError);
       
       // Fallback to localStorage only
@@ -239,7 +239,7 @@ export class ErrorReportingService {
   public trackRecoveryAttempt(
     type: RecoveryAttempt['type'],
     result: RecoveryAttempt['result'],
-    details: Record<string, any>,
+    details: Record<string, unknown>,
     retryResult?: RetryResult<any>
   ): RecoveryAttempt {
     const attempt: RecoveryAttempt = {
@@ -298,7 +298,7 @@ export class ErrorReportingService {
   public trackUserAction(
     type: string,
     target: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): void {
     if (!this.isTrackingActions) return;
 
@@ -337,7 +337,8 @@ export class ErrorReportingService {
   }
 
   private getNetworkInfo(): NetworkInfo {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    const nav = navigator as any;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
     
     return {
       effectiveType: connection?.effectiveType,
@@ -349,11 +350,13 @@ export class ErrorReportingService {
 
   private getPerformanceInfo(): PerformanceInfo {
     const loadTime = performance.now();
-    const connection = (navigator as any).connection;
+    const nav = navigator as any;
+    const connection = nav.connection;
+    const perf = performance as any;
     
     return {
       loadTime,
-      memoryUsage: (performance as any).memory?.usedJSHeapSize,
+      memoryUsage: perf.memory?.usedJSHeapSize,
       connectionType: connection?.effectiveType || 'unknown'
     };
   }

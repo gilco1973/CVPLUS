@@ -40,7 +40,7 @@ export const KeywordOptimization: React.FC = () => {
       analyzeATSCompatibility(job.id)
         .then((result) => {
           console.log('KeywordOptimization: ATS analysis raw result:', result);
-          const atsScore = (result as any).result?.atsScore || (result as any).atsScore;
+          const atsScore = (result as unknown).result?.atsScore || (result as unknown).atsScore;
           console.log('KeywordOptimization: Extracted atsScore:', atsScore);
           setAtsScore(atsScore);
         })
@@ -74,7 +74,7 @@ export const KeywordOptimization: React.FC = () => {
         console.log('KeywordOptimization: Re-analyzing with keywords:', missingKeywords);
         const result = await analyzeATSCompatibility(job.id, undefined, missingKeywords);
         console.log('KeywordOptimization: Re-analysis raw result:', result);
-        const atsScore = (result as any).result?.atsScore || (result as any).atsScore;
+        const atsScore = (result as unknown).result?.atsScore || (result as unknown).atsScore;
         console.log('KeywordOptimization: Re-analysis extracted atsScore:', atsScore);
         setAtsScore(atsScore);
       }

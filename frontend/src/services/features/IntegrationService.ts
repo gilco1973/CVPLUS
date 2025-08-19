@@ -45,13 +45,13 @@ export class IntegrationService {
     return result.data;
   }
 
-  static async updatePortfolioItem(jobId: string, itemId: string, updates: any) {
+  static async updatePortfolioItem(jobId: string, itemId: string, updates: unknown) {
     const updateFunction = httpsCallable(functions, 'updatePortfolioItem');
     const result = await updateFunction({ jobId, itemId, updates });
     return result.data;
   }
 
-  static async addPortfolioItem(jobId: string, item: any) {
+  static async addPortfolioItem(jobId: string, item: unknown) {
     const addFunction = httpsCallable(functions, 'addPortfolioItem');
     const result = await addFunction({ jobId, item });
     return result.data;
@@ -95,13 +95,13 @@ export class IntegrationService {
   }
 
   // QR Code Management
-  static async generateQRCode(jobId: string, config: any) {
+  static async generateQRCode(jobId: string, config: unknown) {
     const generateFunction = httpsCallable(functions, 'generateQRCode');
     const result = await generateFunction({ jobId, config });
     return result.data;
   }
 
-  static async trackQRCodeScan(qrCodeId: string, scanData: any) {
+  static async trackQRCodeScan(qrCodeId: string, scanData: unknown) {
     const trackFunction = httpsCallable(functions, 'trackQRCodeScan');
     const result = await trackFunction({ qrCodeId, scanData });
     return result.data;
@@ -113,7 +113,7 @@ export class IntegrationService {
     return result.data;
   }
 
-  static async updateQRCode(jobId: string, qrCodeId: string, updates: any) {
+  static async updateQRCode(jobId: string, qrCodeId: string, updates: unknown) {
     const updateFunction = httpsCallable(functions, 'updateQRCode');
     const result = await updateFunction({ jobId, qrCodeId, updates });
     return result.data;
@@ -144,13 +144,13 @@ export class IntegrationService {
     return result.data;
   }
 
-  static async addSocialProfile(jobId: string, profile: any) {
+  static async addSocialProfile(jobId: string, profile: unknown) {
     const addFunction = httpsCallable(functions, 'addSocialProfile');
     const result = await addFunction({ jobId, profile });
     return result.data;
   }
 
-  static async updateSocialProfile(jobId: string, profileId: string, updates: any) {
+  static async updateSocialProfile(jobId: string, profileId: string, updates: unknown) {
     const updateFunction = httpsCallable(functions, 'updateSocialProfile');
     const result = await updateFunction({ jobId, profileId, updates });
     return result.data;
@@ -162,7 +162,7 @@ export class IntegrationService {
     return result.data;
   }
 
-  static async trackSocialClick(jobId: string, platform: string, metadata?: any) {
+  static async trackSocialClick(jobId: string, platform: string, metadata?: unknown) {
     const trackFunction = httpsCallable(functions, 'trackSocialClick');
     const result = await trackFunction({ jobId, platform, metadata });
     return result.data;
@@ -174,7 +174,7 @@ export class IntegrationService {
     return result.data;
   }
 
-  static async updateSocialDisplaySettings(jobId: string, displaySettings: any) {
+  static async updateSocialDisplaySettings(jobId: string, displaySettings: unknown) {
     const updateFunction = httpsCallable(functions, 'updateSocialDisplaySettings');
     const result = await updateFunction({ jobId, displaySettings });
     return result.data;

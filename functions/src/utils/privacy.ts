@@ -50,7 +50,7 @@ export function maskPII(cv: ParsedCV, settings: PrivacySettings): ParsedCV {
     if (masked.education) {
       masked.education = masked.education.map((edu: any) => ({
         ...edu,
-        year: maskYear(edu.year)
+        graduationDate: maskYear(edu.graduationDate)
       }));
     }
   }

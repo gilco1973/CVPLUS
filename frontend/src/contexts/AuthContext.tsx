@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { isFirebaseError, getErrorMessage, logError } from '../utils/errorHandling';
 
 // Helper function to convert Firebase auth error codes to user-friendly messages
 const getFriendlyAuthErrorMessage = (errorCode: string): string => {
@@ -32,6 +33,8 @@ const getFriendlyAuthErrorMessage = (errorCode: string): string => {
       return 'Sign-in was cancelled.';
     case 'auth/popup-blocked':
       return 'Pop-up was blocked. Please allow pop-ups and try again.';
+    case 'auth/unknown-error':
+      return 'An unknown authentication error occurred. Please try again.';
     default:
       return 'An error occurred during authentication. Please try again.';
   }
@@ -72,13 +75,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         setError(null);
       }
-    }, (authError: any) => {
+    }, (authError: unknown) => {
       // Handle auth state change errors gracefully
-      console.warn('Auth state change error (this is normal on first load):', authError);
+      logError('onAuthStateChanged', authError);
       setLoading(false);
       
       // Only set user-friendly errors for actual problems
-      if (authError?.code && authError.code !== 'auth/user-not-found') {
+      if (isFirebaseError(authError) && authError.code !== 'auth/user-not-found') {
         const friendlyMessage = getFriendlyAuthErrorMessage(authError.code);
         setError(friendlyMessage);
       }
@@ -95,9 +98,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       clearError();
       await firebaseSignInAnonymously(auth);
-    } catch (error: any) {
-      console.error('Error signing in anonymously:', error);
-      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+    } catch (error: unknown) {
+      logError('signInAnonymously', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
       setError(friendlyMessage);
       throw new Error(friendlyMessage);
     }
@@ -108,9 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearError();
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+    } catch (error: unknown) {
+      logError('signInWithGoogle', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
       setError(friendlyMessage);
       throw new Error(friendlyMessage);
     }
@@ -120,9 +125,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       clearError();
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      console.error('Error signing in:', error);
-      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+    } catch (error: unknown) {
+      logError('signIn', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
       setError(friendlyMessage);
       throw new Error(friendlyMessage);
     }
@@ -132,9 +138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       clearError();
       await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      console.error('Error signing up:', error);
-      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+    } catch (error: unknown) {
+      logError('signUp', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
       setError(friendlyMessage);
       throw new Error(friendlyMessage);
     }
@@ -144,9 +151,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       clearError();
       await firebaseSignOut(auth);
-    } catch (error: any) {
-      console.error('Error signing out:', error);
-      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+    } catch (error: unknown) {
+      logError('signOut', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
       setError(friendlyMessage);
       throw new Error(friendlyMessage);
     }

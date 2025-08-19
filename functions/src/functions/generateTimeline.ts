@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { timelineGenerationService } from '../services/timeline-generation.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generateTimeline = onCall(
   {
@@ -70,7 +70,7 @@ export const generateTimeline = onCall(
 
       // Generate HTML fragment for progressive enhancement
       const experience = jobData.parsedData.experience || [];
-      const htmlFragment = HTMLFragmentGeneratorService.generateTimelineHTML(experience);
+      const htmlFragment = htmlFragmentGenerator.generateTimelineHTML(experience);
 
       // Update with final results
       await admin.firestore()

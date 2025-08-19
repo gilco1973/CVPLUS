@@ -37,7 +37,7 @@ import { IntegrationService } from './features/IntegrationService';
 import { ProfileService } from './features/ProfileService';
 
 // Legacy podcast function
-export const generatePodcast = (jobId: string, config: any) => 
+export const generatePodcast = (jobId: string, config: unknown) => 
   MediaService.generateEnhancedPodcast(jobId, config.style || 'professional');
 
 // Media functions

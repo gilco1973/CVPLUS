@@ -118,7 +118,7 @@ export function extractSectionText(data: CVParsedData, sectionKey: string): stri
           edu.field || '',
           edu.year || '',
           edu.gpa || '',
-          (edu.honors || []).join(', '),
+          Array.isArray(edu.honors) ? edu.honors.join(', ') : (edu.honors || ''),
           edu.description || ''
         ].filter(Boolean).join('\n')
       ).join('\n\n');

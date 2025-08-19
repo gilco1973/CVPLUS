@@ -317,7 +317,7 @@ export class HeuristicPredictor {
             description: 'Developed applications'
           }],
           skills: ['JavaScript', 'React'],
-          education: [{ institution: 'University', degree: 'Bachelor', field: 'Computer Science', year: '2020' }]
+          education: [{ institution: 'University', degree: 'Bachelor', field: 'Computer Science', graduationDate: '2020' }]
         },
         jobDescription: 'Software Engineer position requiring React experience'
       };

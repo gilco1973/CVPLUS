@@ -27,7 +27,7 @@ export const HomePage = () => {
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: any } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: unknown } | null>(null);
   const [userInstructions, setUserInstructions] = useState<string>('');
 
   // Session management state
@@ -97,7 +97,7 @@ export const HomePage = () => {
           await signInAnonymous();
           // Wait a bit for the auth state to update
           await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (authError: any) {
+        } catch (authError: unknown) {
           // If anonymous sign-in fails, show sign-in dialog
           setIsLoading(false);
           setPendingAction({ type: 'file', data: { file, quickCreate } });
@@ -117,7 +117,7 @@ export const HomePage = () => {
       // Navigate to processing page with quick create flag
       console.log('Created session:', sessionId);
       navigate(`/process/${jobId}${quickCreate ? '?quickCreate=true' : ''}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading file:', error);
       toast.error(error.message || 'Failed to upload CV. Please try again.');
       
@@ -164,7 +164,7 @@ export const HomePage = () => {
       // Navigate to processing page
       console.log('Created session from URL:', sessionId);
       navigate(`/process/${jobId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing URL:', error);
       toast.error(error.message || 'Failed to process URL. Please try again.');
       
@@ -227,7 +227,7 @@ export const HomePage = () => {
       // Remove from resume list
       await sessionResume.dismissSession(sessionId);
       toast.success('Session deleted');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete session');
     }
   };
@@ -271,7 +271,7 @@ export const HomePage = () => {
                     try {
                       await signInWithGoogle();
                       toast.success('Signed in successfully!');
-                    } catch (error) {
+                    } catch {
                       toast.error('Failed to sign in');
                     }
                   }}

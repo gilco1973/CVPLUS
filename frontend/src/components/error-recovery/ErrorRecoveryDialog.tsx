@@ -30,7 +30,7 @@ interface ErrorRecoveryDialogProps {
   onRetry: () => Promise<void>;
   onRestoreCheckpoint?: () => Promise<void>;
   onReportError?: (error: ClassifiedError) => void;
-  retryResult?: RetryResult<any>;
+  retryResult?: RetryResult<unknown>;
   isRetrying?: boolean;
   showCheckpointInfo?: boolean;
 }

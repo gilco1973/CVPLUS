@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Download, FileText, RefreshCw, Clock, RotateCcw } from 'lucide-react';
 import { getPodcastStatus, generateEnhancedPodcast, regeneratePodcast } from '../services/cvService';
 import toast from 'react-hot-toast';
@@ -23,33 +23,7 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   const [generating, setGenerating] = useState(false);
   const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    checkPodcastStatus();
-    return () => {
-      if (checkInterval) {
-        clearInterval(checkInterval);
-      }
-    };
-  }, [jobId, checkInterval, checkPodcastStatus]);
-
-  const checkPodcastStatus = async () => {
-    try {
-      const response = await getPodcastStatus(jobId);
-      setPodcastStatus(response as PodcastStatus);
-      setLoading(false);
-
-      // If generating, start polling
-      if ((response as PodcastStatus).status === 'generating') {
-        startPolling();
-      }
-    } catch (error) {
-      console.error('Error checking podcast status:', error);
-      setPodcastStatus({ status: 'not-started' });
-      setLoading(false);
-    }
-  };
-
-  const startPolling = () => {
+  const startPolling = useCallback(() => {
     if (checkInterval) {
       clearInterval(checkInterval);
     }
@@ -70,7 +44,33 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
     }, 5000);
 
     setCheckInterval(interval);
-  };
+  }, [checkInterval, jobId]);
+
+  const checkPodcastStatus = useCallback(async () => {
+    try {
+      const response = await getPodcastStatus(jobId);
+      setPodcastStatus(response as PodcastStatus);
+      setLoading(false);
+
+      // If generating, start polling
+      if ((response as PodcastStatus).status === 'generating') {
+        startPolling();
+      }
+    } catch (error) {
+      console.error('Error checking podcast status:', error);
+      setPodcastStatus({ status: 'not-started' });
+      setLoading(false);
+    }
+  }, [jobId, startPolling]);
+
+  useEffect(() => {
+    checkPodcastStatus();
+    return () => {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+    };
+  }, [jobId]);
 
   const handleGeneratePodcast = async () => {
     setGenerating(true);

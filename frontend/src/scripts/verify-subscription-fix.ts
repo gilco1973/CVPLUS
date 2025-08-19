@@ -48,11 +48,11 @@ function demonstrateSubscriptionFix() {
 
   // Simulate multiple components subscribing to the same job
   const callbacks = [
-    (job: any) => console.log('  📱 ProcessingPage updated:', job?.status),
-    (job: any) => console.log('  📊 AnalysisPage updated:', job?.status),
-    (job: any) => console.log('  📄 PreviewPage updated:', job?.status),
-    (job: any) => console.log('  🔗 useJob hook updated:', job?.status),
-    (job: any) => console.log('  🎯 Additional component updated:', job?.status)
+    (job: unknown) => console.log('  📱 ProcessingPage updated:', job?.status),
+    (job: unknown) => console.log('  📊 AnalysisPage updated:', job?.status),
+    (job: unknown) => console.log('  📄 PreviewPage updated:', job?.status),
+    (job: unknown) => console.log('  🔗 useJob hook updated:', job?.status),
+    (job: unknown) => console.log('  🎯 Additional component updated:', job?.status)
   ];
 
   const unsubscribeFunctions = callbacks.map((callback, index) => {

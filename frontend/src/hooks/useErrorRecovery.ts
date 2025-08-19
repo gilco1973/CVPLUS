@@ -34,7 +34,7 @@ export interface ErrorRecoveryActions {
   ) => Promise<T>;
   createCheckpoint: (
     type: CheckpointType,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     description?: string
   ) => Promise<void>;
   restoreFromCheckpoint: () => Promise<boolean>;
@@ -48,7 +48,7 @@ export interface ErrorRecoveryActions {
     }
   ) => Promise<string>;
   clearError: () => void;
-  trackAction: (type: string, target: string, details?: Record<string, any>) => void;
+  trackAction: (type: string, target: string, details?: Record<string, unknown>) => void;
   loadCheckpoints: () => Promise<void>;
 }
 
@@ -160,7 +160,7 @@ export function useErrorRecovery(
         throw result.error?.originalError || new Error('Operation failed');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (mountedRef.current) {
         const classifiedError = recoveryManager.current.classifyError(error, {
           operation: operationName,
@@ -184,7 +184,7 @@ export function useErrorRecovery(
    */
   const createCheckpoint = useCallback(async (
     type: CheckpointType,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     description?: string
   ) => {
     if (!jobId) throw new Error('Job ID is required for checkpoint creation');
@@ -270,7 +270,7 @@ export function useErrorRecovery(
   const trackAction = useCallback((
     type: string, 
     target: string, 
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) => {
     if (trackActions) {
       recoveryManager.current.trackUserAction(type, target, {
@@ -341,7 +341,7 @@ export function useSimpleErrorRecovery() {
         throw result.error?.originalError || new Error('Operation failed');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const classifiedError = recoveryManager.current.classifyError(error, {
         operation: operationName
       });

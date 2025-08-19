@@ -9,7 +9,7 @@ interface TestResult {
   testName: string;
   passed: boolean;
   error?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export class NavigationAndDuplicateFixTester {

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { FeaturePreviewData } from '../../types/cv-preview';
 
-export const useFeaturePreviews = (previewData: any) => {
+export const useFeaturePreviews = (previewData: unknown) => {
   const getMockFeatureData = useCallback((featureId: string): FeaturePreviewData => {
     switch (featureId) {
       case 'language-proficiency':
@@ -33,7 +33,7 @@ export const useFeaturePreviews = (previewData: any) => {
         
       case 'achievements-showcase':
         // Use real achievements from experience data
-        const realAchievements = previewData?.experience?.flatMap((exp: any) => 
+        const realAchievements = previewData?.experience?.flatMap((exp: unknown) => 
           exp.achievements?.map((achievement: string) => ({
             title: achievement,
             category: 'Professional',
@@ -70,7 +70,7 @@ export const useFeaturePreviews = (previewData: any) => {
             </h3>
             <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
               <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-                ${mockData.languages?.map((lang: any) => `
+                ${mockData.languages?.map((lang: unknown) => `
                   <span style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);">${lang.name}</span>
                 `).join('')}
               </div>
@@ -90,7 +90,7 @@ export const useFeaturePreviews = (previewData: any) => {
             </h3>
             <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
               <div class="certification-grid">
-                ${mockData.certifications?.map((cert: any) => `
+                ${mockData.certifications?.map((cert: unknown) => `
                   <div class="certification-badge">
                     <div class="badge-icon">${cert.verified ? '✅' : '📋'}</div>
                     <div class="badge-content">
@@ -137,7 +137,7 @@ export const useFeaturePreviews = (previewData: any) => {
             </h3>
             <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
               <div class="achievements-grid">
-                ${mockData.keyAchievements?.map((achievement: any) => `
+                ${mockData.keyAchievements?.map((achievement: unknown) => `
                   <div class="achievement-card">
                     <div class="achievement-icon">🎯</div>
                     <div class="achievement-content">

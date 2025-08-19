@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { CVGenerator } from '../services/cvGenerator';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 // Import real feature services - NO MORE MOCK CODE
 import { AdvancedATSOptimizationService } from '../services/ats-optimization.service';
@@ -305,6 +306,23 @@ async function updateJobWithProcessingSummary(jobId: string, results: any): Prom
     }
 
     await admin.firestore().collection('jobs').doc(jobId).update(updateData);
+    
+    // If processing is complete (all features processed), inject completed features into CV
+    if (results.total > 0 && (results.successful + results.failed) === results.total) {
+      console.log(`🔧 All features processed (${results.successful} successful, ${results.failed} failed), injecting completed features into CV`);
+      
+      // Get user ID from job document for feature injection
+      const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+      const jobData = jobDoc.data();
+      const userId = jobData?.userId;
+      
+      if (userId) {
+        await injectCompletedFeaturesIntoCV(jobId, userId);
+      } else {
+        console.error('Cannot inject features: userId not found in job document');
+      }
+    }
+    
   } catch (updateError) {
     console.error('Failed to update processing summary:', updateError);
   }
@@ -365,7 +383,6 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
     switch (functionName) {
       case 'generateSkillsVisualization':
         const { skillsVisualizationService } = await import('../services/skills-visualization.service');
-        const { HTMLFragmentGeneratorService } = await import('../services/html-fragment-generator.service');
         
         // Get job data
         const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
@@ -377,7 +394,7 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           jobData?.parsedData,
           ['radar', 'bar']
         );
-        const htmlFragment = HTMLFragmentGeneratorService.generateSkillsVisualizationHTML(visualization);
+        const htmlFragment = htmlFragmentGenerator.generateSkillsVisualizationHTML(visualization);
         
         // Update job with results - filter out undefined values to prevent Firestore errors
         const skillsData = sanitizeForFirestore({
@@ -410,7 +427,7 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           userId,
           { style: 'professional', duration: 'medium', focus: 'balanced' }
         );
-        const podcastHtmlFragment = HTMLFragmentGeneratorService.generatePodcastHTML(podcastResult);
+        const podcastHtmlFragment = htmlFragmentGenerator.generatePodcastHTML(podcastResult);
         
         // Update job with results
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -439,7 +456,7 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           langJobData?.parsedData,
           jobId
         );
-        const langHtmlFragment = HTMLFragmentGeneratorService.generateLanguageProficiencyHTML(langVisualization);
+        const langHtmlFragment = htmlFragmentGenerator.generateLanguageProficiencyHTML(langVisualization);
         
         // Update job with results
         await admin.firestore().collection('jobs').doc(jobId).update({
@@ -690,4 +707,160 @@ function sanitizeForFirestore(obj: any): any {
   }
   
   return obj;
+}
+
+/**
+ * Inject completed features into the CV HTML by calling the injection logic directly
+ */
+async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Promise<void> {
+  try {
+    console.log(`🔧 Injecting completed features into CV for job: ${jobId}`);
+    
+    // Get job data
+    const jobDoc = await admin.firestore()
+      .collection('jobs')
+      .doc(jobId)
+      .get();
+    
+    if (!jobDoc.exists) {
+      console.warn('Job not found for feature injection');
+      return;
+    }
+
+    const jobData = jobDoc.data();
+    
+    // Check if there's a generated CV and completed features
+    if (!jobData?.generatedCV?.html) {
+      console.log('No generated CV found to inject features into');
+      return;
+    }
+
+    // Get completed features with HTML fragments
+    const completedFeatures = getCompletedFeaturesWithFragments(jobData);
+    
+    if (completedFeatures.length === 0) {
+      console.log('No completed features with HTML fragments found');
+      return;
+    }
+
+    // Inject feature HTML fragments into the CV
+    const updatedHTML = injectFeatureFragments(
+      jobData.generatedCV.html,
+      completedFeatures
+    );
+
+    // Save updated HTML to storage and update job
+    const generator = new CVGenerator();
+    const { htmlUrl } = await generator.saveGeneratedFiles(
+      jobId,
+      userId,
+      updatedHTML
+    );
+
+    // Update job with new HTML and injection status
+    await admin.firestore()
+      .collection('jobs')
+      .doc(jobId)
+      .update({
+        'generatedCV.html': updatedHTML,
+        'generatedCV.htmlUrl': htmlUrl,
+        'featureInjectionStatus': 'completed',
+        'lastFeatureInjection': FieldValue.serverTimestamp(),
+        'injectedFeatures': completedFeatures.map(f => f.featureName),
+        updatedAt: FieldValue.serverTimestamp()
+      });
+
+    console.log(`✅ Successfully injected ${completedFeatures.length} features into CV`);
+    
+  } catch (error) {
+    console.error(`❌ Error injecting completed features for job ${jobId}:`, error);
+    // Don't throw - let the main process continue even if feature injection fails
+  }
+}
+
+/**
+ * Get completed features that have HTML fragments ready for injection
+ */
+function getCompletedFeaturesWithFragments(jobData: any): Array<{
+  featureName: string;
+  htmlFragment: string;
+  featureType: string;
+}> {
+  const completedFeatures: Array<{
+    featureName: string;
+    htmlFragment: string;
+    featureType: string;
+  }> = [];
+
+  if (!jobData.enhancedFeatures) {
+    console.log('No enhanced features found in job data');
+    return completedFeatures;
+  }
+
+  for (const [featureName, featureData] of Object.entries(jobData.enhancedFeatures)) {
+    const feature = featureData as any;
+    
+    if (feature.status === 'completed' && feature.htmlFragment) {
+      console.log(`Found completed feature with HTML fragment: ${featureName}`);
+      completedFeatures.push({
+        featureName,
+        htmlFragment: feature.htmlFragment,
+        featureType: featureName
+      });
+    } else {
+      console.log(`Skipping feature ${featureName}: status=${feature.status}, hasFragment=${!!feature.htmlFragment}`);
+    }
+  }
+
+  console.log(`Found ${completedFeatures.length} completed features with HTML fragments`);
+  return completedFeatures;
+}
+
+/**
+ * Inject feature HTML fragments into the CV HTML at appropriate locations
+ */
+function injectFeatureFragments(
+  originalHTML: string,
+  features: Array<{ featureName: string; htmlFragment: string; featureType: string }>
+): string {
+  let updatedHTML = originalHTML;
+  
+  console.log('Starting feature injection into CV HTML');
+  
+  for (const feature of features) {
+    console.log(`Injecting feature: ${feature.featureName}`);
+    
+    try {
+      // Inject the feature HTML fragment at the end of the interactive features section
+      // Look for the interactive features section in the template
+      const interactiveFeaturesPattern = /<\/section>\s*<div class="download-section"/;
+      
+      if (interactiveFeaturesPattern.test(updatedHTML)) {
+        // Inject before the download section
+        updatedHTML = updatedHTML.replace(
+          interactiveFeaturesPattern,
+          `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n        <div class="download-section"`
+        );
+        console.log(`Successfully injected ${feature.featureName} before download section`);
+      } else {
+        // Fallback: inject before the closing container div
+        const containerEndPattern = /<\/div>\s*<\/body>/;
+        if (containerEndPattern.test(updatedHTML)) {
+          updatedHTML = updatedHTML.replace(
+            containerEndPattern,
+            `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n    </div>\n</body>`
+          );
+          console.log(`Successfully injected ${feature.featureName} before container end`);
+        } else {
+          console.warn(`Could not find injection point for ${feature.featureName}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error injecting feature ${feature.featureName}:`, error);
+      // Continue with other features even if one fails
+    }
+  }
+  
+  console.log('Completed feature injection into CV HTML');
+  return updatedHTML;
 }

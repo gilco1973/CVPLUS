@@ -31,7 +31,7 @@ export interface ParsedCV {
     institution: string;
     degree: string;
     field: string;
-    year: string;
+    graduationDate: string;
     gpa?: string;
     honors?: string[];
   }>;

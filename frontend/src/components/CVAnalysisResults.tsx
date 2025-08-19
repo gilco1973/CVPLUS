@@ -7,6 +7,7 @@ import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
 import { robustNavigation } from '../utils/robustNavigation';
 import type { PrioritizedRecommendation } from '../types/ats';
+import { getErrorMessage, logError } from '../utils/errorHandling';
 
 interface RecommendationItem {
   id: string;
@@ -298,8 +299,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         }
       });
       
-      if (backendRecs && Array.isArray(backendRecs) && backendRecs.length > 0) {
-        const validBackendRecs: PrioritizedRecommendation[] = backendRecs;
+      if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
+        const validBackendRecs: PrioritizedRecommendation[] = backendRecs as PrioritizedRecommendation[];
         console.log(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
         console.log('First 3 recommendations:', validBackendRecs.slice(0, 3));
         const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: unknown) => {
@@ -387,8 +388,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         setRecommendations([]);
       }
       
-    } catch (error) {
-      console.error(`[CVAnalysisResults] Error loading recommendations for job ${job.id}:`, error);
+    } catch (error: unknown) {
+      logError(`loadRecommendations-${job.id}`, error);
       toast.error('Failed to load recommendations. Please try again.');
       
       // Check if component is still mounted before setting state
@@ -413,7 +414,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         setIsLoading(false);
       }
     }
-  }, [job.id, loadedJobId, isLoading]);
+  }, [job.id, job.status, job.userId, loadedJobId, isLoading]);
 
   // Load recommendations when job changes - Enhanced StrictMode-aware duplicate prevention
   useEffect(() => {
@@ -632,8 +633,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       }, 200);
       
     } catch (error: unknown) {
-      console.error('💥 [DEBUG] Magic transform error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to apply magic transformation. Please try manual selection.');
+      logError('magicTransform', error);
+      toast.error(getErrorMessage(error) || 'Failed to apply magic transformation. Please try manual selection.');
       setIsMagicTransforming(false);
     }
   };
@@ -1027,8 +1028,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                       
                       toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
                     } catch (error: unknown) {
-                      console.error('❌ [DEBUG] Apply improvements error:', error);
-                      toast.error(error instanceof Error ? error.message : 'Failed to apply some improvements. Continuing to preview...');
+                      logError('applyImprovements', error);
+                      toast.error(getErrorMessage(error) || 'Failed to apply some improvements. Continuing to preview...');
                       // Continue anyway - don't let this stop navigation
                     }
                   } else {
@@ -1144,7 +1145,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   // Navigation feedback handled in strategies above
                   
                 } catch (error: unknown) {
-                  console.error('💥 [DEBUG] Unexpected error:', error);
+                  logError('navigateToPreview', error);
                   toast.error('Unexpected error occurred. Navigating to preview anyway...');
                   
                   // Emergency navigation using utility

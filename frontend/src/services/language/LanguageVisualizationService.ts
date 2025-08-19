@@ -9,7 +9,7 @@ import { LanguageAnalysisService } from './LanguageAnalysisService';
 
 export interface VisualizationData {
   type: VisualizationType;
-  data: any;
+  data: unknown;
   config: {
     primaryColor: string;
     accentColor: string;

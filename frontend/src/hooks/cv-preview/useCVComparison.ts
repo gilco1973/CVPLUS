@@ -23,8 +23,8 @@ export interface CVComparisonActions {
  * Hook for managing CV before/after comparison functionality
  */
 export function useCVComparison(
-  originalData: any,
-  improvedData: any | null
+  originalData: unknown,
+  improvedData: unknown | null
 ): {
   state: CVComparisonState;
   actions: CVComparisonActions;
@@ -99,7 +99,7 @@ export function useCVComparison(
 /**
  * Helper hook to check if comparison is available
  */
-export function useHasComparison(originalData: any, improvedData: any): boolean {
+export function useHasComparison(originalData: unknown, improvedData: unknown): boolean {
   return useMemo(() => {
     return !!(originalData && improvedData && originalData !== improvedData);
   }, [originalData, improvedData]);

@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { uploadCV, createJob } from '../services/cvService';
 import { FileText, Globe, Sparkles, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getErrorMessage, logError } from '../utils/errorHandling';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export const HomePage = () => {
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: any } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: unknown } | null>(null);
   const [userInstructions, setUserInstructions] = useState<string>('');
 
   const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
@@ -32,7 +33,7 @@ export const HomePage = () => {
           await signInAnonymous();
           // Wait a bit for the auth state to update
           await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (authError: any) {
+        } catch (authError: unknown) {
           // If anonymous sign-in fails, show user-friendly error and sign-in dialog
           setIsLoading(false);
           setPendingAction({ type: 'file', data: { file, quickCreate } });
@@ -48,9 +49,9 @@ export const HomePage = () => {
       
       // Navigate to processing page with quick create flag
       navigate(`/process/${jobId}${quickCreate ? '?quickCreate=true' : ''}`);
-    } catch (error: any) {
-      console.error('Error uploading file:', error);
-      toast.error(error.message || 'Failed to upload CV. Please try again.');
+    } catch (error: unknown) {
+      logError('uploadFile', error);
+      toast.error(getErrorMessage(error) || 'Failed to upload CV. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +74,9 @@ export const HomePage = () => {
       
       // Navigate to processing page
       navigate(`/process/${jobId}`);
-    } catch (error: any) {
-      console.error('Error processing URL:', error);
-      toast.error(error.message || 'Failed to process URL. Please try again.');
+    } catch (error: unknown) {
+      logError('processURL', error);
+      toast.error(getErrorMessage(error) || 'Failed to process URL. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +129,7 @@ export const HomePage = () => {
                     try {
                       await signInWithGoogle();
                       toast.success('Signed in successfully!');
-                    } catch (error) {
+                    } catch {
                       toast.error('Failed to sign in');
                     }
                   }}

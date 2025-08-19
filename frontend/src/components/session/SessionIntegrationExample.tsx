@@ -23,7 +23,7 @@ export const ProcessingPageWithSession: React.FC = () => {
     // ... other form fields
   };
 
-  const handleSessionUpdate = (changes: any) => {
+  const handleSessionUpdate = (changes: unknown) => {
     console.log('Session updated:', changes);
     // Handle session updates if needed
   };

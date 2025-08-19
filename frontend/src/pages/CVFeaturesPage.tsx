@@ -1,27 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { 
-  Brain, 
-  Sparkles, 
-  Shield, 
-  QrCode, 
-  Clock, 
-  BarChart3, 
-  Video, 
-  FolderOpen,
-  MessageSquare,
-  Share2,
-  Calendar,
-  Globe,
-  Award,
-  Trophy,
-  Target,
-  Zap,
-  FileSearch,
-  Mic,
-  ChevronRight,
-  Home,
-  Users
-} from 'lucide-react';
+import { Brain, Sparkles, Shield, QrCode, Clock, BarChart3, Video, FolderOpen, MessageSquare, Share2, Calendar, Globe, Trophy, Target, Zap, FileSearch, Mic, ChevronRight, Home, Users, Award } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { UserMenu } from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
@@ -350,7 +328,7 @@ export const CVFeaturesPage = () => {
                     try {
                       await signInWithGoogle();
                       toast.success('Signed in successfully!');
-                    } catch (error) {
+                    } catch {
                       toast.error('Failed to sign in');
                     }
                   }}

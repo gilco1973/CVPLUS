@@ -292,7 +292,7 @@ export const ProcessingPageEnhanced = () => {
   const createCheckpointSafely = async (
     jobId: string,
     type: CheckpointType,
-    data: Record<string, any>
+    data: Record<string, unknown>
   ) => {
     try {
       await recoveryManager.createCheckpoint(jobId, type, data);

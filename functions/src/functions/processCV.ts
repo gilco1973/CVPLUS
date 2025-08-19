@@ -10,7 +10,7 @@ export const processCV = onCall(
     timeoutSeconds: 300,
     memory: '2GiB',
     ...corsOptions,
-    // secrets: ['ANTHROPIC_API_KEY'] // Temporarily disabled
+    secrets: ['ANTHROPIC_API_KEY']
   },
   async (request) => {
     console.log('ProcessCV function called');

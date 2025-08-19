@@ -162,7 +162,7 @@ export const CVAnalysisPage = () => {
       // Show user feedback
       toast.loading('Preparing CV preview...', { duration: 2000 });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('💥 [PARENT] Critical error in handleContinueToPreview:', error);
       toast.error('Navigation error. Attempting recovery...');
       
@@ -171,7 +171,7 @@ export const CVAnalysisPage = () => {
         try {
           console.log('🚑 [PARENT] Emergency recovery navigation');
           window.location.href = `/preview/${jobId}`;
-        } catch (recoveryError: any) {
+        } catch (recoveryError: unknown) {
           console.error('💥 [PARENT] Recovery navigation failed:', recoveryError);
           toast.error('Complete navigation failure. Please refresh the page and try again.');
         }

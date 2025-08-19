@@ -39,7 +39,7 @@ export interface ProcessingCheckpoint {
   jobId: string;
   userId: string;
   type: CheckpointType;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   metadata: {
     step: string;
     progress: number;
@@ -56,7 +56,7 @@ export interface ProcessingCheckpoint {
 export interface CheckpointRestoreResult {
   success: boolean;
   checkpoint: ProcessingCheckpoint | null;
-  restoredData: Record<string, any> | null;
+  restoredData: Record<string, unknown> | null;
   message: string;
 }
 
@@ -80,7 +80,7 @@ export class CheckpointManager {
   public async createCheckpoint(
     jobId: string,
     type: CheckpointType,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     metadata: Partial<ProcessingCheckpoint['metadata']>
   ): Promise<ProcessingCheckpoint> {
     const user = auth.currentUser;
@@ -388,8 +388,17 @@ export class CheckpointManager {
   private convertFirestoreDoc(doc: any): ProcessingCheckpoint {
     const data = doc.data();
     return {
-      ...data,
       id: doc.id,
+      jobId: data.jobId || '',
+      userId: data.userId || '',
+      type: data.type || 'processing',
+      data: data.data || {},
+      metadata: data.metadata || {
+        step: '',
+        progress: 0,
+        description: '',
+        canResumeFrom: false
+      },
       createdAt: data.createdAt?.toDate() || new Date(),
       expiresAt: data.expiresAt?.toDate() || new Date(),
       restoredAt: data.restoredAt?.toDate()
@@ -435,7 +444,7 @@ export class CheckpointManager {
       if (!data) return [];
       
       const parsed = JSON.parse(data);
-      return parsed.map((cp: any) => this.deserializeCheckpoint(cp));
+      return parsed.map((cp: unknown) => this.deserializeCheckpoint(cp));
     } catch (error) {
       console.error('Error getting checkpoints from localStorage:', error);
       return [];
@@ -506,7 +515,7 @@ export class CheckpointManager {
     return new Date() > checkpoint.expiresAt;
   }
 
-  private sanitizeData(data: Record<string, any>): Record<string, any> {
+  private sanitizeData(data: Record<string, unknown>): Record<string, unknown> {
     // Remove sensitive data and large objects
     const sanitized = { ...data };
     
@@ -520,7 +529,7 @@ export class CheckpointManager {
     return sanitized;
   }
 
-  private serializeCheckpoint(checkpoint: ProcessingCheckpoint): any {
+  private serializeCheckpoint(checkpoint: ProcessingCheckpoint): unknown {
     return {
       ...checkpoint,
       createdAt: checkpoint.createdAt.toISOString(),
@@ -529,12 +538,20 @@ export class CheckpointManager {
     };
   }
 
-  private deserializeCheckpoint(data: any): ProcessingCheckpoint {
+  private deserializeCheckpoint(data: unknown): ProcessingCheckpoint {
+    // Type guard to ensure data is an object before spreading
+    const checkpointData = (data && typeof data === 'object') ? data as Record<string, any> : {};
     return {
-      ...data,
-      createdAt: new Date(data.createdAt),
-      expiresAt: new Date(data.expiresAt),
-      restoredAt: data.restoredAt ? new Date(data.restoredAt) : undefined
-    };
+      id: checkpointData.id || '',
+      jobId: checkpointData.jobId || '',
+      userId: checkpointData.userId || '',
+      type: checkpointData.type || 'processing',
+      data: checkpointData.data || {},
+      metadata: checkpointData.metadata || {},
+      ...checkpointData,
+      createdAt: new Date(checkpointData.createdAt),
+      expiresAt: new Date(checkpointData.expiresAt),
+      restoredAt: checkpointData.restoredAt ? new Date(checkpointData.restoredAt) : undefined
+    } as ProcessingCheckpoint;
   }
 }

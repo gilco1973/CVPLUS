@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { languageProficiencyService } from '../services/language-proficiency.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 
 export const generateLanguageVisualization = onCall(
   {
@@ -61,7 +61,7 @@ export const generateLanguageVisualization = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generateLanguageProficiencyHTML(visualization);
+      const htmlFragment = htmlFragmentGenerator.generateLanguageProficiencyHTML(visualization);
 
       // Update with final results
       await admin.firestore()

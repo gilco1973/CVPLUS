@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, X, Edit3, Eye, EyeOff, Info } from 'lucide-react';
 import type { PlaceholderMatch } from '../../utils/placeholderDetection';
 import { 
@@ -42,6 +42,13 @@ export const PlaceholderBanner: React.FC<PlaceholderBannerProps> = ({
     }
   }, [cvData]);
 
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false);
+    if (onDismiss) {
+      onDismiss();
+    }
+  }, [onDismiss]);
+
   // Auto-hide functionality
   useEffect(() => {
     if (autoHideAfter && placeholderMatches.length > 0) {
@@ -52,13 +59,6 @@ export const PlaceholderBanner: React.FC<PlaceholderBannerProps> = ({
       return () => clearTimeout(timer);
     }
   }, [autoHideAfter, placeholderMatches.length, handleDismiss]);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    if (onDismiss) {
-      onDismiss();
-    }
-  };
 
   const handleToggleExpanded = () => {
     setIsExpanded(!isExpanded);

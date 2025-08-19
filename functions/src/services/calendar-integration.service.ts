@@ -108,8 +108,8 @@ export class CalendarIntegrationService {
     // Add education milestones
     if (parsedCV.education) {
       for (const edu of parsedCV.education) {
-        if (edu.year) {
-          const gradDate = this.parseDate(edu.year);
+        if (edu.graduationDate) {
+          const gradDate = this.parseDate(edu.graduationDate);
           
           // Graduation anniversary
           events.push({

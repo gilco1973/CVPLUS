@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, AlertCircle, TrendingUp, BarChart3, Target, Users, Gauge, ChevronDown, ChevronRight, Award, Zap } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, TrendingUp, BarChart3, Target, Users, Gauge, ChevronDown, ChevronRight, Zap, Award } from 'lucide-react';
 import { useState } from 'react';
 import type {
   EnhancedATSResult,
@@ -104,7 +104,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
       ...prev,
-      [section]: !(prev as any)[section]
+      [section]: !(prev as Record<string, boolean>)[section]
     }));
   };
   const getScoreColor = (score: number) => {
@@ -190,7 +190,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
           
           {expandedSections.breakdown && (
             <div className="p-6 pt-0 space-y-4">
-              {Object.entries(enhancedResult.advancedScore.breakdown).map(([key, value]) => {
+              {Object.entries(enhancedResult.advancedScore?.breakdown || {}).map(([key, value]) => {
                 const weight = key === 'parsing' ? '40%' : key === 'keywords' ? '25%' : key === 'formatting' ? '20%' : key === 'content' ? '10%' : '5%';
                 return (
                   <div key={key} className="space-y-2">
@@ -236,7 +236,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
           {expandedSections.systems && (
             <div className="p-6 pt-0">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {Object.entries(enhancedResult.advancedScore.atsSystemScores).map(([system, score]) => (
+                {Object.entries(enhancedResult.advancedScore?.atsSystemScores || []).map(([system, score]) => (
                   <div key={system} className="bg-gray-700/50 rounded-lg p-3 text-center">
                     <div className="text-xs text-gray-400 mb-1">
                       {getSystemDisplayName(system as ATSSystemType)}
@@ -279,22 +279,22 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
                 <div>
                   <div className="text-xs text-gray-400">Industry Average</div>
                   <div className="text-xl font-bold text-gray-300">
-                    {enhancedResult.advancedScore.competitorBenchmark.industryAverage}%
+                    {enhancedResult.advancedScore?.competitorBenchmark?.industryAverage || enhancedResult.advancedScore?.competitorBenchmark?.averageIndustry || 0}%
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400">Top 10%</div>
                   <div className="text-xl font-bold text-green-400">
-                    {enhancedResult.advancedScore.competitorBenchmark.topPercentile}%
+                    {enhancedResult.advancedScore?.competitorBenchmark?.topPercentile || enhancedResult.advancedScore?.competitorBenchmark?.percentileRank || 0}%
                   </div>
                 </div>
               </div>
               
-              {enhancedResult.advancedScore.competitorBenchmark.gapAnalysis.missingKeywords.length > 0 && (
+              {(enhancedResult.advancedScore?.competitorBenchmark?.gapAnalysis?.length || 0) > 0 && (
                 <div className="bg-red-900/20 rounded-lg p-3">
                   <h5 className="text-sm font-medium text-red-400 mb-2">Missing Competitive Keywords</h5>
                   <div className="flex flex-wrap gap-2">
-                    {enhancedResult.advancedScore.competitorBenchmark.gapAnalysis.missingKeywords.slice(0, 8).map((keyword, index) => (
+                    {(enhancedResult.advancedScore?.competitorBenchmark?.gapAnalysis || []).slice(0, 8).map((keyword: any, index: any) => (
                       <span key={index} className="text-xs px-2 py-1 bg-red-500/20 text-red-300 rounded">
                         {keyword}
                       </span>
@@ -564,7 +564,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
               </span>
             </button>
             <p className="text-xs text-gray-400">
-              Potential improvement: +{enhancedResult.advancedScore.recommendations.reduce((sum, rec) => sum + rec.estimatedScoreImprovement, 0)} points
+              Potential improvement: +{enhancedResult.advancedScore.recommendations.reduce((sum: number, rec: any) => sum + (typeof rec === 'object' ? rec.estimatedScoreImprovement : 5), 0)} points
             </p>
           </div>
         ) : (

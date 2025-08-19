@@ -103,7 +103,7 @@ export const detectPlaceholdersInCV = (cvData: unknown): PlaceholderMatch[] => {
   if (!cvData || typeof cvData !== 'object') return [];
   
   const allMatches: PlaceholderMatch[] = [];
-  const cvObject = cvData as Record<string, any>;
+  const cvObject = cvData as Record<string, unknown>;
   
   // Check different sections of the CV
   const sections = [

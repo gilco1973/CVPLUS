@@ -41,7 +41,7 @@ export const AboutPage = () => {
                     try {
                       await signInWithGoogle();
                       toast.success('Signed in successfully!');
-                    } catch (error) {
+                    } catch {
                       toast.error('Failed to sign in');
                     }
                   }}

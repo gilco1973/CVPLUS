@@ -33,7 +33,7 @@ export interface Job {
   mimeType?: string;
   isUrl?: boolean;
   userInstructions?: string;
-  parsedData?: any;
+  parsedData?: unknown;
   generatedCV?: {
     html: string;
     htmlUrl?: string;
@@ -47,7 +47,7 @@ export interface Job {
     detectedTypes: string[];
     recommendations: string[];
   };
-  privacyVersion?: any;
+  privacyVersion?: unknown;
   quickCreate?: boolean;
   settings?: {
     applyAllEnhancements: boolean;
@@ -57,8 +57,8 @@ export interface Job {
     useRecommendedTemplate: boolean;
   };
   error?: string;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: unknown;
+  updatedAt: unknown;
 }
 
 export class CVServiceEnhanced {
@@ -167,7 +167,7 @@ export class CVServiceEnhanced {
   /**
    * Processes CV with comprehensive error recovery
    */
-  public async processCV(jobId: string, fileUrl: string, mimeType: string, isUrl: boolean = false): Promise<any> {
+  public async processCV(jobId: string, fileUrl: string, mimeType: string, isUrl: boolean = false): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const processCVFunction = httpsCallable(functions, 'processCV');
@@ -211,7 +211,7 @@ export class CVServiceEnhanced {
     targetRole?: string, 
     industryKeywords?: string[], 
     forceRegenerate?: boolean
-  ): Promise<any> {
+  ): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const user = auth.currentUser;
@@ -229,11 +229,14 @@ export class CVServiceEnhanced {
             forceRegenerate
           });
           return result.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.warn('Callable function failed, trying direct HTTP call:', error);
           
           // Fallback to direct HTTP call
-          const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/getRecommendationsV2`, {
+          const baseUrl = import.meta.env.DEV 
+            ? 'http://localhost:5001/getmycv-ai/us-central1'
+            : 'https://us-central1-getmycv-ai.cloudfunctions.net';
+          const response = await fetch(`${baseUrl}/getRecommendationsV2`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -285,7 +288,7 @@ export class CVServiceEnhanced {
     selectedRecommendationIds: string[], 
     targetRole?: string, 
     industryKeywords?: string[]
-  ): Promise<any> {
+  ): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const user = auth.currentUser;
@@ -303,11 +306,14 @@ export class CVServiceEnhanced {
             industryKeywords
           });
           return result.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.warn('Callable function failed, trying direct HTTP call:', error);
           
           // Fallback to direct HTTP call
-          const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/applyImprovementsV2`, {
+          const baseUrl = import.meta.env.DEV 
+            ? 'http://localhost:5001/getmycv-ai/us-central1'
+            : 'https://us-central1-getmycv-ai.cloudfunctions.net';
+          const response = await fetch(`${baseUrl}/applyImprovementsV2`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -355,7 +361,7 @@ export class CVServiceEnhanced {
    * Generates CV with error recovery
    */
   // @withRetry({ maxRetries: 2 }, 'generate_cv') // Disabled for TypeScript compatibility
-  public async generateCV(jobId: string, templateId: string, features: string[]): Promise<any> {
+  public async generateCV(jobId: string, templateId: string, features: string[]): Promise<unknown> {
     // Create checkpoint before generation
     await this.recoveryManager.createCheckpoint(
       jobId,
@@ -385,7 +391,7 @@ export class CVServiceEnhanced {
   /**
    * Enhanced media generation with recovery
    */
-  public async generateEnhancedPodcast(jobId: string, style?: 'professional' | 'conversational' | 'storytelling'): Promise<any> {
+  public async generateEnhancedPodcast(jobId: string, style?: 'professional' | 'conversational' | 'storytelling'): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const podcastFunction = httpsCallable(functions, 'generatePodcast');
@@ -425,7 +431,7 @@ export class CVServiceEnhanced {
     jobId: string, 
     duration?: 'short' | 'medium' | 'long', 
     style?: string
-  ): Promise<any> {
+  ): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const videoIntroFunction = httpsCallable(functions, 'generateVideoIntroduction');
@@ -487,7 +493,7 @@ export class CVServiceEnhanced {
 
   // Get templates (cached data, low-risk)
   // @withRetry({ maxRetries: 3 }, 'get_templates') // Disabled for TypeScript compatibility
-  public async getTemplates(category?: string): Promise<any> {
+  public async getTemplates(category?: string): Promise<unknown> {
     const getTemplatesFunction = httpsCallable(functions, 'getTemplates');
     const result = await getTemplatesFunction({ category, includePublic: true });
     return result.data;
@@ -507,7 +513,7 @@ export class CVServiceEnhanced {
     });
   }
 
-  public trackUserAction(type: string, target: string, details?: Record<string, any>): void {
+  public trackUserAction(type: string, target: string, details?: Record<string, unknown>): void {
     this.recoveryManager.trackUserAction(type, target, details);
   }
 }

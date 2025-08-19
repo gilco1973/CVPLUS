@@ -92,28 +92,12 @@ export interface ATSSystemSimulation {
   optimizationTips: string[];
 }
 
-// Enhanced ATS result maintaining backward compatibility
-export interface EnhancedATSResult {
-  // Legacy fields for backward compatibility
-  score: number; // Maps to AdvancedATSScore.overall
-  overall: number; // Alias for score
-  passes: boolean;
-  issues: ATSIssue[];
-  suggestions: ATSSuggestion[];
-  recommendations: string[]; // List of recommendation strings
-  keywords: {
-    found: string[];
-    missing: string[];
-    recommended: string[];
-  };
-  
-  // New advanced fields
-  advancedScore: AdvancedATSScore;
-  semanticAnalysis: SemanticKeywordAnalysis;
-  systemSimulations: ATSSystemSimulation[];
-  confidence?: number;
-  optimizedContent?: any;
-}
+// Enhanced ATS result - consolidated in service-types.ts
+// Import from service-types to maintain compatibility
+import type { EnhancedATSResult as ServiceEnhancedATSResult } from './service-types';
+
+// Type alias for backward compatibility
+export type EnhancedATSResult = ServiceEnhancedATSResult;
 
 // Legacy issue format
 export interface ATSIssue {

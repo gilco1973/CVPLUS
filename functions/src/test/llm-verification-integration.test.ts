@@ -72,7 +72,7 @@ const GIL_KLAINERT_CV_DATA = {
       institution: "University of California, Berkeley",
       degree: "Bachelor of Science",
       field: "Computer Science",
-      year: "2018",
+      graduationDate: "2018",
       startDate: "2014-09-01",
       endDate: "2018-05-31",
       gpa: "3.7",

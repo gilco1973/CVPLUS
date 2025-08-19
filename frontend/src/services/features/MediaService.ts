@@ -31,12 +31,14 @@ export class MediaService {
   /**
    * Regenerate video introduction with custom options
    */
-  static async regenerateVideoIntroduction(jobId: string, customScript?: string, options?: any) {
+  static async regenerateVideoIntroduction(jobId: string, customScript?: string, options?: unknown) {
     const regenerateVideoFunction = httpsCallable(functions, 'regenerateVideoIntroduction');
+    // Safe spreading with type guard for options
+    const safeOptions = (options && typeof options === 'object') ? options as Record<string, any> : {};
     const result = await regenerateVideoFunction({
       jobId,
       customScript,
-      ...options
+      ...safeOptions
     });
     return result.data;
   }

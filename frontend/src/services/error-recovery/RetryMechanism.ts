@@ -123,7 +123,7 @@ export class RetryMechanism {
         // Success - record attempt and reset circuit breaker
         const attempt: RetryAttempt = {
           attemptNumber,
-          error: null as any,
+          error: {} as ClassifiedError,
           delay: 0,
           timestamp: new Date(),
           success: true,
@@ -141,7 +141,7 @@ export class RetryMechanism {
           recoveredFromCheckpoint
         };
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         const classifiedError = this.errorClassifier.classify(error, {
           operation: operationContext.operationName,
           retryCount: attemptNumber - 1,
@@ -252,12 +252,10 @@ export class RetryMechanism {
         // Longer delays for rate limits
         delay = Math.max(delay, 30000); // At least 30 seconds
         break;
-        
       case ErrorType.NETWORK:
         // Shorter delays for network errors
         delay = Math.min(delay, 10000); // Max 10 seconds
         break;
-        
       case ErrorType.TIMEOUT:
         // Progressive delays for timeouts
         delay = Math.min(delay * 1.5, config.maxDelay);
@@ -289,11 +287,11 @@ export class RetryMechanism {
         success: false,
         message: 'No suitable checkpoint found'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error during checkpoint restore:', error);
       return {
         success: false,
-        message: `Checkpoint restore failed: ${error.message}`
+        message: `Checkpoint restore failed: ${(error as any)?.message || 'Unknown error'}`
       };
     }
   }
@@ -362,7 +360,11 @@ export class RetryMechanism {
     lastFailureTime?: Date;
     circuitState: string;
   }> {
-    const stats: Record<string, any> = {};
+    const stats: Record<string, {
+      failures: number;
+      lastFailureTime?: Date;
+      circuitState: string;
+    }> = {};
     
     this.circuitBreakers.forEach((state, operationName) => {
       stats[operationName] = {
@@ -399,7 +401,7 @@ export function withRetry<T extends any[], R>(
   operationName?: string
 ) {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
@@ -408,7 +410,7 @@ export function withRetry<T extends any[], R>(
 
     descriptor.value = async function (...args: T): Promise<R> {
       const context = {
-        operationName: operationName || `${target.constructor.name}.${propertyKey}`,
+        operationName: operationName || `${(target as any).constructor.name}.${propertyKey}`,
         // Extract context from arguments if available
         jobId: args.find((arg: any) => arg?.jobId)?.jobId,
         sessionId: args.find((arg: any) => arg?.sessionId)?.sessionId

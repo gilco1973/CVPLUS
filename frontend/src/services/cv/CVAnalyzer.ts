@@ -10,7 +10,7 @@ import type { CVAnalysisParams } from '../../types/cv';
 
 // Module-level request tracking for immediate blocking
 const activeRequests = new Set<string>();
-const cachedPromises = new Map<string, Promise<any>>();
+const cachedPromises = new Map<string, Promise<unknown>>();
 const requestCounts = new Map<string, number>();
 
 // Cleanup cache after 5 minutes to prevent memory leaks
@@ -195,11 +195,14 @@ export class CVAnalyzer {
       });
       console.log(`[CVAnalyzer] Callable function succeeded for job: ${jobId}`);
       return result.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn(`[CVAnalyzer] Callable function failed for job: ${jobId}, trying direct HTTP call:`, error);
       
-      // Fallback to direct HTTP call to V2 function
-      const response = await fetch(`https://us-central1-getmycv-ai.cloudfunctions.net/getRecommendationsV2`, {
+      // Fallback to direct HTTP call to V2 function  
+      const baseUrl = import.meta.env.DEV 
+        ? 'http://localhost:5001/getmycv-ai/us-central1'
+        : 'https://us-central1-getmycv-ai.cloudfunctions.net';
+      const response = await fetch(`${baseUrl}/getRecommendationsV2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

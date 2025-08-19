@@ -297,7 +297,7 @@ export class CreativeTemplate implements CVTemplate {
                     <div class="position-title">${exp.position}</div>
                     <div class="company-name">${exp.company}</div>
                 </div>
-                <div class="duration-badge">${exp.startDate} - ${exp.endDate || 'Present'}</div>
+                <div class="duration-badge">${exp.duration}</div>
             </div>
             ${exp.description ? `<div style="color: #555; line-height: 1.7; margin-top: 10px;">${exp.description}</div>` : ''}
         </div>
@@ -321,7 +321,7 @@ export class CreativeTemplate implements CVTemplate {
                     <div class="degree-title">${edu.degree}</div>
                     <div class="institution-name">${edu.institution}</div>
                 </div>
-                <div class="duration-badge">${edu.year}</div>
+                <div class="duration-badge">${edu.graduationDate}</div>
             </div>
         </div>
     `).join('');

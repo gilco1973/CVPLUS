@@ -1,6 +1,7 @@
 import { onCall } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { CVTransformationService, CVRecommendation } from '../services/cv-transformation.service';
+import { PlaceholderManager, PlaceholderReplacementMap } from '../services/placeholder-manager.service';
 import { ParsedCV } from '../types/job';
 import { corsOptions } from '../config/cors';
 
@@ -353,8 +354,33 @@ async function executeRecommendationGeneration(
   const now = new Date().toISOString();
   const processingTime = startTime ? Date.now() - startTime : 0;
   
+  // Sanitize recommendations for Firestore (remove non-serializable objects like RegExp)
+  const sanitizedRecommendations = recommendations.map((rec: any) => {
+    const sanitizedRec = { ...rec };
+    
+    if (rec.placeholders) {
+      sanitizedRec.placeholders = rec.placeholders.map((placeholder: any) => {
+        const sanitizedPlaceholder = { ...placeholder };
+        
+        // Remove validation RegExp or convert to string, but don't set undefined
+        if (placeholder.validation) {
+          if (placeholder.validation instanceof RegExp) {
+            sanitizedPlaceholder.validation = placeholder.validation.toString();
+          }
+        } else {
+          // Remove undefined validation field entirely
+          delete sanitizedPlaceholder.validation;
+        }
+        
+        return sanitizedPlaceholder;
+      });
+    }
+    
+    return sanitizedRec;
+  });
+  
   await db.collection('jobs').doc(jobId).update({
-    cvRecommendations: recommendations,
+    cvRecommendations: sanitizedRecommendations,
     lastRecommendationGeneration: now,
     status: 'analyzed',
     processingTime: processingTime,
@@ -538,6 +564,93 @@ export const previewImprovement = onCall(
     } catch (error: any) {
       console.error('Error previewing improvement:', error);
       throw new Error(`Failed to preview improvement: ${error.message}`);
+    }
+  }
+);
+
+export const customizePlaceholders = onCall(
+  {
+    timeoutSeconds: 60,
+    memory: '512MiB',
+    ...corsOptions,
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('User must be authenticated');
+    }
+
+    const { jobId, recommendationId, placeholderValues } = request.data;
+    
+    if (!jobId || !recommendationId || !placeholderValues) {
+      throw new Error('Job ID, recommendation ID, and placeholder values are required');
+    }
+
+    const db = getFirestore();
+    const userId = request.auth.uid;
+
+    try {
+      // Get the job document
+      const jobDoc = await db.collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) {
+        throw new Error('Job not found');
+      }
+
+      const jobData = jobDoc.data();
+      if (jobData?.userId !== userId) {
+        throw new Error('Unauthorized access to job');
+      }
+
+      const recommendations: CVRecommendation[] = jobData?.cvRecommendations || [];
+      const recIndex = recommendations.findIndex(rec => rec.id === recommendationId);
+      
+      if (recIndex === -1) {
+        throw new Error('Recommendation not found');
+      }
+
+      const recommendation = recommendations[recIndex];
+      
+      if (!recommendation.suggestedContent) {
+        throw new Error('No content to customize');
+      }
+
+      // Replace placeholders with user values
+      const customizedContent = PlaceholderManager.replacePlaceholders(
+        recommendation.suggestedContent,
+        placeholderValues as PlaceholderReplacementMap
+      );
+
+      // Validate that all placeholders have been replaced
+      const validation = PlaceholderManager.validateReplacements(customizedContent);
+      if (!validation.isValid) {
+        throw new Error(`Some placeholders still need values: ${validation.remainingPlaceholders.join(', ')}`);
+      }
+
+      // Update the recommendation
+      recommendations[recIndex] = {
+        ...recommendation,
+        customizedContent,
+        isCustomized: true
+      };
+
+      // Save updated recommendations
+      await db.collection('jobs').doc(jobId).update({
+        cvRecommendations: recommendations,
+        lastUpdate: new Date().toISOString()
+      });
+
+      return {
+        success: true,
+        data: {
+          recommendationId,
+          customizedContent,
+          originalContent: recommendation.suggestedContent,
+          placeholdersReplaced: Object.keys(placeholderValues).length
+        }
+      };
+
+    } catch (error: any) {
+      console.error('Error customizing placeholders:', error);
+      throw new Error(`Failed to customize placeholders: ${error.message}`);
     }
   }
 );

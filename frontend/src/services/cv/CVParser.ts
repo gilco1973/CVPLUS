@@ -16,6 +16,7 @@ import {
 } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { db, storage, functions, auth } from '../../lib/firebase';
+import { isFirebaseError, getErrorMessage, logError } from '../../utils/errorHandling';
 import type { 
   Job, 
   JobCreateParams, 
@@ -37,7 +38,7 @@ export class CVParser {
     for (let i = 0; i <= maxRetries; i++) {
       try {
         return await operation();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn(`Operation attempt ${i + 1} failed:`, error);
         
         if (i === maxRetries) {
@@ -45,11 +46,12 @@ export class CVParser {
         }
         
         // Check if error is retryable
-        const isRetryable = error?.code === 'unavailable' ||
-                           error?.code === 'deadline-exceeded' ||
-                           error?.message?.includes('EMPTY_RESPONSE') ||
-                           error?.message?.includes('CONNECTION_RESET') ||
-                           error?.message?.includes('network');
+        const errorObj = error as any;
+        const isRetryable = errorObj?.code === 'unavailable' ||
+                           errorObj?.code === 'deadline-exceeded' ||
+                           errorObj?.message?.includes('EMPTY_RESPONSE') ||
+                           errorObj?.message?.includes('CONNECTION_RESET') ||
+                           errorObj?.message?.includes('network');
         
         if (!isRetryable) {
           throw error;
@@ -162,16 +164,18 @@ export class CVParser {
         isUrl
       });
       return result.data;
-    } catch (error: any) {
-      console.error('ProcessCV function error:', error);
+    } catch (error: unknown) {
+      logError('processCV', error);
       
       // Provide more helpful error messages
-      if (error.code === 'functions/invalid-argument') {
-        throw new Error('Invalid parameters sent to processCV function. Please check your file and try again.');
-      } else if (error.code === 'functions/unauthenticated') {
-        throw new Error('Authentication failed. Please sign in and try again.');
-      } else if (error.code === 'functions/permission-denied') {
-        throw new Error('Permission denied. Please check your access rights.');
+      if (isFirebaseError(error)) {
+        if (error.code === 'functions/invalid-argument') {
+          throw new Error('Invalid parameters sent to processCV function. Please check your file and try again.');
+        } else if (error.code === 'functions/unauthenticated') {
+          throw new Error('Authentication failed. Please sign in and try again.');
+        } else if (error.code === 'functions/permission-denied') {
+          throw new Error('Permission denied. Please check your access rights.');
+        }
       }
       
       throw error;
@@ -218,44 +222,54 @@ export class CVParser {
         jobId,
         templateId,
         features: kebabCaseFeatures
-      }) as any;
+      }) as unknown;
       
       console.log('✅ Firebase initiateCVGeneration function completed:', {
         hasResult: !!result,
-        hasData: !!result?.data,
+        hasData: !!(result as any)?.data,
         timestamp: new Date().toISOString()
       });
       
-      if (!result || typeof result.data === 'undefined') {
+      const resultObj = result as any;
+      if (!result || typeof resultObj?.data === 'undefined') {
         throw new Error('Invalid response from CV generation service');
       }
       
-      return result.data;
-    } catch (error: any) {
-      console.error('❌ Firebase initiateCVGeneration function failed:', {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        timestamp: new Date().toISOString()
-      });
+      return resultObj.data;
+    } catch (error: unknown) {
+      const errorData = {
+        timestamp: new Date().toISOString(),
+        ...(isFirebaseError(error) && {
+          error: error.message,
+          code: error.code
+        })
+      };
+      
+      logError('initiateCVGeneration', error, errorData);
       
       // Enhanced Firebase error handling
-      if (error?.code === 'functions/unauthenticated') {
-        throw new Error('Authentication required. Please sign in and try again.');
-      } else if (error?.code === 'functions/permission-denied') {
-        throw new Error('You do not have permission to generate CVs. Please check your account.');
-      } else if (error?.code === 'functions/resource-exhausted') {
-        throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
-      } else if (error?.code === 'functions/invalid-argument') {
-        throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
-      } else if (error?.code === 'functions/unavailable') {
-        throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
-      } else if (error?.message?.includes('network')) {
-        throw new Error('Network error occurred. Please check your connection and try again.');
-      } else {
-        // Re-throw with a user-friendly message for unknown errors
-        throw new Error(`Failed to initiate CV generation: ${error.message || 'Unknown error occurred'}`);
+      if (isFirebaseError(error)) {
+        switch (error.code) {
+          case 'functions/unauthenticated':
+            throw new Error('Authentication required. Please sign in and try again.');
+          case 'functions/permission-denied':
+            throw new Error('You do not have permission to generate CVs. Please check your account.');
+          case 'functions/resource-exhausted':
+            throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
+          case 'functions/invalid-argument':
+            throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
+          case 'functions/unavailable':
+            throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
+          default:
+            if (error.message?.includes('network')) {
+              throw new Error('Network error occurred. Please check your connection and try again.');
+            }
+        }
       }
+      
+      // Re-throw with a user-friendly message for unknown errors
+      const errorMessage = getErrorMessage(error);
+      throw new Error(`Failed to initiate CV generation: ${errorMessage}`);
     }
   }
 
@@ -325,60 +339,86 @@ export class CVParser {
           features: kebabCaseFeatures
         }),
         timeoutPromise
-      ]) as any;
+      ]) as unknown;
       
       console.log('✅ Firebase generateCV function (SYNC) completed:', {
         hasResult: !!result,
-        hasData: !!result?.data,
+        hasData: !!(result as any)?.data,
         timestamp: new Date().toISOString()
       });
       
-      if (!result || typeof result.data === 'undefined') {
+      const resultObj = result as any;
+      if (!result || typeof resultObj?.data === 'undefined') {
         throw new Error('Invalid response from CV generation service');
       }
       
-      return result.data;
-    } catch (error: any) {
-      console.error('❌ Firebase generateCV function (SYNC) failed:', {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        timestamp: new Date().toISOString()
-      });
+      return resultObj.data;
+    } catch (error: unknown) {
+      const errorData = {
+        timestamp: new Date().toISOString(),
+        ...(isFirebaseError(error) && {
+          error: error.message,
+          code: error.code
+        })
+      };
+      
+      logError('generateCV', error, errorData);
       
       // Enhanced Firebase error handling
-      if (error?.code === 'functions/timeout') {
-        throw new Error('CV generation is taking longer than expected. Please try again.');
-      } else if (error?.code === 'functions/unavailable') {
-        throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
-      } else if (error?.code === 'functions/unauthenticated') {
-        throw new Error('Authentication required. Please sign in and try again.');
-      } else if (error?.code === 'functions/permission-denied') {
-        throw new Error('You do not have permission to generate CVs. Please check your account.');
-      } else if (error?.code === 'functions/resource-exhausted') {
-        throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
-      } else if (error?.code === 'functions/invalid-argument') {
-        throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
-      } else if (error?.message?.includes('timeout')) {
-        throw new Error('CV generation timed out. Please try again with a smaller feature set.');
-      } else if (error?.message?.includes('network')) {
-        throw new Error('Network error occurred. Please check your connection and try again.');
-      } else {
-        // Re-throw with a user-friendly message for unknown errors
-        throw new Error(`Failed to generate CV: ${error.message || 'Unknown error occurred'}`);
+      if (isFirebaseError(error)) {
+        switch (error.code) {
+          case 'functions/timeout':
+            throw new Error('CV generation is taking longer than expected. Please try again.');
+          case 'functions/unavailable':
+            throw new Error('CV generation service is temporarily unavailable. Please try again in a few moments.');
+          case 'functions/unauthenticated':
+            throw new Error('Authentication required. Please sign in and try again.');
+          case 'functions/permission-denied':
+            throw new Error('You do not have permission to generate CVs. Please check your account.');
+          case 'functions/resource-exhausted':
+            throw new Error('Service is temporarily overloaded. Please try again in a few minutes.');
+          case 'functions/invalid-argument':
+            throw new Error('Invalid parameters for CV generation. Please check your selections and try again.');
+          default:
+            if (error.message?.includes('timeout')) {
+              throw new Error('CV generation timed out. Please try again with a smaller feature set.');
+            } else if (error.message?.includes('network')) {
+              throw new Error('Network error occurred. Please check your connection and try again.');
+            }
+        }
       }
+      
+      // Re-throw with a user-friendly message for unknown errors
+      const errorMessage = getErrorMessage(error);
+      throw new Error(`Failed to generate CV: ${errorMessage}`);
     }
   }
 
   /**
    * Generate podcast (legacy)
    */
-  static async generatePodcast(jobId: string, config: any) {
+  static async generatePodcast(jobId: string, config: unknown) {
     const generatePodcastFunction = httpsCallable(functions, 'generatePodcastLegacy');
     const result = await generatePodcastFunction({
       jobId,
       config
     });
+    return result.data;
+  }
+
+  /**
+   * Skip a feature for a job
+   */
+  static async skipFeature(jobId: string, featureId: string) {
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    console.log('🚫 Calling skipFeature function:', { jobId, featureId });
+
+    const skipFeatureFunction = httpsCallable(functions, 'skipFeature');
+    const result = await skipFeatureFunction({ jobId, featureId });
+
+    console.log('✅ Feature skipped successfully:', result.data);
     return result.data;
   }
 }

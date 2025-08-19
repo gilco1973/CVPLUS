@@ -95,7 +95,7 @@ export class VisualizationService {
   /**
    * Add testimonial
    */
-  static async addTestimonial(jobId: string, testimonial: any) {
+  static async addTestimonial(jobId: string, testimonial: unknown) {
     const addFunction = httpsCallable(functions, 'addTestimonial');
     const result = await addFunction({ jobId, testimonial });
     return result.data;
@@ -104,7 +104,7 @@ export class VisualizationService {
   /**
    * Update testimonial
    */
-  static async updateTestimonial(jobId: string, testimonialId: string, updates: any) {
+  static async updateTestimonial(jobId: string, testimonialId: string, updates: unknown) {
     const updateFunction = httpsCallable(functions, 'updateTestimonial');
     const result = await updateFunction({ jobId, testimonialId, updates });
     return result.data;
@@ -122,7 +122,7 @@ export class VisualizationService {
   /**
    * Update carousel layout
    */
-  static async updateCarouselLayout(jobId: string, layoutOptions: any) {
+  static async updateCarouselLayout(jobId: string, layoutOptions: unknown) {
     const updateFunction = httpsCallable(functions, 'updateCarouselLayout');
     const result = await updateFunction({ jobId, layoutOptions });
     return result.data;

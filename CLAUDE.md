@@ -4,15 +4,23 @@ You are an AI software engineer operating with strict execution standards. Apply
    - Do not fabricate data.
    - Always request real input data sources or clearly flag missing data as a blocking issue.
 
-2. 🧠 **Always use subagents for all tasks.**
+2. 🚨 **CRITICAL PROHIBITION: NEVER DELETE FILES WITHOUT EXPLICIT USER APPROVAL - EVER!**
+   - **ZERO TOLERANCE**: Do not delete, remove, or destroy ANY files without explicit user consent.
+   - **MANDATORY**: Always ask for manual user approval before deleting ANY file or directory.
+   - **NO EXCEPTIONS**: This applies to temporary files, backups, source code, configs, docs, scripts, and ALL file types.
+   - **ENFORCEMENT**: Unauthorized file deletion is considered a critical failure and security violation.
+   - **PROCESS**: Identify → Ask User → Get Explicit Approval → Then Delete (never skip approval step)
+   - **SAFETY**: When in doubt, DO NOT DELETE - ask the user first.
+
+3. 🧠 **Always use subagents for all tasks.**
    - Every task (including planning, execution, testing, debugging, etc.) must be handled by an appropriate subagent.
    - Subagents must have clearly defined scopes and responsibilities.
 
-3. 📋 **Always generate a TodoList before you begin.**
+4. 📋 **Always generate a TodoList before you begin.**
    - Include all high-level and granular subtasks necessary for successful task completion.
    - Revisit and update the list as needed during execution.
 
-4. 📊 **Use model OpusPlan (Opus 4.1) for planning and task breakdown.**
+5. 📊 **Use model OpusPlan (Opus 4.1) for planning and task breakdown.**
    - Invoke OpusPlan to:
      - Generate project plans.
      - Break complex requests into subproblems.
@@ -22,26 +30,26 @@ You are an AI software engineer operating with strict execution standards. Apply
    - Execute the individual tasks and subplans using the Sonnet model.
    - Apply Sonnet for code generation, implementation, and testing.
 
-5. ✅ **Every code solution must include a complete and executable test suite.**
+6. ✅ **Every code solution must include a complete and executable test suite.**
    - Test suites must be:
      - Comprehensive (cover edge cases, expected flow, and error handling).
      - Written in the same language as the codebase (e.g., Python → `pytest`, TypeScript → `jest` or `vitest`).
      - Self-contained and reproducible.
 
-6. 🔁 **If any test fails, fix iteratively with a dedicated subagent.**
-   - Launch a “TestFixer” subagent with a sole purpose:
+7. 🔁 **If any test fails, fix iteratively with a dedicated subagent.**
+   - Launch a "TestFixer" subagent with a sole purpose:
      - To analyze, fix, and validate failing tests.
    - This subagent must run iteratively until all tests pass.
 
-7. 🔁 **If there are TypeScript or Python errors (e.g., type-checking, compile-time errors), resolve them iteratively.**
-   - Use a dedicated “LintFixer” or “TypeFixer” subagent.
+8. 🔁 **If there are TypeScript or Python errors (e.g., type-checking, compile-time errors), resolve them iteratively.**
+   - Use a dedicated "LintFixer" or "TypeFixer" subagent.
    - Iteratively fix and revalidate until the codebase is error-free and all type checks pass.
 
-8. 🔁 **When creating a document, always place in in an appropriate subfolder under /docs**
+9. 🔁 **When creating a document, always place in in an appropriate subfolder under /docs**
    - Before creating a new document, scan the codebase and make sure there are no loose documents not under /docs and that the document you are about to create does not exist already.
    - Every Planning document MUST be accompanied by one or more mermaid diagrams that will be placed under /docs/diagrams/.
  
- 9. 🔁 **When creating a batch script, always place  in an appropriate subfolder under /scripts**
+10. 🔁 **When creating a batch script, always place  in an appropriate subfolder under /scripts**
        - Before creating a new batch script, scan the codebase and make sure there are no loose scripts not under /scripts  and that the script you are about to create does npt exist already.
            
 
@@ -133,3 +141,10 @@ CVPlus is actively being developed with the following key features implemented:
 - Certification badge system
 - Public profile sharing
 - Real-time processing status tracking
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+🚨 **CRITICAL: Never delete ANY files without explicit user approval - this is a security violation**

@@ -184,7 +184,7 @@ export const useJobEnhanced = (
       setError(null);
       const jobData = await getJob(jobId);
       handleJobUpdate(jobData);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to refresh job');
       console.error('Error refreshing job:', err);
     }
@@ -239,7 +239,7 @@ export const useJobEnhanced = (
         // Setup subscription for real-time updates
         setupSubscription();
         
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err.message || 'Failed to load job');
         console.error('Error loading job:', err);
         

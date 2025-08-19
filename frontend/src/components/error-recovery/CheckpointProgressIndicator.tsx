@@ -135,7 +135,6 @@ export const CheckpointProgressIndicator: React.FC<CheckpointProgressIndicatorPr
     if (index >= steps.length - 1) return 'bg-gray-200';
     
     const currentStep = steps[index];
-    const nextStep = steps[index + 1];
     
     if (currentStep.status === 'completed') {
       return 'bg-green-500';

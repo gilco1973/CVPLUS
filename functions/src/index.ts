@@ -172,3 +172,6 @@ export {
 
 // Export enhanced CV analysis function  
 export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
+
+// Export feature management functions
+export { skipFeature } from './functions/skipFeature';

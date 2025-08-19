@@ -90,7 +90,7 @@ interface EnhancedQRCodeProps {
   qrCodes?: QRCodeConfig[];
   templates?: QRCodeTemplate[];
   onGenerateQRCode: (config: Partial<QRCodeConfig>) => Promise<QRCodeConfig>;
-  onGetAnalytics: (qrCodeId?: string) => Promise<any>;
+  onGetAnalytics: (qrCodeId?: string) => Promise<unknown>;
 }
 
 export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
@@ -133,7 +133,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
     try {
       const analyticsData = await onGetAnalytics();
       setQRAnalytics(analyticsData);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load analytics');
     }
   };
@@ -144,7 +144,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
       await onGenerateQRCode(config);
       setShowCreateModal(false);
       toast.success('QR code generated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate QR code');
     } finally {
       setIsGenerating(false);
@@ -510,7 +510,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as "templates" | "overview" | "analytics" | "qrcodes")}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
               activeTab === tab.id
                 ? 'bg-cyan-600 text-white'
@@ -555,7 +555,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
                 const formData = new FormData(e.currentTarget);
                 
                 const config = {
-                  type: formData.get('type') as any,
+                  type: formData.get('type') as "profile" | "linkedin" | "portfolio" | "contact" | "custom" | "resume-download",
                   data: formData.get('data') as string,
                   template: selectedTemplate || templates[0],
                   metadata: {

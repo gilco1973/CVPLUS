@@ -42,7 +42,7 @@ describe('ATS Phase 1 Integration Tests', () => {
           degree: 'Bachelor of Science',
           field: 'Computer Science',
           institution: 'University of Technology',
-          year: '2019',
+          graduationDate: '2019',
           gpa: '3.8'
         }
       ]

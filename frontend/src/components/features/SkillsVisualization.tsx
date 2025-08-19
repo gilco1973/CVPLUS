@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Code, Briefcase, Globe, Award, TrendingUp, Users } from 'lucide-react';
+import { Code, Briefcase, Globe, TrendingUp, Users, Award } from 'lucide-react';
 
 interface SkillsVisualizationProps {
   technical: Array<{

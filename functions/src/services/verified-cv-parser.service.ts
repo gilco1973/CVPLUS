@@ -40,7 +40,7 @@ export interface ParsedCV {
     institution: string;
     degree: string;
     field: string;
-    year: string;
+    graduationDate: string;
     gpa?: string;
     honors?: string[];
     startDate?: string;
@@ -380,7 +380,7 @@ REQUIRED OUTPUT FORMAT (JSON only, no additional text):
       "institution": "School Name",
       "degree": "Degree Type",
       "field": "Field of Study",
-      "year": "Graduation Year",
+      "graduationDate": "Graduation Year",
       "gpa": "GPA if mentioned",
       "honors": ["Honors/Awards"],
       "location": "School Location"

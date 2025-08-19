@@ -24,9 +24,9 @@ export const useFeatureAvailability = (job: Job | null): FeatureAvailability => 
     },
     achievementsShowcase: {
       available: !!(data.achievements && Array.isArray(data.achievements) && data.achievements.length > 0) ||
-                !!(data.experience && Array.isArray(data.experience) && data.experience.some((exp: any) => exp.achievements && exp.achievements.length > 0)),
+                !!(data.experience && Array.isArray(data.experience) && data.experience.some((exp: unknown) => exp.achievements && exp.achievements.length > 0)),
       reason: (!data.achievements || !Array.isArray(data.achievements) || data.achievements.length === 0) &&
-              (!data.experience || !Array.isArray(data.experience) || !data.experience.some((exp: any) => exp.achievements && exp.achievements.length > 0))
+              (!data.experience || !Array.isArray(data.experience) || !data.experience.some((exp: unknown) => exp.achievements && exp.achievements.length > 0))
         ? "No achievements found in your CV"
         : null
     },

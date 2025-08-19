@@ -5,7 +5,7 @@ import { hasPlaceholders } from '../../utils/placeholderDetection';
 
 export const useCVPreview = (
   job: Job,
-  appliedImprovements?: any,
+  appliedImprovements?: unknown,
   onUpdate?: (updates: Partial<Job['parsedData']>) => void
 ) => {
   // Initialize base data
@@ -33,7 +33,7 @@ export const useCVPreview = (
 
   // QR Code settings
   const [qrCodeSettings, setQrCodeSettings] = useState<QRCodeSettings>(() => {
-    const savedSettings = (job.parsedData as any)?.qrCodeSettings;
+    const savedSettings = (job.parsedData as unknown)?.qrCodeSettings;
     return savedSettings || {
       url: `https://getmycv-ai.web.app/cv/${job.id}`,
       type: 'profile' as const,
@@ -118,12 +118,19 @@ export const useCVPreview = (
   }, []);
 
   // Section editing
-  const handleSectionEdit = useCallback((section: string, newValue: any) => {
+  const handleSectionEdit = useCallback((section: string, newValue: unknown) => {
     const updatedData = { ...previewData };
     
     switch (section) {
       case 'personalInfo':
-        updatedData.personalInfo = { ...updatedData.personalInfo, ...newValue };
+        // Safe spreading with type checks
+        const currentPersonalInfo = (updatedData.personalInfo && typeof updatedData.personalInfo === 'object') 
+          ? updatedData.personalInfo as Record<string, any> 
+          : {};
+        const newPersonalInfo = (newValue && typeof newValue === 'object') 
+          ? newValue as Record<string, any> 
+          : {};
+        updatedData.personalInfo = { ...currentPersonalInfo, ...newPersonalInfo };
         break;
       case 'summary':
         updatedData.summary = newValue;
@@ -135,7 +142,14 @@ export const useCVPreview = (
         updatedData.education = newValue;
         break;
       case 'skills':
-        updatedData.skills = { ...updatedData.skills, ...newValue };
+        // Safe spreading with type checks for skills data
+        const currentSkills = (updatedData.skills && typeof updatedData.skills === 'object') 
+          ? updatedData.skills as Record<string, any> 
+          : {};
+        const newSkills = (newValue && typeof newValue === 'object') 
+          ? newValue as Record<string, any> 
+          : {};
+        updatedData.skills = { ...currentSkills, ...newSkills };
         break;
     }
     

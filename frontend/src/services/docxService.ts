@@ -96,7 +96,7 @@ export class DOCXService {
           );
         }
 
-        if (exp.achievements && exp.achievements.length > 0) {
+        if (exp.achievements && Array.isArray(exp.achievements) && exp.achievements.length > 0) {
           exp.achievements.forEach((achievement: string) => {
             sections.push(
               new Paragraph({
@@ -127,12 +127,12 @@ export class DOCXService {
           new Paragraph({
             children: [
               new TextRun({
-                text: `${edu.degree}${edu.field ? ` in ${edu.field}` : ''}`,
+                text: `${edu?.degree || 'Degree'}${edu?.field ? ` in ${edu.field}` : ''}`,
                 bold: true,
                 size: 24,
               }),
               new TextRun({
-                text: ` • ${edu.graduationDate}`,
+                text: ` • ${edu?.graduationDate || ''}`,
                 size: 22,
               }),
             ],
@@ -141,7 +141,7 @@ export class DOCXService {
           new Paragraph({
             children: [
               new TextRun({
-                text: edu.institution,
+                text: edu?.institution || 'Institution',
                 italics: true,
               }),
             ],

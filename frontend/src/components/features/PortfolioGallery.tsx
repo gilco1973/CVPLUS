@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import { 
-  Grid3x3, List, Clock, Tag, 
-  Trash2, Share2, Loader2,
-  FileText, ExternalLink, X,
-  Briefcase, Trophy, Award, BookOpen, Mic
-} from 'lucide-react';
+import { Grid3x3, List, Clock, Tag, Trash2, Share2, Loader2, FileText, ExternalLink, X, Briefcase, Trophy, BookOpen, Mic, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -106,7 +101,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
     try {
       await onGenerateGallery();
       toast.success('Portfolio gallery generated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate portfolio gallery');
     } finally {
       setIsGenerating(false);

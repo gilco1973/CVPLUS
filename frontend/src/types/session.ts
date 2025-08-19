@@ -27,14 +27,14 @@ export interface SessionFormData {
   };
   
   // Form field data from various pages
-  personalInfo?: Record<string, any>;
-  workExperience?: Record<string, any>;
-  education?: Record<string, any>;
-  skills?: Record<string, any>;
+  personalInfo?: Record<string, unknown>;
+  workExperience?: Record<string, unknown>;
+  education?: Record<string, unknown>;
+  skills?: Record<string, unknown>;
   
   // Additional context data
-  customizations?: Record<string, any>;
-  metadata?: Record<string, any>;
+  customizations?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SessionState {

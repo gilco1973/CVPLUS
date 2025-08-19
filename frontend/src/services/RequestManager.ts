@@ -92,7 +92,7 @@ export class RequestManager {
         });
         
         return {
-          data: cached.result,
+          data: cached.result as T, // Safe cast - cached result is from same operation
           wasFromCache: true,
           requestId: cached.requestId,
           timestamp: cached.timestamp
@@ -121,7 +121,7 @@ export class RequestManager {
       try {
         const result = await existingPromise;
         return {
-          data: result,
+          data: result as T, // Safe cast - result is from awaited promise of correct type
           wasFromCache: true,
           requestId: 'shared-request',
           timestamp: this.requestStartTimes.get(key) || timestamp
@@ -220,7 +220,7 @@ export class RequestManager {
   /**
    * Centralized logging with structured data
    */
-  private log(message: string, data?: Record<string, any>): void {
+  private log(message: string, data?: Record<string, unknown>): void {
     const logData = {
       timestamp: new Date().toISOString(),
       component: 'RequestManager',

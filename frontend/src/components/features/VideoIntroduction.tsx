@@ -9,8 +9,8 @@ interface VideoIntroductionProps {
   status?: 'not-generated' | 'generating' | 'ready' | 'failed';
   script?: string;
   subtitles?: string;
-  onGenerateVideo: (options?: any) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number; script: string; subtitles?: string }>;
-  onRegenerateVideo: (customScript?: string, options?: any) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number }>;
+  onGenerateVideo: (options?: unknown) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number; script: string; subtitles?: string }>;
+  onRegenerateVideo: (customScript?: string, options?: unknown) => Promise<{ videoUrl: string; thumbnailUrl: string; duration: number }>;
 }
 
 export const VideoIntroduction = ({
@@ -48,7 +48,7 @@ export const VideoIntroduction = ({
       const result = await onGenerateVideo(videoSettings);
       setCustomScript(result.script);
       toast.success('Video introduction generated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate video introduction');
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ export const VideoIntroduction = ({
       await onRegenerateVideo(showScriptEditor ? customScript : undefined, videoSettings);
       toast.success('Video regenerated successfully!');
       setShowScriptEditor(false);
-    } catch (error) {
+    } catch {
       toast.error('Failed to regenerate video');
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export const VideoIntroduction = ({
                   <label className="text-xs text-gray-400">Duration</label>
                   <select
                     value={videoSettings.duration}
-                    onChange={(e) => setVideoSettings({...videoSettings, duration: e.target.value as any})}
+                    onChange={(e) => setVideoSettings({...videoSettings, duration: e.target.value as unknown})}
                     className="w-full mt-1 bg-gray-800 text-gray-200 rounded px-3 py-1 text-sm"
                   >
                     <option value="short">30 seconds</option>
@@ -123,7 +123,7 @@ export const VideoIntroduction = ({
                   <label className="text-xs text-gray-400">Avatar Style</label>
                   <select
                     value={videoSettings.style}
-                    onChange={(e) => setVideoSettings({...videoSettings, style: e.target.value as any})}
+                    onChange={(e) => setVideoSettings({...videoSettings, style: e.target.value as unknown})}
                     className="w-full mt-1 bg-gray-800 text-gray-200 rounded px-3 py-1 text-sm"
                   >
                     <option value="professional">Professional</option>

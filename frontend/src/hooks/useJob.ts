@@ -40,7 +40,7 @@ export const useJob = (jobId: string) => {
         } else {
           setError('Job not found');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err.message || 'Failed to load job');
         console.error('Error loading job:', err);
       } finally {

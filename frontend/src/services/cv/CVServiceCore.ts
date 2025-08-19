@@ -154,7 +154,7 @@ export class CVServiceCore {
     return CVAnalyzer.analyzeATSCompatibility(jobId, targetRole, targetKeywords);
   }
 
-  static async applyATSOptimizations(jobId: string, optimizations: any) {
+  static async applyATSOptimizations(jobId: string, optimizations: unknown) {
     return CVTransformer.applyATSOptimizations(jobId, optimizations);
   }
 
@@ -167,7 +167,7 @@ export class CVServiceCore {
     return CVValidator.validateJobStatus(job);
   }
 
-  static validateJobSettings(settings: any): boolean {
+  static validateJobSettings(settings: unknown): boolean {
     return CVValidator.validateJobSettings(settings);
   }
 
@@ -177,6 +177,11 @@ export class CVServiceCore {
 
   static validateURL(url: string) {
     return CVValidator.validateURL(url);
+  }
+
+  // Feature management
+  static async skipFeature(jobId: string, featureId: string) {
+    return CVParser.skipFeature(jobId, featureId);
   }
 }
 
@@ -201,11 +206,11 @@ export const generateCV = CVServiceCore.generateCV;
 export const getTemplates = CVServiceCore.getTemplates;
 
 // Analysis operations
-export const analyzeCV = (parsedCV: any, targetRole?: string) =>
+export const analyzeCV = (parsedCV: unknown, targetRole?: string) =>
   CVServiceCore.analyzeCV({ parsedCV, targetRole });
 
 export const enhancedAnalyzeCV = (
-  parsedCV: any, 
+  parsedCV: unknown, 
   targetRole?: string, 
   jobDescription?: string, 
   industryKeywords?: string[], 
@@ -234,6 +239,9 @@ export { MediaService, VisualizationService, IntegrationService, ProfileService 
 // Legacy compatibility exports for new async functionality
 export const initiateCVGeneration = (jobId: string, templateId: string, features: string[]) =>
   CVServiceCore.initiateCVGeneration({ jobId, templateId, features });
+
+// Feature management
+export const skipFeature = CVServiceCore.skipFeature;
 
 export const isAsyncCVGenerationEnabled = CVServiceCore.isAsyncCVGenerationEnabled;
 

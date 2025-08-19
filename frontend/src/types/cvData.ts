@@ -102,8 +102,8 @@ export interface CVParsedData {
   publications?: string[];
   references?: string[];
   achievements?: string[];
-  portfolio?: any[];
-  testimonials?: any[];
+  portfolio?: unknown[];
+  testimonials?: unknown[];
   customSections?: Record<string, unknown>;
 }
 

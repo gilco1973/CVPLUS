@@ -39,7 +39,7 @@ const sampleCV: ParsedCV = {
       institution: 'State University',
       degree: 'Bachelor of Science',
       field: 'Computer Science',
-      year: '2019'
+      graduationDate: '2019'
     }
   ],
   skills: ['JavaScript', 'Python', 'HTML', 'CSS']

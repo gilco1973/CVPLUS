@@ -5,26 +5,27 @@
  * proper functionality and prevent excessive Firestore calls.
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JobSubscriptionManager } from '../JobSubscriptionManager';
 import { subscriptionRateLimiter } from '../../utils/rateLimiter';
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => ({
-  onSnapshot: jest.fn(),
-  doc: jest.fn(),
+vi.mock('firebase/firestore', () => ({
+  onSnapshot: vi.fn(),
+  doc: vi.fn(),
 }));
 
-jest.mock('../../lib/firebase', () => ({
+vi.mock('../../lib/firebase', () => ({
   db: {},
 }));
 
 // Mock rate limiter
-jest.mock('../../utils/rateLimiter', () => ({
+vi.mock('../../utils/rateLimiter', () => ({
   subscriptionRateLimiter: {
-    isAllowed: jest.fn(() => true),
-    recordRequest: jest.fn(),
-    getTimeUntilReset: jest.fn(() => 0),
-    getStats: jest.fn(() => ({
+    isAllowed: vi.fn(() => true),
+    recordRequest: vi.fn(),
+    getTimeUntilReset: vi.fn(() => 0),
+    getStats: vi.fn(() => ({
       totalKeys: 0,
       totalRequests: 0,
       activeKeys: []
@@ -34,28 +35,36 @@ jest.mock('../../utils/rateLimiter', () => ({
 
 describe('JobSubscriptionManager', () => {
   let manager: JobSubscriptionManager;
-  let mockOnSnapshot: jest.Mock;
-  let mockUnsubscribe: jest.Mock;
+  let mockOnSnapshot: any;
+  let mockUnsubscribe: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset singleton instance
+    (JobSubscriptionManager as any).instance = undefined;
+    (JobSubscriptionManager as any).shutdownHandlersSetup = false;
+    
     manager = JobSubscriptionManager.getInstance();
-    mockUnsubscribe = jest.fn();
-    mockOnSnapshot = require('firebase/firestore').onSnapshot;
+    mockUnsubscribe = vi.fn();
+    
+    const { onSnapshot } = await import('firebase/firestore');
+    mockOnSnapshot = onSnapshot as any;
     mockOnSnapshot.mockReturnValue(mockUnsubscribe);
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     manager.cleanup();
+    (JobSubscriptionManager as any).instance = undefined;
+    (JobSubscriptionManager as any).shutdownHandlersSetup = false;
   });
 
   describe('Subscription Management', () => {
     it('should create only one Firestore subscription per jobId', () => {
       const jobId = 'test-job-1';
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
+      const callback1 = vi.fn();
+      const callback2 = vi.fn();
 
       // Subscribe twice to the same job
       manager.subscribeToJob(jobId, callback1);
@@ -67,8 +76,8 @@ describe('JobSubscriptionManager', () => {
 
     it('should call all callbacks when job updates', () => {
       const jobId = 'test-job-2';
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
+      const callback1 = vi.fn();
+      const callback2 = vi.fn();
 
       // Setup subscriptions
       manager.subscribeToJob(jobId, callback1);
@@ -93,8 +102,8 @@ describe('JobSubscriptionManager', () => {
 
     it('should handle subscription cleanup properly', () => {
       const jobId = 'test-job-3';
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
+      const callback1 = vi.fn();
+      const callback2 = vi.fn();
 
       // Subscribe
       const unsubscribe1 = manager.subscribeToJob(jobId, callback1);
@@ -115,11 +124,11 @@ describe('JobSubscriptionManager', () => {
 
     it('should rate limit subscription attempts', () => {
       const jobId = 'test-job-4';
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       // Mock rate limiter to deny requests
-      (subscriptionRateLimiter.isAllowed as jest.Mock).mockReturnValue(false);
-      (subscriptionRateLimiter.getTimeUntilReset as jest.Mock).mockReturnValue(5000);
+      (subscriptionRateLimiter.isAllowed as any).mockReturnValue(false);
+      (subscriptionRateLimiter.getTimeUntilReset as any).mockReturnValue(5000);
 
       // Attempt to subscribe
       const unsubscribe = manager.subscribeToJob(jobId, callback);
@@ -139,7 +148,7 @@ describe('JobSubscriptionManager', () => {
       const mockJobData = { id: jobId, status: 'processing' };
       
       // First subscription - simulate job data being set
-      const callback1 = jest.fn();
+      const callback1 = vi.fn();
       manager.subscribeToJob(jobId, callback1);
 
       // Simulate Firestore callback setting job data
@@ -152,7 +161,7 @@ describe('JobSubscriptionManager', () => {
       firestoreCallback(mockDoc);
 
       // Second subscription should get cached data immediately
-      const callback2 = jest.fn();
+      const callback2 = vi.fn();
       manager.subscribeToJob(jobId, callback2);
 
       // callback2 should be called immediately with cached data
@@ -166,7 +175,7 @@ describe('JobSubscriptionManager', () => {
       expect(manager.getCurrentJob(jobId)).toBeNull();
 
       // Subscribe and simulate data
-      manager.subscribeToJob(jobId, jest.fn());
+      manager.subscribeToJob(jobId, vi.fn());
       
       const mockDoc = {
         exists: () => true,
@@ -185,7 +194,7 @@ describe('JobSubscriptionManager', () => {
   describe('Error Handling', () => {
     it('should handle Firestore errors gracefully', () => {
       const jobId = 'test-job-7';
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       manager.subscribeToJob(jobId, callback);
 
@@ -200,7 +209,7 @@ describe('JobSubscriptionManager', () => {
 
     it('should track error counts', () => {
       const jobId = 'test-job-8';
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       manager.subscribeToJob(jobId, callback);
 
@@ -223,9 +232,9 @@ describe('JobSubscriptionManager', () => {
       const jobId1 = 'test-job-9';
       const jobId2 = 'test-job-10';
       
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
-      const callback3 = jest.fn();
+      const callback1 = vi.fn();
+      const callback2 = vi.fn();
+      const callback3 = vi.fn();
 
       // Create subscriptions
       manager.subscribeToJob(jobId1, callback1);
@@ -254,7 +263,7 @@ describe('JobSubscriptionManager', () => {
   describe('Memory Management', () => {
     it('should cleanup unused subscriptions', (done) => {
       const jobId = 'test-job-11';
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       const unsubscribe = manager.subscribeToJob(jobId, callback);
       unsubscribe();
@@ -269,7 +278,7 @@ describe('JobSubscriptionManager', () => {
 
     it('should cleanup on manager cleanup', () => {
       const jobId = 'test-job-12';
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       manager.subscribeToJob(jobId, callback);
       

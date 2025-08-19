@@ -75,7 +75,7 @@ export const PodcastGeneration = ({
     try {
       await onGeneratePodcast();
       toast.success('Podcast generated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate podcast');
     } finally {
       setLoading(false);
@@ -87,7 +87,7 @@ export const PodcastGeneration = ({
     try {
       await onRegeneratePodcast(selectedStyle);
       toast.success('Podcast regenerated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to regenerate podcast');
     } finally {
       setLoading(false);

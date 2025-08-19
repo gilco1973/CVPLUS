@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import type { CVPreviewProps } from '../../types/cv-preview';
+import type { CVParsedData } from '../../types/cvData';
 import { useCVPreview } from '../../hooks/cv-preview/useCVPreview';
 import { useAutoSave } from '../../hooks/cv-preview/useAutoSave';
 import { useAchievementAnalysis } from '../../hooks/cv-preview/useAchievementAnalysis';
 import { useKeyboardShortcuts } from '../../utils/cv-preview/keyboardShortcuts';
 import { useHasComparison } from '../../hooks/cv-preview/useCVComparison';
+import { isObject } from '../../types/error-handling';
 import { CVPreviewToolbar } from './CVPreviewToolbar';
 import { CVPreviewContent } from './CVPreviewContent';
 import { CVComparisonView } from '../cv-comparison/CVComparisonView';
@@ -27,8 +29,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   const { triggerAutoSave } = useAutoSave(
     state.autoSaveEnabled,
     (data) => {
-      if (onUpdate) {
-        onUpdate(data);
+      if (onUpdate && isObject(data)) {
+        onUpdate(data as Partial<CVParsedData>);
         // Note: In a real implementation, we would update lastSaved and hasUnsavedChanges
         // This would require exposing these setters from the useCVPreview hook
       }
@@ -70,7 +72,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   }, [handleKeyDown]);
 
   // Handle section editing with auto-save
-  const handleSectionEdit = (section: string, newValue: string | object) => {
+  const handleSectionEdit = (section: string, newValue: unknown) => {
     actions.handleSectionEdit(section, newValue);
     
     if (state.autoSaveEnabled) {
@@ -78,19 +80,29 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       // Apply the same logic as in the hook
       switch (section) {
         case 'personalInfo':
-          updatedData.personalInfo = { ...updatedData.personalInfo, ...newValue };
+          if (isObject(newValue)) {
+            updatedData.personalInfo = { ...updatedData.personalInfo, ...newValue };
+          }
           break;
         case 'summary':
-          updatedData.summary = newValue;
+          if (typeof newValue === 'string') {
+            updatedData.summary = newValue;
+          }
           break;
         case 'experience':
-          updatedData.experience = newValue;
+          if (Array.isArray(newValue)) {
+            updatedData.experience = newValue;
+          }
           break;
         case 'education':
-          updatedData.education = newValue;
+          if (Array.isArray(newValue)) {
+            updatedData.education = newValue;
+          }
           break;
         case 'skills':
-          updatedData.skills = { ...updatedData.skills, ...newValue };
+          if (isObject(newValue)) {
+            updatedData.skills = { ...updatedData.skills, ...newValue };
+          }
           break;
       }
       triggerAutoSave(updatedData);
@@ -109,7 +121,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         lastSaved={state.lastSaved}
         selectedTemplate={selectedTemplate}
         showPreviewBanner={state.showPreviewBanner}
-        appliedImprovements={appliedImprovements}
+        appliedImprovements={appliedImprovements || state.previewData}
         onToggleEditing={actions.toggleEditing}
         onToggleFeaturePreviews={actions.toggleFeaturePreviews}
         onToggleAutoSave={actions.toggleAutoSave}
@@ -146,7 +158,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       {hasComparison ? (
         <CVComparisonView
           originalData={job.parsedData}
-          improvedData={appliedImprovements}
+          improvedData={appliedImprovements || state.previewData}
           className="h-full"
         >
           {previewContent}
@@ -159,7 +171,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       {state.editingSection && (
         <SectionEditor
           section={state.editingSection}
-          data={state.previewData}
+          data={(state.previewData as any)?.[state.editingSection] || state.previewData}
           onSave={(newValue) => handleSectionEdit(state.editingSection!, newValue)}
           onCancel={() => actions.setEditingSection(null)}
         />

@@ -55,7 +55,7 @@ export class CVValidator {
   /**
    * Validate job settings
    */
-  static validateJobSettings(settings: any): boolean {
+  static validateJobSettings(settings: unknown): boolean {
     if (!settings) return true; // Settings are optional
     
     const requiredBooleanFields = [

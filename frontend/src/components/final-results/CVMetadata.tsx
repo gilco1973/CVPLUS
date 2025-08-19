@@ -6,7 +6,7 @@ interface CVMetadataProps {
 }
 
 export const CVMetadata = ({ job }: CVMetadataProps) => {
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: unknown) => {
     if (!timestamp) return 'Unknown';
     
     try {

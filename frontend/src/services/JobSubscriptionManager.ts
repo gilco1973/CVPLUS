@@ -1,8 +1,14 @@
 /**
- * Centralized Job Subscription Manager
+ * Centralized Job Subscription Manager with Memory Leak Prevention
  * 
  * Prevents excessive Firestore calls by managing a single subscription per jobId
  * and allowing multiple components to subscribe to the same job data.
+ * 
+ * Enhanced with comprehensive memory leak prevention:
+ * - Proper interval cleanup on shutdown
+ * - Resource disposal in all error scenarios
+ * - Memory usage monitoring and reporting
+ * - Graceful application shutdown handling
  */
 
 import { onSnapshot, doc, Unsubscribe } from 'firebase/firestore';
@@ -26,11 +32,34 @@ interface SubscriptionOptions {
   enableLogging?: boolean;
 }
 
+interface MemoryStats {
+  subscriptionsCount: number;
+  callbacksCount: number;
+  debounceTimersCount: number;
+  pendingCallbacksCount: number;
+  cleanupTimersCount: number;
+  intervalCount: number;
+  memoryUsageKB: number;
+  lastCleanupTime: number;
+}
+
+interface CleanupTimer {
+  timerId: NodeJS.Timeout;
+  jobId: string;
+  createdAt: number;
+}
+
 export class JobSubscriptionManager {
   private static instance: JobSubscriptionManager;
+  private static shutdownHandlersSetup = false;
   private subscriptions = new Map<string, JobSubscription>();
   private pendingCallbacks = new Map<string, Set<(job: Job | null) => void>>();
   private debounceTimers = new Map<string, NodeJS.Timeout>();
+  private cleanupTimers = new Map<string, CleanupTimer>();
+  private intervals: NodeJS.Timeout[] = [];
+  private isShuttingDown = false;
+  private memoryMonitoringInterval?: NodeJS.Timeout;
+  private lastMemoryCheck = 0;
   private readonly defaultOptions: Required<SubscriptionOptions> = {
     debounceMs: 100,
     maxRetries: 3,
@@ -38,12 +67,101 @@ export class JobSubscriptionManager {
   };
 
   private constructor() {
+    this.setupIntervals();
+    this.setupApplicationShutdownHandlers();
+    this.startMemoryMonitoring();
+  }
+
+  /**
+   * Setup intervals with proper cleanup tracking
+   */
+  private setupIntervals(): void {
     // Cleanup inactive subscriptions every 5 minutes
-    setInterval(() => this.cleanupInactiveSubscriptions(), 5 * 60 * 1000);
+    const cleanupInterval = setInterval(() => {
+      if (!this.isShuttingDown) {
+        this.cleanupInactiveSubscriptions();
+      }
+    }, 5 * 60 * 1000);
+    this.intervals.push(cleanupInterval);
     
     // Log subscription stats every 30 seconds in development
     if (process.env.NODE_ENV === 'development') {
-      setInterval(() => this.logSubscriptionStats(), 30 * 1000);
+      const statsInterval = setInterval(() => {
+        if (!this.isShuttingDown) {
+          this.logSubscriptionStats();
+        }
+      }, 30 * 1000);
+      this.intervals.push(statsInterval);
+    }
+  }
+
+  /**
+   * Setup application shutdown handlers for graceful cleanup
+   */
+  private setupApplicationShutdownHandlers(): void {
+    // Only setup handlers once globally to prevent accumulation
+    if (JobSubscriptionManager.shutdownHandlersSetup) {
+      return;
+    }
+    
+    // Handle browser tab close/refresh
+    if (typeof window !== 'undefined') {
+      const handleBeforeUnload = () => {
+        if (JobSubscriptionManager.instance) {
+          JobSubscriptionManager.instance.shutdown();
+        }
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('unload', handleBeforeUnload);
+      
+      // Handle visibility change (tab switch, minimize)
+      const handleVisibilityChange = () => {
+        if (JobSubscriptionManager.instance && document.hidden && JobSubscriptionManager.instance.subscriptions.size === 0) {
+          // If no active subscriptions and tab is hidden, consider cleanup
+          JobSubscriptionManager.instance.cleanupInactiveSubscriptions();
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    
+    // Handle Node.js process termination (for SSR/testing)
+    if (typeof process !== 'undefined') {
+      const handleProcessExit = () => {
+        if (JobSubscriptionManager.instance) {
+          JobSubscriptionManager.instance.shutdown();
+        }
+      };
+      
+      process.on('exit', handleProcessExit);
+      process.on('SIGINT', handleProcessExit);
+      process.on('SIGTERM', handleProcessExit);
+      process.on('uncaughtException', (error) => {
+        console.error('[JobSubscriptionManager] Uncaught exception, shutting down:', error);
+        if (JobSubscriptionManager.instance) {
+          JobSubscriptionManager.instance.shutdown();
+        }
+      });
+    }
+    
+    JobSubscriptionManager.shutdownHandlersSetup = true;
+  }
+
+  /**
+   * Start memory usage monitoring
+   */
+  private startMemoryMonitoring(): void {
+    if (process.env.NODE_ENV === 'development') {
+      this.memoryMonitoringInterval = setInterval(() => {
+        if (!this.isShuttingDown) {
+          this.checkMemoryUsage();
+        }
+      }, 60000); // Check every minute in development
+      
+      if (this.memoryMonitoringInterval) {
+        this.intervals.push(this.memoryMonitoringInterval);
+      }
     }
   }
 
@@ -63,6 +181,15 @@ export class JobSubscriptionManager {
     options: SubscriptionOptions = {}
   ): () => void {
     const opts = { ...this.defaultOptions, ...options };
+    
+    // Check if shutting down - prevent new subscriptions
+    if (this.isShuttingDown) {
+      if (opts.enableLogging) {
+        console.log(`[JobSubscriptionManager] Ignoring subscription to ${jobId} - shutting down`);
+      }
+      // Return a no-op unsubscribe function
+      return () => {};
+    }
     
     // Check rate limiting
     if (!subscriptionRateLimiter.isAllowed(jobId)) {
@@ -132,7 +259,67 @@ export class JobSubscriptionManager {
   }
 
   /**
-   * Get subscription statistics (for debugging)
+   * Get memory usage statistics
+   */
+  public getMemoryStats(): MemoryStats {
+    const pendingCallbacksCount = Array.from(this.pendingCallbacks.values())
+      .reduce((total, set) => total + set.size, 0);
+    
+    // Estimate memory usage (rough calculation)
+    const memoryUsageKB = Math.round((
+      (this.subscriptions.size * 1000) + // Rough estimate per subscription
+      (this.debounceTimers.size * 100) + // Rough estimate per timer
+      (this.cleanupTimers.size * 100) + // Rough estimate per cleanup timer
+      (pendingCallbacksCount * 50) // Rough estimate per callback
+    ) / 1024);
+    
+    return {
+      subscriptionsCount: this.subscriptions.size,
+      callbacksCount: Array.from(this.subscriptions.values())
+        .reduce((total, sub) => total + sub.callbacks.size, 0),
+      debounceTimersCount: this.debounceTimers.size,
+      pendingCallbacksCount,
+      cleanupTimersCount: this.cleanupTimers.size,
+      intervalCount: this.intervals.length,
+      memoryUsageKB,
+      lastCleanupTime: this.lastMemoryCheck
+    };
+  }
+  
+  /**
+   * Check memory usage and log warnings if necessary
+   */
+  private checkMemoryUsage(): void {
+    this.lastMemoryCheck = Date.now();
+    const stats = this.getMemoryStats();
+    
+    // Log memory stats in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[JobSubscriptionManager] Memory Stats:', stats);
+    }
+    
+    // Warn about potential memory issues
+    if (stats.subscriptionsCount > 100) {
+      console.warn(`[JobSubscriptionManager] High subscription count: ${stats.subscriptionsCount}`);
+    }
+    
+    if (stats.debounceTimersCount > 50) {
+      console.warn(`[JobSubscriptionManager] High debounce timer count: ${stats.debounceTimersCount}`);
+    }
+    
+    if (stats.cleanupTimersCount > 20) {
+      console.warn(`[JobSubscriptionManager] High cleanup timer count: ${stats.cleanupTimersCount}`);
+    }
+    
+    if (stats.memoryUsageKB > 10240) { // 10MB threshold
+      console.warn(`[JobSubscriptionManager] High estimated memory usage: ${stats.memoryUsageKB}KB`);
+      // Force cleanup of inactive subscriptions
+      this.cleanupInactiveSubscriptions();
+    }
+  }
+
+  /**
+   * Get comprehensive subscription statistics (for debugging)
    */
   public getStats(): {
     totalSubscriptions: number;
@@ -144,13 +331,17 @@ export class JobSubscriptionManager {
       totalRequests: number;
       activeKeys: string[];
     };
+    memoryStats: MemoryStats;
+    isShuttingDown: boolean;
   } {
     const stats = {
       totalSubscriptions: this.subscriptions.size,
       activeSubscriptions: 0,
       totalCallbacks: 0,
       subscriptionsByJob: {} as Record<string, { callbackCount: number; isActive: boolean; errorCount: number }>,
-      rateLimitStats: subscriptionRateLimiter.getStats()
+      rateLimitStats: subscriptionRateLimiter.getStats(),
+      memoryStats: this.getMemoryStats(),
+      isShuttingDown: this.isShuttingDown
     };
 
     for (const [jobId, subscription] of this.subscriptions) {
@@ -173,23 +364,92 @@ export class JobSubscriptionManager {
   }
 
   /**
-   * Cleanup all subscriptions (useful for app shutdown)
+   * Comprehensive cleanup with memory leak prevention
    */
   public cleanup(): void {
-    console.log(`[JobSubscriptionManager] Cleaning up ${this.subscriptions.size} subscriptions`);
+    console.log(`[JobSubscriptionManager] Starting comprehensive cleanup of ${this.subscriptions.size} subscriptions`);
     
-    for (const subscription of this.subscriptions.values()) {
-      subscription.unsubscribe();
+    // Mark as shutting down to prevent new operations
+    this.isShuttingDown = true;
+    
+    try {
+      // Clear all Firestore subscriptions
+      for (const subscription of this.subscriptions.values()) {
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('[JobSubscriptionManager] Error unsubscribing:', error);
+        }
+      }
+      
+      // Clear all debounce timers
+      for (const [key, timer] of this.debounceTimers.entries()) {
+        try {
+          clearTimeout(timer);
+        } catch (error) {
+          console.error(`[JobSubscriptionManager] Error clearing debounce timer ${key}:`, error);
+        }
+      }
+      
+      // Clear all cleanup timers
+      for (const [jobId, cleanupTimer] of this.cleanupTimers.entries()) {
+        try {
+          clearTimeout(cleanupTimer.timerId);
+        } catch (error) {
+          console.error(`[JobSubscriptionManager] Error clearing cleanup timer for job ${jobId}:`, error);
+        }
+      }
+      
+      // Clear all intervals
+      for (const interval of this.intervals) {
+        try {
+          clearInterval(interval);
+        } catch (error) {
+          console.error('[JobSubscriptionManager] Error clearing interval:', error);
+        }
+      }
+      
+      // Clear memory monitoring interval specifically
+      if (this.memoryMonitoringInterval) {
+        try {
+          clearInterval(this.memoryMonitoringInterval);
+        } catch (error) {
+          console.error('[JobSubscriptionManager] Error clearing memory monitoring interval:', error);
+        }
+      }
+      
+      // Clear all data structures
+      this.subscriptions.clear();
+      this.pendingCallbacks.clear();
+      this.debounceTimers.clear();
+      this.cleanupTimers.clear();
+      this.intervals.length = 0;
+      
+      console.log('[JobSubscriptionManager] Comprehensive cleanup completed successfully');
+    } catch (error) {
+      console.error('[JobSubscriptionManager] Error during cleanup:', error);
+    }
+  }
+
+  /**
+   * Graceful shutdown with comprehensive resource cleanup
+   */
+  public shutdown(): void {
+    if (this.isShuttingDown) {
+      return; // Already shutting down
     }
     
-    this.subscriptions.clear();
-    this.pendingCallbacks.clear();
+    console.log('[JobSubscriptionManager] Initiating graceful shutdown');
     
-    // Clear debounce timers
-    for (const timer of this.debounceTimers.values()) {
-      clearTimeout(timer);
-    }
-    this.debounceTimers.clear();
+    // Log final memory stats before shutdown
+    const finalStats = this.getMemoryStats();
+    console.log('[JobSubscriptionManager] Final memory stats before shutdown:', finalStats);
+    
+    this.cleanup();
+    
+    // Reset singleton instance to allow clean recreation if needed
+    JobSubscriptionManager.instance = null as any;
+    JobSubscriptionManager.shutdownHandlersSetup = false;
   }
 
   private createNewSubscription(jobId: string, options: Required<SubscriptionOptions>): JobSubscription {
@@ -280,17 +540,50 @@ export class JobSubscriptionManager {
 
     // If no more callbacks, cleanup the subscription after a delay
     if (subscription.callbacks.size === 0) {
+      // Clear any existing cleanup timer for this job to prevent accumulation
+      const existingCleanupTimer = this.cleanupTimers.get(jobId);
+      if (existingCleanupTimer) {
+        clearTimeout(existingCleanupTimer.timerId);
+        this.cleanupTimers.delete(jobId);
+      }
+      
       // Wait 30 seconds before cleaning up in case component remounts quickly
-      setTimeout(() => {
-        const currentSubscription = this.subscriptions.get(jobId);
-        if (currentSubscription && currentSubscription.callbacks.size === 0) {
-          if (enableLogging) {
-            console.log(`[JobSubscriptionManager] Cleaning up unused subscription for job: ${jobId}`);
+      const timerId = setTimeout(() => {
+        try {
+          // Remove from cleanup timers map first
+          this.cleanupTimers.delete(jobId);
+          
+          const currentSubscription = this.subscriptions.get(jobId);
+          if (currentSubscription && currentSubscription.callbacks.size === 0) {
+            if (enableLogging) {
+              console.log(`[JobSubscriptionManager] Cleaning up unused subscription for job: ${jobId}`);
+            }
+            
+            // Clean up subscription
+            try {
+              currentSubscription.unsubscribe();
+            } catch (error) {
+              console.error(`[JobSubscriptionManager] Error unsubscribing from job ${jobId}:`, error);
+            }
+            
+            this.subscriptions.delete(jobId);
+            
+            // Also clear any pending callbacks for this job
+            this.pendingCallbacks.delete(jobId);
           }
-          currentSubscription.unsubscribe();
-          this.subscriptions.delete(jobId);
+        } catch (error) {
+          console.error(`[JobSubscriptionManager] Error during delayed cleanup for job ${jobId}:`, error);
+          // Ensure cleanup timer is removed even if cleanup fails
+          this.cleanupTimers.delete(jobId);
         }
       }, 30000);
+      
+      // Track the cleanup timer for proper memory management
+      this.cleanupTimers.set(jobId, {
+        timerId,
+        jobId,
+        createdAt: Date.now()
+      });
     }
   }
 
@@ -300,22 +593,38 @@ export class JobSubscriptionManager {
     jobData: Job | null,
     debounceMs: number
   ): void {
+    if (this.isShuttingDown) {
+      return; // Don't create new timers during shutdown
+    }
+    
     const key = `${jobId}-${callback.toString()}`;
     
-    // Clear existing timer
+    // Clear existing timer to prevent accumulation
     const existingTimer = this.debounceTimers.get(key);
     if (existingTimer) {
-      clearTimeout(existingTimer);
+      try {
+        clearTimeout(existingTimer);
+      } catch (error) {
+        console.error(`[JobSubscriptionManager] Error clearing existing debounce timer for ${key}:`, error);
+      }
     }
 
-    // Set new timer
+    // Set new timer with enhanced error handling
     const timer = setTimeout(() => {
       try {
-        callback(jobData);
+        // Check if we're still not shutting down before executing
+        if (!this.isShuttingDown) {
+          callback(jobData);
+        }
       } catch (error) {
         console.error(`[JobSubscriptionManager] Callback execution error for job ${jobId}:`, error);
       } finally {
-        this.debounceTimers.delete(key);
+        // Always clean up the timer reference, even on error
+        try {
+          this.debounceTimers.delete(key);
+        } catch (deleteError) {
+          console.error(`[JobSubscriptionManager] Error deleting debounce timer ${key}:`, deleteError);
+        }
       }
     }, debounceMs);
 
@@ -323,10 +632,16 @@ export class JobSubscriptionManager {
   }
 
   private cleanupInactiveSubscriptions(): void {
+    if (this.isShuttingDown) {
+      return;
+    }
+    
     const now = Date.now();
     const inactivityThreshold = 10 * 60 * 1000; // 10 minutes
     let cleanedCount = 0;
+    const jobsToClean: string[] = [];
 
+    // First, identify jobs to clean
     for (const [jobId, subscription] of this.subscriptions) {
       const isInactive = (
         subscription.callbacks.size === 0 || 
@@ -335,15 +650,102 @@ export class JobSubscriptionManager {
       );
 
       if (isInactive) {
-        console.log(`[JobSubscriptionManager] Cleaning up inactive subscription for job: ${jobId}`);
-        subscription.unsubscribe();
-        this.subscriptions.delete(jobId);
-        cleanedCount++;
+        jobsToClean.push(jobId);
+      }
+    }
+    
+    // Then clean them up with proper error handling
+    for (const jobId of jobsToClean) {
+      try {
+        const subscription = this.subscriptions.get(jobId);
+        if (subscription) {
+          console.log(`[JobSubscriptionManager] Cleaning up inactive subscription for job: ${jobId}`);
+          
+          // Clean up Firestore subscription
+          try {
+            subscription.unsubscribe();
+          } catch (error) {
+            console.error(`[JobSubscriptionManager] Error unsubscribing from job ${jobId}:`, error);
+          }
+          
+          // Remove from subscriptions
+          this.subscriptions.delete(jobId);
+          
+          // Clean up any associated cleanup timers
+          const cleanupTimer = this.cleanupTimers.get(jobId);
+          if (cleanupTimer) {
+            try {
+              clearTimeout(cleanupTimer.timerId);
+            } catch (error) {
+              console.error(`[JobSubscriptionManager] Error clearing cleanup timer for job ${jobId}:`, error);
+            }
+            this.cleanupTimers.delete(jobId);
+          }
+          
+          // Clean up any pending callbacks
+          this.pendingCallbacks.delete(jobId);
+          
+          // Clean up any related debounce timers
+          for (const [key, timer] of this.debounceTimers.entries()) {
+            if (key.startsWith(jobId + '-')) {
+              try {
+                clearTimeout(timer);
+                this.debounceTimers.delete(key);
+              } catch (error) {
+                console.error(`[JobSubscriptionManager] Error clearing debounce timer ${key}:`, error);
+              }
+            }
+          }
+          
+          cleanedCount++;
+        }
+      } catch (error) {
+        console.error(`[JobSubscriptionManager] Error cleaning up subscription for job ${jobId}:`, error);
       }
     }
 
     if (cleanedCount > 0) {
       console.log(`[JobSubscriptionManager] Cleaned up ${cleanedCount} inactive subscriptions`);
+      
+      // Log memory stats after cleanup in development
+      if (process.env.NODE_ENV === 'development') {
+        const memStats = this.getMemoryStats();
+        console.log('[JobSubscriptionManager] Memory stats after cleanup:', memStats);
+      }
+    }
+    
+    // Also cleanup any orphaned cleanup timers (older than 5 minutes)
+    this.cleanupOrphanedTimers();
+  }
+  
+  /**
+   * Clean up orphaned cleanup timers that may have been left behind
+   */
+  private cleanupOrphanedTimers(): void {
+    const now = Date.now();
+    const orphanThreshold = 5 * 60 * 1000; // 5 minutes
+    const timersToRemove: string[] = [];
+    
+    for (const [jobId, cleanupTimer] of this.cleanupTimers.entries()) {
+      if ((now - cleanupTimer.createdAt) > orphanThreshold) {
+        timersToRemove.push(jobId);
+      }
+    }
+    
+    for (const jobId of timersToRemove) {
+      const cleanupTimer = this.cleanupTimers.get(jobId);
+      if (cleanupTimer) {
+        try {
+          clearTimeout(cleanupTimer.timerId);
+        } catch (error) {
+          console.error(`[JobSubscriptionManager] Error clearing orphaned timer for job ${jobId}:`, error);
+        }
+        this.cleanupTimers.delete(jobId);
+      }
+    }
+    
+    if (timersToRemove.length > 0) {
+      console.log(`[JobSubscriptionManager] Cleaned up ${timersToRemove.length} orphaned cleanup timers`);
     }
   }
 
@@ -353,6 +755,8 @@ export class JobSubscriptionManager {
       total: stats.totalSubscriptions,
       active: stats.activeSubscriptions,
       callbacks: stats.totalCallbacks,
+      memory: stats.memoryStats,
+      shuttingDown: stats.isShuttingDown,
       details: stats.subscriptionsByJob
     });
   }

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Calendar, Briefcase, GraduationCap, Award, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
+import { Calendar, Briefcase, GraduationCap, ChevronLeft, ChevronRight, Maximize2, X, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TimelineEvent {

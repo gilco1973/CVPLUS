@@ -91,7 +91,7 @@ export const NavigationDebugger: React.FC<NavigationDebuggerProps> = ({
                 ) : (
                   <XCircle className="w-2 h-2 text-red-500" />
                 )}
-                <span>Recommendations ({storageData.recommendations?.length || 0})</span>
+                <span>Recommendations ({Array.isArray(storageData.recommendations) ? storageData.recommendations.length : 0})</span>
               </div>
               <div className="flex items-center gap-1">
                 {storageData.improvements ? (

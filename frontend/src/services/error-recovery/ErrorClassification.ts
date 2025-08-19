@@ -49,7 +49,7 @@ export interface ErrorContext {
   networkStatus?: 'online' | 'offline';
   retryCount?: number;
   lastCheckpoint?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface ClassifiedError {
@@ -67,7 +67,7 @@ export interface ClassifiedError {
   retryDelay: number;
   actionableSteps: string[];
   supportTicketRequired: boolean;
-  telemetryData: Record<string, any>;
+  telemetryData: Record<string, unknown>;
 }
 
 export class ErrorClassifier {
@@ -122,7 +122,8 @@ export class ErrorClassifier {
    */
   private analyzeError(error: unknown): { type: ErrorType; severity: ErrorSeverity } {
     const message = this.extractErrorMessage(error).toLowerCase();
-    const code = error.code || error.status;
+    const errorObj = error as any;
+    const code = errorObj?.code || errorObj?.status;
 
     // Network errors
     if (this.isNetworkError(error, message)) {
@@ -269,8 +270,8 @@ export class ErrorClassifier {
            message.includes('network') ||
            message.includes('fetch') ||
            message.includes('connection') ||
-           error.code === 'NETWORK_ERROR' ||
-           error.name === 'NetworkError';
+           (error as any)?.code === 'NETWORK_ERROR' ||
+           (error as any)?.name === 'NetworkError';
   }
 
   private isAuthError(error: unknown, message: string, code: unknown): boolean {
@@ -279,8 +280,8 @@ export class ErrorClassifier {
            message.includes('permission denied') ||
            code === 401 ||
            code === 403 ||
-           error.code === 'permission-denied' ||
-           error.code === 'unauthenticated';
+           (error as any)?.code === 'permission-denied' ||
+           (error as any)?.code === 'unauthenticated';
   }
 
   private isRateLimitError(error: unknown, message: string, code: unknown): boolean {
@@ -292,20 +293,23 @@ export class ErrorClassifier {
   }
 
   private isTimeoutError(error: unknown, message: string): boolean {
+    const err = error as any;
     return message.includes('timeout') ||
            message.includes('timed out') ||
-           error.name === 'TimeoutError' ||
-           error.code === 'TIMEOUT';
+           err?.name === 'TimeoutError' ||
+           err?.code === 'TIMEOUT';
   }
 
   private isStorageError(error: unknown, message: string): boolean {
+    const err = error as any;
     return message.includes('storage') ||
            message.includes('bucket') ||
            message.includes('file not found') ||
-           error.code?.includes('storage');
+           err?.code?.includes('storage');
   }
 
   private isProcessingError(error: unknown, message: string): boolean {
+    const err = error as any;
     return message.includes('processing') ||
            message.includes('parse') ||
            message.includes('transform') ||
@@ -321,10 +325,11 @@ export class ErrorClassifier {
   }
 
   private isValidationError(error: unknown, message: string): boolean {
+    const err = error as any;
     return message.includes('validation') ||
            message.includes('invalid') ||
            message.includes('missing required') ||
-           error.name === 'ValidationError';
+           err?.name === 'ValidationError';
   }
 
   /**
@@ -332,7 +337,8 @@ export class ErrorClassifier {
    */
   private extractErrorMessage(error: unknown): string {
     if (typeof error === 'string') return error;
-    return error?.message || error?.error?.message || 'An unknown error occurred';
+    const err = error as any;
+    return err?.message || err?.error?.message || 'An unknown error occurred';
   }
 
   private generateUserMessage(errorType: ErrorType, error: unknown): string {
@@ -398,10 +404,11 @@ export class ErrorClassifier {
   }
 
   private extractTelemetryData(error: unknown, context: ErrorContext): Record<string, unknown> {
+    const err = error as any;
     return {
-      errorName: error?.name,
-      errorCode: error?.code,
-      httpStatus: error?.status,
+      errorName: err?.name,
+      errorCode: err?.code,
+      httpStatus: err?.status,
       operation: context.operation,
       timestamp: context.timestamp.toISOString(),
       userAgent: context.userAgent,
@@ -409,7 +416,7 @@ export class ErrorClassifier {
       retryCount: context.retryCount || 0,
       sessionId: context.sessionId,
       jobId: context.jobId,
-      stackTrace: error?.stack ? error.stack.split('\n').slice(0, 10) : undefined
+      stackTrace: err?.stack ? err.stack.split('\n').slice(0, 10) : undefined
     };
   }
 

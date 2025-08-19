@@ -1,0 +1,347 @@
+/**
+ * Configuration Health Check API Endpoint
+ * Provides secure monitoring of environment configuration status and security posture
+ */
+
+import * as functions from 'firebase-functions';
+import { Request, Response } from 'express';
+import { environmentUtils } from '../config/environment';
+import { securityMonitor } from '../config/security-monitor';
+
+// Health check response interface
+interface HealthCheckResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  version: string;
+  environment: string;
+  services: {
+    firebase: boolean;
+    openai: boolean;
+    email: boolean;
+    elevenLabs: boolean;
+    videoGeneration: boolean;
+    search: boolean;
+    rag: boolean;
+    storage: boolean;
+  };
+  configuration: {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  };
+  security: {
+    score: number;
+    recentEvents: number;
+    activeAlerts: number;
+    lastEventTime?: string;
+  };
+  details: {
+    healthPercentage: number;
+    healthyServices: string;
+    errorCount: number;
+    warningCount: number;
+  };
+}
+
+// Detailed security report interface
+interface SecurityReportResponse {
+  summary: {
+    totalEvents: number;
+    eventsBySeverity: Record<string, number>;
+    eventsByType: Record<string, number>;
+    alertsTriggered: number;
+    securityScore: number;
+  };
+  recentEvents: Array<{
+    id: string;
+    timestamp: string;
+    type: string;
+    severity: string;
+    source: string;
+    description: string;
+    resolved: boolean;
+  }>;
+  activeAlerts: Array<{
+    id: string;
+    timestamp: string;
+    eventType: string;
+    eventCount: number;
+    severity: string;
+    description: string;
+  }>;
+  recommendations: string[];
+}
+
+/**
+ * Configuration Health Check Endpoint
+ * GET /api/health
+ * Returns comprehensive health status of the application configuration
+ */
+export const configHealthCheck = functions.https.onRequest(async (req: Request, res: Response) => {
+  try {
+    // Set security headers
+    res.set({
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block'
+    });
+
+    // Only allow GET requests
+    if (req.method !== 'GET') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    // Basic authentication check (in production, implement proper auth)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !isValidHealthCheckAuth(authHeader)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Get configuration and security status
+    const healthCheck = environmentUtils.performHealthCheck();
+    const configValidation = environmentUtils.validateConfiguration();
+    const securityMetrics = securityMonitor.getSecurityMetrics();
+    const activeAlerts = securityMonitor.getActiveAlerts();
+
+    // Build service status
+    const services = {
+      firebase: environmentUtils.isServiceAvailable('firebase'),
+      openai: environmentUtils.isServiceAvailable('openai'),
+      email: environmentUtils.isServiceAvailable('email'),
+      elevenLabs: environmentUtils.isServiceAvailable('elevenLabs'),
+      videoGeneration: environmentUtils.isServiceAvailable('videoGeneration'),
+      search: environmentUtils.isServiceAvailable('search'),
+      rag: environmentUtils.isServiceAvailable('rag'),
+      storage: environmentUtils.isServiceAvailable('storage')
+    };
+
+    // Build response
+    const response: HealthCheckResponse = {
+      status: healthCheck.status,
+      timestamp: new Date().toISOString(),
+      version: '1.0.0', // You can get this from package.json
+      environment: process.env.NODE_ENV || 'unknown',
+      services,
+      configuration: configValidation,
+      security: {
+        score: securityMetrics.securityScore,
+        recentEvents: securityMetrics.totalEvents,
+        activeAlerts: activeAlerts.length,
+        lastEventTime: securityMetrics.lastEventTime?.toISOString()
+      },
+      details: healthCheck.details
+    };
+
+    // Set appropriate HTTP status based on health
+    let statusCode = 200;
+    if (healthCheck.status === 'degraded') {
+      statusCode = 207; // Multi-Status
+    } else if (healthCheck.status === 'unhealthy') {
+      statusCode = 503; // Service Unavailable
+    }
+
+    res.status(statusCode).json(response);
+
+  } catch (error) {
+    functions.logger.error('Health check endpoint error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * Security Report Endpoint
+ * GET /api/security-report
+ * Returns detailed security events and recommendations
+ */
+export const securityReport = functions.https.onRequest(async (req: Request, res: Response) => {
+  try {
+    // Set security headers
+    res.set({
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block'
+    });
+
+    // Only allow GET requests
+    if (req.method !== 'GET') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    // Enhanced authentication check for security reports
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !isValidSecurityReportAuth(authHeader)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Get query parameters
+    const hours = Math.min(parseInt(req.query.hours as string) || 24, 168); // Max 7 days
+    const severity = req.query.severity as string;
+
+    // Generate security report
+    const report = securityMonitor.generateSecurityReport();
+    const recentEvents = securityMonitor.getRecentEvents(hours, severity);
+
+    // Build sanitized response (remove sensitive metadata)
+    const response: SecurityReportResponse = {
+      summary: report.summary,
+      recentEvents: recentEvents.map(event => ({
+        id: event.id,
+        timestamp: event.timestamp.toISOString(),
+        type: event.type,
+        severity: event.severity,
+        source: event.source,
+        description: event.description,
+        resolved: event.resolved
+        // Note: metadata is intentionally excluded for security
+      })),
+      activeAlerts: report.activeAlerts.map(alert => ({
+        id: alert.id,
+        timestamp: alert.timestamp.toISOString(),
+        eventType: alert.eventType,
+        eventCount: alert.eventCount,
+        severity: alert.severity,
+        description: alert.description
+        // Note: events array is intentionally excluded to prevent data duplication
+      })),
+      recommendations: report.recommendations
+    };
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    functions.logger.error('Security report endpoint error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * Configuration Validation Endpoint
+ * POST /api/validate-config
+ * Validates current configuration and returns detailed analysis
+ */
+export const validateConfiguration = functions.https.onRequest(async (req: Request, res: Response) => {
+  try {
+    // Set security headers
+    res.set({
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block'
+    });
+
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    // Enhanced authentication check
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !isValidConfigValidationAuth(authHeader)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Perform comprehensive validation
+    const configValidation = environmentUtils.validateConfiguration();
+    const healthCheck = environmentUtils.performHealthCheck();
+    const validationResult = environmentUtils.getValidationResult();
+
+    const response = {
+      timestamp: new Date().toISOString(),
+      configuration: {
+        isValid: configValidation.isValid,
+        errors: configValidation.errors,
+        warnings: configValidation.warnings
+      },
+      initialValidation: validationResult,
+      healthStatus: healthCheck,
+      recommendations: generateConfigRecommendations(configValidation, healthCheck)
+    };
+
+    // Set status based on validation result
+    const statusCode = configValidation.isValid ? 200 : 400;
+    res.status(statusCode).json(response);
+
+  } catch (error) {
+    functions.logger.error('Configuration validation endpoint error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Helper functions
+
+function isValidHealthCheckAuth(authHeader: string): boolean {
+  // In production, implement proper authentication
+  // This could be API key, JWT, or service account verification
+  const expectedToken = process.env.HEALTH_CHECK_TOKEN || 'dev-health-token';
+  const token = authHeader.replace('Bearer ', '');
+  return token === expectedToken;
+}
+
+function isValidSecurityReportAuth(authHeader: string): boolean {
+  // Security reports require higher authentication level
+  const expectedToken = process.env.SECURITY_REPORT_TOKEN || 'dev-security-token';
+  const token = authHeader.replace('Bearer ', '');
+  return token === expectedToken;
+}
+
+function isValidConfigValidationAuth(authHeader: string): boolean {
+  // Configuration validation requires admin-level authentication
+  const expectedToken = process.env.CONFIG_ADMIN_TOKEN || 'dev-config-admin-token';
+  const token = authHeader.replace('Bearer ', '');
+  return token === expectedToken;
+}
+
+function generateConfigRecommendations(
+  validation: any,
+  health: any
+): string[] {
+  const recommendations: string[] = [];
+
+  if (!validation.isValid) {
+    recommendations.push('Fix configuration errors before deploying to production');
+  }
+
+  if (validation.warnings.length > 0) {
+    recommendations.push('Review configuration warnings to ensure full functionality');
+  }
+
+  if (health.status === 'unhealthy') {
+    recommendations.push('Critical: Less than 50% of services are properly configured');
+  } else if (health.status === 'degraded') {
+    recommendations.push('Warning: Some services are not properly configured, limiting functionality');
+  }
+
+  if (health.details.errorCount > 0) {
+    recommendations.push('Resolve configuration errors to improve system reliability');
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push('Configuration is healthy - monitor regularly and keep environment variables up to date');
+  }
+
+  return recommendations;
+}

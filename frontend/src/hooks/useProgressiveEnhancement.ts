@@ -148,14 +148,14 @@ export function useProgressiveEnhancement({
       const callable = httpsCallable(functions, functionName);
       const result = await callable({ jobId, featureId });
       
-      const data = result.data as any;
+      const data = result.data as unknown;
       if (!data.success) {
         throw new Error(data.error || `${functionName} failed`);
       }
 
       console.log(`✅ ${functionName} completed successfully`);
       return data.html || '';
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Error calling ${functionName}:`, error);
       throw new Error(error.message || `Failed to generate ${featureId}`);
     }
@@ -190,7 +190,7 @@ export function useProgressiveEnhancement({
 
   // Get merge strategy for specific feature
   const getMergeStrategy = (featureId: string) => {
-    const strategies: Record<string, any> = {
+    const strategies: Record<string, unknown> = {
       'skills-visualization': {
         type: 'insert-after',
         target: '<section class="summary"',
@@ -238,7 +238,7 @@ export function useProgressiveEnhancement({
   };
 
   // Replace section merge strategy
-  const replaceSectionMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: any): string => {
+  const replaceSectionMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: unknown): string => {
     const startIndex = baseHtml.indexOf(strategy.target);
     if (startIndex === -1) {
       return appendToBodyMerge(baseHtml, featureHtml, featureId);
@@ -262,7 +262,7 @@ export function useProgressiveEnhancement({
   };
 
   // Insert after target merge strategy
-  const insertAfterMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: any): string => {
+  const insertAfterMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: unknown): string => {
     const targetIndex = baseHtml.indexOf(strategy.target);
     if (targetIndex === -1) {
       return appendToBodyMerge(baseHtml, featureHtml, featureId);
@@ -296,7 +296,7 @@ export function useProgressiveEnhancement({
   };
 
   // Insert before target merge strategy
-  const insertBeforeMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: any): string => {
+  const insertBeforeMerge = (baseHtml: string, featureHtml: string, featureId: string, strategy: unknown): string => {
     const targetIndex = baseHtml.indexOf(strategy.target);
     if (targetIndex === -1) {
       return appendToBodyMerge(baseHtml, featureHtml, featureId);
@@ -431,7 +431,7 @@ export function useProgressiveEnhancement({
         const activeMetrics = performanceMonitorService.getActiveMonitoring();
         const currentMetric = activeMetrics.find(m => m.featureId === featureId);
         if (currentMetric) {
-          (currentMetric as any).validation = validationMetrics;
+          (currentMetric as unknown).validation = validationMetrics;
         }
       }
 
@@ -474,7 +474,7 @@ export function useProgressiveEnhancement({
       delete retryCountRef.current[retryKey];
 
       toast.success(`${featureName} added successfully!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Error processing feature ${featureId}:`, error);
 
       // Analyze error with enhanced error recovery service
@@ -641,7 +641,7 @@ export function useProgressiveEnhancement({
       // Stop system monitoring
       performanceMonitorService.stopSystemMonitoring();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error starting progressive enhancement:', error);
       
       // Stop monitoring on error

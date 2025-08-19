@@ -20,7 +20,7 @@ export class ProfileService {
     return result.data;
   }
 
-  static async updatePublicProfileSettings(jobId: string, settings: any) {
+  static async updatePublicProfileSettings(jobId: string, settings: unknown) {
     const updateSettingsFunction = httpsCallable(functions, 'updatePublicProfileSettings');
     const result = await updateSettingsFunction({
       jobId,
@@ -51,7 +51,7 @@ export class ProfileService {
   }
 
   // QR Tracking
-  static async trackQRScan(jobId: string, metadata?: any) {
+  static async trackQRScan(jobId: string, metadata?: unknown) {
     const trackScanFunction = httpsCallable(functions, 'trackQRScan');
     const result = await trackScanFunction({
       jobId,
@@ -71,7 +71,7 @@ export class ProfileService {
     return result.data;
   }
 
-  static async startChatSession(jobId: string, visitorId?: string, metadata?: any) {
+  static async startChatSession(jobId: string, visitorId?: string, metadata?: unknown) {
     const startChatFunction = httpsCallable(functions, 'startChatSession');
     const result = await startChatFunction({
       jobId,

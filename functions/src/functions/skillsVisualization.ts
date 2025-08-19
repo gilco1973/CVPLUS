@@ -5,7 +5,7 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { skillsVisualizationService } from '../services/skills-visualization.service';
-import { HTMLFragmentGeneratorService } from '../services/html-fragment-generator.service';
+import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
 import { EnhancedJob, ParsedCV } from '../types/enhanced-models';
 import { corsOptions } from '../config/cors';
 
@@ -104,7 +104,7 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
       });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = HTMLFragmentGeneratorService.generateSkillsVisualizationHTML(visualization);
+      const htmlFragment = htmlFragmentGenerator.generateSkillsVisualizationHTML(visualization);
 
       // Update job with visualization data and HTML fragment
       await jobDoc.ref.update({

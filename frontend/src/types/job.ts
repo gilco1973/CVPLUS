@@ -11,7 +11,7 @@ export interface Job {
   fileName?: string;
   isUrl?: boolean;
   userInstructions?: string;
-  parsedData?: any;
+  parsedData?: unknown;
   generatedCV?: {
     html: string;
     htmlUrl?: string;
@@ -25,7 +25,7 @@ export interface Job {
     detectedTypes: string[];
     recommendations: string[];
   };
-  privacyVersion?: any;
+  privacyVersion?: unknown;
   quickCreate?: boolean;
   settings?: {
     applyAllEnhancements: boolean;
@@ -35,8 +35,18 @@ export interface Job {
     useRecommendedTemplate: boolean;
   };
   error?: string;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: unknown;
+  updatedAt: unknown;
+  
+  // Enhanced features tracking (for progress monitoring)
+  enhancedFeatures?: Record<string, {
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    progress: number;
+    currentStep?: string;
+    error?: string;
+    htmlFragment?: string;
+    processedAt?: unknown;
+  }>;
   
   // Session management fields
   session?: {
@@ -53,12 +63,12 @@ export interface Job {
       jobDescription?: string;
       selectedTemplateId?: string;
       selectedFeatures?: string[];
-      personalInfo?: Record<string, any>;
-      workExperience?: Record<string, any>;
-      education?: Record<string, any>;
-      skills?: Record<string, any>;
-      customizations?: Record<string, any>;
-      metadata?: Record<string, any>;
+      personalInfo?: Record<string, unknown>;
+      workExperience?: Record<string, unknown>;
+      education?: Record<string, unknown>;
+      skills?: Record<string, unknown>;
+      customizations?: Record<string, unknown>;
+      metadata?: Record<string, unknown>;
     };
     
     // Resume metadata
@@ -109,13 +119,13 @@ export interface CreateJobRequest {
   quickCreate?: boolean;
   userInstructions?: string;
   sessionId?: string;
-  formData?: Record<string, any>;
+  formData?: Record<string, unknown>;
 }
 
 export interface UpdateJobRequest {
   status?: JobStatus;
   sessionData?: Partial<Job['session']>;
-  formData?: Record<string, any>;
+  formData?: Record<string, unknown>;
   error?: string;
 }
 

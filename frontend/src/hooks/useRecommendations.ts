@@ -18,6 +18,18 @@ interface RecommendationItem {
   selected: boolean;
 }
 
+// Raw recommendation from backend API
+interface RawRecommendation {
+  id: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  section?: string;
+  impact?: string;
+  estimatedScoreImprovement?: number;
+  [key: string]: any; // For additional properties
+}
+
 interface UseRecommendationsOptions {
   targetRole?: string;
   industryKeywords?: string[];
@@ -100,28 +112,34 @@ export function useRecommendations(
         let transformedRecommendations: RecommendationItem[] = [];
         
         if (result?.data?.recommendations) {
-          transformedRecommendations = result.data.recommendations.map((rec: any) => ({
-            id: rec.id,
-            title: rec.title || 'CV Improvement',
-            description: rec.description || 'Enhance your CV content',
-            priority: mapPriorityFromBackend(rec),
-            category: rec.category || rec.section || 'General',
-            impact: rec.description || `${rec.impact || 'medium'} impact improvement`,
-            estimatedImprovement: rec.estimatedScoreImprovement || 5,
-            selected: mapPriorityFromBackend(rec) === 'high'
-          }));
+          transformedRecommendations = result.data.recommendations.map((rec: unknown) => {
+            const recommendation = rec as RawRecommendation;
+            return {
+              id: recommendation.id,
+              title: recommendation.title || 'CV Improvement',
+              description: recommendation.description || 'Enhance your CV content',
+              priority: mapPriorityFromBackend(recommendation),
+              category: recommendation.category || recommendation.section || 'General',
+              impact: recommendation.description || `${recommendation.impact || 'medium'} impact improvement`,
+              estimatedImprovement: recommendation.estimatedScoreImprovement || 5,
+              selected: mapPriorityFromBackend(recommendation) === 'high'
+            };
+          });
         } else if (result?.recommendations) {
           // Fallback format
-          transformedRecommendations = result.recommendations.map((rec: any) => ({
-            id: rec.id,
-            title: rec.title || 'CV Improvement',
-            description: rec.description || 'Enhance your CV content',
-            priority: mapPriorityFromBackend(rec),
-            category: rec.category || rec.section || 'General',
-            impact: rec.description || `${rec.impact || 'medium'} impact improvement`,
-            estimatedImprovement: rec.estimatedScoreImprovement || 5,
-            selected: mapPriorityFromBackend(rec) === 'high'
-          }));
+          transformedRecommendations = result.recommendations.map((rec: unknown) => {
+            const recommendation = rec as RawRecommendation;
+            return {
+              id: recommendation.id,
+              title: recommendation.title || 'CV Improvement',
+              description: recommendation.description || 'Enhance your CV content',
+              priority: mapPriorityFromBackend(recommendation),
+              category: recommendation.category || recommendation.section || 'General',
+              impact: recommendation.description || `${recommendation.impact || 'medium'} impact improvement`,
+              estimatedImprovement: recommendation.estimatedScoreImprovement || 5,
+              selected: mapPriorityFromBackend(recommendation) === 'high'
+            };
+          });
         }
         
         // Update cache
@@ -134,7 +152,7 @@ export function useRecommendations(
         console.log(`[useRecommendations] Loaded ${transformedRecommendations.length} recommendations for job ${jobId}`);
         return transformedRecommendations;
         
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`[useRecommendations] Error loading recommendations for job ${jobId}:`, err);
         
         // Clear loading state from cache
@@ -217,7 +235,7 @@ export function useRecommendations(
   };
 }
 
-function mapPriorityFromBackend(rec: any): 'high' | 'medium' | 'low' {
+function mapPriorityFromBackend(rec: RawRecommendation): 'high' | 'medium' | 'low' {
   if (rec.impact === 'high' || rec.priority >= 8) {
     return 'high';
   } else if (rec.impact === 'medium' || rec.priority >= 5) {

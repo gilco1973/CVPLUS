@@ -42,7 +42,14 @@ export const CalendarIntegration = ({
   onDownloadICal
 }: CalendarIntegrationProps) => {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<{ 
+    totalEvents: number; 
+    workAnniversaries: number;
+    educationMilestones: number;
+    certifications: number;
+    reminders: number;
+    eventsByType?: Record<string, number>;
+  } | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<'google' | 'outlook' | 'ical' | null>(null);
   const [syncInstructions, setSyncInstructions] = useState<string[]>([]);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
@@ -93,7 +100,7 @@ export const CalendarIntegration = ({
       const result = await onGenerateEvents();
       setSummary(result.summary);
       toast.success(`Generated ${result.summary.totalEvents} calendar events!`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate calendar events');
     } finally {
       setLoading({ ...loading, generate: false });
@@ -127,7 +134,7 @@ export const CalendarIntegration = ({
       }
       
       toast.success(`${provider === 'ical' ? 'Calendar file ready for download' : `Syncing with ${provider}`}`);
-    } catch (error) {
+    } catch {
       toast.error(`Failed to sync with ${provider}`);
     } finally {
       setLoading({ ...loading, [provider]: false });
@@ -238,7 +245,7 @@ export const CalendarIntegration = ({
           {providers.map((provider) => (
             <motion.button
               key={provider.id}
-              onClick={() => handleSync(provider.id as any)}
+              onClick={() => handleSync(provider.id as 'google' | 'outlook' | 'ical')}
               disabled={loading[provider.id]}
               className={`relative p-6 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 group`}
               whileHover={{ scale: 1.02 }}

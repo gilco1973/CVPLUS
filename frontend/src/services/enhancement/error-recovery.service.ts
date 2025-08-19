@@ -259,13 +259,13 @@ export class ErrorRecoveryService {
     // Network connection info
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
-      context.connectionType = connection.effectiveType;
+      context.connectionType = connection?.effectiveType;
     }
 
     // Memory usage
     if ('memory' in performance) {
       const memInfo = (performance as any).memory;
-      context.memoryUsage = memInfo.usedJSHeapSize;
+      context.memoryUsage = memInfo?.usedJSHeapSize;
     }
 
     return context;
@@ -281,15 +281,12 @@ export class ErrorRecoveryService {
       case 'exponential':
         delay = strategy.baseDelay * Math.pow(strategy.backoffMultiplier, attemptNumber - 1);
         break;
-      
       case 'linear':
         delay = strategy.baseDelay * attemptNumber;
         break;
-      
       case 'fibonacci':
         delay = strategy.baseDelay * this.fibonacci(attemptNumber);
         break;
-      
       default:
         delay = strategy.baseDelay;
     }
@@ -326,31 +323,26 @@ export class ErrorRecoveryService {
         actions.push('Verify Firebase Function endpoints');
         actions.push('Try alternative API endpoints');
         break;
-      
       case 'timeout':
         actions.push('Increase timeout duration');
         actions.push('Split large requests into smaller chunks');
         actions.push('Use streaming response if available');
         break;
-      
       case 'quota':
         actions.push('Implement request batching');
         actions.push('Add longer delays between requests');
         actions.push('Use alternative processing resources');
         break;
-      
       case 'validation':
         actions.push('Sanitize input data');
         actions.push('Check data format requirements');
         actions.push('Apply data transformation rules');
         break;
-      
       case 'processing':
         actions.push('Verify input parameters');
         actions.push('Check server resource availability');
         actions.push('Try simplified processing options');
         break;
-      
       default:
         actions.push('Log detailed error information');
         actions.push('Perform general system health check');
@@ -403,19 +395,14 @@ export class ErrorRecoveryService {
     switch (context.errorType) {
       case 'processing':
         return 'Try generating feature with reduced complexity or fallback template';
-      
       case 'network':
         return 'Switch to offline mode with cached templates';
-      
       case 'timeout':
         return 'Use asynchronous processing with status polling';
-      
       case 'quota':
         return 'Queue request for later processing when quota resets';
-      
       case 'validation':
         return 'Use simplified feature variant that bypasses validation issues';
-      
       default:
         return 'Skip this feature and continue with remaining enhancements';
     }

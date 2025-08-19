@@ -40,8 +40,8 @@ describe('Placeholder Detection', () => {
     });
 
     it('should handle null or undefined input', () => {
-      expect(detectPlaceholdersInText(null as any)).toEqual([]);
-      expect(detectPlaceholdersInText(undefined as any)).toEqual([]);
+      expect(detectPlaceholdersInText(null as unknown)).toEqual([]);
+      expect(detectPlaceholdersInText(undefined as unknown)).toEqual([]);
       expect(detectPlaceholdersInText('')).toEqual([]);
     });
   });
