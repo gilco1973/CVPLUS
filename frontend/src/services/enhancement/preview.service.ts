@@ -7,8 +7,9 @@
  */
 
 import { ref, getDownloadURL } from 'firebase/storage';
-import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
-import { storage, db } from '../../lib/firebase';
+import { JobSubscriptionManager } from '../JobSubscriptionManager';
+import { storage } from '../../lib/firebase';
+import type { Job } from '../cvService';
 
 export interface PreviewState {
   baseHtml: string | null;
@@ -170,24 +171,31 @@ export class PreviewService {
       this.unsubscribe();
     }
 
-    const jobDocRef = doc(db, 'jobs', jobId);
+    const jobSubscriptionManager = JobSubscriptionManager.getInstance();
     
-    this.unsubscribe = onSnapshot(jobDocRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        this.handleJobUpdate(docSnapshot.data());
+    this.unsubscribe = jobSubscriptionManager.subscribeToPreview(
+      jobId,
+      (job: Job | null) => {
+        if (job) {
+          this.handleJobUpdate(job);
+        } else {
+          console.warn('📡 No job data received in preview monitoring');
+        }
+      },
+      {
+        enableLogging: true,
+        debounceMs: 300, // Slightly higher debounce for preview updates
+        errorRecovery: true
       }
-    }, (error) => {
-      console.error('❌ Error in real-time monitoring:', error);
-      this.updateState({ error: 'Lost connection to enhancement progress' });
-    });
+    );
 
-    console.log('📡 Started real-time preview monitoring');
+    console.log('📡 Started real-time preview monitoring via JobSubscriptionManager');
   }
 
   /**
    * Handle job document updates from Firestore
    */
-  private handleJobUpdate(jobData: DocumentData): void {
+  private handleJobUpdate(jobData: Job): void {
     const enhancedFeatures = jobData.enhancedFeatures || {};
     let htmlChanged = false;
 

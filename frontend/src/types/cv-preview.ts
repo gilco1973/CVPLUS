@@ -1,10 +1,11 @@
 import type { Job } from '../services/cvService';
 import type { CVParsedData, CVPersonalInfo, CVExperienceItem, CVEducationItem, CVSkillsData } from './cvData';
+import type { SelectedFeatures } from './results';
 
 export interface CVPreviewProps {
   job: Job;
   selectedTemplate: string;
-  selectedFeatures: Record<string, boolean>;
+  selectedFeatures: SelectedFeatures;
   appliedImprovements?: CVParsedData; // LLM-improved content from analysis step
   onUpdate?: (updates: Partial<Job['parsedData']>) => void;
   onFeatureToggle?: (feature: string, enabled: boolean) => void;
@@ -94,7 +95,7 @@ export interface CVPreviewToolbarProps {
 export interface CVPreviewContentProps {
   previewData: CVParsedData;
   selectedTemplate: string;
-  selectedFeatures: Record<string, boolean>;
+  selectedFeatures: SelectedFeatures;
   showFeaturePreviews: boolean;
   collapsedSections: Record<string, boolean>;
   qrCodeSettings: QRCodeSettings;

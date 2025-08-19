@@ -4,8 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { JobSubscriptionManager } from '../services/JobSubscriptionManager';
 import type { Job } from '../types/cv';
 import toast from 'react-hot-toast';
 
@@ -97,14 +96,16 @@ export const useEnhancedProgressTracking = ({
     console.log('🔄 [ENHANCED] Setting up progress tracking for job:', trackingJobId);
     console.log('📊 [ENHANCED] Tracking features:', trackingFeatures.map(f => f.name));
     
-    const jobRef = doc(db, 'jobs', trackingJobId);
-    const unsubscribe = onSnapshot(jobRef, (doc) => {
-      if (!doc.exists() || !isMountedRef.current) {
-        console.log('📊 [ENHANCED] Document does not exist or component unmounted');
-        return;
-      }
-      
-      const data = doc.data();
+    const jobSubscriptionManager = JobSubscriptionManager.getInstance();
+    const unsubscribe = jobSubscriptionManager.subscribeToProgress(
+      trackingJobId,
+      (job: Job | null) => {
+        if (!job || !isMountedRef.current) {
+          console.log('📊 [ENHANCED] No job data or component unmounted');
+          return;
+        }
+        
+        const data = job;
       const now = Date.now();
       
       // Throttle updates to prevent overwhelming the UI
@@ -214,11 +215,13 @@ export const useEnhancedProgressTracking = ({
       }
       
       console.log(`📊 [ENHANCED] Progress summary: ${completedCount}/${trackingFeatures.length} completed, ${failedCount} failed, ${processingCount} processing`);
-      
-    }, (error) => {
-      console.error('❌ [ENHANCED] Progress tracking error:', error);
-      toast.error('Lost connection to progress tracking. Please refresh if issues persist.');
-    });
+      },
+      {
+        enableLogging: true,
+        debounceMs: 200, // Match the previous throttling behavior
+        errorRecovery: true
+      }
+    );
     
     progressUnsubscribe.current = unsubscribe;
   }, [trackingFeatures, onFeatureComplete, onAllFeaturesComplete]);

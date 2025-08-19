@@ -12,6 +12,14 @@ import axios from 'axios';
 import { config } from '../config/environment';
 import { ParsedCV } from '../types/enhanced-models';
 
+// Set FFmpeg path for fluent-ffmpeg (environment-aware)
+const ffmpegPath = process.env.FFMPEG_PATH || 
+                   '/usr/local/bin/ffmpeg' ||
+                   '/usr/bin/ffmpeg' || 
+                   '/layers/google.nodejs.ffmpeg/bin/ffmpeg';
+ffmpeg.setFfmpegPath(ffmpegPath);
+console.log('FFmpeg path set to:', ffmpegPath);
+
 export class MediaGenerationService {
   private openai: OpenAI | null = null;
   

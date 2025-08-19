@@ -4,10 +4,47 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { CVGenerator } from '../services/cvGenerator';
 import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+import { EnhancedFileGenerationResult } from '../services/cv-generator/types';
 
 // Import real feature services - NO MORE MOCK CODE
 import { AdvancedATSOptimizationService } from '../services/ats-optimization.service';
 import { AchievementsAnalysisService } from '../services/achievements-analysis.service';
+
+/**
+ * Core CV generation logic that can be called from other functions
+ */
+export async function generateCVCore(jobId: string, templateId: string | undefined, features: string[] | undefined, userId: string) {
+  console.log('generateCVCore called for job:', jobId);
+  console.log('User authenticated:', userId);
+  console.log('Processing CV generation for job:', jobId);
+
+  try {
+    // Step 1: Initialize job and validate data
+    const { jobData, cvData } = await initializeAndValidateJob(jobId, templateId, features, userId);
+
+    // Step 2: Generate CV HTML and save files
+    const generatedCV = await generateAndSaveCV(jobId, userId, cvData, templateId, features);
+
+    // Step 3: Process enhancement features
+    await processEnhancementFeatures(jobId, userId, features || [], cvData);
+
+    // Step 4: Complete job and handle special features
+    await completeJobGeneration(jobId, generatedCV, features);
+
+    return {
+      success: true,
+      generatedCV
+    };
+  } catch (error: any) {
+    console.error('Error generating CV:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Handle error with dedicated function
+    await handleGenerationError(jobId, error);
+    
+    throw new Error(`Failed to generate CV: ${error.message}`);
+  }
+}
 
 export const generateCV = onCall(
   {
@@ -26,35 +63,7 @@ export const generateCV = onCall(
     const { jobId, templateId, features } = request.data;
     const userId = request.auth.uid;
     
-    console.log('User authenticated:', userId);
-    console.log('Processing CV generation for job:', jobId);
-
-    try {
-      // Step 1: Initialize job and validate data
-      const { jobData, cvData } = await initializeAndValidateJob(jobId, templateId, features, userId);
-
-      // Step 2: Generate CV HTML and save files
-      const generatedCV = await generateAndSaveCV(jobId, userId, cvData, templateId, features);
-
-      // Step 3: Process enhancement features
-      await processEnhancementFeatures(jobId, userId, features || [], cvData);
-
-      // Step 4: Complete job and handle special features
-      await completeJobGeneration(jobId, generatedCV, features);
-
-      return {
-        success: true,
-        generatedCV
-      };
-    } catch (error: any) {
-      console.error('Error generating CV:', error.message);
-      console.error('Error stack:', error.stack);
-      
-      // Handle error with dedicated function
-      await handleGenerationError(jobId, error);
-      
-      throw new Error(`Failed to generate CV: ${error.message}`);
-    }
+    return await generateCVCore(jobId, templateId, features, userId);
   });
 
 /**
@@ -109,7 +118,7 @@ async function initializeAndValidateJob(
 }
 
 /**
- * Step 2: Generate CV HTML and save files
+ * Step 2: Generate CV HTML and save files with comprehensive error handling and status updates
  */
 async function generateAndSaveCV(
   jobId: string,
@@ -118,27 +127,43 @@ async function generateAndSaveCV(
   templateId: string | undefined,
   features: string[] | undefined
 ) {
-  // Generate CV HTML
-  console.log('Generating CV HTML with template:', templateId || 'modern');
-  const generator = new CVGenerator();
-  const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
+  console.log(`🎯 [CV-GEN] Starting CV generation for job ${jobId}`);
   
-  // Save generated files and get URLs
-  console.log('Saving generated files to Firebase Storage...');
-  const { pdfUrl, docxUrl, htmlUrl } = await generator.saveGeneratedFiles(
-    jobId,
-    userId,
-    htmlContent
-  );
-
-  return {
-    html: htmlContent,
-    htmlUrl,
-    pdfUrl,
-    docxUrl,
-    template: templateId,
-    features: features
-  };
+  try {
+    // Update job status to show CV generation in progress
+    await updateJobGenerationStep(jobId, 'html-generation', 'Generating CV HTML content');
+    
+    // Generate CV HTML
+    console.log('🎨 [CV-GEN] Generating CV HTML with template:', templateId || 'modern');
+    const generator = new CVGenerator();
+    const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
+    console.log(`✅ [CV-GEN] HTML content generated successfully (${htmlContent.length} characters)`);
+    
+    // Update job status to show file saving in progress
+    await updateJobGenerationStep(jobId, 'file-generation', 'Saving CV files to storage');
+    
+    // Save generated files with comprehensive error handling
+    console.log('💾 [CV-GEN] Saving generated files to Firebase Storage...');
+    const fileResults = await saveFilesWithFallback(generator, jobId, userId, htmlContent);
+    
+    console.log(`🎉 [CV-GEN] CV generation completed successfully for job ${jobId}`);
+    console.log(`📄 Files generated: HTML=${!!fileResults.htmlUrl}, PDF=${!!fileResults.pdfUrl}, DOCX=${!!fileResults.docxUrl}`);
+    
+    return {
+      html: htmlContent,
+      htmlUrl: fileResults.htmlUrl,
+      pdfUrl: fileResults.pdfUrl,
+      docxUrl: fileResults.docxUrl,
+      template: templateId,
+      features: features,
+      fileGenerationDetails: fileResults.generationDetails
+    };
+    
+  } catch (error: any) {
+    console.error(`❌ [CV-GEN] Error in generateAndSaveCV for job ${jobId}:`, error);
+    await updateJobGenerationStep(jobId, 'error', `CV generation failed: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
@@ -186,26 +211,48 @@ async function completeJobGeneration(
 }
 
 /**
- * Handle generation errors with proper job status updates
+ * Handle generation errors with comprehensive error analysis and recovery options
  */
 async function handleGenerationError(jobId: string, error: any) {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  const errorStack = error instanceof Error ? error.stack : '';
+  
+  console.error(`🚨 [ERROR-HANDLER] CV generation failed for job ${jobId}:`, errorMessage);
+  
+  // Analyze error type for better recovery recommendations
+  const errorAnalysis = analyzeGenerationError(error);
+  
   try {
+    const errorData = {
+      status: 'failed',
+      error: errorMessage,
+      errorDetails: {
+        type: errorAnalysis.type,
+        category: errorAnalysis.category,
+        retryable: errorAnalysis.retryable,
+        recommendedAction: errorAnalysis.recommendedAction,
+        timestamp: new Date(),
+        stack: errorStack.substring(0, 1000) // Limit stack trace length
+      },
+      lastGenerationStep: await getLastGenerationStep(jobId),
+      updatedAt: FieldValue.serverTimestamp()
+    };
+    
     await admin.firestore()
       .collection('jobs')
       .doc(jobId)
-      .update({
-        status: 'failed',
-        error: error.message,
-        updatedAt: FieldValue.serverTimestamp()
-      });
+      .update(errorData);
+    
+    console.log(`📋 [ERROR-HANDLER] Error details saved for job ${jobId}: ${errorAnalysis.type} - ${errorAnalysis.recommendedAction}`);
+    
   } catch (updateError: any) {
-    console.error('Failed to update job status:', updateError);
+    console.error(`❌ [ERROR-HANDLER] Failed to update job status for ${jobId}:`, updateError);
   }
 }
 
 /**
  * Process REAL enhancement features by calling actual service functions
- * NO MORE MOCK/SIMULATION CODE - REAL IMPLEMENTATIONS ONLY
+ * WITH COMPREHENSIVE TIMEOUT AND ERROR RECOVERY
  */
 async function processRealFeatures(jobId: string, userId: string, features: string[], cvData: any): Promise<void> {
   console.log('🚀 [REAL ENHANCEMENT] Processing features for job:', jobId);
@@ -213,6 +260,23 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
   
   if (features.length === 0) {
     console.log('🔍 No enhancement features to process');
+    // Initialize empty enhancedFeatures field to prevent missing field errors
+    await admin.firestore().collection('jobs').doc(jobId).update({
+      enhancedFeatures: {},
+      featureProcessingSummary: {
+        total: 0,
+        successful: 0,
+        failed: 0,
+        successRate: 100,
+        completedFeatures: [],
+        failedFeatures: [],
+        errors: [],
+        lastProcessed: FieldValue.serverTimestamp(),
+        skipped: true,
+        skipReason: 'No features selected'
+      },
+      updatedAt: FieldValue.serverTimestamp()
+    });
     return;
   }
 
@@ -227,39 +291,109 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
     failedFeatures: [] as string[]
   };
 
-  // Process each feature with graceful failure handling
-  for (const feature of features) {
-    try {
-      console.log(`🎯 Processing feature: ${feature}`);
-      await processIndividualFeature(feature, jobId, userId, cvData);
-      
-      processingResults.successful++;
-      processingResults.completedFeatures.push(feature);
-      console.log(`✅ Feature ${feature} completed successfully`);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Error processing feature ${feature}:`, errorMessage);
-      
-      processingResults.failed++;
-      processingResults.failedFeatures.push(feature);
-      processingResults.errors.push({ feature, error: errorMessage });
-      
-      // Mark individual feature as failed but continue with others
-      await markFeatureAsFailed(jobId, feature, errorMessage);
-      
-      // For critical failures, log more details but don't stop processing
-      if (error instanceof Error && error.stack) {
-        console.error(`📋 Stack trace for ${feature}:`, error.stack);
+  try {
+    // Process all features with comprehensive timeout protection
+    console.log(`🚀 Starting parallel processing of ${features.length} features with 8-minute global timeout`);
+    
+    const featurePromises = features.map(async (feature) => {
+      try {
+        console.log(`🎯 Processing feature: ${feature}`);
+        // Add per-feature timeout of 3 minutes
+        const result = await Promise.race([
+          processIndividualFeature(feature, jobId, userId, cvData),
+          new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(`Feature ${feature} timed out after 3 minutes`)), 180000);
+          })
+        ]);
+        console.log(`✅ Feature ${feature} completed successfully`);
+        return { feature, status: 'success' };
+      } catch (error: any) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`❌ Error processing feature ${feature}:`, errorMessage);
+        
+        // Mark individual feature as failed but continue with others
+        await markFeatureAsFailed(jobId, feature, errorMessage);
+        
+        // For critical failures, log more details but don't stop processing
+        if (error instanceof Error && error.stack) {
+          console.error(`📋 Stack trace for ${feature}:`, error.stack);
+        }
+        
+        return { 
+          feature, 
+          status: 'failed', 
+          error: errorMessage 
+        };
       }
+    });
+
+    // Wait for all features to complete with global timeout protection
+    console.log(`⏳ Waiting for all ${features.length} features to complete with 8-minute timeout...`);
+    const results = await Promise.race([
+      Promise.allSettled(featurePromises),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Feature processing timed out after 8 minutes')), 480000);
+      })
+    ]);
+  
+  // Process results and update counters
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      const featureResult = result.value;
+      if (featureResult.status === 'success') {
+        processingResults.successful++;
+        processingResults.completedFeatures.push(featureResult.feature);
+      } else {
+        processingResults.failed++;
+        processingResults.failedFeatures.push(featureResult.feature);
+        processingResults.errors.push({ 
+          feature: featureResult.feature, 
+          error: featureResult.error || 'Unknown error'
+        });
+      }
+    } else {
+      // Handle unexpected Promise.allSettled rejection (should not happen with our error handling)
+      console.error('❌ Unexpected promise rejection:', result.reason);
+      processingResults.failed++;
+      processingResults.failedFeatures.push('unknown-feature');
+      processingResults.errors.push({ 
+        feature: 'unknown-feature', 
+        error: `Unexpected promise rejection: ${result.reason}` 
+      });
     }
   }
+  
+  console.log(`🏁 Parallel processing completed: ${processingResults.successful} successful, ${processingResults.failed} failed`);
 
   // Update job with comprehensive processing summary
   await updateJobWithProcessingSummary(jobId, processingResults);
   
-  // Log final processing summary
-  logProcessingSummary(jobId, processingResults);
+    // Log final processing summary
+    logProcessingSummary(jobId, processingResults);
+    
+  } catch (globalError: any) {
+    console.error('🚨 CRITICAL: Global feature processing failed:', globalError.message);
+    
+    // If global processing fails, mark all remaining features as failed
+    for (const feature of features) {
+      if (!processingResults.completedFeatures.includes(feature) && !processingResults.failedFeatures.includes(feature)) {
+        processingResults.failed++;
+        processingResults.failedFeatures.push(feature);
+        processingResults.errors.push({
+          feature,
+          error: `Global processing failure: ${globalError.message}`
+        });
+        await markFeatureAsFailed(jobId, feature, `Global timeout: ${globalError.message}`);
+      }
+    }
+    
+    // Update job with global failure summary
+    await updateJobWithProcessingSummary(jobId, processingResults);
+    logProcessingSummary(jobId, processingResults);
+    
+    // Don't throw - allow CV generation to complete even if features fail
+    console.warn('⚠️ Feature processing completed with global errors but CV generation will continue');
+  }
 }
 
 /**
@@ -863,4 +997,282 @@ function injectFeatureFragments(
   
   console.log('Completed feature injection into CV HTML');
   return updatedHTML;
+}
+
+/**
+ * Update job generation step with detailed progress information
+ */
+async function updateJobGenerationStep(
+  jobId: string, 
+  step: string, 
+  message: string, 
+  progress?: number
+): Promise<void> {
+  try {
+    const updateData: any = {
+      'generationProgress.currentStep': step,
+      'generationProgress.stepMessage': message,
+      'generationProgress.lastUpdated': FieldValue.serverTimestamp()
+    };
+    
+    if (progress !== undefined) {
+      updateData['generationProgress.percentage'] = Math.min(100, Math.max(0, progress));
+    }
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
+    console.log(`📈 [PROGRESS] Job ${jobId}: ${step} - ${message}`);
+  } catch (error) {
+    console.error(`Failed to update generation step for job ${jobId}:`, error);
+    // Don't throw - progress updates shouldn't break the main flow
+  }
+}
+
+/**
+ * Save files with comprehensive fallback handling
+ */
+async function saveFilesWithFallback(
+  generator: CVGenerator,
+  jobId: string,
+  userId: string,
+  htmlContent: string
+): Promise<{
+  htmlUrl: string;
+  pdfUrl: string;
+  docxUrl: string;
+  generationDetails: any;
+}> {
+  const generationDetails: any = {
+    htmlGeneration: { success: false, error: null, timestamp: new Date() },
+    pdfGeneration: { success: false, error: null, timestamp: new Date() },
+    docxGeneration: { success: false, error: null, timestamp: new Date() }
+  };
+  
+  let htmlUrl = '';
+  let pdfUrl = '';
+  let docxUrl = '';
+  
+  try {
+    console.log('💾 [FILE-SAVE] Starting file generation process...');
+    
+    // Always try to save files, but don't fail the entire process if one fails
+    const fileResults: EnhancedFileGenerationResult = await generator.saveGeneratedFiles(jobId, userId, htmlContent);
+    
+    // Check individual file results
+    if (fileResults.htmlUrl) {
+      htmlUrl = fileResults.htmlUrl;
+      generationDetails.htmlGeneration.success = true;
+      console.log('✅ [FILE-SAVE] HTML file saved successfully');
+    }
+    
+    if (fileResults.pdfUrl) {
+      pdfUrl = fileResults.pdfUrl;
+      generationDetails.pdfGeneration.success = true;
+      console.log('✅ [FILE-SAVE] PDF file generated successfully');
+    } else {
+      console.warn('⚠️ [FILE-SAVE] PDF generation returned empty URL - likely failed silently');
+      generationDetails.pdfGeneration.error = 'PDF generation failed or returned empty URL';
+    }
+    
+    if (fileResults.docxUrl) {
+      docxUrl = fileResults.docxUrl;
+      generationDetails.docxGeneration.success = true;
+      console.log('✅ [FILE-SAVE] DOCX file generated successfully');
+    } else {
+      console.log('📄 [FILE-SAVE] DOCX generation skipped (not implemented)');
+      generationDetails.docxGeneration.error = 'DOCX generation not implemented';
+    }
+    
+    // Record any errors from the file generation process
+    if (fileResults.errors && fileResults.errors.length > 0) {
+      generationDetails.pdfGeneration.error = fileResults.errors.join('; ');
+    }
+    
+  } catch (error: any) {
+    console.error('❌ [FILE-SAVE] Error in file generation:', error);
+    
+    // Even if file generation fails, we should still try to provide HTML at minimum
+    if (!htmlUrl) {
+      try {
+        // Try to save just the HTML as a fallback
+        const fallbackResult = await saveFallbackHtml(jobId, userId, htmlContent);
+        if (fallbackResult) {
+          htmlUrl = fallbackResult;
+          generationDetails.htmlGeneration.success = true;
+          console.log('✅ [FILE-SAVE] Fallback HTML save successful');
+        }
+      } catch (fallbackError) {
+        console.error('❌ [FILE-SAVE] Even fallback HTML save failed:', fallbackError);
+        generationDetails.htmlGeneration.error = `File generation failed: ${error.message}`;
+      }
+    }
+    
+    // Record the error but don't throw - we want to complete CV generation even with file issues
+    generationDetails.pdfGeneration.error = error.message;
+    generationDetails.docxGeneration.error = error.message;
+  }
+  
+  // Ensure we have at least HTML content available
+  if (!htmlUrl && htmlContent) {
+    console.warn('🚨 [FILE-SAVE] No HTML URL available, but HTML content exists - this is a critical issue');
+    throw new Error('Critical: Could not save any CV files, including HTML');
+  }
+  
+  return {
+    htmlUrl,
+    pdfUrl,
+    docxUrl,
+    generationDetails
+  };
+}
+
+/**
+ * Fallback HTML save function with minimal dependencies
+ */
+async function saveFallbackHtml(
+  jobId: string, 
+  userId: string, 
+  htmlContent: string
+): Promise<string | null> {
+  try {
+    console.log('🆘 [FALLBACK] Attempting fallback HTML save...');
+    
+    const bucket = admin.storage().bucket();
+    const htmlFileName = `users/${userId}/generated/${jobId}/cv-fallback.html`;
+    const htmlFile = bucket.file(htmlFileName);
+    
+    await htmlFile.save(htmlContent, {
+      metadata: {
+        contentType: 'text/html',
+        cacheControl: 'public, max-age=31536000'
+      },
+    });
+    
+    // Generate signed URL
+    const [signedUrl] = await htmlFile.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+    });
+    
+    console.log('✅ [FALLBACK] Fallback HTML save successful');
+    return signedUrl;
+    
+  } catch (error) {
+    console.error('❌ [FALLBACK] Fallback HTML save failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Analyze generation errors to provide better recovery recommendations
+ */
+function analyzeGenerationError(error: any): {
+  type: string;
+  category: string;
+  retryable: boolean;
+  recommendedAction: string;
+} {
+  const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  const errorStack = error instanceof Error ? error.stack || '' : '';
+  
+  // Puppeteer/PDF generation errors
+  if (errorMessage.includes('puppeteer') || errorMessage.includes('browser') || errorMessage.includes('chrome')) {
+    return {
+      type: 'puppeteer_error',
+      category: 'file_generation',
+      retryable: true,
+      recommendedAction: 'Retry with fallback PDF generation or skip PDF generation'
+    };
+  }
+  
+  // Memory errors
+  if (errorMessage.includes('memory') || errorMessage.includes('heap') || errorStack.includes('out of memory')) {
+    return {
+      type: 'memory_error',
+      category: 'system_resource',
+      retryable: true,
+      recommendedAction: 'Retry with reduced feature set or increase function memory'
+    };
+  }
+  
+  // Timeout errors
+  if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+    return {
+      type: 'timeout_error',
+      category: 'performance',
+      retryable: true,
+      recommendedAction: 'Retry with longer timeout or reduce feature complexity'
+    };
+  }
+  
+  // Firebase/Firestore errors
+  if (errorMessage.includes('firestore') || errorMessage.includes('firebase')) {
+    return {
+      type: 'firebase_error',
+      category: 'database',
+      retryable: true,
+      recommendedAction: 'Check Firebase permissions and retry after brief delay'
+    };
+  }
+  
+  // Network errors
+  if (errorMessage.includes('network') || errorMessage.includes('connection') || errorMessage.includes('econnreset')) {
+    return {
+      type: 'network_error',
+      category: 'connectivity',
+      retryable: true,
+      recommendedAction: 'Retry after checking network connectivity'
+    };
+  }
+  
+  // Storage errors
+  if (errorMessage.includes('storage') || errorMessage.includes('bucket')) {
+    return {
+      type: 'storage_error',
+      category: 'file_system',
+      retryable: true,
+      recommendedAction: 'Check Firebase Storage permissions and quota'
+    };
+  }
+  
+  // Authentication errors
+  if (errorMessage.includes('auth') || errorMessage.includes('unauthorized') || errorMessage.includes('permission')) {
+    return {
+      type: 'auth_error',
+      category: 'security',
+      retryable: false,
+      recommendedAction: 'Check user authentication and permissions'
+    };
+  }
+  
+  // Template/data errors
+  if (errorMessage.includes('template') || errorMessage.includes('parse') || errorMessage.includes('data')) {
+    return {
+      type: 'data_error',
+      category: 'input_validation',
+      retryable: false,
+      recommendedAction: 'Check CV data integrity and template compatibility'
+    };
+  }
+  
+  // Default case
+  return {
+    type: 'unknown_error',
+    category: 'general',
+    retryable: true,
+    recommendedAction: 'Review error details and retry with basic features only'
+  };
+}
+
+/**
+ * Get the last generation step from the job document
+ */
+async function getLastGenerationStep(jobId: string): Promise<string | null> {
+  try {
+    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+    const jobData = jobDoc.data();
+    return jobData?.generationProgress?.currentStep || null;
+  } catch (error) {
+    console.error(`Failed to get last generation step for job ${jobId}:`, error);
+    return null;
+  }
 }

@@ -504,7 +504,7 @@ export class FeaturePriorityService {
   /**
    * Get or create user preferences
    */
-  private async getUserPreferences(userId: string): Promise<UserPreferences> {
+  async getUserPreferences(userId: string): Promise<UserPreferences> {
     const cached = this.userPreferences.get(userId);
     if (cached) return cached;
 

@@ -2,6 +2,7 @@
  * Feature Selection Panel Component
  */
 
+import { useCallback } from 'react';
 import { FeatureCheckbox } from './FeatureCheckbox';
 import type { SelectedFeatures, FeatureAvailability } from '../../types/results';
 
@@ -16,12 +17,15 @@ export const FeatureSelectionPanel = ({
   setSelectedFeatures, 
   featureAvailability 
 }: FeatureSelectionPanelProps) => {
-  const updateFeature = (feature: keyof SelectedFeatures, value: boolean) => {
+  const updateFeature = useCallback((feature: keyof SelectedFeatures, value: boolean) => {
     console.log(`🔍 [FEATURE SELECTION] ${feature} toggled to:`, value);
+    console.log('🔍 [FEATURE SELECTION] Current features object reference ID:', selectedFeatures);
     const newFeatures = { ...selectedFeatures, [feature]: value };
     console.log('🔍 [FEATURE SELECTION] New state will be:', newFeatures);
+    console.log('🔍 [FEATURE SELECTION] New object reference ID:', newFeatures);
+    console.log('🔍 [FEATURE SELECTION] Object references are different:', selectedFeatures !== newFeatures);
     setSelectedFeatures(newFeatures);
-  };
+  }, [selectedFeatures, setSelectedFeatures]);
 
   const selectedCount = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length;
   const totalFeatures = Object.keys(selectedFeatures).length;

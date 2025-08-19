@@ -485,6 +485,44 @@ export const CVTemplateStyles = {
       font-weight: 700;
       font-size: 18px;
     }
+
+    /* Feature Preview Styles */
+    .privacy-info p {
+      margin: 8px 0;
+      padding: 8px 12px;
+      background: #f0fff4;
+      border-left: 3px solid #48bb78;
+      border-radius: 4px;
+    }
+
+    .calendar-widget {
+      text-align: center;
+    }
+
+    .schedule-button {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 12px 20px;
+      background: #4299e1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .schedule-button:hover {
+      background: #3182ce;
+    }
+
+    .calendar-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+    }
   `,
 
   getAllStyles: (): string => {

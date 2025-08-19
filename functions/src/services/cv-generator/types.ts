@@ -66,6 +66,13 @@ export interface FileGenerationResult {
 }
 
 /**
+ * Enhanced file generation result with error tracking
+ */
+export interface EnhancedFileGenerationResult extends FileGenerationResult {
+  errors?: string[];
+}
+
+/**
  * Template types supported by the system
  */
 export type TemplateType = 'modern' | 'classic' | 'creative';

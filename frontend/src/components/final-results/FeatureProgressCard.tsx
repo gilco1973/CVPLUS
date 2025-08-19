@@ -47,6 +47,21 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
     }
   };
 
+  const getStatusText = () => {
+    switch (progress.status) {
+      case 'completed':
+        return 'Completed';
+      case 'processing':
+        return `Processing (${progress.progress}%)`;
+      case 'failed':
+        return 'Failed';
+      case 'skipped':
+        return 'Skipped';
+      default:
+        return 'Pending';
+    }
+  };
+
   const getStatusColor = () => {
     switch (progress.status) {
       case 'completed':
@@ -67,7 +82,10 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-lg">{feature.icon}</span>
-          <h3 className="font-medium text-gray-100">{feature.name}</h3>
+          <div>
+            <h3 className="font-medium text-gray-100">{feature.name}</h3>
+            <p className="text-xs text-gray-400">{getStatusText()}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {getStatusIcon()}
@@ -94,11 +112,17 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
       
       <p className="text-sm text-gray-400 mb-3">{feature.description}</p>
       
-      {progress.status === 'processing' && (
+      {(progress.status === 'processing' || (progress.status === 'completed' && progress.progress === 100)) && (
         <div className="space-y-2">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>Progress</span>
+            <span>{progress.progress || 0}%</span>
+          </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              className={`h-2 rounded-full transition-all duration-500 ${
+                progress.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
+              }`}
               style={{ width: `${progress.progress || 0}%` }}
             />
           </div>
@@ -113,12 +137,15 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
       )}
       
       {progress.status === 'completed' && (
-        <p className="text-sm text-green-400">
-          {progress.processedAt ? 
-            `Enhancement complete! (${new Date(progress.processedAt.seconds * 1000).toLocaleTimeString()})` : 
-            'Enhancement complete!'
-          }
-        </p>
+        <div className="flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-green-400" />
+          <p className="text-sm text-green-400">
+            {progress.processedAt ? 
+              `Enhancement complete! (${new Date(progress.processedAt.seconds * 1000).toLocaleTimeString()})` : 
+              'Enhancement complete!'
+            }
+          </p>
+        </div>
       )}
       
       {progress.status === 'skipped' && (

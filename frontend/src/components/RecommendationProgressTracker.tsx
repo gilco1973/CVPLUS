@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { JobSubscriptionManager } from '../services/JobSubscriptionManager';
+import type { Job } from '../services/cvService';
 
 interface ProgressTrackerProps {
   jobId: string;
@@ -87,11 +87,12 @@ const RecommendationProgressTracker: React.FC<ProgressTrackerProps> = ({
     console.log(`[ProgressTracker] Starting monitoring for job ${jobId}`);
     setStartTime(new Date());
 
-    const unsubscribe = onSnapshot(
-      doc(db, 'jobs', jobId),
-      (doc) => {
-        if (doc.exists()) {
-          const data = doc.data() as JobProgress;
+    const jobSubscriptionManager = JobSubscriptionManager.getInstance();
+    const unsubscribe = jobSubscriptionManager.subscribeToProgress(
+      jobId,
+      (job: Job | null) => {
+        if (job) {
+          const data = job as any; // Cast to JobProgress interface
           setProgress(data);
           
           console.log(`[ProgressTracker] Status update:`, {
@@ -109,11 +110,14 @@ const RecommendationProgressTracker: React.FC<ProgressTrackerProps> = ({
             console.log(`[ProgressTracker] Analysis failed:`, data.error);
             onComplete?.(false, data.error);
           }
+        } else {
+          console.warn('[ProgressTracker] No job data received');
         }
       },
-      (error) => {
-        console.error('[ProgressTracker] Firestore listener error:', error);
-        onComplete?.(false, 'Failed to monitor progress');
+      {
+        enableLogging: true,
+        debounceMs: 500, // Longer debounce for recommendation progress
+        errorRecovery: true
       }
     );
 

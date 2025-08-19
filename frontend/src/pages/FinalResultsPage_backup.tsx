@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Sparkles, Loader2, CheckCircle, Clock, AlertCircle, Zap } from 'lucide-react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { getJob, generateCV, generateEnhancedPodcast } from '../services/cvService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
+import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
 import { db, storage } from '../lib/firebase';
-import type { Job } from '../types/cv';
+import type { Job } from '../types/job';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import { Header } from '../components/Header';
 import { CVMetadata } from '../components/final-results/CVMetadata';
@@ -355,22 +356,22 @@ export const FinalResultsPage = () => {
     setupProgressTracking(jobId, queue);
   };
 
-  // Set up real-time progress tracking
+  // Set up real-time progress tracking using JobSubscriptionManager
   const setupProgressTracking = (jobId: string, trackingFeatures: FeatureConfig[]) => {
     console.log('📡 [DEBUG] Setting up progress tracking for job:', jobId);
     console.log('📡 [DEBUG] Tracking features:', trackingFeatures.map(f => ({ id: f.id, name: f.name })));
     
-    const jobRef = doc(db, 'jobs', jobId);
-    const unsubscribe = onSnapshot(jobRef, (doc) => {
-      if (!doc.exists() || !isMountedRef.current) {
-        console.log('📡 [DEBUG] Document does not exist or component unmounted');
+    // Use JobSubscriptionManager for consolidated Firestore listening
+    const handleJobUpdate = (job: Job | null) => {
+      if (!job || !isMountedRef.current) {
+        console.log('📡 [DEBUG] Job is null or component unmounted');
         return;
       }
       
-      const data = doc.data();
-      console.log('📡 [DEBUG] Full document data keys:', Object.keys(data || {}));
+      console.log('📡 [DEBUG] Job update received via JobSubscriptionManager');
+      console.log('📡 [DEBUG] Full job data keys:', Object.keys(job || {}));
       
-      const enhancedFeatures = data.enhancedFeatures || {};
+      const enhancedFeatures = job.enhancedFeatures || {};
       console.log('📡 [DEBUG] Enhanced features keys:', Object.keys(enhancedFeatures));
       console.log('📡 [DEBUG] Enhanced features content:', enhancedFeatures);
       
@@ -423,12 +424,13 @@ export const FinalResultsPage = () => {
       
       // Update HTML if new fragments are available
       // This would be implemented in Phase 2 with HTML merging
-      
-    }, (error) => {
-      console.error('❌ [DEBUG] Progress tracking error:', error);
-    });
+    };
     
-    setProgressUnsubscribe(() => unsubscribe);
+    // Subscribe to job updates via JobSubscriptionManager
+    const unsubscribeFromJob = jobSubscriptionManager.subscribeToJob(jobId, handleJobUpdate);
+    
+    // Set up cleanup function
+    setProgressUnsubscribe(() => unsubscribeFromJob);
   };
 
   useEffect(() => {

@@ -16,20 +16,45 @@ import { db } from '../lib/firebase';
 import { subscriptionRateLimiter } from '../utils/rateLimiter';
 import type { Job } from './cvService';
 
+// Callback types for different use cases
+export type JobCallback = (job: Job | null) => void;
+export type ProgressCallback = (job: Job | null, progressData?: any) => void;
+export type PreviewCallback = (job: Job | null, previewData?: any) => void;
+export type FeatureCallback = (job: Job | null, features?: any[]) => void;
+
+export enum CallbackType {
+  GENERAL = 'general',
+  PROGRESS = 'progress', 
+  PREVIEW = 'preview',
+  FEATURES = 'features'
+}
+
+interface CallbackRegistration {
+  callback: JobCallback;
+  type: CallbackType;
+  filter?: (job: Job | null) => boolean;
+}
+
 interface JobSubscription {
   jobId: string;
   job: Job | null;
   unsubscribe: Unsubscribe;
-  callbacks: Set<(job: Job | null) => void>;
+  callbacks: Map<JobCallback, CallbackRegistration>;
   lastUpdate: number;
   errorCount: number;
   isActive: boolean;
+  lastErrorTime?: number;
+  consecutiveErrors: number;
+  lastJobHash?: string; // Track job content to prevent duplicate logging
 }
 
 interface SubscriptionOptions {
   debounceMs?: number;
   maxRetries?: number;
   enableLogging?: boolean;
+  callbackType?: CallbackType;
+  filter?: (job: Job | null) => boolean;
+  errorRecovery?: boolean;
 }
 
 interface MemoryStats {
@@ -53,7 +78,7 @@ export class JobSubscriptionManager {
   private static instance: JobSubscriptionManager;
   private static shutdownHandlersSetup = false;
   private subscriptions = new Map<string, JobSubscription>();
-  private pendingCallbacks = new Map<string, Set<(job: Job | null) => void>>();
+  private pendingCallbacks = new Map<string, Map<JobCallback, CallbackRegistration>>();
   private debounceTimers = new Map<string, NodeJS.Timeout>();
   private cleanupTimers = new Map<string, CleanupTimer>();
   private intervals: NodeJS.Timeout[] = [];
@@ -63,7 +88,10 @@ export class JobSubscriptionManager {
   private readonly defaultOptions: Required<SubscriptionOptions> = {
     debounceMs: 100,
     maxRetries: 3,
-    enableLogging: true
+    enableLogging: true,
+    callbackType: CallbackType.GENERAL,
+    filter: undefined,
+    errorRecovery: true
   };
 
   private constructor() {
@@ -216,8 +244,13 @@ export class JobSubscriptionManager {
       this.subscriptions.set(jobId, subscription);
     }
 
-    // Add callback to subscription
-    subscription.callbacks.add(callback);
+    // Add callback to subscription with registration info
+    const registration: CallbackRegistration = {
+      callback,
+      type: opts.callbackType || CallbackType.GENERAL,
+      filter: opts.filter
+    };
+    subscription.callbacks.set(callback, registration);
 
     // If job data already exists, call callback immediately
     if (subscription.job !== null) {
@@ -228,6 +261,78 @@ export class JobSubscriptionManager {
     return () => {
       this.unsubscribeCallback(jobId, callback, opts.enableLogging);
     };
+  }
+
+  /**
+   * Subscribe to job progress updates with progress-specific filtering
+   */
+  public subscribeToProgress(
+    jobId: string,
+    callback: ProgressCallback,
+    options: Omit<SubscriptionOptions, 'callbackType'> = {}
+  ): () => void {
+    const progressFilter = (job: Job | null) => {
+      if (!job) return true;
+      // Only notify on status changes or progress updates
+      return job.status === 'processing' || job.status === 'completed' || 
+             job.progress !== undefined || job.features !== undefined;
+    };
+
+    return this.subscribeToJob(jobId, callback as JobCallback, {
+      ...options,
+      callbackType: CallbackType.PROGRESS,
+      filter: progressFilter
+    });
+  }
+
+  /**
+   * Subscribe to job preview updates with preview-specific filtering
+   */
+  public subscribeToPreview(
+    jobId: string,
+    callback: PreviewCallback,
+    options: Omit<SubscriptionOptions, 'callbackType'> = {}
+  ): () => void {
+    const previewFilter = (job: Job | null) => {
+      if (!job) return true;
+      // Only notify when preview-related data changes
+      return job.status === 'completed' || job.cvData !== undefined ||
+             job.previewData !== undefined;
+    };
+
+    return this.subscribeToJob(jobId, callback as JobCallback, {
+      ...options,
+      callbackType: CallbackType.PREVIEW,
+      filter: previewFilter
+    });
+  }
+
+  /**
+   * Subscribe to feature-specific updates
+   */
+  public subscribeToFeatures(
+    jobId: string,
+    callback: FeatureCallback,
+    featureNames?: string[],
+    options: Omit<SubscriptionOptions, 'callbackType'> = {}
+  ): () => void {
+    const featureFilter = (job: Job | null) => {
+      if (!job || !job.features) return false;
+      
+      // If specific features requested, only notify when those change
+      if (featureNames && featureNames.length > 0) {
+        return job.features.some(f => featureNames.includes(f.name || f.id));
+      }
+      
+      // Otherwise notify on any feature change
+      return job.features && job.features.length > 0;
+    };
+
+    return this.subscribeToJob(jobId, callback as JobCallback, {
+      ...options,
+      callbackType: CallbackType.FEATURES,
+      filter: featureFilter
+    });
   }
 
   /**
@@ -461,9 +566,10 @@ export class JobSubscriptionManager {
       jobId,
       job: null,
       unsubscribe: () => {}, // Will be set below
-      callbacks: new Set(),
+      callbacks: new Map(),
       lastUpdate: Date.now(),
       errorCount: 0,
+      consecutiveErrors: 0,
       isActive: true
     };
 
@@ -476,18 +582,31 @@ export class JobSubscriptionManager {
             ? { id: docSnapshot.id, ...docSnapshot.data() } as Job
             : null;
 
+          // Create a hash of relevant job data to detect actual changes
+          const jobHash = jobData ? `${jobData.status}-${jobData.progress}-${jobData.features?.length || 0}-${jobData.updatedAt || jobData.createdAt}` : 'null';
+          const hasActualChange = subscription.lastJobHash !== jobHash;
+          
           // Update subscription data
           subscription.job = jobData;
           subscription.lastUpdate = Date.now();
           subscription.errorCount = 0; // Reset error count on success
+          subscription.lastJobHash = jobHash;
 
-          if (options.enableLogging && docSnapshot.exists()) {
+          // Only log when there's an actual change in meaningful data
+          if (options.enableLogging && docSnapshot.exists() && hasActualChange) {
             console.log(`[JobSubscriptionManager] Job update for ${jobId}:`, docSnapshot.data()?.status);
           }
 
-          // Notify all callbacks with debouncing
-          for (const callback of subscription.callbacks) {
-            this.debouncedCallback(jobId, callback, jobData, options.debounceMs);
+          // Only notify callbacks if there's an actual change to avoid excessive updates
+          if (hasActualChange) {
+            // Notify all callbacks with debouncing and filtering
+            for (const [callback, registration] of subscription.callbacks) {
+              // Apply filter if specified
+              if (registration.filter && !registration.filter(jobData)) {
+                continue;
+              }
+              this.debouncedCallback(jobId, callback, jobData, options.debounceMs);
+            }
           }
         } catch (error) {
           console.error(`[JobSubscriptionManager] Error processing job update for ${jobId}:`, error);
@@ -510,7 +629,7 @@ export class JobSubscriptionManager {
         }
 
         // Notify callbacks about the error (pass null)
-        for (const callback of subscription.callbacks) {
+        for (const [callback, registration] of subscription.callbacks) {
           try {
             callback(null);
           } catch (callbackError) {
@@ -597,7 +716,9 @@ export class JobSubscriptionManager {
       return; // Don't create new timers during shutdown
     }
     
-    const key = `${jobId}-${callback.toString()}`;
+    // Use a more efficient key that doesn't rely on callback.toString()
+    const callbackId = callback.name || `cb_${Math.random().toString(36).substr(2, 9)}`;
+    const key = `${jobId}-${callbackId}`;
     
     // Clear existing timer to prevent accumulation
     const existingTimer = this.debounceTimers.get(key);

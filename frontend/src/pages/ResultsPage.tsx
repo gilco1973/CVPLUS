@@ -168,8 +168,35 @@ export const ResultsPage = () => {
       const selectedFeatureKeys = Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]);
       const selectedFeatureCount = selectedFeatureKeys.length;
       
+      // Convert camelCase feature keys to kebab-case for backend compatibility
+      const featureMapping: Record<string, string> = {
+        'atsOptimization': 'ats-optimization',
+        'keywordEnhancement': 'keyword-enhancement',
+        'achievementHighlighting': 'achievement-highlighting',
+        'skillsVisualization': 'skills-visualization',
+        'generatePodcast': 'generate-podcast',
+        'privacyMode': 'privacy-mode',
+        'embedQRCode': 'embed-qr-code',
+        'interactiveTimeline': 'interactive-timeline',
+        'skillsChart': 'skills-chart',
+        'videoIntroduction': 'video-introduction',
+        'portfolioGallery': 'portfolio-gallery',
+        'testimonialsCarousel': 'testimonials-carousel',
+        'contactForm': 'contact-form',
+        'socialMediaLinks': 'social-media-links',
+        'availabilityCalendar': 'availability-calendar',
+        'languageProficiency': 'language-proficiency',
+        'certificationBadges': 'certification-badges',
+        'achievementsShowcase': 'achievements-showcase'
+      };
+      
+      const backendFeatureKeys = selectedFeatureKeys.map(camelCaseKey => {
+        return featureMapping[camelCaseKey] || camelCaseKey.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+      });
+      
       console.log('🔍 [FEATURE DEBUG] Full selectedFeatures state:', selectedFeatures);
-      console.log('🔍 [FEATURE DEBUG] Keys that are true:', selectedFeatureKeys);
+      console.log('🔍 [FEATURE DEBUG] CamelCase keys that are true:', selectedFeatureKeys);
+      console.log('🔍 [FEATURE DEBUG] Backend kebab-case keys:', backendFeatureKeys);
       console.log('🔍 [FEATURE DEBUG] Total selected count:', selectedFeatureCount);
       console.log('🔍 [FEATURE DEBUG] Template:', selectedTemplate);
       console.log('🔍 [FEATURE DEBUG] Async mode:', asyncMode);
@@ -178,7 +205,7 @@ export const ResultsPage = () => {
       const generationConfig = {
         jobId: job.id,
         templateId: selectedTemplate,
-        features: selectedFeatureKeys,
+        features: backendFeatureKeys, // Use kebab-case keys for backend
         featureCount: selectedFeatureCount,
         asyncMode,
         timestamp: new Date().toISOString()
@@ -200,7 +227,7 @@ export const ResultsPage = () => {
         const initResponse = await CVServiceCore.initiateCVGeneration({
           jobId: job.id,
           templateId: selectedTemplate,
-          features: selectedFeatureKeys
+          features: backendFeatureKeys // Use kebab-case keys for backend
         });
         
         // Update config with initialization response
@@ -230,7 +257,7 @@ export const ResultsPage = () => {
         generateCV(
           job.id, 
           selectedTemplate, 
-          selectedFeatureKeys
+          backendFeatureKeys // Use kebab-case keys for backend
         ).then((result) => {
           console.log('✅ [BACKGROUND] CV generation completed:', result);
           toast.success('CV generated successfully!');
@@ -392,13 +419,23 @@ export const ResultsPage = () => {
             <PodcastPlayer jobId={job.id} />
             
             {job.generatedCV ? (
-              <GeneratedCVDisplay job={job} />
+              <>
+                {console.log('🖥️ [RENDER DEBUG] Showing GeneratedCVDisplay instead of CVPreview - this prevents dynamic updates')}
+                <GeneratedCVDisplay job={job} />
+              </>
             ) : (
-              <CVPreview 
-                job={job}
-                selectedTemplate={selectedTemplate}
-                selectedFeatures={selectedFeatures as unknown as Record<string, boolean>}
-              />
+              <>
+                {console.log('🖥️ [RENDER DEBUG] Showing CVPreview for dynamic updates', {
+                  selectedTemplate,
+                  selectedFeatures,
+                  featureCount: Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof typeof selectedFeatures]).length
+                })}
+                <CVPreview 
+                  job={job}
+                  selectedTemplate={selectedTemplate}
+                  selectedFeatures={selectedFeatures}
+                />
+              </>
             )}
           </div>
         </div>

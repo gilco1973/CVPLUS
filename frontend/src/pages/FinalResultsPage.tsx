@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Sparkles, Loader2, Zap } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles, Loader2, Zap, CheckCircle } from 'lucide-react';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import { Header } from '../components/Header';
 import { CVMetadata } from '../components/final-results/CVMetadata';
@@ -9,13 +9,16 @@ import { PodcastPlayer } from '../components/PodcastPlayer';
 import { FeatureProgressCard } from '../components/final-results/FeatureProgressCard';
 import { FinalResultsErrorBoundary } from '../components/error-boundaries/FinalResultsErrorBoundary';
 import { AsyncGenerationErrorBoundary } from '../components/error-boundaries/AsyncGenerationErrorBoundary';
+import { FirestoreErrorBoundary } from '../components/error-boundaries/FirestoreErrorBoundary';
 import { useAsyncMode } from '../hooks/useAsyncMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { useCVGeneration } from '../hooks/useCVGeneration';
 import { useFinalResultsPage } from '../hooks/useFinalResultsPage';
+import { useProgressiveEnhancement } from '../hooks/useProgressiveEnhancement';
 import { skipFeature } from '../services/cv/CVServiceCore';
 import '../styles/final-results-animations.css';
 import toast from 'react-hot-toast';
+import { debugJobState, shouldDisplayCV } from '../utils/jobDebugger';
 
 export const FinalResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -27,6 +30,20 @@ export const FinalResultsPage = () => {
   } = useFinalResultsPage(jobId!);
   const { progressState } = useProgressTracking(jobId!, featureQueue);
   const { isGenerating } = useCVGeneration(jobId!);
+  
+  // Progressive enhancement for real-time feature integration
+  // Extract kebab-case feature IDs from the feature configs (they're already in kebab-case)
+  const selectedFeatureIds = featureQueue.map(feature => feature.id);
+  
+  console.log('🔧 Progressive Enhancement Feature IDs (from configs):', selectedFeatureIds);
+  
+  const progressiveEnhancement = useProgressiveEnhancement({
+    jobId: jobId!,
+    selectedFeatures: selectedFeatureIds,
+    autoStart: featureQueue.length > 0 && baseHTML !== '',
+    retryAttempts: 3,
+    retryDelay: 2000
+  });
 
   // Handle skip feature action
   const handleSkipFeature = async (featureId: string) => {
@@ -43,8 +60,11 @@ export const FinalResultsPage = () => {
     }
   };
 
-  // Loading state
-  if (loading || isGenerating) {
+  // Loading state - but only show loading if we're actually still generating
+  const shouldShowLoading = (loading || isGenerating) && 
+    (!job || (job.status === 'generating' || job.status === 'processing'));
+  
+  if (shouldShowLoading) {
     const message = loading ? 'Loading your CV...' : 
                    isAsyncInitialization ? 'Your CV is being generated in real-time...' : 
                    'Generating your enhanced CV...';
@@ -67,6 +87,14 @@ export const FinalResultsPage = () => {
             <p className="text-gray-300 text-lg mb-2">{message}</p>
             {isAsyncInitialization && (
               <p className="text-cyan-200/80 text-xs">Real-time CV generation in progress</p>
+            )}
+            {job && (
+              <div className="mt-4 text-sm text-gray-400">
+                <p>Job Status: {job.status}</p>
+                {job.status === 'completed' && (
+                  <p className="text-green-400">✅ Generation completed, loading CV...</p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -96,29 +124,105 @@ export const FinalResultsPage = () => {
     );
   }
 
-  if (!job) return null;
+  if (!job) {
+    console.log('🚫 [FINAL-RESULTS] No job data available');
+    return null;
+  }
+  
+  // Debug job state
+  debugJobState(job, 'FINAL-RESULTS-RENDER');
+  
+  // Check if we should display the CV
+  const canDisplayCV = shouldDisplayCV(job);
 
   return (
-    <FinalResultsErrorBoundary>
-      <div className="min-h-screen bg-gray-900">
+    <FirestoreErrorBoundary 
+      identifier="FinalResultsPage"
+      onError={(error, errorInfo) => {
+        console.error('Firestore error in FinalResultsPage:', error, errorInfo);
+        toast.error('Connection issue detected. Retrying automatically...');
+      }}
+    >
+      <FinalResultsErrorBoundary>
+        <div className="min-h-screen bg-gray-900">
         <Header 
           currentPage="final-results" 
           jobId={jobId} 
           title="Your Enhanced CV" 
-          subtitle={isProcessingFeatures ? "Your CV is ready! We're adding enhanced features..." : "Download your professionally enhanced CV"}
+          subtitle={
+            (isProcessingFeatures || progressiveEnhancement.isProcessing) 
+              ? "Your CV is ready! We're adding interactive features..." 
+              : featureQueue.length === 0 
+                ? "Your enhanced CV is ready for download" 
+                : "Download your professionally enhanced CV"
+          }
           variant="dark" 
         />
         
         <div className="max-w-6xl mx-auto px-4 py-8">
           <AsyncGenerationErrorBoundary>
-            {/* Feature Progress Section */}
+            {/* Backend-processed Features Section - Already Included */}
+            {job && job.selectedFeatures && (() => {
+              const backendProcessedFeatures = ['ats-optimization', 'keyword-enhancement', 'achievement-highlighting'];
+              const includedBackendFeatures = job.selectedFeatures.filter(f => backendProcessedFeatures.includes(f));
+              
+              if (includedBackendFeatures.length > 0) {
+                return (
+                  <div className="mb-8">
+                    <div className="bg-green-900/20 rounded-lg border border-green-700/50 p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <h2 className="text-lg font-semibold text-green-100">
+                          Core Features Already Applied
+                        </h2>
+                        <span className="text-xs bg-green-400 text-green-900 px-2 py-1 rounded-full font-medium">
+                          Included in CV
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {includedBackendFeatures.map(featureId => {
+                          const featureNames = {
+                            'ats-optimization': 'ATS Optimization',
+                            'keyword-enhancement': 'Keyword Enhancement', 
+                            'achievement-highlighting': 'Achievement Highlighting'
+                          };
+                          const featureIcons = {
+                            'ats-optimization': '🎯',
+                            'keyword-enhancement': '🔑',
+                            'achievement-highlighting': '⭐'
+                          };
+                          return (
+                            <div key={featureId} className="bg-green-800/20 rounded-lg p-4 border border-green-600/30">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xl">{featureIcons[featureId]}</span>
+                                <div className="flex-1">
+                                  <h3 className="font-medium text-green-100">{featureNames[featureId]}</h3>
+                                  <p className="text-xs text-green-300">Processed during CV generation</p>
+                                </div>
+                                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-sm text-green-200/80 mt-3">
+                        These features are already integrated into your CV content and don't require additional processing.
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Feature Progress Section - Only show if there are progressive enhancement features */}
             {featureQueue.length > 0 && (
               <div className="mb-8">
                 <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-5 h-5 text-cyan-400" />
                     <h2 className="text-lg font-semibold text-gray-100">
-                      {isProcessingFeatures ? 'Adding Enhanced Features' : 'Enhanced Features Complete'}
+                      {isProcessingFeatures ? 'Adding Interactive Features' : 'Interactive Features Complete'}
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -150,20 +254,60 @@ export const FinalResultsPage = () => {
 
             {/* CV Display */}
             <div className="mb-8 cv-display-fade-in">
-              {baseHTML ? (
+              {canDisplayCV ? (
                 <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-100">Your CV</h2>
-                    {isProcessingFeatures && (
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-gray-100">Your Enhanced CV</h2>
+                      {job.status === 'completed' && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
+                          <CheckCircle className="w-3 h-3" />
+                          Ready
+                        </div>
+                      )}
+                    </div>
+                    {(isProcessingFeatures || progressiveEnhancement.isProcessing) && (
                       <div className="flex items-center gap-2 text-sm text-cyan-400">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Adding enhancements...
+                        Adding enhancements... ({progressiveEnhancement.completedFeatures.length}/{progressiveEnhancement.features.length})
                       </div>
                     )}
                   </div>
                   <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
-                    <div dangerouslySetInnerHTML={{ __html: enhancedHTML }} />
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'
+                    }} />
                   </div>
+                  
+                  {/* Show completed features summary */}
+                  {featureQueue.length > 0 && (
+                    <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-200 mb-2">Applied Enhancements:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {featureQueue.map(feature => {
+                          const progress = progressState[feature.id];
+                          const isCompleted = progress?.status === 'completed';
+                          return (
+                            <div 
+                              key={feature.id}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                                isCompleted 
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : 'bg-gray-600/50 text-gray-400'
+                              }`}
+                            >
+                              {isCompleted ? (
+                                <CheckCircle className="w-3 h-3" />
+                              ) : (
+                                <span className="w-3 h-3 rounded-full border border-current" />
+                              )}
+                              {feature.name}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <GeneratedCVDisplay job={job} className="rounded-lg shadow-lg overflow-hidden" />
@@ -190,5 +334,6 @@ export const FinalResultsPage = () => {
         </div>
       </div>
     </FinalResultsErrorBoundary>
+    </FirestoreErrorBoundary>
   );
 };

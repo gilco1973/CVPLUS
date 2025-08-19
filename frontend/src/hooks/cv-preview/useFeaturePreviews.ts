@@ -271,6 +271,65 @@ export const useFeaturePreviews = (previewData: unknown) => {
             </div>
           </div>
         `;
+
+      case 'privacy-mode':
+        return `
+          <div class="privacy-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>🔒 Preview: Sensitive information will be protected</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              🔒 Privacy Protection Active
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="privacy-info">
+                <p>✅ Personal contact information protected</p>
+                <p>✅ Addresses and phone numbers masked</p>
+                <p>✅ Safe for public sharing</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'availability-calendar':
+        return `
+          <div class="calendar-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📅 Preview: Integrated scheduling calendar</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              📅 Schedule Interview
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
+              <div class="calendar-widget">
+                <button class="schedule-button">📅 Book 30-min Interview</button>
+                <button class="schedule-button">☕ Schedule Coffee Chat</button>
+                <p class="calendar-note">Powered by Calendly integration</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+      case 'embed-qr-code':
+        return `
+          <div class="qr-section feature-preview" data-feature="${featureId}">
+            <div class="feature-preview-banner">
+              <span>📱 Preview: QR code for easy profile sharing</span>
+            </div>
+            <h3 class="section-title" onclick="toggleSection('${featureId}')">
+              📱 QR Code
+              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
+            </h3>
+            <div class="section-content ${isCollapsed ? 'collapsed' : ''}" style="text-align: center;">
+              <div style="width: 120px; height: 120px; background: #f0f0f0; border: 2px dashed #ccc; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin: 20px auto;">
+                QR Code
+              </div>
+              <p style="font-size: 12px; color: #666;">Scan to view digital profile</p>
+            </div>
+          </div>
+        `;
       
       default:
         return '';

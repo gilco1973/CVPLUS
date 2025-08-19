@@ -3,12 +3,12 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 
-// Import the existing generateCV function for background processing
-import { generateCV } from './generateCV';
+// Import the core CV generation logic for background processing
+import { generateCVCore } from './generateCV';
 
 export const initiateCVGeneration = onCall(
   {
-    timeoutSeconds: 60, // Quick initialization only
+    timeoutSeconds: 90, // Increased to handle recovery logic
     memory: '1GiB',
     ...corsOptions
   },
@@ -69,27 +69,26 @@ export const initiateCVGeneration = onCall(
           updatedAt: FieldValue.serverTimestamp()
         });
 
-      // Step 4: Trigger background generateCV processing (fire-and-forget)
-      console.log('Triggering background CV generation process...');
+      // Step 4: Trigger background generateCV processing with comprehensive error recovery
+      console.log('Triggering background CV generation process with recovery mechanisms...');
       setImmediate(async () => {
         try {
           console.log('Background generateCV started for job:', jobId);
-          await generateCV.run({
-            auth: request.auth,
-            data: { jobId, templateId, features }
-          } as any);
-          console.log('Background generateCV completed for job:', jobId);
+          
+          // Add global timeout protection for the entire generation process
+          const result = await Promise.race([
+            generateCVCore(jobId, templateId, features, request.auth?.uid || ''),
+            new Promise<never>((_, reject) => {
+              setTimeout(() => reject(new Error('CV generation timed out after 12 minutes')), 720000);
+            })
+          ]);
+          
+          console.log('Background generateCV completed for job:', jobId, result);
         } catch (error) {
           console.error('Background generateCV failed for job:', jobId, error);
-          // Update job status to failed
-          await admin.firestore()
-            .collection('jobs')
-            .doc(jobId)
-            .update({
-              status: 'failed',
-              error: error instanceof Error ? error.message : 'Unknown error during background processing',
-              updatedAt: FieldValue.serverTimestamp()
-            });
+          
+          // Comprehensive error recovery
+          await handleCVGenerationFailure(jobId, error, features || []);
         }
       });
 
@@ -198,4 +197,91 @@ function getFeatureEstimatedTime(feature: string): number {
   };
   
   return featureTimings[feature] || 60; // Default to 1 minute for unknown features
+}
+
+/**
+ * Comprehensive error recovery for CV generation failures
+ */
+async function handleCVGenerationFailure(jobId: string, error: any, features: string[]): Promise<void> {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  const isTimeout = errorMessage.includes('timed out') || errorMessage.includes('timeout');
+  const isNetworkError = errorMessage.includes('network') || errorMessage.includes('ECONNRESET');
+  const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('limit');
+  
+  console.log(`🚨 Handling CV generation failure for job ${jobId}: ${errorMessage}`);
+  
+  try {
+    // Update job with failure details and recovery information
+    const updateData: any = {
+      status: 'failed',
+      error: errorMessage,
+      failureTimestamp: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      recoveryInfo: {
+        isTimeout,
+        isNetworkError,
+        isQuotaError,
+        retryable: isTimeout || isNetworkError || isQuotaError,
+        recommendedRetryDelay: getRetryDelay(errorMessage),
+        maxRetries: 3
+      }
+    };
+    
+    // Mark all selected features as failed if they weren't processed
+    const enhancedFeatures: Record<string, any> = {};
+    for (const feature of features) {
+      enhancedFeatures[feature] = {
+        status: 'failed',
+        error: `CV generation failed: ${errorMessage}`,
+        failureTimestamp: FieldValue.serverTimestamp(),
+        retryable: isTimeout || isNetworkError
+      };
+    }
+    updateData.enhancedFeatures = enhancedFeatures;
+    
+    await admin.firestore()
+      .collection('jobs')
+      .doc(jobId)
+      .update(updateData);
+      
+    console.log(`✅ Successfully updated job ${jobId} with failure information and recovery details`);
+    
+  } catch (updateError) {
+    console.error(`❌ Failed to update job ${jobId} with failure information:`, updateError);
+    
+    // Last resort: try to at least mark the job as failed
+    try {
+      await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .update({
+          status: 'failed',
+          error: errorMessage,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+    } catch (lastResortError) {
+      console.error(`❌ CRITICAL: Could not update job ${jobId} status even with last resort attempt:`, lastResortError);
+    }
+  }
+}
+
+/**
+ * Get recommended retry delay based on error type
+ */
+function getRetryDelay(errorMessage: string): number {
+  const lowerError = errorMessage.toLowerCase();
+  
+  if (lowerError.includes('quota') || lowerError.includes('limit')) {
+    return 900; // 15 minutes for quota errors
+  }
+  
+  if (lowerError.includes('timeout') || lowerError.includes('timed out')) {
+    return 300; // 5 minutes for timeout errors
+  }
+  
+  if (lowerError.includes('network') || lowerError.includes('connection')) {
+    return 120; // 2 minutes for network errors
+  }
+  
+  return 180; // 3 minutes default
 }

@@ -81,7 +81,6 @@ export {
 // Export media generation functions
 export {
   generateVideoIntro,
-  generatePodcast as generatePodcastScript,
   generateAudioFromText,
   regenerateMedia,
   getMediaStatus,
@@ -175,3 +174,11 @@ export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
 
 // Export feature management functions
 export { skipFeature } from './functions/skipFeature';
+
+// Export job monitoring functions
+export { 
+  monitorStuckJobs,
+  triggerJobMonitoring,
+  getJobDetails,
+  getJobStats
+} from './functions/monitorJobs';

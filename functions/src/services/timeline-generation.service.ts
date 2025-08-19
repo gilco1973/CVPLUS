@@ -153,49 +153,171 @@ export class TimelineGenerationService {
   }
   
   /**
-   * Parse date string to Date object
+   * Parse date string to Date object with comprehensive error handling
+   * Supports multiple date formats and provides safe fallback behavior
    */
   private parseDate(dateStr: string): Date {
-    // Handle various date formats
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-    
-    // Try parsing "Month Year" format
-    const monthYearMatch = dateStr.match(/(\w+)\s+(\d{4})/);
-    if (monthYearMatch) {
-      const monthMap: Record<string, number> = {
-        'january': 0, 'jan': 0,
-        'february': 1, 'feb': 1,
-        'march': 2, 'mar': 2,
-        'april': 3, 'apr': 3,
-        'may': 4,
-        'june': 5, 'jun': 5,
-        'july': 6, 'jul': 6,
-        'august': 7, 'aug': 7,
-        'september': 8, 'sep': 8, 'sept': 8,
-        'october': 9, 'oct': 9,
-        'november': 10, 'nov': 10,
-        'december': 11, 'dec': 11
-      };
-      
-      const month = monthMap[monthYearMatch[1].toLowerCase()];
-      const year = parseInt(monthYearMatch[2]);
-      
-      if (month !== undefined && !isNaN(year)) {
-        return new Date(year, month, 1);
+    try {
+      // Input validation and sanitization
+      if (!dateStr || typeof dateStr !== 'string') {
+        console.warn('[Timeline Service] Invalid date input received:', dateStr);
+        return new Date(); // Safe fallback
       }
+      
+      const sanitizedInput = dateStr.trim();
+      if (sanitizedInput.length === 0) {
+        console.warn('[Timeline Service] Empty date string provided');
+        return new Date(); // Safe fallback
+      }
+      
+      console.log(`[Timeline Service] Parsing date: "${sanitizedInput}"`);
+      
+      // Strategy 1: Direct Date constructor parsing
+      try {
+        const directDate = new Date(sanitizedInput);
+        if (!isNaN(directDate.getTime()) && this.isValidDateRange(directDate)) {
+          console.log(`[Timeline Service] Successfully parsed date using direct parsing: ${directDate.toISOString()}`);
+          return directDate;
+        }
+      } catch (error) {
+        console.warn('[Timeline Service] Direct date parsing failed:', error);
+      }
+      
+      // Strategy 2: Parse "Month Year" format (e.g., "January 2023", "Jan 2023")
+      try {
+        const monthYearPattern = /^\s*(\w+)\s+(\d{4})\s*$/i;
+        const monthYearMatch = sanitizedInput.match(monthYearPattern);
+        if (monthYearMatch) {
+          const monthMap: Record<string, number> = {
+            'january': 0, 'jan': 0,
+            'february': 1, 'feb': 1,
+            'march': 2, 'mar': 2,
+            'april': 3, 'apr': 3,
+            'may': 4,
+            'june': 5, 'jun': 5,
+            'july': 6, 'jul': 6,
+            'august': 7, 'aug': 7,
+            'september': 8, 'sep': 8, 'sept': 8,
+            'october': 9, 'oct': 9,
+            'november': 10, 'nov': 10,
+            'december': 11, 'dec': 11
+          };
+          
+          const monthStr = monthYearMatch[1].toLowerCase();
+          const yearStr = monthYearMatch[2];
+          const month = monthMap[monthStr];
+          const year = parseInt(yearStr, 10);
+          
+          if (month !== undefined && !isNaN(year) && year >= 1900 && year <= new Date().getFullYear() + 10) {
+            const parsedDate = new Date(year, month, 1);
+            if (this.isValidDateRange(parsedDate)) {
+              console.log(`[Timeline Service] Successfully parsed Month-Year format: ${parsedDate.toISOString()}`);
+              return parsedDate;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[Timeline Service] Month-Year parsing failed:', error);
+      }
+      
+      // Strategy 3: Parse year-only format (e.g., "2023", "1995")
+      try {
+        const yearOnlyPattern = /^\s*(\d{4})\s*$/;
+        const yearOnlyMatch = sanitizedInput.match(yearOnlyPattern);
+        if (yearOnlyMatch) {
+          const year = parseInt(yearOnlyMatch[1], 10);
+          if (year >= 1900 && year <= new Date().getFullYear() + 10) {
+            const parsedDate = new Date(year, 0, 1);
+            console.log(`[Timeline Service] Successfully parsed year-only format: ${parsedDate.toISOString()}`);
+            return parsedDate;
+          }
+        }
+      } catch (error) {
+        console.warn('[Timeline Service] Year-only parsing failed:', error);
+      }
+      
+      // Strategy 4: Extract year from anywhere in the string (e.g., "Graduated in 2020")
+      try {
+        const yearExtractPattern = /\b(19|20)\d{2}\b/;
+        const yearExtractMatch = sanitizedInput.match(yearExtractPattern);
+        if (yearExtractMatch) {
+          const year = parseInt(yearExtractMatch[0], 10);
+          if (year >= 1900 && year <= new Date().getFullYear() + 10) {
+            const parsedDate = new Date(year, 0, 1);
+            console.log(`[Timeline Service] Successfully extracted year from text: ${parsedDate.toISOString()}`);
+            return parsedDate;
+          }
+        }
+      } catch (error) {
+        console.warn('[Timeline Service] Year extraction parsing failed:', error);
+      }
+      
+      // Strategy 5: Handle common date separators (e.g., "01/2023", "2023-01", "01-2023")
+      try {
+        const separatorPatterns = [
+          /^\s*(\d{1,2})\/(\d{4})\s*$/, // MM/YYYY
+          /^\s*(\d{4})-(\d{1,2})\s*$/, // YYYY-MM  
+          /^\s*(\d{1,2})-(\d{4})\s*$/  // MM-YYYY
+        ];
+        
+        for (const pattern of separatorPatterns) {
+          const match = sanitizedInput.match(pattern);
+          if (match) {
+            let month: number, year: number;
+            
+            if (pattern === separatorPatterns[1]) { // YYYY-MM format
+              year = parseInt(match[1], 10);
+              month = parseInt(match[2], 10) - 1; // Convert to 0-based month
+            } else { // MM/YYYY or MM-YYYY format
+              month = parseInt(match[1], 10) - 1; // Convert to 0-based month
+              year = parseInt(match[2], 10);
+            }
+            
+            if (month >= 0 && month <= 11 && year >= 1900 && year <= new Date().getFullYear() + 10) {
+              const parsedDate = new Date(year, month, 1);
+              if (this.isValidDateRange(parsedDate)) {
+                console.log(`[Timeline Service] Successfully parsed separator format: ${parsedDate.toISOString()}`);
+                return parsedDate;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[Timeline Service] Separator format parsing failed:', error);
+      }
+      
+      // All parsing strategies failed - log comprehensive error and return safe default
+      console.error(`[Timeline Service] All date parsing strategies failed for input: "${sanitizedInput}"`);
+      console.error('[Timeline Service] Falling back to current date as safe default');
+      
+      return new Date(); // Safe fallback
+      
+    } catch (error) {
+      // Catastrophic failure - should never reach here but provides ultimate safety
+      console.error('[Timeline Service] Catastrophic error in parseDate method:', error);
+      console.error('[Timeline Service] Input that caused failure:', dateStr);
+      console.error('[Timeline Service] Stack trace:', error instanceof Error ? error.stack : 'No stack available');
+      
+      // Return current date as the safest possible fallback
+      return new Date();
     }
-    
-    // Try parsing year only
-    const yearMatch = dateStr.match(/\b(19|20)\d{2}\b/);
-    if (yearMatch) {
-      return new Date(parseInt(yearMatch[0]), 0, 1);
+  }
+  
+  /**
+   * Validate that a parsed date falls within reasonable range for CV data
+   * Prevents obviously invalid dates from being accepted
+   */
+  private isValidDateRange(date: Date): boolean {
+    try {
+      const now = new Date();
+      const minDate = new Date(1900, 0, 1); // No CV dates before 1900
+      const maxDate = new Date(now.getFullYear() + 10, 11, 31); // Allow up to 10 years in future
+      
+      return date >= minDate && date <= maxDate && !isNaN(date.getTime());
+    } catch (error) {
+      console.error('[Timeline Service] Error validating date range:', error);
+      return false;
     }
-    
-    // Default to current date if parsing fails
-    return new Date();
   }
   
   /**
@@ -208,31 +330,59 @@ export class TimelineGenerationService {
   
   /**
    * Estimate education start date based on end date and degree type
+   * Enhanced with comprehensive error handling
    */
   private estimateEducationStartDate(edu: any): Date {
-    if (!edu.endDate) return new Date();
-    
-    const endDate = this.parseDate(edu.endDate);
-    const degreeYears: Record<string, number> = {
-      'bachelor': 4,
-      'master': 2,
-      'phd': 5,
-      'associate': 2,
-      'diploma': 1,
-      'certificate': 1
-    };
-    
-    const degreeLower = edu.degree.toLowerCase();
-    let years = 4; // Default to 4 years
-    
-    for (const [key, value] of Object.entries(degreeYears)) {
-      if (degreeLower.includes(key)) {
-        years = value;
-        break;
+    try {
+      if (!edu || !edu.endDate) {
+        console.warn('[Timeline Service] No end date provided for education estimation, using current date');
+        return new Date();
       }
+      
+      const endDate = this.parseDate(edu.endDate);
+      if (!endDate || !this.isValidDateRange(endDate)) {
+        console.warn('[Timeline Service] Invalid end date parsed, using current date');
+        return new Date();
+      }
+      
+      const degreeYears: Record<string, number> = {
+        'bachelor': 4,
+        'master': 2,
+        'phd': 5,
+        'associate': 2,
+        'diploma': 1,
+        'certificate': 1
+      };
+      
+      let years = 4; // Default to 4 years
+      
+      if (edu.degree && typeof edu.degree === 'string') {
+        const degreeLower = edu.degree.toLowerCase();
+        for (const [key, value] of Object.entries(degreeYears)) {
+          if (degreeLower.includes(key)) {
+            years = value;
+            break;
+          }
+        }
+      } else {
+        console.warn('[Timeline Service] No valid degree field found, using default duration');
+      }
+      
+      const estimatedStartDate = new Date(endDate.getFullYear() - years, endDate.getMonth(), 1);
+      
+      // Validate the estimated start date is reasonable
+      if (!this.isValidDateRange(estimatedStartDate)) {
+        console.warn('[Timeline Service] Estimated education start date is out of valid range, using current date');
+        return new Date();
+      }
+      
+      console.log(`[Timeline Service] Estimated education start date: ${estimatedStartDate.toISOString()} (${years} years before end date)`);
+      return estimatedStartDate;
+      
+    } catch (error) {
+      console.error('[Timeline Service] Error estimating education start date:', error);
+      return new Date(); // Safe fallback
     }
-    
-    return new Date(endDate.getFullYear() - years, endDate.getMonth(), 1);
   }
   
   /**

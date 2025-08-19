@@ -8,13 +8,18 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg = require('fluent-ffmpeg');
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-// Set FFmpeg path for fluent-ffmpeg
-ffmpeg.setFfmpegPath('/usr/local/bin/ffmpeg');
+// Set FFmpeg path for fluent-ffmpeg (environment-aware)
+const ffmpegPath = process.env.FFMPEG_PATH || 
+                   '/usr/local/bin/ffmpeg' ||
+                   '/usr/bin/ffmpeg' || 
+                   '/layers/google.nodejs.ffmpeg/bin/ffmpeg';
+ffmpeg.setFfmpegPath(ffmpegPath);
+console.log('FFmpeg path set to:', ffmpegPath);
 
 interface ConversationalScript {
   segments: Array<{
@@ -68,6 +73,57 @@ export class PodcastGenerationService {
   }
   
   /**
+   * Validate environment and dependencies
+   */
+  private async validateEnvironment(): Promise<void> {
+    console.log('Validating podcast generation environment...');
+    
+    // Check ElevenLabs API key
+    if (!this.elevenLabsApiKey || this.elevenLabsApiKey.length < 10) {
+      throw new Error('ElevenLabs API key is missing or invalid');
+    }
+    
+    // Test ElevenLabs API key validity by making a simple API call
+    try {
+      const testResponse = await axios.get('https://api.elevenlabs.io/v1/user', {
+        headers: {
+          'xi-api-key': this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '')
+        },
+        timeout: 10000
+      });
+      console.log('ElevenLabs API key validation successful');
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error('ElevenLabs API key is invalid or expired. Please update your ELEVENLABS_API_KEY secret.');
+      }
+      console.warn('Could not validate ElevenLabs API key, but continuing with generation...');
+    }
+    
+    // Check voice configuration
+    if (!this.voiceConfig.host1.voiceId || !this.voiceConfig.host2.voiceId) {
+      throw new Error('Voice configuration is incomplete - missing voice IDs');
+    }
+    
+    // Check FFmpeg availability
+    try {
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg.getAvailableFormats((err, formats) => {
+          if (err) {
+            reject(new Error(`FFmpeg not available: ${err.message}`));
+          } else {
+            console.log('FFmpeg validation successful');
+            resolve();
+          }
+        });
+      });
+    } catch (error: any) {
+      throw new Error(`FFmpeg validation failed: ${error.message}`);
+    }
+    
+    console.log('Environment validation completed successfully');
+  }
+  
+  /**
    * Generate a conversational podcast from CV data
    */
   async generatePodcast(
@@ -85,24 +141,51 @@ export class PodcastGenerationService {
     duration: string;
     chapters: Array<{ title: string; startTime: number; endTime: number; }>;
   }> {
+    console.log(`Starting podcast generation for job ${jobId}`);
+    
     try {
+      // Step 0: Validate environment and dependencies
+      await this.validateEnvironment();
+      
       // Step 1: Generate conversational script
+      console.log('Step 1: Generating conversational script...');
       const script = await this.generateConversationalScript(parsedCV, options);
       
+      if (!script || !script.segments || script.segments.length === 0) {
+        throw new Error('Failed to generate valid script - no segments created');
+      }
+      console.log(`Generated script with ${script.segments.length} segments`);
+      
       // Step 2: Generate audio for each segment
+      console.log('Step 2: Generating audio segments...');
       const audioSegments = await this.generateAudioSegments(script);
       
+      if (!audioSegments || audioSegments.length === 0) {
+        throw new Error('Failed to generate any audio segments');
+      }
+      console.log(`Generated ${audioSegments.length} audio segments`);
+      
       // Step 3: Merge audio segments into final podcast
+      console.log('Step 3: Merging audio segments...');
       const podcastUrl = await this.mergeAudioSegments(audioSegments, jobId, userId);
       
+      if (!podcastUrl) {
+        throw new Error('Failed to generate podcast URL after merging');
+      }
+      console.log('Audio merging completed successfully');
+      
       // Step 4: Generate chapters from script
+      console.log('Step 4: Generating chapters...');
       const chapters = this.generateChapters(script);
       
       // Step 5: Create readable transcript
+      console.log('Step 5: Formatting transcript...');
       const transcript = this.formatTranscript(script);
       
       // Step 6: Calculate total duration
       const duration = this.calculateDuration(audioSegments);
+      
+      console.log(`Podcast generation completed successfully: ${duration} duration`);
       
       return {
         audioUrl: podcastUrl,
@@ -111,7 +194,12 @@ export class PodcastGenerationService {
         chapters
       };
     } catch (error: any) {
-      console.error('Error generating podcast:', error);
+      console.error('Error generating podcast:', {
+        error: error.message,
+        stack: error.stack,
+        jobId,
+        userId
+      });
       throw new Error(`Podcast generation failed: ${error.message}`);
     }
   }
@@ -287,35 +375,63 @@ Focus: ${options.focus || 'balanced'}`;
   private async generateAudioSegments(
     script: ConversationalScript
   ): Promise<Array<{ speaker: string; audioBuffer: Buffer; duration: number; }>> {
-    const audioSegments = [];
+    console.log(`Generating audio for ${script.segments.length} script segments`);
     
-    for (const segment of script.segments) {
+    // Validate input
+    if (!script || !script.segments || script.segments.length === 0) {
+      throw new Error('No script segments provided for audio generation');
+    }
+    
+    const audioSegments = [];
+    let processedSegments = 0;
+    let skippedSegments = 0;
+    
+    for (let i = 0; i < script.segments.length; i++) {
+      const segment = script.segments[i];
+      console.log(`Processing segment ${i + 1}/${script.segments.length}: ${segment.speaker}`);
+      
       const voiceId = segment.speaker === 'host1' 
         ? this.voiceConfig.host1.voiceId 
         : this.voiceConfig.host2.voiceId;
       
       try {
+        // Validate voice configuration
+        if (!voiceId || voiceId.length === 0) {
+          console.error(`Invalid voice ID for speaker ${segment.speaker}`);
+          skippedSegments++;
+          continue;
+        }
+        
         // Validate and clean API key before making request
         if (!this.elevenLabsApiKey || this.elevenLabsApiKey.length < 10) {
-          throw new Error('Invalid ElevenLabs API key');
+          throw new Error('Invalid ElevenLabs API key - check environment configuration');
         }
 
         // Ensure API key contains only valid characters (remove newlines, spaces, etc.)
         const cleanApiKey = this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '');
         
         // Clean text one more time before sending to ElevenLabs
-        const cleanText = this.cleanScriptText(segment.text);
+        let cleanText = this.cleanScriptText(segment.text);
         
         // Skip if text is empty after cleaning
         if (!cleanText.trim()) {
-          console.log('Skipping empty segment after cleaning');
+          console.log(`Skipping empty segment ${i} after text cleaning`);
+          skippedSegments++;
           continue;
+        }
+        
+        // Validate text length (ElevenLabs has limits)
+        if (cleanText.length > 5000) {
+          console.warn(`Truncating long text segment ${i} from ${cleanText.length} to 5000 characters`);
+          cleanText = cleanText.substring(0, 5000);
         }
         
         // Enhanced voice settings based on emotion
         const voiceSettings = this.getVoiceSettingsForEmotion(segment.emotion, segment.speaker);
         
-        // Call ElevenLabs API
+        console.log(`Calling ElevenLabs API for segment ${i} (${cleanText.length} chars)`);
+        
+        // Call ElevenLabs API with timeout and retry logic
         const response = await axios.post(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
           {
@@ -329,15 +445,41 @@ Focus: ${options.focus || 'balanced'}`;
               'xi-api-key': cleanApiKey,
               'Content-Type': 'application/json'
             },
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
+            timeout: 30000, // 30 second timeout
+            validateStatus: (status) => {
+              return status >= 200 && status < 300; // Only accept 2xx status codes
+            }
           }
         );
         
+        console.log(`ElevenLabs API response for segment ${i}: ${response.status} (${response.data.byteLength} bytes)`);
+        
+        // Validate response data
+        if (!response.data || response.data.byteLength === 0) {
+          throw new Error(`Empty audio response from ElevenLabs for segment ${i}`);
+        }
+        
+        const audioBuffer = Buffer.from(response.data);
+        if (audioBuffer.length === 0) {
+          throw new Error(`Generated audio buffer is empty for segment ${i}`);
+        }
+        
+        const estimatedDuration = this.estimateAudioDuration(cleanText);
+        
         audioSegments.push({
           speaker: segment.speaker,
-          audioBuffer: Buffer.from(response.data),
-          duration: this.estimateAudioDuration(segment.text)
+          audioBuffer: audioBuffer,
+          duration: estimatedDuration
         });
+        
+        processedSegments++;
+        console.log(`Successfully generated audio segment ${i}: ${audioBuffer.length} bytes, ~${Math.round(estimatedDuration/1000)}s`);
+        
+        // Small delay to avoid rate limiting
+        if (i < script.segments.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
         
         // Add pause if specified (skip for now to avoid FFmpeg lavfi issues)
         // Note: Pauses can be handled by adding brief silence between segments in the concat process
@@ -348,13 +490,70 @@ Focus: ${options.focus || 'balanced'}`;
         //     duration: segment.pause
         //   });
         // }
-      } catch (error) {
-        console.error('Error generating audio segment:', error);
-        // Skip failed segments
+      } catch (error: any) {
+        console.error(`Error generating audio for segment ${i}:`, {
+          speaker: segment.speaker,
+          textLength: segment.text?.length || 0,
+          error: error.message,
+          response: error.response?.status,
+          responseData: error.response?.data?.toString?.(),
+          voiceId
+        });
+        
+        // Check for authentication error
+        if (error.response?.status === 401) {
+          console.error('ElevenLabs authentication failed - invalid API key');
+          throw new Error('ElevenLabs authentication failed. Please check your API key configuration.');
+        }
+        
+        // Check for quota exceeded error
+        if (error.response?.data?.includes?.('credits remaining') || 
+            error.response?.data?.includes?.('quota exceeded') ||
+            error.response?.status === 402) {
+          console.error('ElevenLabs quota exceeded - falling back to text-only podcast');
+          throw new Error('Audio generation quota exceeded. Please upgrade your ElevenLabs plan or try again later.');
+        }
+        
+        skippedSegments++;
+        
+        // If this is an API rate limit error, add a longer delay before continuing
+        if (error.response?.status === 429) {
+          console.log('Rate limit detected, waiting 2 seconds before continuing...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        // Continue with other segments instead of failing completely
       }
     }
     
-    return audioSegments;
+    console.log(`Audio generation summary: ${processedSegments} processed, ${skippedSegments} skipped, ${audioSegments.length} total segments`);
+    
+    // Validate we have some audio segments
+    if (audioSegments.length === 0) {
+      throw new Error('No audio segments were successfully generated - all segments failed or were skipped');
+    }
+    
+    if (audioSegments.length < script.segments.length * 0.5) {
+      console.warn(`Low success rate: only ${audioSegments.length}/${script.segments.length} segments generated successfully`);
+    }
+    
+    // Final validation of audio segments
+    const validSegments = audioSegments.filter(seg => 
+      seg.audioBuffer && 
+      seg.audioBuffer.length > 0 && 
+      seg.duration > 0
+    );
+    
+    if (validSegments.length !== audioSegments.length) {
+      console.warn(`Removed ${audioSegments.length - validSegments.length} invalid audio segments`);
+    }
+    
+    if (validSegments.length === 0) {
+      throw new Error('No valid audio segments after validation - all segments have empty or invalid audio data');
+    }
+    
+    console.log(`Returning ${validSegments.length} valid audio segments`);
+    return validSegments;
   }
   
   /**
@@ -369,65 +568,176 @@ Focus: ${options.focus || 'balanced'}`;
     const outputPath = path.join(tempDir, 'final-podcast.mp3');
     
     try {
-      // Create temp directory
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
+      console.log(`Starting audio merge for ${segments.length} segments`);
+      
+      // Validate input segments
+      if (!segments || segments.length === 0) {
+        throw new Error('No audio segments provided for merging');
       }
       
-      // Save individual audio segments to temp files
+      // Create temp directory with proper permissions
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true, mode: 0o755 });
+        console.log(`Created temp directory: ${tempDir}`);
+      }
+      
+      // Save individual audio segments to temp files and validate
       const tempFiles: string[] = [];
       const listFilePath = path.join(tempDir, 'filelist.txt');
       const listFileContent: string[] = [];
+      let validSegmentCount = 0;
       
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         
         if (segment.speaker === 'pause') {
           // Skip pause segments for now to avoid FFmpeg lavfi issues
-          // In production, these could be handled by adding crossfade or brief silence
           console.log(`Skipping pause segment of ${segment.duration}ms`);
           continue;
-        } else {
-          // Save audio segment
-          const segmentFile = path.join(tempDir, `segment-${i}.mp3`);
-          fs.writeFileSync(segmentFile, segment.audioBuffer);
+        }
+        
+        // Validate segment has audio data
+        if (!segment.audioBuffer || segment.audioBuffer.length === 0) {
+          console.warn(`Skipping empty audio segment ${i}`);
+          continue;
+        }
+        
+        try {
+          // Save audio segment with validation
+          const segmentFile = path.join(tempDir, `segment-${validSegmentCount}.mp3`);
+          fs.writeFileSync(segmentFile, segment.audioBuffer, { mode: 0o644 });
+          
+          // Verify file was written successfully
+          if (!fs.existsSync(segmentFile)) {
+            throw new Error(`Failed to write segment file: ${segmentFile}`);
+          }
+          
+          const fileStats = fs.statSync(segmentFile);
+          if (fileStats.size === 0) {
+            throw new Error(`Written segment file is empty: ${segmentFile}`);
+          }
+          
+          console.log(`Written segment ${validSegmentCount}: ${fileStats.size} bytes`);
+          
           tempFiles.push(segmentFile);
-          listFileContent.push(`file '${segmentFile}'`);
+          // Properly escape file paths for FFmpeg concat demuxer
+          const escapedPath = segmentFile.replace(/\\/g, '\\\\').replace(/'/g, "'\\''");
+          listFileContent.push(`file '${escapedPath}'`);
+          validSegmentCount++;
+        } catch (segmentError) {
+          console.error(`Error processing segment ${i}:`, segmentError);
+          // Continue with other segments
         }
       }
       
-      // Write list file for FFmpeg concat
-      fs.writeFileSync(listFilePath, listFileContent.join('\n'));
+      // Validate we have segments to process
+      if (validSegmentCount === 0) {
+        throw new Error('No valid audio segments found after filtering');
+      }
       
-      // Merge audio files using FFmpeg
-      await new Promise<void>((resolve, reject) => {
-        const command = ffmpeg()
-          .input(listFilePath)
-          .inputOptions(['-f', 'concat', '-safe', '0'])
-          .audioCodec('libmp3lame')
-          .audioBitrate('128k')
-          .audioFrequency(44100)
-          .audioChannels(2)
-          .output(outputPath)
-          .on('start', (cmdline: string) => {
-            console.log('FFmpeg command:', cmdline);
-          })
-          .on('progress', (progress: any) => {
-            console.log('FFmpeg progress:', progress.percent + '% done');
-          })
-          .on('end', () => {
-            console.log('Audio merging completed');
-            resolve();
-          })
-          .on('error', (err: any) => {
-            console.error('FFmpeg error:', err);
-            console.error('FFmpeg stderr:', err.stderr);
-            reject(new Error(`Audio merging failed: ${err.message}`));
-          });
-        
-        console.log('Starting FFmpeg audio merging...');
-        command.run();
-      });
+      if (listFileContent.length === 0) {
+        throw new Error('No files to concatenate - all segments were filtered out');
+      }
+      
+      console.log(`Processing ${validSegmentCount} valid audio segments`);
+      
+      // Write list file for FFmpeg concat with validation
+      const listFileData = listFileContent.join('\n') + '\n'; // Ensure newline at end
+      fs.writeFileSync(listFilePath, listFileData, { encoding: 'utf8', mode: 0o644 });
+      
+      // Verify list file was written correctly
+      if (!fs.existsSync(listFilePath)) {
+        throw new Error(`Failed to create filelist: ${listFilePath}`);
+      }
+      
+      const listFileStats = fs.statSync(listFilePath);
+      if (listFileStats.size === 0) {
+        throw new Error(`Filelist is empty: ${listFilePath}`);
+      }
+      
+      console.log(`Created filelist with ${listFileContent.length} entries (${listFileStats.size} bytes)`);
+      console.log(`Filelist content:\n${listFileData}`);
+      
+      // Validate all referenced files exist before calling FFmpeg
+      for (const tempFile of tempFiles) {
+        if (!fs.existsSync(tempFile)) {
+          throw new Error(`Referenced audio file does not exist: ${tempFile}`);
+        }
+      }
+      
+      // Handle single file case (no concatenation needed)
+      if (validSegmentCount === 1) {
+        console.log('Single segment detected, copying directly instead of concatenating');
+        const singleFile = tempFiles[0];
+        fs.copyFileSync(singleFile, outputPath);
+      } else {
+        // Merge audio files using FFmpeg with enhanced error handling
+        await new Promise<void>((resolve, reject) => {
+          const command = ffmpeg()
+            .input(listFilePath)
+            .inputOptions(['-f', 'concat', '-safe', '0'])
+            .audioCodec('libmp3lame')
+            .audioBitrate('128k')
+            .audioFrequency(44100)
+            .audioChannels(2)
+            .output(outputPath)
+            .on('start', (cmdline: string) => {
+              console.log('FFmpeg command:', cmdline);
+              console.log('FFmpeg input list file:', listFilePath);
+              console.log('FFmpeg output path:', outputPath);
+            })
+            .on('progress', (progress: any) => {
+              if (progress.percent) {
+                console.log('FFmpeg progress:', Math.round(progress.percent) + '% done');
+              }
+            })
+            .on('stderr', (stderrLine: string) => {
+              console.log('FFmpeg stderr:', stderrLine);
+            })
+            .on('end', () => {
+              console.log('Audio merging completed successfully');
+              // Verify output file was created
+              if (!fs.existsSync(outputPath)) {
+                reject(new Error('FFmpeg completed but output file was not created'));
+                return;
+              }
+              const outputStats = fs.statSync(outputPath);
+              if (outputStats.size === 0) {
+                reject(new Error('FFmpeg completed but output file is empty'));
+                return;
+              }
+              console.log(`Output file created: ${outputStats.size} bytes`);
+              resolve();
+            })
+            .on('error', (err: any) => {
+              console.error('FFmpeg error details:', {
+                message: err.message,
+                stderr: err.stderr,
+                code: err.code,
+                signal: err.signal
+              });
+              
+              // Enhanced error reporting
+              let errorMessage = `Audio merging failed: ${err.message}`;
+              if (err.stderr) {
+                errorMessage += `\nFFmpeg stderr: ${err.stderr}`;
+              }
+              if (err.code) {
+                errorMessage += `\nExit code: ${err.code}`;
+              }
+              
+              reject(new Error(errorMessage));
+            });
+          
+          console.log('Starting FFmpeg audio merging...');
+          try {
+            command.run();
+          } catch (runError) {
+            console.error('Error starting FFmpeg:', runError);
+            reject(new Error(`Failed to start FFmpeg: ${runError.message}`));
+          }
+        });
+      }
       
       // Upload merged file to Firebase Storage
       const bucket = admin.storage().bucket();
@@ -466,11 +776,28 @@ Focus: ${options.focus || 'balanced'}`;
       
       return audioUrl;
       
-    } catch (error) {
-      console.error('Error merging audio segments:', error);
+    } catch (error: any) {
+      console.error('Error merging audio segments:', {
+        message: error.message,
+        stack: error.stack,
+        tempDir,
+        segmentCount: segments?.length || 0
+      });
+      
       // Clean up temp files on error
-      this.cleanupTempFiles([tempDir]);
-      throw new Error(`Failed to merge audio segments: ${error}`);
+      try {
+        this.cleanupTempFiles([tempDir]);
+      } catch (cleanupError) {
+        console.warn('Error during cleanup:', cleanupError);
+      }
+      
+      // Provide detailed error information
+      let errorMessage = 'Failed to merge audio segments';
+      if (error.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
   
@@ -485,28 +812,59 @@ Focus: ${options.focus || 'balanced'}`;
     // 1. Using crossfade between audio segments
     // 2. Adding brief delays in the concat process
     // 3. Using a different audio processing library
+    // 4. Pre-generating silence files and concatenating them
     
     console.log(`Silence generation skipped for ${durationMs}ms duration`);
-    throw new Error('Silence generation temporarily disabled');
+    throw new Error('Silence generation temporarily disabled - use alternative pause handling');
   }
   
   /**
-   * Clean up temporary files
+   * Clean up temporary files with enhanced error handling
    */
   private cleanupTempFiles(filePaths: string[]): void {
+    console.log(`Cleaning up ${filePaths.length} temp files/directories`);
+    
+    let cleanedCount = 0;
+    let errorCount = 0;
+    
     filePaths.forEach(filePath => {
       try {
-        if (fs.existsSync(filePath)) {
-          if (fs.lstatSync(filePath).isDirectory()) {
-            fs.rmSync(filePath, { recursive: true, force: true });
-          } else {
-            fs.unlinkSync(filePath);
-          }
+        if (!filePath || filePath.trim() === '') {
+          console.warn('Skipping empty file path during cleanup');
+          return;
         }
-      } catch (error) {
-        console.warn(`Failed to cleanup file ${filePath}:`, error);
+        
+        if (fs.existsSync(filePath)) {
+          const stats = fs.lstatSync(filePath);
+          
+          if (stats.isDirectory()) {
+            // Recursively remove directory and all contents
+            fs.rmSync(filePath, { recursive: true, force: true });
+            console.log(`Removed directory: ${filePath}`);
+          } else if (stats.isFile()) {
+            // Remove individual file
+            fs.unlinkSync(filePath);
+            console.log(`Removed file: ${filePath}`);
+          } else {
+            console.warn(`Skipping non-file/non-directory: ${filePath}`);
+            return;
+          }
+          
+          cleanedCount++;
+        } else {
+          console.log(`File already removed or doesn't exist: ${filePath}`);
+        }
+      } catch (error: any) {
+        console.error(`Failed to cleanup ${filePath}:`, {
+          error: error.message,
+          code: error.code,
+          errno: error.errno
+        });
+        errorCount++;
       }
     });
+    
+    console.log(`Cleanup complete: ${cleanedCount} cleaned, ${errorCount} errors`);
   }
   
   /**
@@ -614,12 +972,25 @@ Focus: ${options.focus || 'balanced'}`;
   }
   
   /**
-   * Estimate audio duration from text
+   * Estimate audio duration from text with validation
    */
   private estimateAudioDuration(text: string): number {
-    const words = text.split(' ').length;
+    if (!text || text.trim() === '') {
+      return 1000; // 1 second minimum for empty text
+    }
+    
+    const words = text.trim().split(/\s+/).length;
     const wordsPerSecond = 2.5; // Average speaking rate
-    return (words / wordsPerSecond) * 1000; // milliseconds
+    const baseDuration = (words / wordsPerSecond) * 1000; // milliseconds
+    
+    // Add minimum duration and account for pauses
+    const minDuration = 1000; // 1 second minimum
+    const maxDuration = 60000; // 60 seconds maximum for safety
+    
+    let finalDuration = Math.max(baseDuration, minDuration);
+    finalDuration = Math.min(finalDuration, maxDuration);
+    
+    return Math.round(finalDuration);
   }
   
   /**

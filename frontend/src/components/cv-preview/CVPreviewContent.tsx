@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import type { CVPreviewContentProps } from '../../types/cv-preview';
 import { CVTemplateGenerator } from '../../utils/cv-preview/cvTemplateGenerator';
 import { useFeaturePreviews } from '../../hooks/cv-preview/useFeaturePreviews';
@@ -21,8 +21,20 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   const previewRef = useRef<HTMLDivElement>(null);
   const { generateFeaturePreview } = useFeaturePreviews(previewData);
 
-  // Generate the HTML content
-  const generatePreviewHTML = () => {
+  // Create a stable reference for selectedFeatures to track changes properly
+  const selectedFeaturesString = useMemo(() => 
+    JSON.stringify(selectedFeatures), 
+    [selectedFeatures]
+  );
+  
+  // Generate the HTML content with proper reactivity using useMemo
+  const generatedHTML = useMemo(() => {
+    console.log('🔄 [HTML REGENERATION] Regenerating preview HTML due to dependency changes');
+    console.log('🔄 [HTML REGENERATION] selectedFeatures:', selectedFeatures);
+    console.log('🔄 [HTML REGENERATION] selectedFeaturesString:', selectedFeaturesString);
+    console.log('🔄 [HTML REGENERATION] showFeaturePreviews:', showFeaturePreviews);
+    console.log('🔄 [HTML REGENERATION] selectedTemplate:', selectedTemplate);
+    
     if (!showFeaturePreviews) {
       // Return basic CV without feature previews
       return CVTemplateGenerator.generateHTML(
@@ -43,7 +55,7 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
       collapsedSections,
       generateFeaturePreview
     );
-  };
+  }, [selectedFeaturesString, previewData, selectedTemplate, showFeaturePreviews, qrCodeSettings, collapsedSections, generateFeaturePreview]);
 
   // Setup event listeners and DOM interactions
   useEffect(() => {
@@ -108,76 +120,8 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
     };
   }, [onToggleSection, onEditQRCode, onAnalyzeAchievements, previewData]);
 
-  // Real-time feature updates
-  useEffect(() => {
-    if (!previewRef.current) return;
-
-    // Map feature IDs to their camelCase equivalents in selectedFeatures
-    const featureMapping: Record<string, string> = {
-      // Core Enhancement Features
-      'ats-optimization': 'atsOptimization',
-      'keyword-enhancement': 'keywordEnhancement',
-      'achievement-highlighting': 'achievementHighlighting',
-      
-      // Interactive Features
-      'skills-visualization': 'skillsVisualization',
-      'skills-chart': 'skillsChart',
-      'interactive-timeline': 'interactiveTimeline',
-      
-      // Multimedia Features
-      'generate-podcast': 'generatePodcast',
-      'video-introduction': 'videoIntroduction',
-      'portfolio-gallery': 'portfolioGallery',
-      
-      // Professional Features
-      'certification-badges': 'certificationBadges',
-      'language-proficiency': 'languageProficiency',
-      'achievements-showcase': 'achievementsShowcase',
-      
-      // Contact & Integration Features
-      'contact-form': 'contactForm',
-      'social-media-links': 'socialMediaLinks',
-      'availability-calendar': 'availabilityCalendar',
-      'testimonials-carousel': 'testimonialsCarousel',
-      
-      // Technical Features
-      'embed-qr-code': 'embedQRCode',
-      'privacy-mode': 'privacyMode'
-    };
-
-    console.log('🔄 [DYNAMIC UPDATE] selectedFeatures changed:', selectedFeatures);
-    console.log('🔄 [DYNAMIC UPDATE] Available selectedFeatures keys:', Object.keys(selectedFeatures));
-    
-    // Smoothly update only feature previews when selectedFeatures changes
-    const featurePreviews = previewRef.current.querySelectorAll('.feature-preview');
-    console.log(`🔄 [DYNAMIC UPDATE] Found ${featurePreviews.length} feature previews in DOM`);
-    
-    featurePreviews.forEach((preview, index) => {
-      const featureId = preview.getAttribute('data-feature');
-      if (featureId) {
-        const camelCaseKey = featureMapping[featureId];
-        const isEnabled = camelCaseKey ? selectedFeatures[camelCaseKey] : false;
-        
-        console.log(`🔄 [DYNAMIC UPDATE #${index + 1}] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);
-        
-        // Handle both direct key match and camelCase mapping
-        const directMatch = selectedFeatures[featureId];
-        const finalEnabled = isEnabled || directMatch;
-        
-        if (finalEnabled) {
-          preview.classList.remove('opacity-50', 'grayscale');
-          preview.classList.add('animate-fade-in-up');
-          (preview as HTMLElement).style.transform = 'scale(1)';
-        } else {
-          preview.classList.add('opacity-50', 'grayscale');
-          preview.classList.remove('animate-fade-in-up');
-          (preview as HTMLElement).style.transform = 'scale(0.95)';
-        }
-      } else {
-        console.warn(`🔄 [DYNAMIC UPDATE] Preview element ${index + 1} missing data-feature attribute`);
-      }
-    });
-  }, [selectedFeatures]);
+  // Feature updates are now handled automatically through HTML regeneration via useMemo
+  // No manual DOM manipulation needed - React will re-render the entire preview when dependencies change
 
   return (
     <div className="cv-preview-content-wrapper">
@@ -196,7 +140,7 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
       <div 
         ref={previewRef}
         className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200"
-        dangerouslySetInnerHTML={{ __html: generatePreviewHTML() }}
+        dangerouslySetInnerHTML={{ __html: generatedHTML }}
       />
     </div>
   );

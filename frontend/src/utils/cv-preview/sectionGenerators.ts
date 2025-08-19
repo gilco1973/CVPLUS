@@ -177,34 +177,48 @@ export class SectionGenerators {
     collapsedSections: Record<string, boolean>,
     generateFeaturePreview: (featureId: string, isEnabled: boolean, isCollapsed: boolean) => string
   ): string {
-    // Map feature IDs to their camelCase equivalents in selectedFeatures
-    const featureMapping = {
-      'language-proficiency': 'languageProficiency',
-      'certification-badges': 'certificationBadges',
-      'social-media-links': 'socialMediaLinks',
-      'achievements-showcase': 'achievementsShowcase',
-      'interactive-timeline': 'interactiveTimeline',
+    // Complete feature mapping from kebab-case to camelCase - sourced from FEATURE_CONFIGS
+    const featureMapping: Record<string, string> = {
+      // Core Enhancement Features
+      'ats-optimization': 'atsOptimization',
+      'keyword-enhancement': 'keywordEnhancement',
+      'achievement-highlighting': 'achievementHighlighting',
+      
+      // Interactive Features
+      'skills-visualization': 'skillsVisualization',
       'skills-chart': 'skillsChart',
+      'interactive-timeline': 'interactiveTimeline',
+      
+      // Multimedia Features
+      'generate-podcast': 'generatePodcast',
       'video-introduction': 'videoIntroduction',
       'portfolio-gallery': 'portfolioGallery',
-      'contact-form': 'contactForm'
+      
+      // Professional Features
+      'certification-badges': 'certificationBadges',
+      'language-proficiency': 'languageProficiency',
+      'achievements-showcase': 'achievementsShowcase',
+      
+      // Contact & Integration Features
+      'contact-form': 'contactForm',
+      'social-media-links': 'socialMediaLinks',
+      'availability-calendar': 'availabilityCalendar',
+      'testimonials-carousel': 'testimonialsCarousel',
+      
+      // Technical Features
+      'embed-qr-code': 'embedQRCode',
+      'privacy-mode': 'privacyMode'
     };
 
-    const features = [
-      'language-proficiency',
-      'certification-badges', 
-      'social-media-links',
-      'achievements-showcase',
-      'interactive-timeline',
-      'skills-chart',
-      'video-introduction',
-      'portfolio-gallery',
-      'contact-form'
-    ];
+    // All available features that support preview generation
+    const features = Object.keys(featureMapping);
+
+    console.log('🔍 [FEATURE PREVIEW GENERATION] Processing features:', features);
+    console.log('🔍 [FEATURE PREVIEW GENERATION] Selected features:', selectedFeatures);
 
     return features
       .map(featureId => {
-        const camelCaseKey = featureMapping[featureId as keyof typeof featureMapping];
+        const camelCaseKey = featureMapping[featureId];
         const isEnabled = selectedFeatures[camelCaseKey] || false;
         
         console.log(`🔍 [FEATURE PREVIEW] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);

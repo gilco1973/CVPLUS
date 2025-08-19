@@ -15,16 +15,78 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
   onDownloadDOCX,
   className = ''
 }) => {
-  // Display the actual generated CV HTML content
+  // Try multiple sources for CV content
   const generatedHTML = job.generatedCV?.html;
+  const hasHtmlUrl = job.generatedCV?.htmlUrl;
+  const hasFiles = job.generatedCV?.pdfUrl || job.generatedCV?.docxUrl;
   
-  if (!generatedHTML) {
+  console.log('🖥️ [CV-DISPLAY] Debug info:', {
+    hasGeneratedCV: !!job.generatedCV,
+    hasHTML: !!generatedHTML,
+    hasHtmlUrl: !!hasHtmlUrl,
+    hasFiles: !!hasFiles,
+    jobStatus: job.status,
+    htmlLength: generatedHTML?.length || 0,
+    htmlUrl: hasHtmlUrl,
+    generatedCVData: job.generatedCV,
+    allJobKeys: Object.keys(job),
+    allKeys: job.generatedCV ? Object.keys(job.generatedCV) : []
+  });
+  
+  if (!generatedHTML && !hasHtmlUrl && !hasFiles) {
     return (
       <div className={`bg-gray-800 rounded-lg p-8 text-center ${className}`}>
         <div className="text-gray-400">
           <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No Generated CV Found</h3>
-          <p className="text-sm">The CV generation may still be in progress.</p>
+          <div className="text-sm space-y-2">
+            <p>Job Status: {job.status}</p>
+            {job.status === 'completed' && (
+              <p className="text-yellow-400">CV was generated but content is not available for display.</p>
+            )}
+            {job.status !== 'completed' && (
+              <p>The CV generation may still be in progress.</p>
+            )}
+            {hasHtmlUrl && (
+              <a 
+                href={hasHtmlUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block mt-2 text-cyan-400 hover:text-cyan-300 underline"
+              >
+                View CV Online
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // If we have an HTML URL but no inline HTML, show it with a fetch option
+  if (!generatedHTML && hasHtmlUrl) {
+    return (
+      <div className={`bg-gray-800 rounded-lg p-8 text-center ${className}`}>
+        <div className="text-gray-400">
+          <Globe className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">CV Generated Successfully!</h3>
+          <p className="text-sm mb-4">
+            Your CV has been generated and is ready. Click below to view it.
+          </p>
+          <div className="space-y-3">
+            <a 
+              href={hasHtmlUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <Globe className="w-4 h-4" />
+              View Your CV Online
+            </a>
+            <div className="text-xs text-gray-500">
+              CV URL: {hasHtmlUrl.split('?')[0].split('/').pop()}
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -9,12 +9,14 @@
  * - Providing real-time status updates
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { ref, getDownloadURL } from 'firebase/storage';
-import { doc, onSnapshot, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { functions, storage, db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
+import type { Job } from '../types/job';
 import toast from 'react-hot-toast';
 import { performanceMonitorService } from '../services/enhancement/performance-monitor.service';
 import { cssOptimizerService } from '../services/enhancement/css-optimizer.service';
@@ -59,7 +61,8 @@ const LEGACY_FUNCTIONS: Record<string, string> = {
   'language-proficiency': 'generateLanguageVisualization',
   'portfolio-gallery': 'generatePortfolioGallery',
   'video-introduction': 'generateVideoIntroduction',
-  'generate-podcast': 'generatePodcast'
+  'generate-podcast': 'generatePodcast',
+  'embed-qr-code': 'generateQRCode'
 };
 
 // Feature display names
@@ -71,7 +74,8 @@ const FEATURE_NAMES: Record<string, string> = {
   'language-proficiency': 'Language Proficiency',
   'portfolio-gallery': 'Portfolio Gallery',
   'video-introduction': 'Video Introduction',
-  'generate-podcast': 'Career Podcast'
+  'generate-podcast': 'Career Podcast',
+  'embed-qr-code': 'QR Code Integration'
 };
 
 export function useProgressiveEnhancement({
@@ -82,6 +86,10 @@ export function useProgressiveEnhancement({
   retryDelay = 2000
 }: UseProgressiveEnhancementOptions) {
   const { user } = useAuth();
+  
+  // Memoize selectedFeatures to prevent unnecessary recreations
+  const memoizedSelectedFeatures = useMemo(() => selectedFeatures, [selectedFeatures.join(',')]);
+  
   const [state, setState] = useState<ProgressiveEnhancementState>({
     baseHtml: null,
     currentHtml: null,
@@ -95,9 +103,9 @@ export function useProgressiveEnhancement({
   const retryCountRef = useRef<Record<string, number>>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  // Initialize feature progress tracking
+  // Initialize feature progress tracking - stable memoization
   const initializeFeatures = useCallback(() => {
-    const features: FeatureProgress[] = selectedFeatures.map(featureId => ({
+    const features: FeatureProgress[] = memoizedSelectedFeatures.map(featureId => ({
       id: featureId,
       name: FEATURE_NAMES[featureId] || featureId,
       status: 'pending',
@@ -112,9 +120,9 @@ export function useProgressiveEnhancement({
     }));
 
     return features;
-  }, [selectedFeatures]);
+  }, [memoizedSelectedFeatures]);
 
-  // Fetch base HTML content from Firebase Storage
+  // Fetch base HTML content from Firebase Storage - stable memoization
   const fetchBaseHtml = useCallback(async (): Promise<string> => {
     try {
       const storageRef = ref(storage, `users/${user?.uid}/generated/${jobId}/cv.html`);
@@ -146,7 +154,24 @@ export function useProgressiveEnhancement({
       console.log(`🚀 Calling ${functionName} for feature: ${featureId}`);
       
       const callable = httpsCallable(functions, functionName);
-      const result = await callable({ jobId, featureId });
+      
+      // Special handling for QR code generation
+      let result;
+      if (featureId === 'embed-qr-code') {
+        result = await callable({ 
+          jobId, 
+          config: {
+            type: 'profile',
+            metadata: {
+              title: 'Professional Profile QR Code',
+              description: 'Scan to view my professional profile',
+              tags: ['cv', 'profile', 'professional']
+            }
+          }
+        });
+      } else {
+        result = await callable({ jobId, featureId });
+      }
       
       const data = result.data as unknown;
       if (!data.success) {
@@ -154,6 +179,57 @@ export function useProgressiveEnhancement({
       }
 
       console.log(`✅ ${functionName} completed successfully`);
+      
+      // For QR code generation, we need to create HTML from the response
+      if (featureId === 'embed-qr-code' && data.qrCode) {
+        const qrCode = data.qrCode;
+        const qrHtml = `
+          <section class="qr-code-section" data-feature="embed-qr-code">
+            <div class="qr-code-container">
+              <h3>Quick Access</h3>
+              <div class="qr-code-display">
+                <img src="${qrCode.qrImageUrl}" alt="${qrCode.metadata.title}" class="qr-code-image" />
+                <p class="qr-code-description">${qrCode.metadata.description}</p>
+                <p class="qr-code-instructions">Scan with your phone to view this profile</p>
+              </div>
+            </div>
+            <style>
+              .qr-code-section {
+                margin: 2rem 0;
+                padding: 1.5rem;
+                background: #f8f9fa;
+                border-radius: 8px;
+                text-align: center;
+              }
+              .qr-code-container h3 {
+                margin-bottom: 1rem;
+                color: #333;
+                font-size: 1.25rem;
+              }
+              .qr-code-image {
+                max-width: 200px;
+                height: auto;
+                margin: 0 auto 1rem;
+                display: block;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+              }
+              .qr-code-description {
+                font-weight: 600;
+                color: #555;
+                margin-bottom: 0.5rem;
+              }
+              .qr-code-instructions {
+                font-size: 0.875rem;
+                color: #666;
+                font-style: italic;
+              }
+            </style>
+          </section>
+        `;
+        return qrHtml;
+      }
+      
       return data.html || '';
     } catch (error: unknown) {
       console.error(`❌ Error calling ${functionName}:`, error);
@@ -230,6 +306,11 @@ export function useProgressiveEnhancement({
       'generate-podcast': {
         type: 'insert-before',
         target: '<footer',
+        fallback: 'append-body'
+      },
+      'embed-qr-code': {
+        type: 'insert-after',
+        target: '<section class="contact"',
         fallback: 'append-body'
       }
     };
@@ -554,68 +635,142 @@ export function useProgressiveEnhancement({
     }
   }, [callLegacyFunction, mergeFeatureHtml, updateFeatureProgress, retryAttempts, retryDelay]);
 
-  // Start progressive enhancement process
+  // Start progressive enhancement process - memoized to prevent excessive recreation
   const startEnhancement = useCallback(async () => {
-    if (!user || !jobId || selectedFeatures.length === 0) {
+    if (!user || !jobId || memoizedSelectedFeatures.length === 0) {
       return;
     }
+    
+    console.log('🔥 [useProgressiveEnhancement] startEnhancement called for job:', jobId);
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState(prev => {
+        // Check if already processing to prevent duplicate calls
+        if (prev.isLoading) {
+          console.warn('⚠️ [useProgressiveEnhancement] Already processing, ignoring duplicate call');
+          return prev;
+        }
+        return { ...prev, isLoading: true, error: null };
+      });
       
       // Start system performance monitoring
       performanceMonitorService.startSystemMonitoring();
       
-      // Calculate optimal feature priorities using intelligent ordering
-      console.log('🧠 Calculating optimal feature priorities...');
-      const priorityContext = {
-        userId: user.uid,
-        jobId,
-        selectedFeatures,
-        totalTimeEstimate: selectedFeatures.length * 5, // rough estimate
-        currentSystemLoad: 0.5, // would get from performance monitoring
-        previousSuccessRates: {}, // would load from historical data
-        userPreferences: await featurePriorityService['getUserPreferences'](user.uid)
-      };
-
-      const prioritizedFeatures = await featurePriorityService.calculatePriorities(priorityContext);
-      
-      // Log priority analysis
-      const analysis = featurePriorityService.getPriorityAnalysis(prioritizedFeatures);
-      console.log('📊 Priority Analysis:', analysis);
-      console.log('🎯 Recommendations:', analysis.recommendations);
-      
-      // Show priority recommendations to user
-      if (analysis.recommendations.length > 0) {
-        toast.success(`Smart ordering applied: ${analysis.recommendations[0]}`, { duration: 4000 });
-      }
-      
-      // Initialize features with prioritized order
+      // Initialize features first - this ensures they're displayed even if priority calculation fails
       const features = initializeFeatures();
       
-      // Fetch base HTML
+      // Fetch and display base HTML immediately
+      console.log('📄 Fetching base HTML...');
       const baseHtml = await fetchBaseHtml();
       setState(prev => ({
         ...prev,
         baseHtml,
         currentHtml: baseHtml,
-        isLoading: false
+        isLoading: false // Set to false so base CV is visible during processing
       }));
 
-      // Process features in optimized priority order
-      const orderedFeatureIds = prioritizedFeatures.map(p => p.featureId);
-      console.log('🚀 Processing features in optimized order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
+      // Attempt to calculate optimal feature priorities using intelligent ordering
+      let orderedFeatureIds: string[] = [];
+      let prioritizedFeatures: FeaturePriority[] = [];
       
-      for (const featureId of orderedFeatureIds) {
-        await processFeature(featureId);
+      try {
+        console.log('🧠 Calculating optimal feature priorities...');
+        const priorityContext = {
+          userId: user.uid,
+          jobId,
+          selectedFeatures: memoizedSelectedFeatures,
+          totalTimeEstimate: memoizedSelectedFeatures.length * 5, // rough estimate
+          currentSystemLoad: 0.5, // would get from performance monitoring
+          previousSuccessRates: {}, // would load from historical data
+          userPreferences: await featurePriorityService.getUserPreferences(user.uid)
+        };
+
+        prioritizedFeatures = await featurePriorityService.calculatePriorities(priorityContext);
+        
+        // Check if priority calculation returned valid results
+        if (prioritizedFeatures && prioritizedFeatures.length > 0) {
+          orderedFeatureIds = prioritizedFeatures.map(p => p.featureId);
+          
+          // Log priority analysis
+          const analysis = featurePriorityService.getPriorityAnalysis(prioritizedFeatures);
+          console.log('📊 Priority Analysis:', analysis);
+          console.log('🎯 Recommendations:', analysis.recommendations);
+          
+          // Show priority recommendations to user
+          if (analysis.recommendations.length > 0) {
+            toast.success(`Smart ordering applied: ${analysis.recommendations[0]}`, { duration: 4000 });
+          }
+          
+          console.log('🚀 Processing features in optimized order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
+        } else {
+          throw new Error('Priority service returned empty results');
+        }
+        
+      } catch (priorityError) {
+        console.warn('⚠️ Priority calculation failed, falling back to original order:', priorityError.message);
+        // Fallback to original order when priority service fails
+        orderedFeatureIds = [...memoizedSelectedFeatures];
+        console.log('🚀 Processing features in original order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
+        toast('Processing features in default order', { duration: 3000 });
+      }
+
+      // Ensure we have features to process
+      if (orderedFeatureIds.length === 0) {
+        console.error('❌ No features to process after priority calculation and fallback');
+        toast.error('No features available for processing');
+        return;
+      }
+      
+      // Process features in determined order (either prioritized or fallback)
+      for (let i = 0; i < orderedFeatureIds.length; i++) {
+        const featureId = orderedFeatureIds[i];
+        const featureName = FEATURE_NAMES[featureId] || featureId;
+        const progress = ((i + 1) / orderedFeatureIds.length) * 100;
+        
+        console.log(`🔄 Processing feature ${i + 1}/${orderedFeatureIds.length}: ${featureName} (${progress.toFixed(1)}% complete)`);
+        
+        // Show progress toast for each feature
+        toast.loading(`Processing ${featureName}... (${i + 1}/${orderedFeatureIds.length})`, {
+          id: `feature-${featureId}`, // Use consistent ID to replace previous toasts
+          duration: 0 // Keep toast until manually dismissed
+        });
+        
+        try {
+          await processFeature(featureId);
+          
+          // Dismiss the loading toast and show success
+          toast.dismiss(`feature-${featureId}`);
+          toast.success(`✅ ${featureName} completed`, { duration: 2000 });
+          
+        } catch (error) {
+          // Dismiss the loading toast and show error
+          toast.dismiss(`feature-${featureId}`);
+          console.error(`❌ Feature ${featureName} failed:`, error);
+          // Note: processFeature handles its own error toasts, so we don't duplicate
+        }
+        
+        // Update overall progress
+        setState(prev => ({
+          ...prev,
+          overallProgress: Math.round(progress)
+        }));
+        
         // Intelligent delay based on system load and next feature complexity
-        const nextFeatureIndex = orderedFeatureIds.indexOf(featureId) + 1;
-        if (nextFeatureIndex < orderedFeatureIds.length) {
-          const nextFeature = prioritizedFeatures.find(p => p.featureId === orderedFeatureIds[nextFeatureIndex]);
-          const delay = nextFeature?.technicalComplexity ? Math.min(1000, nextFeature.technicalComplexity * 100) : 500;
+        if (i < orderedFeatureIds.length - 1) {
+          let delay = 500; // default delay
+          
+          if (prioritizedFeatures.length > 0) {
+            // Use intelligent delay if we have priority information
+            const nextFeature = prioritizedFeatures.find(p => p.featureId === orderedFeatureIds[i + 1]);
+            delay = nextFeature?.technicalComplexity ? Math.min(1000, nextFeature.technicalComplexity * 100) : 500;
+          }
+          
+          console.log(`⏱️ Waiting ${delay}ms before next feature...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
+
+      console.log('🎉 All features processed successfully!');
 
       // Generate performance report when all features are complete
       if (user) {
@@ -626,13 +781,19 @@ export function useProgressiveEnhancement({
           console.error('❌ Error generating performance report:', reportError);
         }
 
-        // Update user preferences based on completed and failed features
+        // Update user preferences based on completed and failed features - get current state
         try {
-          const completedFeatures = state.features.filter(f => f.status === 'completed').map(f => f.id);
-          const failedFeatures = state.features.filter(f => f.status === 'failed').map(f => f.id);
-          
-          await featurePriorityService.updateUserPreferences(user.uid, completedFeatures, failedFeatures);
-          console.log('👤 User preferences updated based on session results');
+          setState(currentState => {
+            const completedFeatures = currentState.features.filter(f => f.status === 'completed').map(f => f.id);
+            const failedFeatures = currentState.features.filter(f => f.status === 'failed').map(f => f.id);
+            
+            // Update preferences asynchronously without blocking
+            featurePriorityService.updateUserPreferences(user.uid, completedFeatures, failedFeatures)
+              .then(() => console.log('👤 User preferences updated based on session results'))
+              .catch(prefsError => console.error('❌ Error updating user preferences:', prefsError));
+            
+            return currentState;
+          });
         } catch (prefsError) {
           console.error('❌ Error updating user preferences:', prefsError);
         }
@@ -654,49 +815,88 @@ export function useProgressiveEnhancement({
       }));
       toast.error('Failed to start CV enhancement');
     }
-  }, [user, jobId, selectedFeatures, initializeFeatures, fetchBaseHtml, processFeature]);
+  }, [user?.uid, jobId, memoizedSelectedFeatures, initializeFeatures, fetchBaseHtml, processFeature]);
 
-  // Set up Firestore real-time subscription for progress tracking
+  // Set up real-time job subscription for progress tracking via JobSubscriptionManager
   useEffect(() => {
     if (!user || !jobId) {
       return;
     }
 
-    const progressDocRef = doc(db, 'jobs', jobId, 'progress', 'enhancement');
-    
-    const unsubscribe = onSnapshot(progressDocRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        console.log('📊 Progress update from Firestore:', data);
-        
-        // Update progress based on Firestore data
-        if (data.features) {
-          setState(prev => ({
-            ...prev,
-            features: prev.features.map(feature => {
-              const firestoreFeature = data.features[feature.id];
-              return firestoreFeature ? { ...feature, ...firestoreFeature } : feature;
-            })
-          }));
-        }
+    // Check if there's already an active subscription to prevent duplicates
+    if (unsubscribeRef.current) {
+      console.warn('⚠️ [useProgressiveEnhancement] Cleaning up existing subscription before creating new one');
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
+    const handleJobUpdate = (job: Job | null) => {
+      if (!job) {
+        return;
       }
-    }, (error) => {
-      console.error('❌ Error listening to progress updates:', error);
+
+      console.log('📊 Job update received via JobSubscriptionManager for job:', jobId);
+      
+      // Update progress based on job enhancedFeatures data
+      if (job.enhancedFeatures) {
+        setState(prev => ({
+          ...prev,
+          features: prev.features.map(feature => {
+            const firestoreFeature = job.enhancedFeatures?.[feature.id];
+            return firestoreFeature ? { ...feature, ...firestoreFeature } : feature;
+          })
+        }));
+      }
+    };
+
+    console.log('🔔 [useProgressiveEnhancement] Setting up job subscription for:', jobId);
+    
+    // Subscribe to job updates via JobSubscriptionManager
+    const unsubscribeFromJob = jobSubscriptionManager.subscribeToJob(jobId, handleJobUpdate, {
+      enableLogging: true,
+      debounceMs: 200, // Add some debouncing to prevent excessive updates
+      callbackType: 'features' as any // Type cast for compatibility
     });
 
-    unsubscribeRef.current = unsubscribe;
+    // Store unsubscribe function
+    unsubscribeRef.current = unsubscribeFromJob;
 
     return () => {
-      unsubscribe();
+      console.log('🧹 [useProgressiveEnhancement] Cleaning up job subscription for:', jobId);
+      unsubscribeFromJob();
+      unsubscribeRef.current = null;
     };
   }, [user, jobId]);
 
-  // Auto-start enhancement if enabled
+  // Auto-start enhancement if enabled - use ref to prevent infinite loop
+  const hasStartedRef = useRef(false);
+  const lastJobIdRef = useRef<string>('');
+  const lastFeaturesHashRef = useRef<string>('');
+  
+  // Reset hasStarted flag when jobId or selectedFeatures change
   useEffect(() => {
-    if (autoStart && selectedFeatures.length > 0) {
+    const featuresHash = memoizedSelectedFeatures.join(',');
+    if (jobId !== lastJobIdRef.current || featuresHash !== lastFeaturesHashRef.current) {
+      hasStartedRef.current = false;
+      lastJobIdRef.current = jobId;
+      lastFeaturesHashRef.current = featuresHash;
+    }
+  }, [jobId, memoizedSelectedFeatures]);
+  
+  useEffect(() => {
+    console.log('🚀 [useProgressiveEnhancement] Auto-start check:', {
+      autoStart,
+      featuresCount: memoizedSelectedFeatures.length,
+      hasStarted: hasStartedRef.current,
+      jobId
+    });
+    
+    if (autoStart && memoizedSelectedFeatures.length > 0 && !hasStartedRef.current) {
+      console.log('✅ [useProgressiveEnhancement] Starting enhancement for job:', jobId);
+      hasStartedRef.current = true;
       startEnhancement();
     }
-  }, [autoStart, selectedFeatures, startEnhancement]);
+  }, [autoStart, memoizedSelectedFeatures.length > 0]); // Remove startEnhancement from dependencies
 
   // Cleanup on unmount
   useEffect(() => {
