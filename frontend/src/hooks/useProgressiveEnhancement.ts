@@ -57,6 +57,7 @@ const LEGACY_FUNCTIONS: Record<string, string> = {
   'skills-visualization': 'generateSkillsVisualization',
   'certification-badges': 'generateCertificationBadges',
   'calendar-integration': 'generateCalendarEvents',
+  'availability-calendar': 'generateAvailabilityCalendar',
   'interactive-timeline': 'generateTimeline',
   'language-proficiency': 'generateLanguageVisualization',
   'portfolio-gallery': 'generatePortfolioGallery',
@@ -70,6 +71,7 @@ const FEATURE_NAMES: Record<string, string> = {
   'skills-visualization': 'Skills Visualization',
   'certification-badges': 'Certification Badges',
   'calendar-integration': 'Calendar Integration',
+  'availability-calendar': 'Availability Calendar',
   'interactive-timeline': 'Interactive Timeline',
   'language-proficiency': 'Language Proficiency',
   'portfolio-gallery': 'Portfolio Gallery',
@@ -230,7 +232,13 @@ export function useProgressiveEnhancement({
         return qrHtml;
       }
       
-      return data.html || '';
+      // For availability calendar generation, extract htmlFragment
+      if (featureId === 'availability-calendar' && data.htmlFragment) {
+        console.log(`🔧 [availability-calendar] Extracted HTML fragment: ${data.htmlFragment.substring(0, 100)}...`);
+        return data.htmlFragment;
+      }
+      
+      return data.html || data.htmlFragment || '';
     } catch (error: unknown) {
       console.error(`❌ Error calling ${functionName}:`, error);
       throw new Error(error.message || `Failed to generate ${featureId}`);
@@ -311,6 +319,11 @@ export function useProgressiveEnhancement({
       'embed-qr-code': {
         type: 'insert-after',
         target: '<section class="contact"',
+        fallback: 'append-body'
+      },
+      'availability-calendar': {
+        type: 'insert-before',
+        target: '<footer',
         fallback: 'append-body'
       }
     };

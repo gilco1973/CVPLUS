@@ -50,26 +50,69 @@ export class PodcastGenerationService {
   private voiceConfig: VoiceConfig;
   
   constructor() {
+    // Enhanced API key retrieval with proper error handling
+    const openaiKey = this.getSecretValue('OPENAI_API_KEY') || config.openai?.apiKey || process.env.OPENAI_API_KEY || '';
+    if (!openaiKey) {
+      console.error('❌ OPENAI_API_KEY is missing');
+      throw new Error('OpenAI API key is required but not found in secrets or environment');
+    }
+    
     this.openai = new OpenAI({
-      apiKey: config.openai?.apiKey || process.env.OPENAI_API_KEY || ''
+      apiKey: openaiKey
     });
     
-    this.elevenLabsApiKey = (config.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY || '').trim();
+    // Enhanced ElevenLabs API key retrieval
+    this.elevenLabsApiKey = (
+      this.getSecretValue('ELEVENLABS_API_KEY') ||
+      config.elevenLabs?.apiKey || 
+      process.env.ELEVENLABS_API_KEY || ''
+    ).trim();
     
-    // Configure voices for conversational podcast
-    // Note: Swapped voice IDs to fix gender assignment issue
+    if (!this.elevenLabsApiKey) {
+      console.error('❌ ELEVENLABS_API_KEY is missing');
+      throw new Error('ElevenLabs API key is required but not found in secrets or environment');
+    }
+    
+    // Configure voices for conversational podcast with enhanced secret retrieval
     this.voiceConfig = {
       host1: {
-        voiceId: config.elevenLabs?.host1VoiceId || process.env.ELEVENLABS_HOST1_VOICE_ID || 'yoZ06aMxZJJ28mfd3POQ',
+        voiceId: this.getSecretValue('ELEVENLABS_HOST1_VOICE_ID') || 
+                 config.elevenLabs?.host1VoiceId || 
+                 process.env.ELEVENLABS_HOST1_VOICE_ID || 
+                 'yoZ06aMxZJJ28mfd3POQ',
         name: 'Sarah',
         style: 'Professional podcast host'
       },
       host2: {
-        voiceId: config.elevenLabs?.host2VoiceId || process.env.ELEVENLABS_HOST2_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
+        voiceId: this.getSecretValue('ELEVENLABS_HOST2_VOICE_ID') || 
+                 config.elevenLabs?.host2VoiceId || 
+                 process.env.ELEVENLABS_HOST2_VOICE_ID || 
+                 'pNInz6obpgDQGcFmaJgB',
         name: 'Mike',
         style: 'Engaging co-host'
       }
     };
+    
+    console.log('✅ Podcast service initialized with API keys and voice configurations');
+  }
+  
+  /**
+   * Safely retrieve secret values from Firebase Functions secrets
+   */
+  private getSecretValue(secretName: string): string | undefined {
+    try {
+      // Firebase Functions v2 secrets are available as environment variables
+      const secretValue = process.env[secretName];
+      if (secretValue && secretValue.trim().length > 0) {
+        console.log(`✅ Secret ${secretName} retrieved successfully`);
+        return secretValue.trim();
+      }
+      console.warn(`⚠️ Secret ${secretName} is empty or undefined`);
+      return undefined;
+    } catch (error) {
+      console.error(`❌ Error retrieving secret ${secretName}:`, error);
+      return undefined;
+    }
   }
   
   /**
@@ -85,18 +128,33 @@ export class PodcastGenerationService {
     
     // Test ElevenLabs API key validity by making a simple API call
     try {
+      const cleanApiKey = this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '');
+      console.log(`Testing ElevenLabs API with key length: ${cleanApiKey.length}`);
+      
       const testResponse = await axios.get('https://api.elevenlabs.io/v1/user', {
         headers: {
-          'xi-api-key': this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '')
+          'xi-api-key': cleanApiKey,
+          'Content-Type': 'application/json'
         },
         timeout: 10000
       });
-      console.log('ElevenLabs API key validation successful');
+      console.log('✅ ElevenLabs API key validation successful');
+      console.log('User info:', testResponse.data);
     } catch (error: any) {
+      console.error('❌ ElevenLabs API validation failed:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       if (error.response?.status === 401) {
-        throw new Error('ElevenLabs API key is invalid or expired. Please update your ELEVENLABS_API_KEY secret.');
+        throw new Error('ElevenLabs API key is invalid or expired. Please update your ELEVENLABS_API_KEY secret in Firebase Console.');
+      } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        console.warn('⚠️ Network connectivity issue with ElevenLabs API, but continuing...');
+      } else {
+        console.warn('⚠️ Could not validate ElevenLabs API key, but continuing with generation...');
       }
-      console.warn('Could not validate ElevenLabs API key, but continuing with generation...');
     }
     
     // Check voice configuration
@@ -1061,4 +1119,18 @@ Focus: ${options.focus || 'balanced'}`;
   }
 }
 
-export const podcastGenerationService = new PodcastGenerationService();
+// Lazy initialization to prevent runtime errors during module loading
+let _podcastGenerationService: PodcastGenerationService | null = null;
+
+export function getPodcastGenerationService(): PodcastGenerationService {
+  if (!_podcastGenerationService) {
+    _podcastGenerationService = new PodcastGenerationService();
+  }
+  return _podcastGenerationService;
+}
+
+// For backward compatibility
+export const podcastGenerationService = {
+  generatePodcast: (parsedCV: any, jobId: string, userId: string, options: any = {}) => 
+    getPodcastGenerationService().generatePodcast(parsedCV, jobId, userId, options)
+};

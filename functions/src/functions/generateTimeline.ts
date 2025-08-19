@@ -4,6 +4,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { timelineGenerationService } from '../services/timeline-generation.service';
 import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
+import { handleFunctionError } from '../utils/enhanced-error-handler';
 
 export const generateTimeline = onCall(
   {
@@ -92,17 +94,39 @@ export const generateTimeline = onCall(
     } catch (error: any) {
       console.error('Error generating timeline:', error);
       
-      // Update status to failed
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
+      // Use enhanced error handling
+      try {
+        // Sanitize error data for safe Firestore write
+        const sanitizedErrorContext = sanitizeErrorContext({
+          errorMessage: error.message,
+          errorStack: error.stack,
+          errorCode: error.code,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Create safe error update object
+        const errorUpdateData = sanitizeForFirestore({
           'enhancedFeatures.timeline.status': 'failed',
-          'enhancedFeatures.timeline.error': error.message,
+          'enhancedFeatures.timeline.error': error.message || 'Unknown error',
+          'enhancedFeatures.timeline.errorContext': sanitizedErrorContext,
           'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
         });
+        
+        // Update status to failed
+        await admin.firestore()
+          .collection('jobs')
+          .doc(jobId)
+          .update(errorUpdateData);
+      } catch (updateError) {
+        console.error('Failed to update job status after error:', updateError);
+      }
       
-      throw new Error(`Failed to generate timeline: ${error.message}`);
+      // Handle error with enhanced error handling
+      await handleFunctionError(error, 'generateTimeline', {
+        userId: request.auth?.uid,
+        jobId,
+        requestData: request.data
+      });
     }
   });
 

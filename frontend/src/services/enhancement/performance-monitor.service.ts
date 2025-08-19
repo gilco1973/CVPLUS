@@ -152,8 +152,12 @@ export class PerformanceMonitorService {
   private async storePerformanceMetric(metrics: PerformanceMetrics): Promise<void> {
     try {
       const metricsCollection = collection(db, 'performance_metrics');
+      // Filter out undefined values for Firestore compatibility
+      const cleanMetrics = Object.fromEntries(
+        Object.entries(metrics).filter(([_, value]) => value !== undefined)
+      );
       await addDoc(metricsCollection, {
-        ...metrics,
+        ...cleanMetrics,
         timestamp: serverTimestamp()
       });
     } catch (error) {
@@ -352,8 +356,10 @@ export class PerformanceMonitorService {
     // Store report in Firestore
     try {
       const reportRef = doc(db, 'performance_reports', `${jobId}_${Date.now()}`);
+      // Filter out undefined values for Firestore compatibility
+      const cleanReport = this.removeUndefinedValues(report);
       await setDoc(reportRef, {
-        ...report,
+        ...cleanReport,
         generatedAt: serverTimestamp()
       });
     } catch (error) {
@@ -361,6 +367,23 @@ export class PerformanceMonitorService {
     }
 
     return report;
+  }
+
+  /**
+   * Remove undefined values from objects for Firestore compatibility
+   */
+  private removeUndefinedValues(obj: any): any {
+    if (obj === null || typeof obj !== 'object') return obj;
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeUndefinedValues(item));
+    }
+    
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, this.removeUndefinedValues(value)])
+    );
   }
 
   /**

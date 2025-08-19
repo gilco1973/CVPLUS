@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { podcastGenerationService } from '../services/podcast-generation.service';
 import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 
 export const generatePodcast = onCall(
   {
@@ -100,34 +101,41 @@ export const generatePodcast = onCall(
       // Generate HTML fragment for progressive enhancement
       const htmlFragment = htmlFragmentGenerator.generatePodcastHTML(podcastResult);
 
+      // Sanitize podcast result data before Firestore write
+      const sanitizedPodcastData = sanitizeForFirestore(podcastResult);
+      const sanitizedHtmlFragment = sanitizeForFirestore(htmlFragment);
+      
+      // Create safe update object
+      const updateData = sanitizeForFirestore({
+        'enhancedFeatures.generatePodcast.status': 'completed',
+        'enhancedFeatures.generatePodcast.progress': 100,
+        'enhancedFeatures.generatePodcast.data': sanitizedPodcastData,
+        'enhancedFeatures.generatePodcast.htmlFragment': sanitizedHtmlFragment,
+        'enhancedFeatures.generatePodcast.processedAt': FieldValue.serverTimestamp(),
+        podcastStatus: 'completed',
+        podcast: sanitizeForFirestore({
+          url: podcastResult.audioUrl,
+          transcript: podcastResult.transcript,
+          duration: podcastResult.duration,
+          chapters: podcastResult.chapters,
+          generatedAt: FieldValue.serverTimestamp()
+        }),
+        'enhancedFeatures.podcast': sanitizeForFirestore({
+          enabled: true,
+          status: 'completed',
+          data: {
+            url: podcastResult.audioUrl,
+            duration: podcastResult.duration
+          }
+        }),
+        updatedAt: FieldValue.serverTimestamp()
+      });
+
       // Update job with podcast completion
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
-        .update({
-          'enhancedFeatures.generatePodcast.status': 'completed',
-          'enhancedFeatures.generatePodcast.progress': 100,
-          'enhancedFeatures.generatePodcast.data': podcastResult,
-          'enhancedFeatures.generatePodcast.htmlFragment': htmlFragment,
-          'enhancedFeatures.generatePodcast.processedAt': FieldValue.serverTimestamp(),
-          podcastStatus: 'completed',
-          podcast: {
-            url: podcastResult.audioUrl,
-            transcript: podcastResult.transcript,
-            duration: podcastResult.duration,
-            chapters: podcastResult.chapters,
-            generatedAt: FieldValue.serverTimestamp()
-          },
-          'enhancedFeatures.podcast': {
-            enabled: true,
-            status: 'completed',
-            data: {
-              url: podcastResult.audioUrl,
-              duration: podcastResult.duration
-            }
-          },
-          updatedAt: FieldValue.serverTimestamp()
-        });
+        .update(updateData);
 
       return {
         success: true,
@@ -140,18 +148,30 @@ export const generatePodcast = onCall(
     } catch (error: any) {
       console.error('Error generating podcast:', error);
       
+      // Sanitize error data for safe Firestore write
+      const sanitizedErrorContext = sanitizeErrorContext({
+        errorMessage: error.message,
+        errorStack: error.stack,
+        errorCode: error.code,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Create safe error update object
+      const errorUpdateData = sanitizeForFirestore({
+        'enhancedFeatures.generatePodcast.status': 'failed',
+        'enhancedFeatures.generatePodcast.error': error.message || 'Unknown error',
+        'enhancedFeatures.generatePodcast.errorContext': sanitizedErrorContext,
+        'enhancedFeatures.generatePodcast.processedAt': FieldValue.serverTimestamp(),
+        podcastStatus: 'failed',
+        podcastError: error.message || 'Unknown error',
+        updatedAt: FieldValue.serverTimestamp()
+      });
+      
       // Update status to failed
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
-        .update({
-          'enhancedFeatures.generatePodcast.status': 'failed',
-          'enhancedFeatures.generatePodcast.error': error.message,
-          'enhancedFeatures.generatePodcast.processedAt': FieldValue.serverTimestamp(),
-          podcastStatus: 'failed',
-          podcastError: error.message,
-          updatedAt: FieldValue.serverTimestamp()
-        });
+        .update(errorUpdateData);
       
       throw new Error(`Failed to generate podcast: ${error.message}`);
     }

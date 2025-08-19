@@ -119,20 +119,31 @@ export class TimelineGenerationService {
     }
     
     // Process achievements as separate events if they have dates
-    if (parsedCV.achievements) {
+    if (parsedCV.achievements && Array.isArray(parsedCV.achievements)) {
       for (const achievement of parsedCV.achievements) {
-        // Try to extract date from achievement text
-        const dateMatch = achievement.match(/\b(19|20)\d{2}\b/);
-        if (dateMatch) {
-          const achievementEvent: TimelineEvent = {
-            id: `achievement-${events.length}`,
-            type: 'achievement',
-            title: this.extractAchievementTitle(achievement),
-            organization: this.extractAchievementOrg(achievement, parsedCV),
-            startDate: new Date(parseInt(dateMatch[0]), 0, 1),
-            description: achievement
-          };
-          events.push(achievementEvent);
+        // Ensure achievement is a valid string before processing
+        if (!achievement || typeof achievement !== 'string' || achievement.trim().length === 0) {
+          console.warn('[Timeline Service] Skipping invalid achievement:', achievement);
+          continue;
+        }
+        
+        try {
+          // Try to extract date from achievement text
+          const dateMatch = achievement.match(/\b(19|20)\d{2}\b/);
+          if (dateMatch) {
+            const achievementEvent: TimelineEvent = {
+              id: `achievement-${events.length}`,
+              type: 'achievement',
+              title: this.extractAchievementTitle(achievement),
+              organization: this.extractAchievementOrg(achievement, parsedCV),
+              startDate: new Date(parseInt(dateMatch[0]), 0, 1),
+              description: achievement
+            };
+            events.push(achievementEvent);
+          }
+        } catch (error) {
+          console.error('[Timeline Service] Error processing achievement:', error, 'Achievement:', achievement);
+          continue;
         }
       }
     }
@@ -417,54 +428,95 @@ export class TimelineGenerationService {
   }
   
   /**
-   * Extract achievement title
+   * Extract achievement title with null safety
    */
   private extractAchievementTitle(achievement: string): string {
-    // Try to extract the main action or award
-    const patterns = [
-      /^(Awarded|Received|Won|Achieved|Earned)\s+(.+?)(?:\s+for|\s+in|\s+at|$)/i,
-      /^(.+?)\s+(Award|Prize|Recognition|Certificate)/i,
-      /^(.{20,50})/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = achievement.match(pattern);
-      if (match) {
-        return match[2] || match[1];
-      }
+    // Input validation
+    if (!achievement || typeof achievement !== 'string') {
+      console.warn('[Timeline Service] Invalid achievement input for title extraction:', achievement);
+      return 'Achievement';
     }
     
-    // Default: return first 50 characters
-    return achievement.substring(0, 50) + (achievement.length > 50 ? '...' : '');
+    const cleanAchievement = achievement.trim();
+    if (cleanAchievement.length === 0) {
+      return 'Achievement';
+    }
+    
+    try {
+      // Try to extract the main action or award
+      const patterns = [
+        /^(Awarded|Received|Won|Achieved|Earned)\s+(.+?)(?:\s+for|\s+in|\s+at|$)/i,
+        /^(.+?)\s+(Award|Prize|Recognition|Certificate)/i,
+        /^(.{20,50})/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = cleanAchievement.match(pattern);
+        if (match && (match[2] || match[1])) {
+          const title = (match[2] || match[1]).trim();
+          return title || 'Achievement';
+        }
+      }
+      
+      // Default: return first 50 characters
+      return cleanAchievement.substring(0, 50) + (cleanAchievement.length > 50 ? '...' : '');
+    } catch (error) {
+      console.error('[Timeline Service] Error extracting achievement title:', error);
+      return 'Achievement';
+    }
   }
   
   /**
-   * Extract organization from achievement
+   * Extract organization from achievement with null safety
    */
   private extractAchievementOrg(achievement: string, cv: ParsedCV): string {
-    // Check if any company names are mentioned
-    if (cv.experience) {
-      for (const exp of cv.experience) {
-        if (achievement.includes(exp.company)) {
-          return exp.company;
+    // Input validation
+    if (!achievement || typeof achievement !== 'string') {
+      console.warn('[Timeline Service] Invalid achievement input for org extraction:', achievement);
+      return 'Achievement';
+    }
+    
+    if (!cv) {
+      console.warn('[Timeline Service] No CV data provided for org extraction');
+      return 'Achievement';
+    }
+    
+    try {
+      const cleanAchievement = achievement.trim();
+      if (cleanAchievement.length === 0) {
+        return 'Achievement';
+      }
+      
+      // Check if any company names are mentioned
+      if (cv.experience && Array.isArray(cv.experience)) {
+        for (const exp of cv.experience) {
+          if (exp && exp.company && typeof exp.company === 'string') {
+            if (cleanAchievement.toLowerCase().includes(exp.company.toLowerCase())) {
+              return exp.company;
+            }
+          }
         }
       }
-    }
-    
-    // Look for common patterns
-    const patterns = [
-      /(?:at|from|by)\s+([A-Z][A-Za-z\s&]+)/,
-      /([A-Z][A-Za-z\s&]+)\s+(?:Award|Prize|Recognition)/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = achievement.match(pattern);
-      if (match) {
-        return match[1].trim();
+      
+      // Look for common patterns
+      const patterns = [
+        /(?:at|from|by)\s+([A-Z][A-Za-z\s&]+)/,
+        /([A-Z][A-Za-z\s&]+)\s+(?:Award|Prize|Recognition)/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = cleanAchievement.match(pattern);
+        if (match && match[1]) {
+          const org = match[1].trim();
+          return org || 'Achievement';
+        }
       }
+      
+      return 'Achievement';
+    } catch (error) {
+      console.error('[Timeline Service] Error extracting achievement organization:', error);
+      return 'Achievement';
     }
-    
-    return 'Achievement';
   }
   
   /**

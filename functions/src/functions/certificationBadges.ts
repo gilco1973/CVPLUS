@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { certificationBadgesService } from '../services/certification-badges.service';
 import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 
 export const generateCertificationBadges = onCall(
   {
@@ -64,17 +65,24 @@ export const generateCertificationBadges = onCall(
       const certifications = jobData.parsedData.certifications || [];
       const htmlFragment = htmlFragmentGenerator.generateCertificationBadgesHTML(certifications);
 
+      // Sanitize data before Firestore write
+      const sanitizedBadgesCollection = sanitizeForFirestore(badgesCollection);
+      const sanitizedHtmlFragment = sanitizeForFirestore(htmlFragment);
+      
+      // Create safe update object
+      const updateData = sanitizeForFirestore({
+        'enhancedFeatures.certificationBadges.status': 'completed',
+        'enhancedFeatures.certificationBadges.progress': 100,
+        'enhancedFeatures.certificationBadges.data': sanitizedBadgesCollection,
+        'enhancedFeatures.certificationBadges.htmlFragment': sanitizedHtmlFragment,
+        'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
+      });
+
       // Update with final results
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
-        .update({
-          'enhancedFeatures.certificationBadges.status': 'completed',
-          'enhancedFeatures.certificationBadges.progress': 100,
-          'enhancedFeatures.certificationBadges.data': badgesCollection,
-          'enhancedFeatures.certificationBadges.htmlFragment': htmlFragment,
-          'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
-        });
+        .update(updateData);
 
       return {
         success: true,
@@ -84,15 +92,27 @@ export const generateCertificationBadges = onCall(
     } catch (error: any) {
       console.error('Error generating certification badges:', error);
       
+      // Sanitize error data for safe Firestore write
+      const sanitizedErrorContext = sanitizeErrorContext({
+        errorMessage: error.message,
+        errorStack: error.stack,
+        errorCode: error.code,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Create safe error update object
+      const errorUpdateData = sanitizeForFirestore({
+        'enhancedFeatures.certificationBadges.status': 'failed',
+        'enhancedFeatures.certificationBadges.error': error.message || 'Unknown error',
+        'enhancedFeatures.certificationBadges.errorContext': sanitizedErrorContext,
+        'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
+      });
+      
       // Update status to failed
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
-        .update({
-          'enhancedFeatures.certificationBadges.status': 'failed',
-          'enhancedFeatures.certificationBadges.error': error.message,
-          'enhancedFeatures.certificationBadges.processedAt': FieldValue.serverTimestamp()
-        });
+        .update(errorUpdateData);
       
       throw new Error(`Failed to generate certification badges: ${error.message}`);
     }

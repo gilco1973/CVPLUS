@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sanitizeForFirestore } from '../utils/firestore-sanitizer';
 
 /**
  * Comprehensive job monitoring service for detecting and resolving stuck CV generation jobs
@@ -102,7 +103,7 @@ export class JobMonitoringService {
       };
     }
     
-    await admin.firestore().collection('jobs').doc(jobId).update({
+    const updateData = sanitizeForFirestore({
       status: 'failed',
       error: `Job stuck in generating status for ${stuckMinutes} minutes - feature processing never started`,
       enhancedFeatures: enhancedFeatures,
@@ -110,6 +111,8 @@ export class JobMonitoringService {
       recoveryReason: 'missing_features_initialization',
       updatedAt: FieldValue.serverTimestamp()
     });
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
   }
   
   /**
@@ -135,7 +138,7 @@ export class JobMonitoringService {
       else if (feature.status === 'processing') processingCount++;
     }
     
-    await admin.firestore().collection('jobs').doc(jobId).update({
+    const updateData = sanitizeForFirestore({
       status: 'failed',
       error: `Job stuck for ${stuckMinutes} minutes during CV generation phase. Features: ${completedCount} completed, ${failedCount} failed, ${processingCount} stuck`,
       recoveredAt: FieldValue.serverTimestamp(),
@@ -148,6 +151,8 @@ export class JobMonitoringService {
       },
       updatedAt: FieldValue.serverTimestamp()
     });
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
   }
   
   /**
@@ -160,13 +165,15 @@ export class JobMonitoringService {
   ): Promise<void> {
     console.log(`🟢 Completing job ${jobId} - appears finished but status not updated`);
     
-    await admin.firestore().collection('jobs').doc(jobId).update({
+    const updateData = sanitizeForFirestore({
       status: 'completed',
       recoveredAt: FieldValue.serverTimestamp(),
       recoveryReason: 'status_update_missed',
       recoveryNote: `Job was stuck for ${stuckMinutes} minutes but appeared complete - status updated by recovery system`,
       updatedAt: FieldValue.serverTimestamp()
     });
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
   }
   
   /**
@@ -178,13 +185,15 @@ export class JobMonitoringService {
   ): Promise<void> {
     console.log(`🔴 Failing job ${jobId} - unknown state`);
     
-    await admin.firestore().collection('jobs').doc(jobId).update({
+    const updateData = sanitizeForFirestore({
       status: 'failed',
       error: `Job stuck for ${stuckMinutes} minutes in unknown state - unable to determine processing phase`,
       recoveredAt: FieldValue.serverTimestamp(),
       recoveryReason: 'unknown_state_timeout',
       updatedAt: FieldValue.serverTimestamp()
     });
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
   }
   
   /**

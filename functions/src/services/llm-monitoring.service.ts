@@ -1,6 +1,7 @@
 import { LLMVerificationService } from './llm-verification.service';
 import { VerifiedClaudeService } from './verified-claude.service';
 import { llmVerificationConfig } from '../config/llm-verification.config';
+import { sanitizeForFirestore, sanitizeMetrics } from '../utils/firestore-sanitizer';
 
 /**
  * LLM Monitoring Service

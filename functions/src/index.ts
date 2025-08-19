@@ -42,6 +42,9 @@ export {
   handleCalendarCallback
 } from './functions/calendarIntegration';
 
+// Export availability calendar function
+export { generateAvailabilityCalendar } from './functions/generateAvailabilityCalendar';
+
 // Export enhanced CV features functions
 export { 
   createPublicProfile,
