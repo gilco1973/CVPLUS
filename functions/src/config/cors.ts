@@ -11,6 +11,13 @@ const allowedOrigins: (string | RegExp)[] = [
   'http://localhost:3002', // React dev server (port 3002)
   'http://localhost:5173', // Vite dev server
   'http://localhost:5000', // Firebase emulator
+  'http://localhost:7860', // Gradio dev server
+  // HuggingFace Spaces domains for portal chat
+  'https://huggingface.co',
+  /https:\/\/.*\.hf\.space$/,
+  /https:\/\/.*\.gradio\.app$/,
+  /https:\/\/.*\.streamlit\.app$/,
+  /https:\/\/.*-[a-z0-9]+-[a-z0-9]+\.hf\.space$/, // HF Space URLs with user-space format
 ];
 
 // Firebase Functions v2 compatible CORS options with explicit typing

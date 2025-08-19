@@ -7,9 +7,9 @@ import { CVTemplate, InteractiveFeatureResult } from '../types';
  */
 export class CreativeTemplate implements CVTemplate {
   
-  async generateHTML(cv: ParsedCV, jobId: string, features?: string[]): Promise<string> {
-    // Interactive features will be injected by the main generator
-    const interactiveFeatures: InteractiveFeatureResult = {};
+  async generateHTML(cv: ParsedCV, jobId: string, features?: string[], interactiveFeatures?: InteractiveFeatureResult): Promise<string> {
+    // Use provided interactive features or default to empty object
+    const featuresObj: InteractiveFeatureResult = interactiveFeatures || {};
     
     return `<!DOCTYPE html>
 <html lang="en">
@@ -19,7 +19,7 @@ export class CreativeTemplate implements CVTemplate {
     <title>${cv.personalInfo.name} - CV</title>
     <style>
         ${this.getStyles()}
-        ${interactiveFeatures.additionalStyles || ''}
+        ${featuresObj.additionalStyles || ''}
     </style>
 </head>
 <body>
@@ -30,14 +30,14 @@ export class CreativeTemplate implements CVTemplate {
             ${this.generateExperience(cv)}
             ${this.generateEducation(cv)}
             ${this.generateSkills(cv)}
-            ${this.generateInteractiveFeatures(interactiveFeatures)}
+            ${this.generateInteractiveFeatures(featuresObj)}
             ${this.generateDownloadSection()}
         </div>
         ${this.generateFooter()}
     </div>
     
     ${this.getScripts()}
-    ${interactiveFeatures.additionalScripts || ''}
+    ${featuresObj.additionalScripts ? `<script>${featuresObj.additionalScripts}</script>` : ''}
 </body>
 </html>`;
   }

@@ -7,9 +7,9 @@ import { CVTemplate, InteractiveFeatureResult } from '../types';
  */
 export class ModernTemplate implements CVTemplate {
   
-  async generateHTML(cv: ParsedCV, jobId: string, features?: string[]): Promise<string> {
-    // Interactive features will be injected by the main generator
-    const interactiveFeatures: InteractiveFeatureResult = {};
+  async generateHTML(cv: ParsedCV, jobId: string, features?: string[], interactiveFeatures?: InteractiveFeatureResult): Promise<string> {
+    // Use provided interactive features or default to empty object
+    const featuresObj: InteractiveFeatureResult = interactiveFeatures || {};
     
     return `<!DOCTYPE html>
 <html lang="en">
@@ -20,7 +20,7 @@ export class ModernTemplate implements CVTemplate {
     ${features?.includes('generate-podcast') ? '<meta name="job-id" content="{{JOB_ID}}">' : ''}
     <style>
         ${this.getStyles()}
-        ${interactiveFeatures.additionalStyles || ''}
+        ${featuresObj.additionalStyles || ''}
     </style>
 </head>
 <body>
@@ -30,13 +30,13 @@ export class ModernTemplate implements CVTemplate {
         ${this.generateExperience(cv)}
         ${this.generateEducation(cv)}
         ${this.generateSkills(cv)}
-        ${this.generateInteractiveFeatures(interactiveFeatures)}
+        ${this.generateInteractiveFeatures(featuresObj)}
         ${this.generateDownloadSection()}
         ${this.generateFooter()}
     </div>
     
     ${this.getScripts()}
-    ${interactiveFeatures.additionalScripts || ''}
+    ${featuresObj.additionalScripts ? `<script>${featuresObj.additionalScripts}</script>` : ''}
 </body>
 </html>`;
   }

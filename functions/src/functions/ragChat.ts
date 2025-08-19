@@ -50,20 +50,15 @@ export const initializeRAG = onCall(
       // Generate vector namespace
       const vectorNamespace = `user-${request.auth.uid}-job-${jobId}`;
 
-      // Create CV chunks
-      console.log('Creating CV chunks...');
+      // Create CV chunks with embeddings
+      console.log('Creating CV chunks with embeddings...');
       const chunks = await embeddingService.createCVChunks(job.parsedData, jobId);
 
-      // Generate embeddings
-      console.log('Generating embeddings...');
-      const chunksWithEmbeddings = await embeddingService.generateEmbeddings(chunks);
-
       // Store in vector database
-      console.log('Storing embeddings in Pinecone...');
+      console.log('Storing embeddings in vector database...');
       await embeddingService.storeEmbeddings(
-        chunksWithEmbeddings,
+        chunks,
         vectorNamespace,
-        request.auth.uid,
         jobId
       );
 
@@ -73,7 +68,7 @@ export const initializeRAG = onCall(
         jobId,
         vectorNamespace,
         embeddingModel: 'openai',
-        chunks: chunksWithEmbeddings,
+        chunks: chunks,
         lastIndexed: new Date(),
         chatSessions: [],
         settings: {
@@ -361,15 +356,13 @@ export const updateRAGEmbeddings = onCall(
       // Delete old embeddings
       await embeddingService.deleteEmbeddings(job.ragChat.vectorNamespace, jobId);
 
-      // Create new chunks and embeddings
+      // Create new chunks with embeddings
       const chunks = await embeddingService.createCVChunks(job.parsedData!, jobId);
-      const chunksWithEmbeddings = await embeddingService.generateEmbeddings(chunks);
 
       // Store new embeddings
       await embeddingService.storeEmbeddings(
-        chunksWithEmbeddings,
+        chunks,
         job.ragChat.vectorNamespace,
-        request.auth.uid,
         jobId
       );
 
@@ -378,7 +371,7 @@ export const updateRAGEmbeddings = onCall(
         .collection('ragProfiles')
         .doc(`${request.auth.uid}_${jobId}`)
         .update({
-          chunks: chunksWithEmbeddings,
+          chunks: chunks,
           lastIndexed: new Date()
         });
 

@@ -85,7 +85,7 @@ async function testFeatures() {
 
     // Test 3: Feature Registry Integration
     console.log('\n🏭 Testing Feature Registry Integration...');
-    const features = await FeatureRegistry.generateFeatures(mockCV, jobId, ['contact-form', 'social-links']);
+    const features = await FeatureRegistry.generateFeatures(mockCV, jobId, ['contact-form', 'social-media-links']);
     
     console.log('✅ Feature Registry integration successful');
     console.log(`   Contact Form generated: ${features.contactForm ? 'Yes' : 'No'}`);
@@ -106,7 +106,7 @@ async function testFeatures() {
     const supportedTypes = FeatureRegistry.getSupportedTypes();
     console.log(`   Total supported features: ${supportedTypes.length}`);
     console.log(`   Contact Form supported: ${FeatureRegistry.isSupported('contact-form') ? 'Yes' : 'No'}`);
-    console.log(`   Social Links supported: ${FeatureRegistry.isSupported('social-links') ? 'Yes' : 'No'}`);
+    console.log(`   Social Links supported: ${FeatureRegistry.isSupported('social-media-links') ? 'Yes' : 'No'}`);
 
     console.log('\n🎉 All tests passed successfully!');
     console.log('✅ Contact Form feature is now functional');

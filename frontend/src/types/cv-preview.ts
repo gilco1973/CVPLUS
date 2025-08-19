@@ -103,6 +103,8 @@ export interface CVPreviewContentProps {
   editingSection: string | null;
   achievementAnalysis: AchievementAnalysis | null;
   showPlaceholderBanner: boolean;
+  useBackendPreview?: boolean;
+  jobId?: string;
   onSectionEdit: (section: string, newValue: unknown) => void;
   onToggleSection: (sectionId: string) => void;
   onEditQRCode: () => void;
@@ -144,4 +146,14 @@ export interface ComparisonStats {
   newSections: number;
   enhancedSections: number;
   improvementPercentage: number;
+}
+
+// Preview Generation State
+export type PreviewSource = 'local' | 'backend';
+
+export interface PreviewGenerationState {
+  isGenerating: boolean;
+  source: PreviewSource;
+  error: string | null;
+  lastGenerated: Date | null;
 }

@@ -36,23 +36,21 @@ export class CVGenerator {
       // Validate features
       const validFeatures = this.validateFeatures(features || []);
       
-      // Get template instance
-      const templateInstance = TemplateRegistry.getTemplate(templateType);
-      
-      // Generate base HTML from template
-      let html = await templateInstance.generateHTML(parsedCV, jobId || '', validFeatures);
-      
-      // Generate and inject interactive features if requested
+      // Generate interactive features first if requested
+      let interactiveFeatures = {};
       if (validFeatures.length > 0 && jobId) {
-        const interactiveFeatures = await FeatureRegistry.generateFeatures(
+        interactiveFeatures = await FeatureRegistry.generateFeatures(
           parsedCV, 
           jobId, 
           validFeatures
         );
-        
-        // Inject features into template
-        html = this.injectFeatures(html, interactiveFeatures);
       }
+      
+      // Get template instance
+      const templateInstance = TemplateRegistry.getTemplate(templateType);
+      
+      // Generate HTML from template with features
+      let html = await templateInstance.generateHTML(parsedCV, jobId || '', validFeatures, interactiveFeatures);
       
       // Replace jobId placeholder if podcast feature is enabled
       if (validFeatures.includes('generate-podcast') && jobId) {
@@ -124,51 +122,6 @@ export class CVGenerator {
     return validFeatures;
   }
 
-  /**
-   * Inject interactive features into the HTML template
-   */
-  private injectFeatures(html: string, features: InteractiveFeatureResult): string {
-    let injectedHtml = html;
-    
-    // Inject additional styles
-    if (features.additionalStyles) {
-      injectedHtml = injectedHtml.replace(
-        '</style>',
-        features.additionalStyles + '\n</style>'
-      );
-    }
-    
-    // Inject additional scripts
-    if (features.additionalScripts) {
-      injectedHtml = injectedHtml.replace(
-        '</body>',
-        `<script>${features.additionalScripts}</script>\n</body>`
-      );
-    }
-    
-    // Replace feature placeholders with actual content
-    const featureMap = {
-      '${interactiveFeatures.qrCode || \'\'}': features.qrCode || '',
-      '${interactiveFeatures.podcastPlayer || \'\'}': features.podcastPlayer || '',
-      '${interactiveFeatures.timeline || \'\'}': features.timeline || '',
-      '${interactiveFeatures.skillsChart || \'\'}': features.skillsChart || '',
-      '${interactiveFeatures.socialLinks || \'\'}': features.socialLinks || '',
-      '${interactiveFeatures.contactForm || \'\'}': features.contactForm || '',
-      '${interactiveFeatures.calendar || \'\'}': features.calendar || '',
-      '${interactiveFeatures.languageProficiency || \'\'}': features.languageProficiency || '',
-      '${interactiveFeatures.certificationBadges || \'\'}': features.certificationBadges || '',
-      '${interactiveFeatures.achievementsShowcase || \'\'}': features.achievementsShowcase || '',
-      '${interactiveFeatures.videoIntroduction || \'\'}': features.videoIntroduction || '',
-      '${interactiveFeatures.portfolioGallery || \'\'}': features.portfolioGallery || '',
-      '${interactiveFeatures.testimonialsCarousel || \'\'}': features.testimonialsCarousel || ''
-    };
-    
-    for (const [placeholder, content] of Object.entries(featureMap)) {
-      injectedHtml = injectedHtml.replace(new RegExp(escapeRegExp(placeholder), 'g'), content);
-    }
-    
-    return injectedHtml;
-  }
 
   /**
    * Get supported template types
@@ -183,11 +136,4 @@ export class CVGenerator {
   getSupportedFeatures(): FeatureType[] {
     return FeatureRegistry.getSupportedTypes();
   }
-}
-
-/**
- * Utility function to escape special regex characters
- */
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

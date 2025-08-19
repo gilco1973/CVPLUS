@@ -86,7 +86,7 @@ export class FeatureRegistry {
         return new PodcastFeature();
       case 'contact-form':
         return new ContactFormFeature();
-      case 'social-links':
+      case 'social-media-links':
         return new SocialLinksFeature();
       case 'privacy-mode':
         // Privacy mode is handled at the data level, not as injected content
@@ -132,7 +132,7 @@ export class FeatureRegistry {
       case 'skills-visualization':
         result.skillsChart = content;
         break;
-      case 'social-links':
+      case 'social-media-links':
         result.socialLinks = content;
         break;
       case 'contact-form':
@@ -174,7 +174,7 @@ export class FeatureRegistry {
       'privacy-mode',
       'interactive-timeline',
       'skills-visualization',
-      'social-links',
+      'social-media-links',
       'contact-form',
       'calendar-integration',
       'language-proficiency',

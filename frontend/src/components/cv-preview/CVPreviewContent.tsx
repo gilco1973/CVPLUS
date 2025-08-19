@@ -12,6 +12,8 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   collapsedSections,
   qrCodeSettings,
   showPlaceholderBanner,
+  useBackendPreview = import.meta.env.VITE_USE_BACKEND_PREVIEW === 'true',
+  jobId,
   onToggleSection,
   onEditQRCode,
   onAnalyzeAchievements,
@@ -145,3 +147,6 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
     </div>
   );
 };
+
+// Export the component with backward compatibility
+CVPreviewContent.displayName = 'CVPreviewContent';
