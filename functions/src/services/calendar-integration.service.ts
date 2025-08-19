@@ -9,6 +9,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { google } from 'googleapis';
 import ical from 'ical-generator';
 import axios from 'axios';
+import { getGoogleAccessToken } from '../utils/auth';
 
 interface CalendarEvent {
   id: string;
@@ -205,19 +206,23 @@ export class CalendarIntegrationService {
   }
   
   /**
-   * Create Google Calendar integration
+   * Create Google Calendar integration using stored user tokens
    */
   async createGoogleCalendarIntegration(
     events: CalendarEvent[],
     jobId: string,
+    userId: string,
     accessToken?: string
   ): Promise<CalendarIntegration> {
     if (!this.oauth2Client) {
       throw new Error('Google Calendar integration not configured');
     }
     
-    if (accessToken) {
-      this.oauth2Client.setCredentials({ access_token: accessToken });
+    // Use provided token or get from stored user tokens
+    const tokenToUse = accessToken || await getGoogleAccessToken(userId);
+    
+    if (tokenToUse) {
+      this.oauth2Client.setCredentials({ access_token: tokenToUse });
       const calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
       
       try {
@@ -285,10 +290,13 @@ export class CalendarIntegrationService {
         throw error;
       }
     } else {
-      // Generate OAuth URL for user to authorize
+      // Generate OAuth URL for user to authorize (fallback)
       const authUrl = this.oauth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/calendar'],
+        scope: [
+          'https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events'
+        ],
         state: jobId
       });
       
@@ -297,9 +305,9 @@ export class CalendarIntegrationService {
         events,
         syncUrl: authUrl,
         instructions: [
-          'Click the link to authorize Google Calendar access',
-          'Your career milestones will be synced after authorization',
-          'You can manage events directly in Google Calendar'
+          'Please re-authenticate to grant calendar permissions',
+          'Your career milestones will be synced after authorization', 
+          'Calendar integration requires additional permissions'
         ]
       };
     }
@@ -592,6 +600,51 @@ export class CalendarIntegrationService {
     return colorMap[color || '#4285F4'] || '9';
   }
   
+  /**
+   * Create a Google Calendar meeting invitation
+   */
+  async createMeetingInvite(
+    attendeeEmail: string,
+    duration: number,
+    professionalName: string,
+    professionalEmail: string,
+    meetingType: string
+  ): Promise<{ calendarUrl: string; meetingDetails: any }> {
+    // Create a Google Calendar event URL with pre-filled details
+    const now = new Date();
+    const startTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+    const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+    
+    const eventDetails = {
+      title: `${meetingType} with ${professionalName}`,
+      description: `Professional meeting scheduled through CVPlus.\n\nMeeting Type: ${meetingType}\nDuration: ${duration} minutes\n\nThis meeting was requested through the availability calendar on the professional profile.`,
+      startTime: startTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      endTime: endTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      attendees: [attendeeEmail, professionalEmail].join(',')
+    };
+    
+    // Generate Google Calendar URL
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+      `&text=${encodeURIComponent(eventDetails.title)}` +
+      `&dates=${eventDetails.startTime}/${eventDetails.endTime}` +
+      `&details=${encodeURIComponent(eventDetails.description)}` +
+      `&add=${encodeURIComponent(eventDetails.attendees)}` +
+      `&sf=true&output=xml`;
+    
+    return {
+      calendarUrl,
+      meetingDetails: {
+        title: eventDetails.title,
+        description: eventDetails.description,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        duration,
+        attendees: [attendeeEmail, professionalEmail],
+        meetingType
+      }
+    };
+  }
+
   /**
    * Store calendar data in Firestore
    */

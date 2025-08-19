@@ -45,6 +45,9 @@ export {
 // Export availability calendar function
 export { generateAvailabilityCalendar } from './functions/generateAvailabilityCalendar';
 
+// Export meeting booking function
+export { bookMeeting } from './functions/bookMeeting';
+
 // Export enhanced CV features functions
 export { 
   createPublicProfile,

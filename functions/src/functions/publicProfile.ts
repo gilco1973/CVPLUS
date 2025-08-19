@@ -29,11 +29,12 @@ interface UpdateProfileSettingsRequest {
 }
 
 interface SubmitContactFormRequest {
-  jobId: string;
+  profileId: string; // Change from jobId to profileId for public profiles
   senderName: string;
   senderEmail: string;
   senderPhone?: string;
   company?: string;
+  subject: string; // Add subject field as shown in ContactFormFeature
   message: string;
 }
 
@@ -298,33 +299,69 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
     ...corsOptions
   },
   async (request: CallableRequest<SubmitContactFormRequest>) => {
-    const { jobId, senderName, senderEmail, senderPhone, company, message } = request.data;
+    const { profileId, senderName, senderEmail, senderPhone, company, subject, message } = request.data;
     
-    // Validate required fields
-    if (!jobId || !senderName || !senderEmail || !message) {
-      throw new HttpsError('invalid-argument', 'Required fields missing');
+    // SECURITY: Enhanced input validation
+    if (!profileId || typeof profileId !== 'string') {
+      throw new HttpsError('invalid-argument', 'Invalid profile ID provided');
+    }
+    if (!senderName || typeof senderName !== 'string' || senderName.trim().length < 2) {
+      throw new HttpsError('invalid-argument', 'Name must be at least 2 characters long');
+    }
+    if (!senderEmail || typeof senderEmail !== 'string') {
+      throw new HttpsError('invalid-argument', 'Email is required');
+    }
+    if (!subject || typeof subject !== 'string') {
+      throw new HttpsError('invalid-argument', 'Subject is required');
+    }
+    if (!message || typeof message !== 'string' || message.trim().length < 10) {
+      throw new HttpsError('invalid-argument', 'Message must be at least 10 characters long');
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // SECURITY: Enhanced email validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!emailRegex.test(senderEmail)) {
-      throw new HttpsError('invalid-argument', 'Invalid email address');
+      throw new HttpsError('invalid-argument', 'Invalid email address format');
     }
+
+    // SECURITY: Phone validation if provided
+    if (senderPhone && typeof senderPhone === 'string') {
+      const cleanPhone = senderPhone.replace(/[\s()-]/g, '');
+      if (!/^\+?[1-9]\d{1,14}$/.test(cleanPhone)) {
+        throw new HttpsError('invalid-argument', 'Invalid phone number format');
+      }
+    }
+
+    // SECURITY: Input sanitization and length limits
+    const sanitizedData = {
+      senderName: senderName.trim().substring(0, 100),
+      senderEmail: senderEmail.trim().toLowerCase(),
+      senderPhone: senderPhone?.trim().substring(0, 20),
+      company: company?.trim().substring(0, 100),
+      subject: subject.trim().substring(0, 200),
+      message: message.trim().substring(0, 2000)
+    };
 
     try {
-      // Get profile
-      const profileDoc = await admin.firestore()
+      // SECURITY: Log security event without PII
+      console.log(`[SECURITY] Contact form submission attempt for profile: ${profileId}`);
+      console.log(`[SECURITY] Message length: ${sanitizedData.message.length} characters`);
+
+      // Get profile by slug (not jobId)
+      const profileQuery = await admin.firestore()
         .collection('publicProfiles')
-        .doc(jobId)
+        .where('slug', '==', profileId)
+        .limit(1)
         .get();
 
-      if (!profileDoc.exists) {
+      if (profileQuery.empty) {
         throw new HttpsError('not-found', 'Public profile not found');
       }
 
+      const profileDoc = profileQuery.docs[0];
       const profile = profileDoc.data() as PublicCVProfile;
 
-      // Check if contact form is enabled
+      // SECURITY: Check if contact form is enabled
       if (!profile.allowContactForm) {
         throw new HttpsError('failed-precondition', 'Contact form is not enabled for this profile');
       }
@@ -332,26 +369,41 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
       // Get job to find contact email
       const jobDoc = await admin.firestore()
         .collection('jobs')
-        .doc(jobId)
+        .doc(profile.jobId)
         .get();
 
       if (!jobDoc.exists) {
-        throw new HttpsError('not-found', 'Job not found');
+        throw new HttpsError('not-found', 'Associated job not found');
       }
 
       const job = jobDoc.data() as EnhancedJob;
 
-      // Create contact submission
+      // SECURITY: Rate limiting check (basic implementation)
+      const recentSubmissions = await admin.firestore()
+        .collection('contactSubmissions')
+        .where('senderEmail', '==', sanitizedData.senderEmail)
+        .where('submittedAt', '>', new Date(Date.now() - 60000)) // Last minute
+        .count()
+        .get();
+
+      if (recentSubmissions.data().count >= 3) {
+        throw new HttpsError('resource-exhausted', 'Too many submissions. Please wait before sending another message.');
+      }
+
+      // Create contact submission with sanitized data
       const submission = {
-        jobId,
+        jobId: profile.jobId,
         profileId: profile.slug,
-        senderName,
-        senderEmail,
-        senderPhone,
-        company,
-        message,
+        senderName: sanitizedData.senderName,
+        senderEmail: sanitizedData.senderEmail,
+        senderPhone: sanitizedData.senderPhone,
+        company: sanitizedData.company,
+        subject: sanitizedData.subject,
+        message: sanitizedData.message,
         submittedAt: FieldValue.serverTimestamp(),
-        status: 'pending'
+        status: 'pending',
+        ipAddress: request.rawRequest?.ip || 'unknown',
+        userAgent: request.rawRequest?.headers?.['user-agent'] || 'unknown'
       };
 
       // Save submission

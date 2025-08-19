@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { CVParser } from '../services/cvParser';
 import { PIIDetector } from '../services/piiDetector';
 import { corsOptions } from '../config/cors';
+import { requireGoogleAuth, updateUserLastLogin } from '../utils/auth';
 
 export const processCV = onCall(
   {
@@ -17,13 +18,13 @@ export const processCV = onCall(
     console.log('Request auth:', request.auth ? 'Present' : 'Missing');
     console.log('Request data keys:', Object.keys(request.data || {}));
     
-    // Check authentication
-    if (!request.auth) {
-      console.error('Authentication missing in processCV request');
-      throw new Error('User must be authenticated to process CV');
-    }
-
-    console.log('User ID:', request.auth.uid);
+    // Require Google authentication
+    const user = await requireGoogleAuth(request);
+    console.log(`[PROCESS-CV] Authenticated Google user: ${user.uid}`);
+    // PII REMOVED: Email logging removed for security compliance
+    
+    // Update user login tracking
+    await updateUserLastLogin(user.uid, user.email, user.name, user.picture);
 
     const { jobId, fileUrl, mimeType, isUrl } = request.data;
     
@@ -97,7 +98,7 @@ export const processCV = onCall(
       const piiDetector = new PIIDetector(apiKey);
       const piiResult = await piiDetector.detectAndMaskPII(parsedCV);
 
-      // Save parsed data with PII information
+      // Save parsed data with PII information and user association
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
@@ -110,6 +111,9 @@ export const processCV = onCall(
             recommendations: piiResult.recommendations
           },
           privacyVersion: piiResult.maskedData,
+          userId: user.uid, // Associate job with authenticated user
+          userEmail: user.email,
+          hasCalendarPermissions: user.hasCalendarPermissions || false,
           updatedAt: FieldValue.serverTimestamp()
         }, { merge: true });
 

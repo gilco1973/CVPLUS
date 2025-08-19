@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  signInAnonymously as firebaseSignInAnonymously, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -9,8 +8,26 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { isFirebaseError, getErrorMessage, logError } from '../utils/errorHandling';
+
+// Helper function to store Google OAuth tokens for calendar integration
+const storeGoogleTokens = async (uid: string, accessToken: string) => {
+  try {
+    await setDoc(doc(db, 'users', uid), {
+      googleTokens: {
+        accessToken,
+        grantedAt: serverTimestamp(),
+        scopes: ['calendar', 'calendar.events']
+      },
+      lastLoginAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    logError('storeGoogleTokens', error);
+    // Don't throw here - token storage failure shouldn't block authentication
+  }
+};
 
 // Helper function to convert Firebase auth error codes to user-friendly messages
 const getFriendlyAuthErrorMessage = (errorCode: string): string => {
@@ -44,12 +61,13 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signInAnonymous: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
+  hasCalendarPermissions: boolean;
+  requestCalendarPermissions: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,10 +84,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasCalendarPermissions, setHasCalendarPermissions] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      
+      // Check calendar permissions for authenticated users
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          const hasTokens = userData?.googleTokens?.accessToken;
+          setHasCalendarPermissions(!!hasTokens);
+        } catch (error) {
+          logError('checkCalendarPermissions', error);
+          setHasCalendarPermissions(false);
+        }
+      } else {
+        setHasCalendarPermissions(false);
+      }
+      
       setLoading(false);
       // Clear any previous errors when auth state changes successfully
       if (error) {
@@ -94,24 +129,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   };
 
-  const signInAnonymous = async () => {
-    try {
-      clearError();
-      await firebaseSignInAnonymously(auth);
-    } catch (error: unknown) {
-      logError('signInAnonymously', error);
-      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
-      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
-      setError(friendlyMessage);
-      throw new Error(friendlyMessage);
-    }
-  };
 
   const signInWithGoogle = async () => {
     try {
       clearError();
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      
+      // Add calendar scopes for unified authentication
+      provider.addScope('https://www.googleapis.com/auth/calendar');
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
+      
+      // Configure OAuth parameters
+      provider.setCustomParameters({
+        'prompt': 'consent', // Force consent screen for calendar permissions
+        'access_type': 'offline' // Enable refresh tokens
+      });
+      
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check if calendar permissions were granted
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        // Store the access token for calendar integration
+        await storeGoogleTokens(result.user.uid, credential.accessToken);
+        setHasCalendarPermissions(true);
+      }
     } catch (error: unknown) {
       logError('signInWithGoogle', error);
       const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
@@ -160,16 +202,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Request calendar permissions separately if not granted during initial auth
+  const requestCalendarPermissions = async () => {
+    if (!user) {
+      throw new Error('User must be authenticated first');
+    }
+    
+    try {
+      clearError();
+      const provider = new GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/calendar');
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
+      provider.setCustomParameters({
+        'prompt': 'consent',
+        'access_type': 'offline'
+      });
+      
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      
+      if (credential?.accessToken) {
+        await storeGoogleTokens(user.uid, credential.accessToken);
+        setHasCalendarPermissions(true);
+      }
+    } catch (error: unknown) {
+      logError('requestCalendarPermissions', error);
+      const errorCode = isFirebaseError(error) ? error.code : 'auth/unknown-error';
+      const friendlyMessage = getFriendlyAuthErrorMessage(errorCode);
+      setError(friendlyMessage);
+      throw new Error(friendlyMessage);
+    }
+  };
+
   const value = {
     user,
     loading,
     error,
-    signInAnonymous,
     signInWithGoogle,
     signIn,
     signUp,
     signOut,
-    clearError
+    clearError,
+    hasCalendarPermissions,
+    requestCalendarPermissions
   };
 
   return (

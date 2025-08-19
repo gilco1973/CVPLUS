@@ -13,7 +13,7 @@ import { getErrorMessage, logError } from '../utils/errorHandling';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const { user, signInAnonymous, signInWithGoogle, error, clearError } = useAuth();
+  const { user, signInWithGoogle, error, clearError } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -25,22 +25,14 @@ export const HomePage = () => {
     try {
       setIsLoading(true);
       
-      // Sign in anonymously if not authenticated
+      // Require authentication before file upload
       const currentUser = user;
       if (!currentUser) {
-        try {
-          clearError(); // Clear any previous auth errors
-          await signInAnonymous();
-          // Wait a bit for the auth state to update
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (authError: unknown) {
-          // If anonymous sign-in fails, show user-friendly error and sign-in dialog
-          setIsLoading(false);
-          setPendingAction({ type: 'file', data: { file, quickCreate } });
-          setShowSignInDialog(true);
-          toast.error(authError.message || 'Authentication required. Please sign in to continue.');
-          return;
-        }
+        setIsLoading(false);
+        setShowSignInDialog(true);
+        setPendingAction({ type: 'file', data: { file, quickCreate } });
+        toast.error('Please sign in with Google to upload your CV and access all features.');
+        return;
       }
 
       // Create job and upload file
@@ -61,12 +53,14 @@ export const HomePage = () => {
     try {
       setIsLoading(true);
       
-      // Sign in anonymously if not authenticated
+      // Require authentication before URL processing
       const currentUser = user;
       if (!currentUser) {
-        await signInAnonymous();
-        // Wait a bit for the auth state to update
-        await new Promise(resolve => setTimeout(resolve, 100));
+        setIsLoading(false);
+        setShowSignInDialog(true);
+        setPendingAction({ type: 'url', data: url });
+        toast.error('Please sign in with Google to process URLs and access all features.');
+        return;
       }
 
       // Create job for URL
@@ -98,7 +92,11 @@ export const HomePage = () => {
     // Retry the pending action after successful sign-in
     if (pendingAction) {
       if (pendingAction.type === 'file') {
-        handleFileUpload(pendingAction.data.file, pendingAction.data.quickCreate);
+        const { file, quickCreate } = pendingAction.data as { file: File, quickCreate: boolean };
+        handleFileUpload(file, quickCreate);
+      } else if (pendingAction.type === 'url') {
+        const url = pendingAction.data as string;
+        handleURLSubmit(url);
       }
       setPendingAction(null);
     }

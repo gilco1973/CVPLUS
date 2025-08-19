@@ -10,6 +10,7 @@ import { FeatureProgressCard } from '../components/final-results/FeatureProgress
 import { FinalResultsErrorBoundary } from '../components/error-boundaries/FinalResultsErrorBoundary';
 import { AsyncGenerationErrorBoundary } from '../components/error-boundaries/AsyncGenerationErrorBoundary';
 import { FirestoreErrorBoundary } from '../components/error-boundaries/FirestoreErrorBoundary';
+import { ProgressiveEnhancementRenderer } from '../components/ProgressiveEnhancementRenderer';
 import { useAsyncMode } from '../hooks/useAsyncMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { useCVGeneration } from '../hooks/useCVGeneration';
@@ -44,6 +45,34 @@ export const FinalResultsPage = () => {
     retryAttempts: 3,
     retryDelay: 2000
   });
+
+  // Calculate if we're still processing features by combining both backend and progressive enhancement status
+  const isActuallyProcessingFeatures = React.useMemo(() => {
+    // If there are no progressive enhancement features, we're not processing
+    if (featureQueue.length === 0) {
+      return false;
+    }
+    
+    // If progressive enhancement is still processing, we're processing
+    if (progressiveEnhancement.isProcessing) {
+      return true;
+    }
+    
+    // Check if all progressive enhancement features are complete
+    const progressiveComplete = progressiveEnhancement.completedFeatures.length === progressiveEnhancement.features.length;
+    
+    console.log('🔍 [PROCESSING-CHECK]', {
+      featureQueueLength: featureQueue.length,
+      progressiveIsProcessing: progressiveEnhancement.isProcessing,
+      progressiveCompleted: progressiveEnhancement.completedFeatures.length,
+      progressiveTotal: progressiveEnhancement.features.length,
+      progressiveComplete,
+      isProcessingFeatures,
+      finalResult: !progressiveComplete
+    });
+    
+    return !progressiveComplete;
+  }, [featureQueue.length, progressiveEnhancement.isProcessing, progressiveEnhancement.completedFeatures.length, progressiveEnhancement.features.length, isProcessingFeatures]);
 
   // Handle skip feature action
   const handleSkipFeature = async (featureId: string) => {
@@ -150,7 +179,7 @@ export const FinalResultsPage = () => {
           jobId={jobId} 
           title="Your Enhanced CV" 
           subtitle={
-            (isProcessingFeatures || progressiveEnhancement.isProcessing) 
+            isActuallyProcessingFeatures 
               ? "Your CV is ready! We're adding interactive features..." 
               : featureQueue.length === 0 
                 ? "Your enhanced CV is ready for download" 
@@ -222,7 +251,7 @@ export const FinalResultsPage = () => {
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-5 h-5 text-cyan-400" />
                     <h2 className="text-lg font-semibold text-gray-100">
-                      {isProcessingFeatures ? 'Adding Interactive Features' : 'Interactive Features Complete'}
+                      {isActuallyProcessingFeatures ? 'Adding Interactive Features' : 'Interactive Features Complete'}
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -266,7 +295,7 @@ export const FinalResultsPage = () => {
                         </div>
                       )}
                     </div>
-                    {(isProcessingFeatures || progressiveEnhancement.isProcessing) && (
+                    {isActuallyProcessingFeatures && (
                       <div className="flex items-center gap-2 text-sm text-cyan-400">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Adding enhancements... ({progressiveEnhancement.completedFeatures.length}/{progressiveEnhancement.features.length})
@@ -274,9 +303,9 @@ export const FinalResultsPage = () => {
                     )}
                   </div>
                   <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
-                    <div dangerouslySetInnerHTML={{ 
-                      __html: progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'
-                    }} />
+                    <ProgressiveEnhancementRenderer
+                      htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}
+                    />
                   </div>
                   
                   {/* Show completed features summary */}

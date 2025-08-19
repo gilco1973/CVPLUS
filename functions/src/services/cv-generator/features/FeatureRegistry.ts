@@ -2,6 +2,8 @@ import { CVFeature, FeatureType, InteractiveFeatureResult } from '../types';
 import { ParsedCV } from '../../cvParser';
 import { QRCodeFeature } from './QRCodeFeature';
 import { PodcastFeature } from './PodcastFeature';
+import { ContactFormFeature } from './ContactFormFeature';
+import { SocialLinksFeature } from './SocialLinksFeature';
 
 /**
  * Feature registry for managing CV interactive features
@@ -82,6 +84,10 @@ export class FeatureRegistry {
         return new QRCodeFeature();
       case 'generate-podcast':
         return new PodcastFeature();
+      case 'contact-form':
+        return new ContactFormFeature();
+      case 'social-links':
+        return new SocialLinksFeature();
       case 'privacy-mode':
         // Privacy mode is handled at the data level, not as injected content
         return null;
@@ -89,8 +95,6 @@ export class FeatureRegistry {
       // Placeholder for other features - to be implemented
       case 'interactive-timeline':
       case 'skills-visualization':
-      case 'social-links':
-      case 'contact-form':
       case 'calendar-integration':
       case 'language-proficiency':
       case 'certification-badges':

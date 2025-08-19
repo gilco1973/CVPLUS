@@ -232,10 +232,11 @@ export function useProgressiveEnhancement({
         return qrHtml;
       }
       
-      // For availability calendar generation, extract htmlFragment
-      if (featureId === 'availability-calendar' && data.htmlFragment) {
-        console.log(`🔧 [availability-calendar] Extracted HTML fragment: ${data.htmlFragment.substring(0, 100)}...`);
-        return data.htmlFragment;
+      // For availability calendar generation, extract featureData (React component data)
+      if (featureId === 'availability-calendar' && data.featureData) {
+        console.log(`🔧 [availability-calendar] Extracted feature data:`, data.featureData);
+        // Return a placeholder that will be replaced by React component
+        return `<div id="availability-calendar-placeholder" data-feature="availability-calendar" data-professional-name="${data.featureData.professionalName}" data-professional-email="${data.featureData.professionalEmail}"></div>`;
       }
       
       return data.html || data.htmlFragment || '';

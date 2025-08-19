@@ -69,3 +69,6 @@ claude-config-backup.zip
 logs/deployment/
 logs/testing/
 *.deployment-report.json
+
+# Sample implementation directories
+klainert-web-portal/

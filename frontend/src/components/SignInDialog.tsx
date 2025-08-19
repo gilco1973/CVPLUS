@@ -11,7 +11,7 @@ interface SignInDialogProps {
 }
 
 export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { signInWithGoogle, signInAnonymous, error, clearError } = useAuth();
+  const { signInWithGoogle, error, clearError } = useAuth();
 
   if (!isOpen) return null;
 
@@ -27,17 +27,6 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
     }
   };
 
-  const handleAnonymousSignIn = async () => {
-    try {
-      await signInAnonymous();
-      toast.success('Signed in anonymously!');
-      onSuccess();
-    } catch (error: unknown) {
-      // Error is already handled by AuthContext, just show the user-friendly message
-      const errorMessage = getErrorMessage(error) || 'Failed to sign in anonymously. Please try again.';
-      toast.error(errorMessage);
-    }
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
@@ -52,9 +41,29 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
           </button>
         </div>
         
-        <p className="text-gray-300 mb-6">
-          To upload and process your CV, please sign in with your Google account or continue anonymously.
-        </p>
+        <div className="space-y-4 mb-6">
+          <p className="text-gray-300">
+            Sign in with Google to unlock all CVPlus features including:
+          </p>
+          <ul className="text-sm text-gray-400 space-y-2 ml-4">
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+              Calendar integration for career milestones
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+              Meeting availability scheduling
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+              Save and access your CV history
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+              Personalized recommendations
+            </li>
+          </ul>
+        </div>
 
         {/* Display auth errors */}
         {error && (
@@ -84,30 +93,16 @@ export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onS
             </svg>
             Sign in with Google
           </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">or</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleAnonymousSignIn}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 flex items-center justify-center gap-3 hover:bg-gray-600 transition text-gray-100"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-            </svg>
-            Continue Anonymously
-          </button>
         </div>
 
-        <p className="text-xs text-gray-400 mt-4 text-center">
-          By signing in, you agree to our Terms of Service and Privacy Policy.
-        </p>
+        <div className="mt-4 text-center space-y-2">
+          <p className="text-xs text-gray-400">
+            By signing in, you agree to our Terms of Service and Privacy Policy.
+          </p>
+          <p className="text-xs text-blue-400">
+            We'll request calendar permissions to enable timeline features.
+          </p>
+        </div>
       </div>
     </div>
   );

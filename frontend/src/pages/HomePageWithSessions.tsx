@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const { user, signInAnonymous, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle } = useAuth();
   const { actions } = useHelp();
   
   // Original state
@@ -90,16 +90,17 @@ export const HomePage = () => {
       // Update session step
       await session.updateStep('processing');
       
-      // Sign in anonymously if not authenticated
+      // Require authentication before file upload
       const currentUser = user;
       if (!currentUser) {
-        try {
-          await signInAnonymous();
-          // Wait a bit for the auth state to update
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (authError: unknown) {
-          // If anonymous sign-in fails, show sign-in dialog
-          setIsLoading(false);
+        setIsLoading(false);
+        setShowSignInDialog(true);
+        setPendingAction({ type: 'file', data: { file, quickCreate } });
+        toast.error('Please sign in with Google to upload your CV.');
+        return;
+      }
+      
+      try {
           setPendingAction({ type: 'file', data: { file, quickCreate } });
           setShowSignInDialog(true);
           return;
@@ -147,12 +148,14 @@ export const HomePage = () => {
       // Update session step
       await session.updateStep('processing');
       
-      // Sign in anonymously if not authenticated
+      // Require authentication before URL processing
       const currentUser = user;
       if (!currentUser) {
-        await signInAnonymous();
-        // Wait a bit for the auth state to update
-        await new Promise(resolve => setTimeout(resolve, 100));
+        setIsLoading(false);
+        setShowSignInDialog(true);
+        setPendingAction({ type: 'url', data: url });
+        toast.error('Please sign in with Google to process URLs.');
+        return;
       }
 
       // Create job for URL

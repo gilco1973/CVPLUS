@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { calendarIntegrationService, CalendarIntegrationService } from '../services/calendar-integration.service';
 import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+import { requireGoogleAuth, requireCalendarPermissions } from '../utils/auth';
 
 export const generateCalendarEvents = onCall(
   {
@@ -11,9 +12,8 @@ export const generateCalendarEvents = onCall(
     ...corsOptions
   },
   async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+    // Require Google authentication
+    const user = await requireGoogleAuth(request);
 
     const { jobId } = request.data;
 
@@ -117,9 +117,8 @@ export const syncToGoogleCalendar = onCall(
     ...corsOptions
   },
   async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+    // Require Google authentication with calendar permissions
+    const user = await requireCalendarPermissions(request);
 
     const { jobId, accessToken } = request.data;
 
@@ -145,6 +144,7 @@ export const syncToGoogleCalendar = onCall(
       const integration = await calendarIntegrationService.createGoogleCalendarIntegration(
         events,
         jobId,
+        user.uid,
         accessToken
       );
 
@@ -177,9 +177,8 @@ export const syncToOutlook = onCall(
     ...corsOptions
   },
   async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+    // Require Google authentication
+    const user = await requireGoogleAuth(request);
 
     const { jobId, accessToken } = request.data;
 
@@ -236,9 +235,8 @@ export const downloadICalFile = onCall(
     ...corsOptions
   },
   async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+    // Require Google authentication
+    const user = await requireGoogleAuth(request);
 
     const { jobId } = request.data;
 
@@ -294,9 +292,8 @@ export const handleCalendarCallback = onCall(
     ...corsOptions
   },
   async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+    // Require Google authentication
+    const user = await requireGoogleAuth(request);
 
     const { provider, code, state } = request.data;
     const jobId = state; // jobId is passed as state parameter
@@ -319,14 +316,17 @@ export const handleCalendarCallback = onCall(
         // Store refresh token for future use
         await admin.firestore()
           .collection('users')
-          .doc(request.auth.uid)
-          .update({
-            'calendarTokens.google': {
+          .doc(user.uid)
+          .set({
+            googleTokens: {
               accessToken: tokens.access_token,
               refreshToken: tokens.refresh_token,
-              expiryDate: tokens.expiry_date
-            }
-          });
+              expiryDate: tokens.expiry_date,
+              grantedAt: FieldValue.serverTimestamp(),
+              scopes: ['calendar', 'calendar.events']
+            },
+            updatedAt: FieldValue.serverTimestamp()
+          }, { merge: true });
       } else if (provider === 'outlook') {
         // Exchange code for access token using Microsoft OAuth
         const axios = require('axios');
@@ -351,14 +351,16 @@ export const handleCalendarCallback = onCall(
         // Store tokens
         await admin.firestore()
           .collection('users')
-          .doc(request.auth.uid)
-          .update({
-            'calendarTokens.outlook': {
+          .doc(user.uid)
+          .set({
+            outlookTokens: {
               accessToken: response.data.access_token,
               refreshToken: response.data.refresh_token,
-              expiresIn: response.data.expires_in
-            }
-          });
+              expiresIn: response.data.expires_in,
+              grantedAt: FieldValue.serverTimestamp()
+            },
+            updatedAt: FieldValue.serverTimestamp()
+          }, { merge: true });
       } else {
         throw new Error('Unsupported provider');
       }
@@ -367,12 +369,30 @@ export const handleCalendarCallback = onCall(
       if (provider === 'google') {
         // For Google Calendar sync, we'll call the internal function directly
         // since we can't call Firebase functions from within other Firebase functions
+        // Get stored events for this job
+        const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+        const jobData = jobDoc.data();
+        const events = jobData?.enhancedFeatures?.calendar?.data?.events;
+        
+        if (!events) {
+          throw new Error('Calendar events not found');
+        }
+        
         const calendarService = new CalendarIntegrationService();
-        return await calendarService.createGoogleCalendarIntegration(jobId, accessToken);
+        return await calendarService.createGoogleCalendarIntegration(events, jobId, user.uid, accessToken);
       } else {
         // For Outlook sync, we'll call the internal function directly
+        // Get stored events for this job
+        const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+        const jobData = jobDoc.data();
+        const events = jobData?.enhancedFeatures?.calendar?.data?.events;
+        
+        if (!events) {
+          throw new Error('Calendar events not found');
+        }
+        
         const calendarService = new CalendarIntegrationService();
-        return await calendarService.createOutlookIntegration(jobId, accessToken);
+        return await calendarService.createOutlookIntegration(events, jobId, accessToken);
       }
     } catch (error: any) {
       console.error('Error handling calendar callback:', error);

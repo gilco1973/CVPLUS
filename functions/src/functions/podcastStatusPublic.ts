@@ -2,17 +2,39 @@ import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
 
+const allowedOrigins = [
+  'https://getmycv-ai.firebaseapp.com',
+  'https://getmycv-ai.web.app',
+  'https://cvplus.firebaseapp.com',
+  'https://cvplus.web.app',
+  'https://cvplus.ai',
+  'https://www.cvplus.ai',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173',
+  'http://localhost:5000'
+];
+
 export const podcastStatusPublic = onRequest(
   {
     ...corsOptions
   },
   async (req, res) => {
-    // Handle preflight
+    // Handle preflight with secure origin validation
     if (req.method === 'OPTIONS') {
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type');
-      res.status(200).send();
+      const origin = req.get('origin');
+      const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : null;
+      if (corsOrigin) {
+        res.set('Access-Control-Allow-Origin', corsOrigin);
+        res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type');
+        res.set('Access-Control-Allow-Credentials', 'true');
+        res.status(200).send();
+      } else {
+        console.warn(`CORS blocked preflight request from origin: ${origin}`);
+        res.status(403).send('Origin not allowed');
+      }
       return;
     }
 
