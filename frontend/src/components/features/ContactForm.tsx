@@ -1,36 +1,16 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Mail, Send, CheckCircle, XCircle, User, Building, Phone, MessageSquare } from 'lucide-react';
+import { Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CVFeatureProps } from '../../types/cv-features';
 import { FeatureWrapper } from './Common/FeatureWrapper';
 import { ErrorBoundary } from './Common/ErrorBoundary';
 import { useFirebaseFunction } from '../../hooks/useFeatureData';
-import { ContactFormData } from './ContactForm/types';
 import { ContactFormFields } from './ContactForm/ContactFormFields';
 import { ContactFormHeader } from './ContactForm/ContactFormHeader';
 import { ContactFormStatus } from './ContactForm/ContactFormStatus';
 import { useContactFormValidation } from './ContactForm/useContactFormValidation';
 
-interface ContactFormProps extends CVFeatureProps {
-  contactName?: string;
-  customization?: {
-    title?: string;
-    buttonText?: string;
-    theme?: 'light' | 'dark' | 'auto';
-    showCompanyField?: boolean;
-    showPhoneField?: boolean;
-    maxRetries?: number;
-  };
-}
-
-interface ContactSubmission {
-  senderName: string;
-  senderEmail: string;
-  senderPhone?: string;
-  company?: string;
-  subject: string;
-  message: string;
-}
+import { ContactFormProps, ContactSubmission } from './ContactForm/types';
 
 export const ContactForm: React.FC<ContactFormProps> = ({
   jobId,

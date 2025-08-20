@@ -91,6 +91,8 @@ const getFunctionName = (featureName: string): string => {
     'career-timeline': 'generateTimeline',
     'social-links': 'getSocialMediaLinks',
     'podcast': 'generatePodcast',
+    'ai-podcast': 'generatePodcast',
+    'ai-podcast-player': 'generatePodcast',
     'ats-optimization': 'getATSOptimization',
     'keyword-enhancement': 'getKeywordEnhancement',
     'achievement-highlighting': 'getAchievementHighlighting',

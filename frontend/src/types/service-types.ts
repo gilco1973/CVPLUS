@@ -1,7 +1,9 @@
 // Service Response Types for CVPlus
 // Defines all service layer types and responses
+// Extended with Portal System Integration
 
 import { AppError } from './error-handling';
+import { PortalConfig, DeploymentResult, HuggingFaceSpaceConfig } from './portal-types';
 
 // Generic API Response wrapper
 export interface ApiResponse<T = unknown> {
@@ -299,6 +301,17 @@ export interface PublicProfileResult {
     views: number;
     uniqueVisitors: number;
   };
+  /** Portal integration data */
+  portalIntegration?: {
+    /** Portal deployment status */
+    deploymentStatus: 'not_deployed' | 'deploying' | 'deployed' | 'error';
+    /** Portal URL (if deployed) */
+    portalUrl?: string;
+    /** Portal configuration */
+    portalConfig?: PortalConfig;
+    /** Last deployment date */
+    lastDeployment?: Date;
+  };
 }
 
 export interface LanguageVisualizationResult {
@@ -449,4 +462,171 @@ export function createSuccessResult<T>(data: T): ServiceResult<T> {
 // Create error result  
 export function createErrorResult<T>(error: AppError): ServiceResult<T> {
   return { success: false, error };
+}
+
+// ============================================================================
+// PORTAL SERVICE RESULT TYPES
+// ============================================================================
+
+/**
+ * Portal deployment service result
+ */
+export interface PortalDeploymentResult {
+  /** Deployment success status */
+  success: boolean;
+  /** Deployed portal URL */
+  portalUrl?: string;
+  /** HuggingFace Space ID */
+  spaceId?: string;
+  /** Deployment configuration used */
+  deploymentConfig: {
+    portalConfig: PortalConfig;
+    spaceConfig: HuggingFaceSpaceConfig;
+    deploymentOptions: Record<string, any>;
+  };
+  /** Deployment metadata */
+  metadata: {
+    deploymentId: string;
+    deployedAt: Date;
+    duration: number;
+    version: string;
+    environment: 'development' | 'staging' | 'production';
+  };
+  /** Deployment analytics */
+  analytics?: {
+    /** Total files deployed */
+    filesDeployed: number;
+    /** Total deployment size */
+    deploymentSize: number;
+    /** Build logs */
+    buildLogs: string[];
+  };
+}
+
+/**
+ * Portal chat service result
+ */
+export interface PortalChatResult {
+  /** Response message */
+  message: string;
+  /** Response metadata */
+  metadata: {
+    /** Response generation time */
+    processingTime: number;
+    /** Tokens used */
+    tokensUsed: number;
+    /** Confidence score */
+    confidence: number;
+    /** Model used */
+    model: string;
+  };
+  /** Source documents (for RAG) */
+  sourceDocuments?: Array<{
+    id: string;
+    content: string;
+    section: string;
+    score: number;
+    metadata: Record<string, any>;
+  }>;
+  /** Chat context */
+  context?: {
+    /** Conversation ID */
+    conversationId: string;
+    /** Message history length */
+    historyLength: number;
+    /** Context window used */
+    contextWindowUsed: number;
+  };
+}
+
+/**
+ * Portal vector search result
+ */
+export interface PortalVectorSearchResult {
+  /** Search results */
+  results: Array<{
+    id: string;
+    content: string;
+    score: number;
+    metadata: Record<string, any>;
+  }>;
+  /** Search metadata */
+  searchMetadata: {
+    /** Query processing time */
+    processingTime: number;
+    /** Total vectors searched */
+    totalVectors: number;
+    /** Search algorithm used */
+    algorithm: string;
+    /** Results returned */
+    resultsReturned: number;
+  };
+  /** Search configuration */
+  searchConfig: {
+    /** Similarity threshold used */
+    threshold: number;
+    /** Top K value */
+    topK: number;
+    /** Filters applied */
+    filtersApplied: Record<string, any>;
+  };
+}
+
+/**
+ * Portal validation result
+ */
+export interface PortalValidationResult {
+  /** Validation success status */
+  isValid: boolean;
+  /** Validation errors */
+  errors: Array<{
+    field: string;
+    code: string;
+    message: string;
+    severity: 'error' | 'warning';
+  }>;
+  /** Sanitized data */
+  sanitizedData?: any;
+  /** Validation metadata */
+  metadata: {
+    /** Validation duration */
+    duration: number;
+    /** Rules applied */
+    rulesApplied: number;
+    /** Fields validated */
+    fieldsValidated: number;
+  };
+}
+
+/**
+ * Portal QR generation result
+ */
+export interface PortalQRGenerationResult {
+  /** Generated QR code data URL */
+  qrCodeDataUrl: string;
+  /** QR code configuration used */
+  config: {
+    size: number;
+    errorCorrectionLevel: string;
+    colors: {
+      foreground: string;
+      background: string;
+    };
+  };
+  /** QR code metadata */
+  metadata: {
+    /** Target URL */
+    targetUrl: string;
+    /** Generation timestamp */
+    generatedAt: Date;
+    /** QR code format */
+    format: string;
+    /** File size */
+    fileSize: number;
+  };
+  /** Download options */
+  downloadOptions?: {
+    formats: string[];
+    urls: Record<string, string>;
+  };
 }

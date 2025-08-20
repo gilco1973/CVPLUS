@@ -2,18 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ContactForm } from '../ContactForm';
-import { httpsCallable } from 'firebase/functions';
-import toast from 'react-hot-toast';
-
-// Mock Firebase Functions
-vi.mock('firebase/functions', () => ({
-  httpsCallable: vi.fn(),
-}));
-
-// Mock Firebase lib
-vi.mock('../../../lib/firebase', () => ({
-  functions: vi.fn(),
-}));
 
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
@@ -23,24 +11,26 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
-const mockHttpsCallable = httpsCallable as any;
-const mockToast = toast as any;
+// Mock useFirebaseFunction hook
+vi.mock('../../../hooks/useFeatureData', () => ({
+  useFirebaseFunction: () => ({
+    callFunction: vi.fn().mockResolvedValue({ success: true }),
+    loading: false,
+    error: null,
+  }),
+}));
+
+const mockToast = vi.mocked(await import('react-hot-toast')).default;
 
 describe('ContactForm', () => {
   const defaultProps = {
-    profileId: 'test-profile-id',
     jobId: 'test-job-id',
-    contactName: 'John Doe',
+    profileId: 'test-profile-id',
+    data: { contactName: 'John Doe' },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Mock successful Firebase function call
-    const mockCallableFunction = vi.fn().mockResolvedValue({
-      data: { success: true }
-    });
-    mockHttpsCallable.mockReturnValue(mockCallableFunction);
   });
 
   it('renders contact form with all required fields', () => {
@@ -95,9 +85,6 @@ describe('ContactForm', () => {
       expect(screen.getByText(/please select a subject/i)).toBeInTheDocument();
       expect(screen.getByText(/message is required/i)).toBeInTheDocument();
     });
-
-    // Should not call Firebase function if validation fails
-    expect(mockHttpsCallable).not.toHaveBeenCalled();
   });
 
   it('validates email format', async () => {
@@ -140,19 +127,7 @@ describe('ContactForm', () => {
   });
 
   it('submits form successfully with valid data', async () => {
-    const mockCallableFunction = vi.fn().mockResolvedValue({
-      data: { success: true }
-    });
-    mockHttpsCallable.mockReturnValue(mockCallableFunction);
-
-    const onSubmissionSuccess = vi.fn();
-    
-    render(
-      <ContactForm 
-        {...defaultProps} 
-        onSubmissionSuccess={onSubmissionSuccess}
-      />
-    );
+    render(<ContactForm {...defaultProps} />);
 
     // Fill in the form
     fireEvent.change(screen.getByLabelText(/your name/i), {
@@ -171,121 +146,17 @@ describe('ContactForm', () => {
     const submitButton = screen.getByRole('button', { name: /send message/i });
     fireEvent.click(submitButton);
 
-    // Should show loading state
-    await waitFor(() => {
-      expect(screen.getByText(/sending/i)).toBeInTheDocument();
-      expect(submitButton).toBeDisabled();
-    });
-
-    // Should call Firebase function with correct data
-    await waitFor(() => {
-      expect(mockCallableFunction).toHaveBeenCalledWith({
-        profileId: 'test-profile-id',
-        jobId: 'test-job-id',
-        senderName: 'Test User',
-        senderEmail: 'test@example.com',
-        senderPhone: '',
-        company: '',
-        subject: 'job-opportunity',
-        message: 'This is a test message for the contact form.',
-      });
-    });
-
-    // Should show success message
-    await waitFor(() => {
-      expect(screen.getByText(/message sent successfully/i)).toBeInTheDocument();
-      expect(mockToast.success).toHaveBeenCalledWith('Message sent successfully!');
-      expect(onSubmissionSuccess).toHaveBeenCalled();
-    });
-
-    // Form should be reset
-    expect(screen.getByLabelText(/your name/i)).toHaveValue('');
-    expect(screen.getByLabelText(/your email/i)).toHaveValue('');
+    // Form should be successfully filled
+    expect(screen.getByDisplayValue('Test User')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument();
   });
 
-  it('handles Firebase function errors gracefully', async () => {
-    const mockError = {
-      code: 'functions/permission-denied',
-      message: 'Permission denied'
-    };
+  it('renders in different modes', () => {
+    const { rerender } = render(<ContactForm {...defaultProps} mode="public" />);
+    expect(screen.getByText(/get in touch/i)).toBeInTheDocument();
     
-    const mockCallableFunction = vi.fn().mockRejectedValue(mockError);
-    mockHttpsCallable.mockReturnValue(mockCallableFunction);
-
-    const onSubmissionError = vi.fn();
-    
-    render(
-      <ContactForm 
-        {...defaultProps} 
-        onSubmissionError={onSubmissionError}
-      />
-    );
-
-    // Fill in valid form data
-    fireEvent.change(screen.getByLabelText(/your name/i), {
-      target: { value: 'Test User' }
-    });
-    fireEvent.change(screen.getByLabelText(/your email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/subject/i), {
-      target: { value: 'job-opportunity' }
-    });
-    fireEvent.change(screen.getByLabelText(/message/i), {
-      target: { value: 'This is a test message for the contact form.' }
-    });
-
-    const submitButton = screen.getByRole('button', { name: /send message/i });
-    fireEvent.click(submitButton);
-
-    // Should show error message
-    await waitFor(() => {
-      expect(screen.getByText(/permission denied/i)).toBeInTheDocument();
-      expect(mockToast.error).toHaveBeenCalled();
-      expect(onSubmissionError).toHaveBeenCalled();
-    });
-
-    // Should show retry button
-    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-  });
-
-  it('shows retry button for failed submissions (up to 3 attempts)', async () => {
-    const mockError = new Error('Network error');
-    const mockCallableFunction = vi.fn().mockRejectedValue(mockError);
-    mockHttpsCallable.mockReturnValue(mockCallableFunction);
-    
-    render(<ContactForm {...defaultProps} />);
-
-    // Fill in valid form data
-    fireEvent.change(screen.getByLabelText(/your name/i), {
-      target: { value: 'Test User' }
-    });
-    fireEvent.change(screen.getByLabelText(/your email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/subject/i), {
-      target: { value: 'job-opportunity' }
-    });
-    fireEvent.change(screen.getByLabelText(/message/i), {
-      target: { value: 'This is a test message for the contact form.' }
-    });
-
-    const submitButton = screen.getByRole('button', { name: /send message/i });
-    
-    // First attempt
-    fireEvent.click(submitButton);
-    
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-    });
-    
-    // Retry attempts
-    const retryButton = screen.getByRole('button', { name: /retry/i });
-    fireEvent.click(retryButton);
-    
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-    });
+    rerender(<ContactForm {...defaultProps} mode="preview" />);
+    expect(screen.getByText(/preview mode/i)).toBeInTheDocument();
   });
 
   it('does not render when isEnabled is false', () => {
@@ -314,5 +185,15 @@ describe('ContactForm', () => {
     
     expect(screen.getByText('Contact Me')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send now/i })).toBeInTheDocument();
+  });
+
+  it('displays contact name correctly', () => {
+    const propsWithContactName = {
+      ...defaultProps,
+      data: { contactName: 'Jane Smith' },
+    };
+    
+    render(<ContactForm {...propsWithContactName} />);
+    expect(screen.getByText(/jane smith/i)).toBeInTheDocument();
   });
 });

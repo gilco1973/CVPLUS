@@ -3,6 +3,8 @@
  * Type definitions for the Contact Form feature
  */
 
+import { CVFeatureProps } from '../../../types/cv-features';
+
 export interface ContactFormData {
   senderName: string;
   senderEmail: string;
@@ -10,6 +12,21 @@ export interface ContactFormData {
   company?: string;
   subject: string;
   message: string;
+}
+
+// Alias for backward compatibility
+export type ContactSubmission = ContactFormData;
+
+export interface ContactFormProps extends CVFeatureProps {
+  contactName?: string;
+  customization?: {
+    title?: string;
+    buttonText?: string;
+    theme?: 'light' | 'dark' | 'auto';
+    showCompanyField?: boolean;
+    showPhoneField?: boolean;
+    maxRetries?: number;
+  };
 }
 
 export interface ContactFormErrors {

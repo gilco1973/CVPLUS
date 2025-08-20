@@ -162,7 +162,7 @@ describe('SocialMediaLinks Component', () => {
       );
 
       // Icons style should not show labels by default when style is icons
-      let linkedinButton = screen.getByTitle('Visit my LinkedIn profile');
+      const linkedinButton = screen.getByTitle('Visit my LinkedIn profile');
       expect(linkedinButton).toBeInTheDocument();
 
       // Test buttons style
