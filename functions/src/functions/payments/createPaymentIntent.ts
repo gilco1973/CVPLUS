@@ -1,6 +1,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
+import { 
+  getPriceInCents, 
+  getTierConfig, 
+  validatePricingConfig,
+  logPricingStatus
+} from '../../config/pricing';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,7 +17,7 @@ interface CreatePaymentIntentData {
   userId: string;
   email: string;
   googleId: string;
-  amount?: number; // Optional, defaults to $5.00
+  amount?: number; // Optional, defaults to premium pricing from config
 }
 
 export const createPaymentIntent = onCall<CreatePaymentIntentData>(
@@ -31,7 +37,28 @@ export const createPaymentIntent = onCall<CreatePaymentIntentData>(
       throw new HttpsError('permission-denied', 'User ID mismatch');
     }
 
-    const { userId, email, googleId, amount = 500 } = data; // $5.00 in cents
+    // Validate pricing configuration
+    const pricingValidation = validatePricingConfig();
+    if (!pricingValidation.isValid) {
+      logger.error('Pricing configuration validation failed', {
+        errors: pricingValidation.errors,
+        warnings: pricingValidation.warnings
+      });
+    }
+    
+    // Use provided amount or default to premium pricing from centralized config
+    const defaultAmount = getPriceInCents('PREMIUM');
+    const { userId, email, googleId, amount = defaultAmount } = data;
+    
+    // Log pricing configuration status
+    logPricingStatus();
+    
+    logger.info('Creating payment intent with pricing', {
+      providedAmount: data.amount,
+      finalAmount: amount,
+      defaultPremiumAmount: defaultAmount,
+      premiumPriceDollars: getTierConfig('PREMIUM').price.dollars
+    });
 
     try {
       // Check if user already has lifetime premium
@@ -69,17 +96,23 @@ export const createPaymentIntent = onCall<CreatePaymentIntentData>(
         customerId = customer.id;
       }
 
+      // Get premium config for consistent description and currency
+      const premiumConfig = getTierConfig('PREMIUM');
+      
       // Create payment intent
       const paymentIntent = await stripe.paymentIntents.create({
         amount,
-        currency: 'usd',
+        currency: premiumConfig.price.currency.toLowerCase(),
         customer: customerId,
-        description: 'CVPlus Lifetime Premium Access',
+        description: `CVPlus ${premiumConfig.name} - ${premiumConfig.description}`,
         metadata: {
           userId,
           googleId,
           email,
-          productType: 'lifetime_premium'
+          productType: 'lifetime_premium',
+          tier: premiumConfig.tier,
+          priceCents: amount.toString(),
+          priceDollars: (amount / 100).toString()
         },
         automatic_payment_methods: {
           enabled: true,

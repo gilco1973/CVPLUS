@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { PricingCard } from '../components/pricing/PricingCard';
-import { StripeCheckoutIframe } from '../components/pricing/StripeCheckoutIframe';
+import { StripeCheckoutSDK } from '../components/pricing/StripeCheckoutSDK';
 import { PricingHero } from './components/PricingHero';
 import { LifetimeAccessGuarantee } from './components/LifetimeAccessGuarantee';
 import { FeatureComparison } from './components/FeatureComparison';
@@ -11,6 +11,11 @@ import { PricingFAQ } from './components/PricingFAQ';
 import { ArrowLeft, Users, Crown, CheckCircle, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatFeatureName } from '../services/paymentService';
+import { 
+  getTierConfig, 
+  formatPrice, 
+  PRICING_CONFIG 
+} from '../config/pricing';
 
 export const PricingPage = () => {
   const navigate = useNavigate();
@@ -19,27 +24,12 @@ export const PricingPage = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const freeFeaturesIncluded = [
-    'AI CV Analysis & Enhancement',
-    'Professional CV Templates',
-    'ATS Optimization & Scoring',
-    'Skills Visualization Charts',
-    'Interactive Career Timeline',
-    'Basic QR Code Generation',
-    'Portfolio Gallery',
-    'Multi-format Export (PDF, DOCX, HTML)',
-    'Basic Analytics & Tracking'
-  ];
-
-  const premiumFeaturesIncluded = [
-    'Everything in Free Forever',
-    'Personal Web Portal (Custom URL)',
-    'AI Chat Assistant (RAG-powered)',
-    'AI Career Podcast Generation',
-    'Advanced Analytics Dashboard',
-    'Priority Customer Support',
-    'Remove CVPlus Branding'
-  ];
+  // Get tier configurations from centralized pricing config
+  const freeConfig = getTierConfig('FREE');
+  const premiumConfig = getTierConfig('PREMIUM');
+  
+  const freeFeaturesIncluded = freeConfig.features;
+  const premiumFeaturesIncluded = premiumConfig.features;
 
   const handleGetStartedFree = async () => {
     if (!user) {
@@ -105,7 +95,8 @@ export const PricingPage = () => {
             Back to Pricing
           </button>
           
-          <StripeCheckoutIframe
+          <StripeCheckoutSDK
+            price={premiumConfig.price.dollars}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onCancel={() => setShowPaymentForm(false)}
@@ -202,31 +193,31 @@ export const PricingPage = () => {
         <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
           {/* Free Tier */}
           <PricingCard
-            title="Free"
-            subtitle="Perfect for getting started"
-            price={0}
-            billing="Forever"
+            title={freeConfig.name}
+            subtitle={freeConfig.subtitle}
+            price={freeConfig.price.dollars}
+            billing={freeConfig.billing.displayText}
             features={freeFeaturesIncluded}
-            buttonText="Get Started Free"
-            buttonVariant="outline"
+            buttonText={freeConfig.ui.buttonText}
+            buttonVariant={freeConfig.ui.buttonVariant}
             onButtonClick={handleGetStartedFree}
             isLoading={isLoading}
-            popular={false}
+            popular={freeConfig.ui.popular}
           />
 
           {/* Premium Tier */}
           <PricingCard
-            title="Premium"
-            subtitle="Lifetime Access"
-            price={5}
-            billing="One-time payment"
+            title={premiumConfig.name}
+            subtitle={premiumConfig.subtitle}
+            price={premiumConfig.price.dollars}
+            billing={premiumConfig.billing.displayText}
             features={premiumFeaturesIncluded}
-            buttonText={isLifetimePremium ? "Already Premium!" : "Get Lifetime Access"}
-            buttonVariant={isLifetimePremium ? "disabled" : "primary"}
+            buttonText={isLifetimePremium ? "Already Premium!" : premiumConfig.ui.buttonText}
+            buttonVariant={isLifetimePremium ? "disabled" : premiumConfig.ui.buttonVariant}
             onButtonClick={handleUpgradeToPremium}
             isLoading={isLoading || premiumLoading}
-            popular={true}
-            badge={isLifetimePremium ? "ACTIVE" : "LIFETIME"}
+            popular={premiumConfig.ui.popular}
+            badge={isLifetimePremium ? "ACTIVE" : premiumConfig.ui.badge}
             disabled={isLifetimePremium}
           />
         </div>

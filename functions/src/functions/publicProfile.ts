@@ -85,16 +85,25 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
 
       // Generate public profile with default privacy settings
       const defaultPrivacySettings: PrivacySettings = {
+        showContactInfo: true,
+        showSocialLinks: true,
+        allowCVDownload: true,
+        showAnalytics: false,
+        allowChatMessages: true,
+        publicProfile: true,
+        searchable: true,
+        showPersonalityProfile: true,
+        showTestimonials: true,
+        showPortfolio: true,
         enabled: true,
-        level: 'moderate',
         maskingRules: {
-          name: false,
-          email: true,
-          phone: true,
-          address: true,
-          companies: false,
-          dates: false
-        }
+          maskEmail: true,
+          maskPhone: true,
+          maskAddress: true
+        },
+        publicEmail: false,
+        publicPhone: false,
+        requireContactFormForCV: false
       };
       const maskedCV = maskPII(job.parsedData, defaultPrivacySettings);
       const publicSlug = `cv-${jobId.substring(0, 8)}-${Date.now()}`;
@@ -135,7 +144,6 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
         jobId,
         userId: job.userId,
         slug: publicSlug,
-        parsedCV: maskedCV,
         features: job.enhancedFeatures || {},
         template: job.selectedTemplate || 'modern',
         isPublic: true,
@@ -145,10 +153,16 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
         createdAt: FieldValue.serverTimestamp() as any,
         updatedAt: FieldValue.serverTimestamp() as any,
         analytics: {
+          totalViews: 0,
+          uniqueVisitors: 0,
+          averageTimeOnPage: 0,
+          bounceRate: 0,
+          featureUsage: {},
+          conversionRate: 0,
+          lastAnalyticsUpdate: new Date(),
           views: 0,
           qrScans: 0,
-          contactSubmissions: 0,
-          lastViewedAt: null
+          contactSubmissions: 0
         }
       };
 
@@ -405,16 +419,25 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
             // Generate public profile with default privacy settings
             const defaultPrivacySettings: PrivacySettings = {
+              showContactInfo: true,
+              showSocialLinks: true,
+              allowCVDownload: true,
+              showAnalytics: false,
+              allowChatMessages: true,
+              publicProfile: true,
+              searchable: true,
+              showPersonalityProfile: true,
+              showTestimonials: true,
+              showPortfolio: true,
               enabled: true,
-              level: 'moderate',
               maskingRules: {
-                name: false,
-                email: true,
-                phone: true,
-                address: true,
-                companies: false,
-                dates: false
-              }
+                maskEmail: true,
+                maskPhone: true,
+                maskAddress: true
+              },
+              publicEmail: false,
+              publicPhone: false,
+              requireContactFormForCV: false
             };
             const maskedCV = maskPII(job.parsedData, defaultPrivacySettings);
             const publicSlug = `cv-${lookupId.substring(0, 8)}-${Date.now()}`;
@@ -455,8 +478,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
               jobId: lookupId,
               userId: job.userId,
               slug: publicSlug,
-              parsedCV: maskedCV,
-              features: job.enhancedFeatures || {},
+                    features: job.enhancedFeatures || {},
               template: job.selectedTemplate || 'modern',
               isPublic: true,
               allowContactForm: true,
@@ -465,10 +487,16 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
               createdAt: FieldValue.serverTimestamp() as any,
               updatedAt: FieldValue.serverTimestamp() as any,
               analytics: {
+                totalViews: 0,
+                uniqueVisitors: 0,
+                averageTimeOnPage: 0,
+                bounceRate: 0,
+                featureUsage: {},
+                conversionRate: 0,
+                lastAnalyticsUpdate: new Date(),
                 views: 0,
                 qrScans: 0,
-                contactSubmissions: 0,
-                lastViewedAt: null
+                contactSubmissions: 0
               }
             };
 
@@ -556,7 +584,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
       });
 
       // Send email notification if configured
-      const contactEmail = job.interactiveData?.contactEmail || job.parsedData?.personalInfo?.email;
+      const contactEmail = job.parsedData?.personalInfo?.email;
       let emailResult: { success: boolean; error?: string } = { success: false, error: 'No email configured' };
       
       if (contactEmail) {

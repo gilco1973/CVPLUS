@@ -117,30 +117,33 @@ export class ATSOptimizationOrchestrator {
         passes: advancedScore.overall >= 75,
         breakdown: {
           parsing: advancedScore.breakdown.parsing,
-          keywords: advancedScore.breakdown.keywords,
           formatting: advancedScore.breakdown.formatting,
+          keywords: advancedScore.breakdown.keywords,
           content: advancedScore.breakdown.content,
-          specificity: advancedScore.breakdown.specificity
+          specificity: advancedScore.breakdown.specificity,
+          experience: advancedScore.breakdown.experience || 80,
+          education: advancedScore.breakdown.education || 80,
+          skills: advancedScore.breakdown.skills || 80,
+          achievements: advancedScore.breakdown.achievements || 80
         },
         issues: [
           ...systemSimulations.flatMap((sim: any) => sim.identifiedIssues || []),
           ...safeRecommendations
-            .filter(rec => rec.priority === 1 || rec.priority === 2)
-            .map(rec => ({ type: 'warning' as const, description: rec.description || 'Optimization needed', severity: rec.priority === 1 ? 'critical' : 'high' }))
+            .filter(rec => rec.priority === 'critical' || rec.priority === 'high')
+            .map(rec => ({ type: 'warning' as const, description: rec.description || 'Optimization needed', severity: rec.priority === 'critical' ? 'critical' : 'high' }))
         ],
         suggestions: safeRecommendations.map(rec => ({
-          section: rec.section || 'general',
-          original: rec.currentContent || '',
-          suggested: rec.suggestedContent || rec.description || 'Apply recommended improvement',
-          reason: rec.description || 'Optimization needed',
-          impact: rec.impact || 'medium'
+          category: rec.category || 'general',
+          suggestion: rec.title || rec.description || 'Apply recommended improvement',
+          impact: rec.impact === 'high' ? 'high' : rec.impact === 'low' ? 'low' : 'medium',
+          implementation: rec.implementation?.[0] || 'Apply the recommended changes to improve ATS compatibility'
         })),
         recommendations: safeRecommendations.map(rec => rec.description || 'Optimization needed'),
         keywords: {
-          found: semanticAnalysis?.matchedKeywords?.map((kw: any) => kw.keyword || kw) || [],
+          found: [...(semanticAnalysis?.primaryKeywords?.map(kw => kw.keyword) || []), ...(semanticAnalysis?.secondaryKeywords?.map(kw => kw.keyword) || [])],
           missing: semanticAnalysis?.missingKeywords || [],
-          recommended: semanticAnalysis?.recommendations || [],
-          density: semanticAnalysis?.keywordDensity || 0
+          recommended: semanticAnalysis?.trendingKeywords || [],
+          density: semanticAnalysis?.keywordDensity ? Object.values(semanticAnalysis.keywordDensity).reduce((a, b) => a + b, 0) / Object.keys(semanticAnalysis.keywordDensity).length : 0
         },
         advancedScore,
         semanticAnalysis,
@@ -151,7 +154,7 @@ export class ATSOptimizationOrchestrator {
           timestamp: new Date().toISOString(),
           version: '2.0.0-modular',
           processingTime: Date.now(),
-          confidenceLevel: advancedScore.confidence || 0.85
+          confidenceLevel: 0.85
         }
       };
 

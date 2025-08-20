@@ -14,8 +14,10 @@
     "noImplicitAny": false,
     "noImplicitThis": false,
     "noImplicitUseStrict": false,
-    "noEmitOnError": false,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "suppressExcessPropertyErrors": true,
+    "noEmitOnError": false
   },
   "compileOnSave": true,
   "include": [

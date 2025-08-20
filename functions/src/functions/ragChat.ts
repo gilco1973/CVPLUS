@@ -66,17 +66,21 @@ export const initializeRAG = onCall(
       const ragProfile: UserRAGProfile = {
         userId: request.auth.uid,
         jobId,
-        vectorNamespace,
-        embeddingModel: 'openai',
+        vectorStoreId: vectorNamespace,
+        embeddingsGenerated: true,
+        lastEmbeddingUpdate: new Date(),
         chunks: chunks,
-        lastIndexed: new Date(),
-        chatSessions: [],
+        chatHistory: [],
+        personalityContext: '',
+        expertiseAreas: [],
+        conversationalTone: 'professional',
+        availableTopics: [],
         settings: {
           temperature: 0.7,
           maxTokens: 500,
           systemPrompt: request.data.systemPrompt,
           allowedTopics: ['experience', 'skills', 'education', 'projects', 'achievements'],
-          personality: (request.data.personality || 'professional') as 'professional' | 'friendly' | 'concise' | 'detailed'
+          enablePersonalization: true
         },
         statistics: {
           totalQueries: 0,
@@ -181,7 +185,6 @@ export const startChatSession = onCall(
       sessionId,
       suggestedQuestions,
       settings: {
-        personality: job.ragChat.settings.personality || 'professional',
         language: job.ragChat.settings.language || 'en'
       }
     };
@@ -273,7 +276,6 @@ export const sendChatMessage = onCall(
         response: {
           content: response.content,
           timestamp: response.timestamp,
-          confidence: response.metadata?.confidence
         }
       };
     } catch (error: any) {

@@ -248,11 +248,15 @@ export {
 
 // Export CV data update function
 export { updateCVData } from './functions/updateCVData';
+export { sendSchedulingEmail } from './functions/sendSchedulingEmail';
 
 // Export payment processing functions
 export {
   createPaymentIntent,
 } from './functions/payments/createPaymentIntent';
+export {
+  createCheckoutSession,
+} from './functions/payments/createCheckoutSession';
 
 export {
   confirmPayment,

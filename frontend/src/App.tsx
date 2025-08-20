@@ -11,6 +11,7 @@ import { AboutPage } from './pages/AboutPage';
 import { KeywordOptimization } from './pages/KeywordOptimization';
 import { FinalResultsPage } from './pages/FinalResultsPage';
 import { PricingPage } from './pages/PricingPage';
+import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import { FAQPage } from './components/pages/FAQ';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
@@ -84,6 +85,14 @@ const router = createBrowserRouter(
       element: (
         <GlobalLayout variant="default" showFooter={true}>
           <PricingPage />
+        </GlobalLayout>
+      ),
+    },
+    {
+      path: '/payment-success',
+      element: (
+        <GlobalLayout variant="default" showFooter={false}>
+          <PaymentSuccessPage />
         </GlobalLayout>
       ),
     },

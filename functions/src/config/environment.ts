@@ -210,6 +210,15 @@ interface SecureConfig {
   storage: {
     bucketName: string;
   };
+  stripe: {
+    secretKey?: string;
+    webhookSecret?: string;
+    pricing: {
+      priceIdDev?: string;
+      priceIdStaging?: string;
+      priceIdProd?: string;
+    };
+  };
   email: {
     user?: string;
     password?: string;
@@ -340,6 +349,15 @@ class SecureEnvironmentLoader {
       storage: {
         bucketName: EnvironmentValidator.sanitizeString(process.env.STORAGE_BUCKET) || 'getmycv-ai.firebasestorage.app'
       },
+      stripe: {
+        secretKey: EnvironmentValidator.validateApiKey(process.env.STRIPE_SECRET_KEY, 'STRIPE_SECRET_KEY'),
+        webhookSecret: EnvironmentValidator.sanitizeString(process.env.STRIPE_WEBHOOK_SECRET),
+        pricing: {
+          priceIdDev: EnvironmentValidator.sanitizeString(process.env.STRIPE_PRICE_ID_DEV),
+          priceIdStaging: EnvironmentValidator.sanitizeString(process.env.STRIPE_PRICE_ID_STAGING),
+          priceIdProd: EnvironmentValidator.sanitizeString(process.env.STRIPE_PRICE_ID_PROD)
+        }
+      },
       email: {
         user: EnvironmentValidator.validateEmail(process.env.EMAIL_USER),
         password: EnvironmentValidator.sanitizeString(process.env.EMAIL_PASSWORD),
@@ -447,7 +465,7 @@ class SecureEnvironmentLoader {
     const config = SecureEnvironmentLoader.getConfig();
 
     let healthyServices = 0;
-    const totalServices = 8; // Firebase, OpenAI, Email, ElevenLabs, Video, Search, RAG, Storage
+    const totalServices = 9; // Firebase, OpenAI, Email, ElevenLabs, Video, Search, RAG, Storage, Stripe
 
     // Check each service
     if (config.firebase.apiKey && config.firebase.projectId) healthyServices++;
@@ -458,6 +476,7 @@ class SecureEnvironmentLoader {
     if (config.search.serperApiKey) healthyServices++;
     if (config.rag.openaiApiKey && config.rag.pineconeApiKey) healthyServices++;
     if (config.storage.bucketName) healthyServices++;
+    if (config.stripe.secretKey) healthyServices++;
 
     const healthPercentage = (healthyServices / totalServices) * 100;
     

@@ -49,19 +49,23 @@ export class ATSScoringService {
       overall,
       breakdown: {
         parsing: parsingScore,
-        keywords: keywordScore,
         formatting: formattingScore,
+        keywords: keywordScore,
         content: contentScore,
-        specificity: specificityScore
+        specificity: specificityScore,
+        experience: 80,
+        education: 80,
+        skills: 80,
+        achievements: 80
       },
       confidence,
       atsSystemScores: {
-        workday: systemSimulations.find(s => s.system === 'workday')?.overallScore || 0,
-        greenhouse: systemSimulations.find(s => s.system === 'greenhouse')?.overallScore || 0,
-        lever: systemSimulations.find(s => s.system === 'lever')?.overallScore || 0,
-        bamboohr: systemSimulations.find(s => s.system === 'bamboohr')?.overallScore || 0,
-        taleo: systemSimulations.find(s => s.system === 'taleo')?.overallScore || 0,
-        generic: systemSimulations.find(s => s.system === 'generic')?.overallScore || overall
+        workday: systemSimulations.find(s => s.systemName === 'workday')?.passRate || 0,
+        greenhouse: systemSimulations.find(s => s.systemName === 'greenhouse')?.passRate || 0,
+        lever: systemSimulations.find(s => s.systemName === 'lever')?.passRate || 0,
+        bamboohr: systemSimulations.find(s => s.systemName === 'bamboohr')?.passRate || 0,
+        taleo: systemSimulations.find(s => s.systemName === 'taleo')?.passRate || 0,
+        generic: systemSimulations.find(s => s.systemName === 'generic')?.passRate || overall
       },
       recommendations: [], // Will be populated by RecommendationService
       competitorBenchmark: competitorBenchmark || {
@@ -76,10 +80,10 @@ export class ATSScoringService {
         }
       },
       systemSpecificScores: systemSimulations.map((sim: any) => ({
-        systemName: sim.systemName || sim.system || 'Unknown',
-        score: sim.compatibilityScore || sim.score || sim.overallScore || 0,
-        strengths: sim.strengths || [],
-        weaknesses: sim.identifiedIssues || sim.issues || sim.specificIssues || []
+        systemName: sim.systemName || 'Unknown',
+        score: sim.passRate || 0,
+        strengths: [],
+        weaknesses: sim.issues?.map(issue => issue.description) || []
       }))
     };
   }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -11,6 +11,7 @@ import type { User } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { isFirebaseError, getErrorMessage, logError } from '../utils/errorHandling';
+import { getUserSubscription, GetUserSubscriptionResponse } from '../services/paymentService';
 
 // Helper function to store Google OAuth tokens for calendar integration
 const storeGoogleTokens = async (uid: string, accessToken: string) => {
@@ -57,7 +58,28 @@ const getFriendlyAuthErrorMessage = (errorCode: string): string => {
   }
 };
 
-interface AuthContextType {
+// Export premium context type for other components
+export interface PremiumContextType {
+  isPremium: boolean;
+  isLifetimePremium: boolean;
+  subscription: GetUserSubscriptionResponse | null;
+  features: {
+    webPortal: boolean;
+    aiChat: boolean;
+    podcast: boolean;
+    advancedAnalytics: boolean;
+  };
+  subscriptionStatus: 'free' | 'premium_lifetime';
+  purchasedAt?: any;
+  isLoadingPremium: boolean;
+  premiumError: string | null;
+  refreshPremiumStatus: () => Promise<void>;
+  // Helper methods for premium status management
+  hasFeature: (feature: keyof PremiumContextType['features']) => boolean;
+  clearPremiumError: () => void;
+}
+
+export interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
@@ -68,6 +90,8 @@ interface AuthContextType {
   clearError: () => void;
   hasCalendarPermissions: boolean;
   requestCalendarPermissions: () => Promise<void>;
+  // Premium status fields
+  premium: PremiumContextType;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,18 +104,67 @@ export const useAuth = () => {
   return context;
 };
 
+// Dedicated hook for premium status access
+export const usePremium = () => {
+  const { premium } = useAuth();
+  return premium;
+};
+
+// Hook for specific feature access
+export const useFeature = (featureName: keyof PremiumContextType['features']) => {
+  const { premium } = useAuth();
+  return {
+    hasAccess: premium.features[featureName],
+    isPremium: premium.isPremium,
+    isLoading: premium.isLoadingPremium,
+    error: premium.premiumError,
+    refreshStatus: premium.refreshPremiumStatus
+  };
+};
+
+// Hook for premium upgrade checks
+export const usePremiumUpgrade = () => {
+  const { premium, user } = useAuth();
+  
+  const needsUpgrade = !premium.isPremium && !!user;
+  const isEligible = !!user && !premium.isPremium;
+  
+  return {
+    needsUpgrade,
+    isEligible,
+    isPremium: premium.isPremium,
+    isLoading: premium.isLoadingPremium,
+    refreshStatus: premium.refreshPremiumStatus
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasCalendarPermissions, setHasCalendarPermissions] = useState(false);
+  
+  // Premium status state
+  const [subscription, setSubscription] = useState<GetUserSubscriptionResponse | null>(null);
+  const [isLoadingPremium, setIsLoadingPremium] = useState(false);
+  const [premiumError, setPremiumError] = useState<string | null>(null);
+  
+  // Premium status cache for session persistence
+  const [premiumStatusCache, setPremiumStatusCache] = useState<{
+    subscription: GetUserSubscriptionResponse | null;
+    timestamp: number;
+    userId: string;
+  } | null>(null);
+  
+  // Cache duration: 5 minutes
+  const PREMIUM_CACHE_DURATION = 5 * 60 * 1000;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       
-      // Check calendar permissions for authenticated users
       if (user) {
+        // Check calendar permissions for authenticated users
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           const userData = userDoc.data();
@@ -101,8 +174,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           logError('checkCalendarPermissions', error);
           setHasCalendarPermissions(false);
         }
+        
+        // Load premium status for authenticated user
+        await fetchPremiumStatus(user.uid);
       } else {
+        // Clear all user-related state when signing out
         setHasCalendarPermissions(false);
+        setSubscription(null);
+        setPremiumStatusCache(null);
+        setPremiumError(null);
+        
+        // Clear premium cache from localStorage
+        try {
+          const keys = Object.keys(localStorage);
+          keys.forEach(key => {
+            if (key.startsWith('cvplus_premium_')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch (error) {
+          logError('clearPremiumCache', error);
+        }
       }
       
       setLoading(false);
@@ -128,6 +220,132 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearError = () => {
     setError(null);
   };
+  
+  const clearPremiumError = () => {
+    setPremiumError(null);
+  };
+  
+  // Load premium status from cache if valid
+  const loadPremiumFromCache = useCallback((userId: string) => {
+    try {
+      const cached = localStorage.getItem(`cvplus_premium_${userId}`);
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        const isValid = Date.now() - parsedCache.timestamp < PREMIUM_CACHE_DURATION;
+        
+        if (isValid && parsedCache.userId === userId) {
+          setPremiumStatusCache(parsedCache);
+          setSubscription(parsedCache.subscription);
+          return true;
+        } else {
+          // Remove expired cache
+          localStorage.removeItem(`cvplus_premium_${userId}`);
+        }
+      }
+    } catch (error) {
+      logError('loadPremiumFromCache', error);
+      localStorage.removeItem(`cvplus_premium_${userId}`);
+    }
+    return false;
+  }, [PREMIUM_CACHE_DURATION]);
+  
+  // Save premium status to cache
+  const savePremiumToCache = useCallback((userId: string, subscriptionData: GetUserSubscriptionResponse | null) => {
+    try {
+      const cacheData = {
+        subscription: subscriptionData,
+        timestamp: Date.now(),
+        userId
+      };
+      localStorage.setItem(`cvplus_premium_${userId}`, JSON.stringify(cacheData));
+      setPremiumStatusCache(cacheData);
+    } catch (error) {
+      logError('savePremiumToCache', error);
+    }
+  }, []);
+  
+  // Fetch premium status from backend
+  const fetchPremiumStatus = useCallback(async (userId: string, skipCache = false) => {
+    // Check cache first unless explicitly skipping
+    if (!skipCache && loadPremiumFromCache(userId)) {
+      return;
+    }
+    
+    setIsLoadingPremium(true);
+    setPremiumError(null);
+    
+    try {
+      const subscriptionData = await getUserSubscription({ userId });
+      setSubscription(subscriptionData);
+      savePremiumToCache(userId, subscriptionData);
+    } catch (error) {
+      logError('fetchPremiumStatus', error);
+      setPremiumError(error instanceof Error ? error.message : 'Failed to load premium status');
+      setSubscription(null);
+    } finally {
+      setIsLoadingPremium(false);
+    }
+  }, [loadPremiumFromCache, savePremiumToCache]);
+  
+  // Refresh premium status (force reload from backend)
+  const refreshPremiumStatus = useCallback(async () => {
+    if (!user) return;
+    await fetchPremiumStatus(user.uid, true);
+  }, [user, fetchPremiumStatus]);
+  
+  // Set up periodic premium status sync for active users
+  useEffect(() => {
+    if (!user || !subscription) return;
+    
+    // Only sync for premium users to detect any changes
+    if (subscription.lifetimeAccess) {
+      const syncInterval = setInterval(() => {
+        // Check if cache is expired and refresh if needed
+        const cacheExpired = !premiumStatusCache || 
+          Date.now() - premiumStatusCache.timestamp > PREMIUM_CACHE_DURATION;
+        
+        if (cacheExpired) {
+          fetchPremiumStatus(user.uid, true);
+        }
+      }, PREMIUM_CACHE_DURATION);
+      
+      return () => clearInterval(syncInterval);
+    }
+  }, [user, subscription, premiumStatusCache, fetchPremiumStatus, PREMIUM_CACHE_DURATION]);
+  
+  // Listen for payment completion events from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'cvplus_payment_completed' && user) {
+        // Payment completed in another tab, refresh premium status
+        setTimeout(() => {
+          refreshPremiumStatus();
+          localStorage.removeItem('cvplus_payment_completed');
+        }, 1000); // Small delay to ensure backend processing is complete
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user, refreshPremiumStatus]);
+  
+  // Listen for visibility change to refresh status when tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && subscription) {
+        // Check if cache is stale when tab becomes visible
+        const cacheAge = premiumStatusCache ? 
+          Date.now() - premiumStatusCache.timestamp : Infinity;
+        
+        if (cacheAge > PREMIUM_CACHE_DURATION) {
+          fetchPremiumStatus(user.uid, true);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, subscription, premiumStatusCache, fetchPremiumStatus, PREMIUM_CACHE_DURATION]);
 
 
   const signInWithGoogle = async () => {
@@ -192,6 +410,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       clearError();
+      clearPremiumError();
+      
+      // Clear premium state before signing out
+      setSubscription(null);
+      setPremiumStatusCache(null);
+      
       await firebaseSignOut(auth);
     } catch (error: unknown) {
       logError('signOut', error);
@@ -234,6 +458,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Create premium context object
+  const premium: PremiumContextType = {
+    isPremium: subscription?.lifetimeAccess === true,
+    isLifetimePremium: subscription?.lifetimeAccess === true,
+    subscription,
+    features: {
+      webPortal: subscription?.features?.webPortal === true,
+      aiChat: subscription?.features?.aiChat === true,
+      podcast: subscription?.features?.podcast === true,
+      advancedAnalytics: subscription?.features?.advancedAnalytics === true
+    },
+    subscriptionStatus: subscription?.subscriptionStatus === 'premium_lifetime' ? 'premium_lifetime' : 'free',
+    purchasedAt: subscription?.purchasedAt,
+    isLoadingPremium,
+    premiumError,
+    refreshPremiumStatus
+  };
+  
   const value = {
     user,
     loading,
@@ -244,7 +486,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     clearError,
     hasCalendarPermissions,
-    requestCalendarPermissions
+    requestCalendarPermissions,
+    premium
   };
 
   return (

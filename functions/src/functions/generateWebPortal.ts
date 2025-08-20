@@ -401,15 +401,10 @@ export const generateWebPortal = onCall(
           },
           resourceUsage: {
             memoryUsageMB: 0,
-            cpuTimeSeconds: Math.floor(processingTimeMs / 1000),
-            networkRequests: 0,
-            storageUsedMB: 0,
-            apiCalls: {}
+            cpuUsagePercent: Math.min(100, Math.floor(processingTimeMs / 1000)),
           },
           quality: {
-            completenessScore: 0,
-            designConsistencyScore: 0,
-            ragAccuracyScore: 0,
+            completionRate: 0,
             performanceScore: 0,
             accessibilityScore: 0,
             overallScore: 0
