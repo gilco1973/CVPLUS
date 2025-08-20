@@ -1,3 +1,10 @@
 export { QRCodeFeature } from './QRCodeFeature';
 export { PodcastFeature } from './PodcastFeature';
+export { ContactFormFeature } from './ContactFormFeature';
+export { SocialLinksFeature } from './SocialLinksFeature';
+export { PersonalBrandingFeature } from './PersonalBrandingFeature';
+export { CertificationBadgesFeature } from './CertificationBadgesFeature';
+export { VideoIntroFeature } from './VideoIntroFeature';
+export { PortfolioGalleryFeature } from './PortfolioGalleryFeature';
+export { TestimonialsCarouselFeature } from './TestimonialsCarouselFeature';
 export { FeatureRegistry } from './FeatureRegistry';

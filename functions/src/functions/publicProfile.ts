@@ -29,12 +29,13 @@ interface UpdateProfileSettingsRequest {
 }
 
 interface SubmitContactFormRequest {
-  profileId: string; // Change from jobId to profileId for public profiles
+  profileId: string; // Can be either jobId or profile slug
+  jobId?: string; // Optional fallback jobId for compatibility
   senderName: string;
   senderEmail: string;
   senderPhone?: string;
   company?: string;
-  subject: string; // Add subject field as shown in ContactFormFeature
+  subject: string;
   message: string;
 }
 
@@ -299,7 +300,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
     ...corsOptions
   },
   async (request: CallableRequest<SubmitContactFormRequest>) => {
-    const { profileId, senderName, senderEmail, senderPhone, company, subject, message } = request.data;
+    const { profileId, jobId, senderName, senderEmail, senderPhone, company, subject, message } = request.data;
     
     // SECURITY: Enhanced input validation
     if (!profileId || typeof profileId !== 'string') {
@@ -347,18 +348,37 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
       console.log(`[SECURITY] Contact form submission attempt for profile: ${profileId}`);
       console.log(`[SECURITY] Message length: ${sanitizedData.message.length} characters`);
 
-      // Get profile by slug (not jobId)
-      const profileQuery = await admin.firestore()
+      // Get profile by profileId (could be slug or jobId) or jobId fallback
+      let profileDoc;
+      const lookupId = profileId || jobId;
+      
+      if (!lookupId) {
+        throw new HttpsError('invalid-argument', 'Either profileId or jobId must be provided');
+      }
+      
+      // First try to get by document ID (jobId)
+      const profileByJobId = await admin.firestore()
         .collection('publicProfiles')
-        .where('slug', '==', profileId)
-        .limit(1)
+        .doc(lookupId)
         .get();
+      
+      if (profileByJobId.exists) {
+        profileDoc = profileByJobId;
+      } else {
+        // If not found by jobId, try by slug
+        const profileQuery = await admin.firestore()
+          .collection('publicProfiles')
+          .where('slug', '==', lookupId)
+          .limit(1)
+          .get();
 
-      if (profileQuery.empty) {
-        throw new HttpsError('not-found', 'Public profile not found');
+        if (profileQuery.empty) {
+          throw new HttpsError('not-found', `Public profile not found for ID: ${lookupId}`);
+        }
+        
+        profileDoc = profileQuery.docs[0];
       }
 
-      const profileDoc = profileQuery.docs[0];
       const profile = profileDoc.data() as PublicCVProfile;
 
       // SECURITY: Check if contact form is enabled

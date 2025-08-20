@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Download, FileText, Globe } from 'lucide-react';
 import type { Job } from '../services/cvService';
+import { initializeReactComponents } from '../utils/componentRendererFix';
 
 interface GeneratedCVDisplayProps {
   job: Job;
@@ -15,6 +16,8 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
   onDownloadDOCX,
   className = ''
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  
   // Try multiple sources for CV content
   const generatedHTML = job.generatedCV?.html;
   const hasHtmlUrl = job.generatedCV?.htmlUrl;
@@ -32,6 +35,27 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
     allJobKeys: Object.keys(job),
     allKeys: job.generatedCV ? Object.keys(job.generatedCV) : []
   });
+
+  // Initialize React components after HTML is rendered
+  useEffect(() => {
+    if (generatedHTML && contentRef.current) {
+      console.log('🔄 [CV-DISPLAY] HTML rendered, initializing React components...');
+      
+      // Small delay to ensure DOM is fully updated
+      const timer = setTimeout(async () => {
+        console.log('🚀 [CV-DISPLAY] Initializing React components with enhanced renderer...');
+        
+        try {
+          const successCount = await initializeReactComponents(contentRef.current);
+          console.log(`✅ [CV-DISPLAY] Successfully initialized ${successCount} React components`);
+        } catch (error) {
+          console.error('❌ [CV-DISPLAY] Failed to initialize React components:', error);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [generatedHTML]);
   
   if (!generatedHTML && !hasHtmlUrl && !hasFiles) {
     return (
@@ -146,6 +170,7 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
       {/* Generated CV Content */}
       <div className="bg-white rounded-b-lg shadow-xl overflow-hidden">
         <div 
+          ref={contentRef}
           className="generated-cv-content p-8"
           style={{ 
             minHeight: '800px',

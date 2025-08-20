@@ -11,7 +11,7 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { performance } from 'perf_hooks';
 import { PortalGenerationService } from '../services/portal-generation.service';
-import { VectorDatabaseService } from '../services/vector-database.service';
+import { VectorDatabase } from '../services/vector-database.service';
 import { PortalAssetManagementService } from '../services/portal-asset-management.service';
 import { EmbeddingService } from '../services/embedding.service';
 import { ParsedCV } from '../types/job';
@@ -39,22 +39,19 @@ function generateLargeCV(): ParsedCV {
     experience: Array(20).fill(null).map((_, i) => ({
       company: `Company ${i + 1}`,
       position: `Position ${i + 1}`,
+      duration: '5 years',
       startDate: '2020-01-01',
       endDate: '2024-12-31',
       description: 'Lorem ipsum '.repeat(50) + 'detailed job description with many responsibilities.',
       achievements: Array(10).fill(null).map((_, j) => `Achievement ${j + 1} with detailed explanation.`),
       technologies: Array(15).fill(null).map((_, k) => `Technology${k + 1}`)
     })),
-    skills: Array(50).fill(null).map((_, i) => ({
-      name: `Skill ${i + 1}`,
-      level: 'Expert',
-      category: `Category ${Math.floor(i / 10) + 1}`
-    })),
+    skills: Array(50).fill(null).map((_, i) => `Skill ${i + 1}`),
     education: Array(5).fill(null).map((_, i) => ({
       institution: `University ${i + 1}`,
       degree: `Degree ${i + 1}`,
       field: `Field ${i + 1}`,
-      year: `${2010 + i}`
+      graduationDate: `${2010 + i}`
     })),
     projects: Array(15).fill(null).map((_, i) => ({
       name: `Project ${i + 1}`,

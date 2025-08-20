@@ -3,7 +3,7 @@
  * Handles CV content rendering with incremental feature enhancement
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, Eye, Download, Sparkles } from 'lucide-react';
 import { EnhancedFeatureProgress } from '../../hooks/useEnhancedProgressTracking';
 import toast from 'react-hot-toast';
@@ -29,6 +29,7 @@ export const CVContentDisplay: React.FC<CVContentDisplayProps> = ({
   const [addedFeatures, setAddedFeatures] = useState<Set<string>>(new Set());
   const [isUpdating, setIsUpdating] = useState(false);
   const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Integration points for features in CV HTML
   const integrationPoints: { [key: string]: string } = {
@@ -43,6 +44,32 @@ export const CVContentDisplay: React.FC<CVContentDisplayProps> = ({
     'testimonials-carousel': '#testimonials-section, .testimonials-section, [data-section="testimonials"]',
     'embed-qr-code': '#qr-section, .qr-section, [data-section="qr"], .cv-footer'
   };
+
+  // Initialize React components after HTML is rendered or updated
+  useEffect(() => {
+    if (currentHTML && contentRef.current && viewMode === 'preview') {
+      console.log('🔄 [CV-CONTENT] HTML updated, initializing React components...');
+      
+      // Small delay to ensure DOM is fully updated
+      const timer = setTimeout(() => {
+        // Call the global function to initialize React components
+        if (typeof window !== 'undefined' && (window as any).initializeReactComponents) {
+          console.log('🚀 [CV-CONTENT] Calling initializeReactComponents...');
+          (window as any).initializeReactComponents();
+        } else {
+          console.warn('⚠️ [CV-CONTENT] initializeReactComponents not available on window');
+          
+          // Fallback: check for placeholders
+          const placeholders = contentRef.current?.querySelectorAll('.react-component-placeholder');
+          if (placeholders && placeholders.length > 0) {
+            console.log(`🔄 [CV-CONTENT] Found ${placeholders.length} placeholders, may need React renderer`);
+          }
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentHTML, viewMode]);
 
   // Monitor for completed features with HTML fragments
   useEffect(() => {
@@ -285,6 +312,7 @@ export const CVContentDisplay: React.FC<CVContentDisplayProps> = ({
         {/* CV Content */}
         {viewMode === 'preview' ? (
           <div 
+            ref={contentRef}
             className="cv-content p-6 overflow-auto max-h-[600px] prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: currentHTML }}
           />

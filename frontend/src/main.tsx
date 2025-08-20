@@ -9,8 +9,14 @@ if (import.meta.env.DEV) {
   import('./utils/testRecommendationBlocking');
 }
 
-// Import component renderer to make it globally available
-import('./utils/componentRenderer');
+// Import enhanced component renderer to make it globally available
+import('./utils/componentRendererFix');
+
+// Import contact form debugger in development
+if (import.meta.env.DEV) {
+  import('./utils/contactFormDebugger');
+  import('./utils/testContactFormRendering');
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

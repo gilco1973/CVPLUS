@@ -4,6 +4,20 @@
  */
 
 import * as functions from 'firebase-functions';
+import { config as loadDotenv } from 'dotenv';
+import * as path from 'path';
+
+// Load environment variables from .env file
+// This must happen before any validation or configuration loading
+if (process.env.NODE_ENV !== 'production') {
+  const envPath = path.resolve(__dirname, '../../.env');
+  loadDotenv({ path: envPath });
+  
+  // Log successful env loading for debugging
+  if (process.env.PROJECT_ID) {
+    functions.logger.info('Environment variables loaded successfully from .env file');
+  }
+}
 
 // Security event types for monitoring
 export enum SecurityEventType {

@@ -43,6 +43,7 @@ export interface InteractiveFeatureResult {
   videoIntroduction?: string;
   portfolioGallery?: string;
   testimonialsCarousel?: string;
+  personalityInsights?: string;
   additionalStyles?: string;
   additionalScripts?: string;
 }
@@ -94,4 +95,5 @@ export type FeatureType =
   | 'achievements-showcase'
   | 'video-introduction'
   | 'portfolio-gallery'
-  | 'testimonials-carousel';
+  | 'testimonials-carousel'
+  | 'personality-insights';

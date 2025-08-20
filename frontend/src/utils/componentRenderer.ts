@@ -5,7 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ContactForm } from '../components/features/ContactForm';
-import { SocialMediaLinks } from '../components/features/Interactive/SocialMediaLinks';
+import { SocialMediaLinks } from '../components/features/SocialMediaLinks';
 import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode';
 import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
 import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';

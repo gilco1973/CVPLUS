@@ -9,22 +9,13 @@ import * as admin from 'firebase-admin';
 export class ContactFormFeature implements CVFeature {
   
   async generate(cv: ParsedCV, jobId: string, options?: any): Promise<string> {
-    const formId = `contact-form-${jobId}`;
     const contactName = cv.personalInfo?.name || 'the CV owner';
     
     // Check for portal integration
     const portalUrls = await this.getPortalUrls(jobId);
     
-    // Check if React component mode is enabled (via options or environment)
-    const useReactComponent = options?.useReactComponent || process.env.ENABLE_REACT_COMPONENTS === 'true';
-    
-    if (useReactComponent) {
-      // Generate React component placeholder with portal integration
-      return this.generateReactComponentPlaceholder(jobId, contactName, options, portalUrls);
-    }
-    
-    // Legacy HTML generation for backward compatibility with portal integration
-    return this.generateLegacyHTML(formId, jobId, contactName, portalUrls);
+    // Always use React component instead of legacy HTML
+    return this.generateReactComponentPlaceholder(jobId, contactName, options, portalUrls);
   }
   
   /**
@@ -58,30 +49,40 @@ export class ContactFormFeature implements CVFeature {
     const componentProps = {
       profileId: jobId,
       jobId: jobId,
-      contactName: contactName,
+      data: {
+        contactName: contactName
+      },
       isEnabled: true,
       customization: {
         title: options?.title || 'Get in Touch',
         buttonText: options?.buttonText || 'Send Message',
         theme: options?.theme || 'auto',
         showCompanyField: options?.showCompanyField !== false,
-        showPhoneField: options?.showPhoneField !== false
+        showPhoneField: options?.showPhoneField !== false,
+        maxRetries: 3
       },
       className: 'cv-contact-form',
+      mode: 'public',
       portalUrls: portalUrls,
       enablePortalIntegration: portalUrls !== null
     };
     
+    // Add portal integration section if portal exists
+    const portalSection = portalUrls ? this.generatePortalIntegrationSection(portalUrls) : '';
+    
     return `
-      <div class="react-component-placeholder" 
-           data-component="ContactForm" 
-           data-props='${JSON.stringify(componentProps)}'
-           id="contact-form-${jobId}">
-        <!-- React ContactForm component will be rendered here -->
-        <div class="component-loading">
-          <div class="loading-spinner"></div>
-          <p>Loading contact form...</p>
+      <div class="cv-feature-container contact-form-feature">
+        <div class="react-component-placeholder" 
+             data-component="ContactForm" 
+             data-props='${JSON.stringify(componentProps).replace(/'/g, "&apos;")}'
+             id="contact-form-${jobId}">
+          <!-- React ContactForm component will be rendered here -->
+          <div class="component-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading contact form...</p>
+          </div>
         </div>
+        ${portalSection}
       </div>
     `;
   }
@@ -264,6 +265,11 @@ export class ContactFormFeature implements CVFeature {
 
   getStyles(): string {
     return `
+      /* CV Feature Container Styles */
+      .cv-feature-container.contact-form-feature {
+        margin: 2rem 0;
+      }
+      
       /* React Component Placeholder Styles */
       .react-component-placeholder {
         min-height: 400px;
@@ -271,9 +277,58 @@ export class ContactFormFeature implements CVFeature {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-radius: 16px;
         padding: 2rem;
-        margin: 2rem 0;
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* React Fallback Styles */
+      .react-fallback, .react-error {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+      
+      .fallback-header h3, .react-error h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+      }
+      
+      .fallback-header p {
+        color: #64748b;
+        margin: 0 0 1.5rem 0;
+      }
+      
+      .fallback-message {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        text-align: left;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      
+      .fallback-message p {
+        margin: 0.75rem 0;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .fallback-note small {
+        color: #9ca3af;
+        font-style: italic;
+      }
+      
+      .react-error p {
+        color: #dc2626;
+        margin: 0.5rem 0;
       }
       
       .component-loading {
@@ -662,247 +717,76 @@ export class ContactFormFeature implements CVFeature {
   getScripts(): string {
     return `
       (function() {
-        // Check if React component system is available
+        // Initialize React ContactForm components
         function initReactComponents() {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="ContactForm"]');
           
-          if (placeholders.length > 0 && typeof window.renderReactComponent === 'function') {
-            console.log('🔄 Rendering React ContactForm components...');
-            
-            placeholders.forEach(placeholder => {
-              try {
-                const props = JSON.parse(placeholder.dataset.props || '{}');
+          if (placeholders.length === 0) {
+            console.log('No ContactForm placeholders found');
+            return false;
+          }
+          
+          console.log('🔄 Initializing React ContactForm components...', placeholders.length, 'found');
+          
+          placeholders.forEach((placeholder, index) => {
+            try {
+              const propsString = placeholder.dataset.props || '{}';
+              const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
+              
+              console.log('ContactForm props for component', index + 1, ':', props);
+              
+              // Check if React component renderer is available
+              if (typeof window.renderReactComponent === 'function') {
+                console.log('✅ React renderer available, rendering ContactForm');
                 window.renderReactComponent('ContactForm', props, placeholder);
-              } catch (error) {
-                console.error('Failed to render React ContactForm:', error);
-                // Fall back to legacy form if React fails
-                initLegacyContactForms();
+              } else {
+                console.log('⚠️ React renderer not available, showing fallback message');
+                showReactFallback(placeholder, props);
               }
-            });
-            
-            return true; // React components initialized
-          }
-          
-          return false; // Fall back to legacy
-        }
-        
-        // Legacy contact form initialization
-        function initLegacyContactForms() {
-          waitForFirebase(initContactForm);
-        }
-        
-        // Wait for Firebase to be available before initializing contact forms
-        function waitForFirebase(callback, maxAttempts = 50) {
-          let attempts = 0;
-          
-          function checkFirebase() {
-            attempts++;
-            
-            if (typeof firebase !== 'undefined' && firebase.app) {
-              console.log('✅ Firebase is available, initializing contact forms...');
-              callback();
-            } else if (attempts < maxAttempts) {
-              console.log('⏳ Waiting for Firebase... (attempt ' + attempts + '/' + maxAttempts + ')');
-              setTimeout(checkFirebase, 100); // Check every 100ms
-            } else {
-              console.error('❌ Firebase failed to load after ' + maxAttempts + ' attempts');
-              console.log('⚠️ Proceeding without Firebase - contact form will show error message');
-              callback();
-            }
-          }
-          
-          checkFirebase();
-        }
-        
-        // Initialize contact form functionality
-        function initContactForm() {
-          console.log('Initializing contact forms...');
-          const forms = document.querySelectorAll('.contact-form');
-          console.log('Found', forms.length, 'contact forms');
-          
-          forms.forEach((form, index) => {
-            console.log('Initializing form ' + (index + 1) + ':', form);
-            const submitBtn = form.querySelector('.submit-btn');
-            const btnText = form.querySelector('.btn-text');
-            const btnLoading = form.querySelector('.btn-loading');
-            const statusEl = form.querySelector('.form-status');
-            const successEl = form.querySelector('.status-success');
-            const errorEl = form.querySelector('.status-error');
-            const errorMsg = form.querySelector('.error-message');
-            const textarea = form.querySelector('textarea[name="message"]');
-            const charCount = form.querySelector('.character-count .current');
-            
-            // Character counter
-            if (textarea && charCount) {
-              textarea.addEventListener('input', () => {
-                charCount.textContent = textarea.value.length;
-              });
-            }
-            
-            // Form validation
-            function validateForm(formData) {
-              const errors = [];
-              
-              if (!formData.get('senderName')?.trim()) {
-                errors.push('Name is required');
-              }
-              
-              const email = formData.get('senderEmail')?.trim();
-              if (!email) {
-                errors.push('Email is required');
-              } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                errors.push('Please enter a valid email address');
-              }
-              
-              if (!formData.get('subject')) {
-                errors.push('Please select a subject');
-              }
-              
-              const message = formData.get('message')?.trim();
-              if (!message) {
-                errors.push('Message is required');
-              } else if (message.length < 10) {
-                errors.push('Message must be at least 10 characters long');
-              }
-              
-              return errors;
-            }
-            
-            // Handle button click instead of form submit
-            submitBtn.addEventListener('click', async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              
-              console.log('Contact form submit button clicked - JavaScript handler called');
-              
-              const formData = new FormData(form);
-              const jobId = form.dataset.jobId;
-              
-              console.log('Form data:', {
-                jobId,
-                senderName: formData.get('senderName'),
-                senderEmail: formData.get('senderEmail')
-              });
-              
-              // Validate form
-              const errors = validateForm(formData);
-              if (errors.length > 0) {
-                showError(errors.join('. '));
-                return;
-              }
-              
-              // Show loading state
-              submitBtn.disabled = true;
-              btnText.style.display = 'none';
-              btnLoading.style.display = 'flex';
-              statusEl.style.display = 'none';
-              
-              try {
-                // Initialize Firebase if not already done
-                if (typeof firebase === 'undefined') {
-                  throw new Error('Firebase SDK not loaded');
-                }
-                
-                // Get or initialize Firebase Functions
-                let functions;
-                try {
-                  const app = firebase.app();
-                  functions = firebase.functions(app);
-                } catch (e) {
-                  // Firebase not initialized, try to initialize
-                  const firebaseConfig = {
-                    apiKey: "AIzaSyACBVGSO7rRsBqSZnB_oNnqhtyAKKhRJmE",
-                    authDomain: "getmycv-ai.firebaseapp.com",
-                    projectId: "getmycv-ai",
-                    storageBucket: "getmycv-ai.appspot.com",
-                    messagingSenderId: "819342411059",
-                    appId: "1:819342411059:web:40d1d8b28b0458a9c8a96a"
-                  };
-                  const app = firebase.initializeApp(firebaseConfig);
-                  functions = firebase.functions(app);
-                }
-                
-                // Use emulator in development
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                  functions.useEmulator('localhost', 5001);
-                }
-                
-                // Create callable function and call it
-                const submitContactForm = functions.httpsCallable('submitContactForm');
-                const result = await submitContactForm({
-                  profileId: jobId,
-                  senderName: formData.get('senderName'),
-                  senderEmail: formData.get('senderEmail'),
-                  senderPhone: formData.get('senderPhone') || undefined,
-                  company: formData.get('senderCompany') || undefined,
-                  subject: formData.get('subject'),
-                  message: formData.get('message')
-                });
-                
-                if (result.data && result.data.success) {
-                  showSuccess();
-                  form.reset();
-                  if (charCount) charCount.textContent = '0';
-                } else {
-                  showError('Failed to send message. Please try again.');
-                }
-              } catch (error) {
-                console.error('Contact form error:', error);
-                
-                // Handle Firebase Functions errors
-                if (error.code) {
-                  switch (error.code) {
-                    case 'functions/invalid-argument':
-                      showError(error.message || 'Please check your input and try again.');
-                      break;
-                    case 'functions/permission-denied':
-                      showError('Permission denied. Please try again.');
-                      break;
-                    case 'functions/unavailable':
-                      showError('Service temporarily unavailable. Please try again later.');
-                      break;
-                    case 'functions/unauthenticated':
-                      showError('Authentication required. Please refresh the page and try again.');
-                      break;
-                    default:
-                      showError('Failed to send message. Please try again.');
-                  }
-                } else if (error.message && error.message.includes('Firebase SDK not loaded')) {
-                  showError('Contact form requires Firebase. Please refresh the page and try again.');
-                } else {
-                  showError('Network error. Please check your connection and try again.');
-                }
-              } finally {
-                // Reset button state
-                submitBtn.disabled = false;
-                btnText.style.display = 'inline';
-                btnLoading.style.display = 'none';
-              }
-            });
-            
-            function showSuccess() {
-              statusEl.style.display = 'block';
-              successEl.style.display = 'flex';
-              errorEl.style.display = 'none';
-            }
-            
-            function showError(message) {
-              statusEl.style.display = 'block';
-              successEl.style.display = 'none';
-              errorEl.style.display = 'flex';
-              errorMsg.textContent = message;
+            } catch (error) {
+              console.error('Failed to parse ContactForm props:', error);
+              showReactError(placeholder, error.message);
             }
           });
+          
+          return true;
         }
         
-        // Initialize components - try React first, then fallback to legacy
+        // Show fallback when React renderer is not available
+        function showReactFallback(placeholder, props) {
+          placeholder.innerHTML = \`
+            <div class="react-fallback">
+              <div class="fallback-header">
+                <h3>\${props.customization?.title || 'Get in Touch'}</h3>
+                <p>Contact \${props.data?.contactName || 'the CV owner'}</p>
+              </div>
+              <div class="fallback-message">
+                <p>📧 <strong>Email:</strong> Please contact directly via email</p>
+                <p>💼 <strong>LinkedIn:</strong> Connect on LinkedIn for professional inquiries</p>
+                <p>📱 <strong>Phone:</strong> Call for immediate opportunities</p>
+              </div>
+              <div class="fallback-note">
+                <small>Contact form requires JavaScript and React to be enabled</small>
+              </div>
+            </div>
+          \`;
+        }
+        
+        // Show error when React props parsing fails
+        function showReactError(placeholder, errorMessage) {
+          placeholder.innerHTML = \`
+            <div class="react-error">
+              <h3>Contact Form Error</h3>
+              <p>Unable to load contact form: \${errorMessage}</p>
+              <p>Please contact directly via the information provided in the CV.</p>
+            </div>
+          \`;
+        }
+        
+        // Initialize when DOM is ready
         function startInitialization() {
-          // Try React component system first
-          if (!initReactComponents()) {
-            // Fall back to legacy contact forms
-            console.log('📄 Falling back to legacy contact form implementation...');
-            waitForFirebase(initContactForm);
-          }
+          console.log('🚀 Starting ContactForm initialization...');
+          initReactComponents();
         }
         
         if (document.readyState === 'loading') {
@@ -913,9 +797,11 @@ export class ContactFormFeature implements CVFeature {
         
         // Export for external access
         window.ContactFormFeature = {
-          initReactComponents,
-          initLegacyContactForms
+          initReactComponents
         };
+        
+        // Global function to re-initialize components (useful for dynamic content)
+        window.initContactForms = initReactComponents;
         
       })();
     `;

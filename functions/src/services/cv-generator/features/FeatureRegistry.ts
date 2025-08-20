@@ -4,6 +4,11 @@ import { QRCodeFeature } from './QRCodeFeature';
 import { PodcastFeature } from './PodcastFeature';
 import { ContactFormFeature } from './ContactFormFeature';
 import { SocialLinksFeature } from './SocialLinksFeature';
+import { PersonalBrandingFeature } from './PersonalBrandingFeature';
+import { CertificationBadgesFeature } from './CertificationBadgesFeature';
+import { VideoIntroFeature } from './VideoIntroFeature';
+import { PortfolioGalleryFeature } from './PortfolioGalleryFeature';
+import { TestimonialsCarouselFeature } from './TestimonialsCarouselFeature';
 
 /**
  * Feature registry for managing CV interactive features
@@ -88,6 +93,16 @@ export class FeatureRegistry {
         return new ContactFormFeature();
       case 'social-media-links':
         return new SocialLinksFeature();
+      case 'personality-insights':
+        return new PersonalBrandingFeature();
+      case 'certification-badges':
+        return new CertificationBadgesFeature();
+      case 'video-introduction':
+        return new VideoIntroFeature();
+      case 'portfolio-gallery':
+        return new PortfolioGalleryFeature();
+      case 'testimonials-carousel':
+        return new TestimonialsCarouselFeature();
       case 'privacy-mode':
         // Privacy mode is handled at the data level, not as injected content
         return null;
@@ -97,11 +112,7 @@ export class FeatureRegistry {
       case 'skills-visualization':
       case 'calendar-integration':
       case 'language-proficiency':
-      case 'certification-badges':
       case 'achievements-showcase':
-      case 'video-introduction':
-      case 'portfolio-gallery':
-      case 'testimonials-carousel':
         console.warn(`Feature ${type} not yet implemented`);
         return null;
         
@@ -159,6 +170,9 @@ export class FeatureRegistry {
       case 'testimonials-carousel':
         result.testimonialsCarousel = content;
         break;
+      case 'personality-insights':
+        result.personalityInsights = content;
+        break;
       default:
         console.warn(`No mapping defined for feature type: ${featureType}`);
     }
@@ -182,7 +196,8 @@ export class FeatureRegistry {
       'achievements-showcase',
       'video-introduction',
       'portfolio-gallery',
-      'testimonials-carousel'
+      'testimonials-carousel',
+      'personality-insights'
     ];
   }
 

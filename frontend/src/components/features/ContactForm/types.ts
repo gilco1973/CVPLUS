@@ -52,10 +52,10 @@ export type SubmissionStatus = 'idle' | 'success' | 'error';
 export interface ContactFormFieldsProps {
   formData: ContactFormData;
   errors: ContactFormErrors;
-  onInputChange: (field: keyof ContactFormData, value: string) => void;
-  showCompanyField: boolean;
-  showPhoneField: boolean;
-  contactName: string;
+  onChange: (field: keyof ContactFormData, value: string) => void;
+  onClearError: (field: string) => void;
+  showCompanyField?: boolean;
+  showPhoneField?: boolean;
 }
 
 export interface ContactFormHeaderProps {

@@ -10,7 +10,7 @@ import { ContactFormHeader } from './ContactForm/ContactFormHeader';
 import { ContactFormStatus } from './ContactForm/ContactFormStatus';
 import { useContactFormValidation } from './ContactForm/useContactFormValidation';
 
-import { ContactFormProps, ContactSubmission } from './ContactForm/types';
+import { ContactFormProps, ContactFormData } from './ContactForm/types';
 
 export const ContactForm: React.FC<ContactFormProps> = ({
   jobId,
@@ -32,7 +32,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
     maxRetries = 3
   } = customization;
 
-  const [formData, setFormData] = useState<ContactSubmission>({
+  const [formData, setFormData] = useState<ContactFormData>({
     senderName: '',
     senderEmail: '',
     senderPhone: '',
@@ -52,7 +52,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
   // Use validation hook
   const { errors, validateForm, clearError } = useContactFormValidation();
 
-  const handleInputChange = useCallback((field: keyof ContactSubmission, value: string) => {
+  const handleInputChange = useCallback((field: keyof ContactFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -158,10 +158,10 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             <ContactFormFields
               formData={formData}
               errors={errors}
-              onInputChange={handleInputChange}
+              onChange={handleInputChange}
+              onClearError={clearError}
               showCompanyField={showCompanyField}
               showPhoneField={showPhoneField}
-              contactName={contactName}
             />
 
             {/* Submit Button */}
