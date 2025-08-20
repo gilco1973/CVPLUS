@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Calendar, Briefcase, GraduationCap, ChevronLeft, ChevronRight, Maximize2, X, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,17 +18,71 @@ interface TimelineEvent {
 }
 
 interface InteractiveTimelineProps {
-  events: TimelineEvent[];
-  onEventClick?: (event: TimelineEvent) => void;
+  events?: TimelineEvent[];
+  profileId?: string;
+  jobId?: string;
+  data?: {
+    contactName?: string;
+    totalEvents?: number;
+    yearsOfExperience?: number;
+  };
+  isEnabled?: boolean;
+  customization?: {
+    title?: string;
+    theme?: string;
+    viewMode?: 'timeline' | 'calendar' | 'chart';
+    showFilters?: boolean;
+    showMetrics?: boolean;
+    animationType?: string;
+  };
+  className?: string;
+  mode?: string;
+  onEventClick?: ((event: TimelineEvent) => void) | string;
 }
 
-export const InteractiveTimeline = ({ events, onEventClick }: InteractiveTimelineProps) => {
+export const InteractiveTimeline = ({ 
+  events = [], 
+  profileId,
+  jobId,
+  data,
+  isEnabled = true,
+  customization,
+  className,
+  mode = 'public',
+  onEventClick 
+}: InteractiveTimelineProps) => {
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar' | 'chart'>('timeline');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [filterType, setFilterType] = useState<'all' | 'work' | 'education' | 'achievement'>('all');
   const timelineRef = useRef<HTMLDivElement>(null);
   const [hoveredEvent, setHoveredEvent] = useState<string | null>(null);
+
+  // Initialize view mode from customization
+  useEffect(() => {
+    if (customization?.viewMode && customization.viewMode !== viewMode) {
+      setViewMode(customization.viewMode);
+    }
+  }, [customization?.viewMode, viewMode]);
+
+  // Create default handler for CV mode when functions are passed as strings
+  const createDefaultHandler = (handlerName: string | ((event: TimelineEvent) => void) | undefined) => {
+    if (typeof handlerName === 'string') {
+      return (event: TimelineEvent) => {
+        console.log(`📊 Timeline event handler "${handlerName}" called with event:`, event.title);
+        // In CV mode, we can just set the selected event for display
+        setSelectedEvent(event);
+      };
+    }
+    return handlerName;
+  };
+
+  const actualEventHandler = createDefaultHandler(onEventClick);
+
+  // Component disabled state
+  if (!isEnabled) {
+    return null;
+  }
 
   // Sort events by start date
   const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -266,7 +320,7 @@ export const InteractiveTimeline = ({ events, onEventClick }: InteractiveTimelin
                     onMouseLeave={() => setHoveredEvent(null)}
                     onClick={() => {
                       setSelectedEvent(event);
-                      onEventClick?.(event);
+                      actualEventHandler?.(event);
                     }}
                   >
                     <div
@@ -314,7 +368,7 @@ export const InteractiveTimeline = ({ events, onEventClick }: InteractiveTimelin
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={() => {
                   setSelectedEvent(event);
-                  onEventClick?.(event);
+                  actualEventHandler?.(event);
                 }}
               >
                 <div className="flex items-start gap-3">
@@ -384,7 +438,7 @@ export const InteractiveTimeline = ({ events, onEventClick }: InteractiveTimelin
                         }}
                         onClick={() => {
                           setSelectedEvent(event);
-                          onEventClick?.(event);
+                          actualEventHandler?.(event);
                         }}
                       >
                         <div className="flex items-center h-full px-2">

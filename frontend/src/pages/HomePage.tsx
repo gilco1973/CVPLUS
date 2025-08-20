@@ -88,9 +88,11 @@ export const HomePage = () => {
   };
 
   const handleSignInSuccess = () => {
+    console.log('HomePage: handleSignInSuccess called, closing dialog...');
     setShowSignInDialog(false);
     // Retry the pending action after successful sign-in
     if (pendingAction) {
+      console.log('HomePage: Retrying pending action:', pendingAction.type);
       if (pendingAction.type === 'file') {
         const { file, quickCreate } = pendingAction.data as { file: File, quickCreate: boolean };
         handleFileUpload(file, quickCreate);
@@ -99,6 +101,8 @@ export const HomePage = () => {
         handleURLSubmit(url);
       }
       setPendingAction(null);
+    } else {
+      console.log('HomePage: No pending action to retry');
     }
   };
 

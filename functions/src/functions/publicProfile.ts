@@ -111,10 +111,24 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
           contentType: 'image/png'
         }
       });
-      const [qrCodeUrl] = await qrFile.getSignedUrl({
-        action: 'read',
-        expires: '03-09-2491' // Far future date
-      });
+      
+      // Generate URL based on environment (emulator vs production)
+      const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                         process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+      let qrCodeUrl: string;
+      
+      if (isEmulator) {
+        // In emulator, use direct Storage emulator URL
+        const bucketName = process.env.STORAGE_BUCKET || 'getmycv-ai.firebasestorage.app';
+        qrCodeUrl = `http://localhost:9199/v0/b/${bucketName}/o/${encodeURIComponent(qrFile.name)}?alt=media`;
+      } else {
+        // In production, use signed URL
+        const [signedUrl] = await qrFile.getSignedUrl({
+          action: 'read',
+          expires: '03-09-2491' // Far future date
+        });
+        qrCodeUrl = signedUrl;
+      }
 
       // Create public profile
       const publicProfile: PublicCVProfile = {
@@ -198,7 +212,7 @@ export const getPublicProfile = onCall<GetPublicProfileRequest>(
 
       // Update analytics
       await profilesSnapshot.docs[0].ref.update({
-        'analytics.views': admin.firestore.FieldValue.increment(1),
+        'analytics.views': FieldValue.increment(1),
         'analytics.lastViewedAt': FieldValue.serverTimestamp()
       });
 
@@ -373,10 +387,115 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
           .get();
 
         if (profileQuery.empty) {
-          throw new HttpsError('not-found', `Public profile not found for ID: ${lookupId}`);
+          // If no public profile exists, check if the job exists and auto-create the profile
+          const jobDoc = await admin.firestore()
+            .collection('jobs')
+            .doc(lookupId)
+            .get();
+          
+          if (jobDoc.exists) {
+            console.log(`Auto-creating public profile for job: ${lookupId}`);
+            
+            const job = jobDoc.data() as EnhancedJob;
+            
+            // Check if parsed CV exists
+            if (!job.parsedData) {
+              throw new HttpsError('failed-precondition', 'CV must be processed before creating public profile');
+            }
+
+            // Generate public profile with default privacy settings
+            const defaultPrivacySettings: PrivacySettings = {
+              enabled: true,
+              level: 'moderate',
+              maskingRules: {
+                name: false,
+                email: true,
+                phone: true,
+                address: true,
+                companies: false,
+                dates: false
+              }
+            };
+            const maskedCV = maskPII(job.parsedData, defaultPrivacySettings);
+            const publicSlug = `cv-${lookupId.substring(0, 8)}-${Date.now()}`;
+            
+            // Generate QR code for the public profile
+            const publicUrl = `${process.env.PUBLIC_URL || 'https://cvplus.ai'}/public/${publicSlug}`;
+            const qrCodeBuffer = await integrationsService.generateQRCode(publicUrl);
+            
+            // Upload QR code to storage
+            const bucket = admin.storage().bucket();
+            const qrFile = bucket.file(`public-profiles/${lookupId}/qr-code.png`);
+            await qrFile.save(qrCodeBuffer, {
+              metadata: {
+                contentType: 'image/png'
+              }
+            });
+            
+            // Generate URL based on environment (emulator vs production)
+            const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                               process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+            let qrCodeUrl: string;
+            
+            if (isEmulator) {
+              // In emulator, use direct Storage emulator URL
+              const bucketName = process.env.STORAGE_BUCKET || 'getmycv-ai.firebasestorage.app';
+              qrCodeUrl = `http://localhost:9199/v0/b/${bucketName}/o/${encodeURIComponent(qrFile.name)}?alt=media`;
+            } else {
+              // In production, use signed URL
+              const [signedUrl] = await qrFile.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491' // Far future date
+              });
+              qrCodeUrl = signedUrl;
+            }
+
+            // Create public profile
+            const publicProfile: PublicCVProfile = {
+              jobId: lookupId,
+              userId: job.userId,
+              slug: publicSlug,
+              parsedCV: maskedCV,
+              features: job.enhancedFeatures || {},
+              template: job.selectedTemplate || 'modern',
+              isPublic: true,
+              allowContactForm: true,
+              qrCodeUrl,
+              publicUrl,
+              createdAt: FieldValue.serverTimestamp() as any,
+              updatedAt: FieldValue.serverTimestamp() as any,
+              analytics: {
+                views: 0,
+                qrScans: 0,
+                contactSubmissions: 0,
+                lastViewedAt: null
+              }
+            };
+
+            // Save to Firestore
+            const newProfileDoc = await admin.firestore()
+              .collection('publicProfiles')
+              .doc(lookupId)
+              .create(publicProfile);
+
+            // Update job with public profile info
+            await jobDoc.ref.update({
+              publicProfile: {
+                slug: publicSlug,
+                url: publicUrl,
+                qrCodeUrl,
+                createdAt: FieldValue.serverTimestamp()
+              }
+            });
+
+            console.log(`Auto-created public profile with slug: ${publicSlug}`);
+            profileDoc = await admin.firestore().collection('publicProfiles').doc(lookupId).get();
+          } else {
+            throw new HttpsError('not-found', `Job not found for ID: ${lookupId}`);
+          }
+        } else {
+          profileDoc = profileQuery.docs[0];
         }
-        
-        profileDoc = profileQuery.docs[0];
       }
 
       const profile = profileDoc.data() as PublicCVProfile;
@@ -433,7 +552,7 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
       // Update analytics
       await profileDoc.ref.update({
-        'analytics.contactSubmissions': admin.firestore.FieldValue.increment(1)
+        'analytics.contactSubmissions': FieldValue.increment(1)
       });
 
       // Send email notification if configured
@@ -510,7 +629,7 @@ export const trackQRScan = onCall<TrackQRScanRequest>(
         .doc(jobId);
 
       await profileRef.update({
-        'analytics.qrScans': admin.firestore.FieldValue.increment(1)
+        'analytics.qrScans': FieldValue.increment(1)
       });
 
       // Log scan event

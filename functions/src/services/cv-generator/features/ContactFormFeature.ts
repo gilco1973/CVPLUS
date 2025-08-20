@@ -172,19 +172,7 @@ export class ContactFormFeature implements CVFeature {
             </div>
           </div>
           
-          <div class="form-actions">
-            <button type="button" class="submit-btn">
-              <span class="btn-text">Send Message</span>
-              <span class="btn-loading" style="display: none;">
-                <svg class="spinner" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="32">
-                    <animate attributeName="stroke-dashoffset" dur="1s" repeatCount="indefinite" values="32;0;32"/>
-                  </circle>
-                </svg>
-                Sending...
-              </span>
-            </button>
-          </div>
+          <!-- Submit button removed - React component handles submission -->
           
           <div class="form-status" style="display: none;">
             <div class="status-success" style="display: none;">
@@ -439,46 +427,7 @@ export class ContactFormFeature implements CVFeature {
         margin-top: 0.25rem;
       }
       
-      .form-actions {
-        text-align: center;
-        margin-top: 2rem;
-      }
-      
-      .submit-btn {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.875rem 2rem;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        position: relative;
-        min-width: 160px;
-      }
-      
-      .submit-btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px -4px rgba(6, 182, 212, 0.4);
-      }
-      
-      .submit-btn:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-        transform: none;
-      }
-      
-      .btn-loading {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      
-      .spinner {
-        width: 16px;
-        height: 16px;
-      }
+      /* Form actions removed - React component handles styling */
       
       .form-status {
         margin-top: 1rem;
@@ -527,10 +476,6 @@ export class ContactFormFeature implements CVFeature {
         
         .contact-form-header h3 {
           font-size: 1.5rem;
-        }
-        
-        .submit-btn {
-          width: 100%;
         }
       }
       

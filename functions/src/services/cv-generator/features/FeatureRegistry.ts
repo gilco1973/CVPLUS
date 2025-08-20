@@ -9,6 +9,9 @@ import { CertificationBadgesFeature } from './CertificationBadgesFeature';
 import { VideoIntroFeature } from './VideoIntroFeature';
 import { PortfolioGalleryFeature } from './PortfolioGalleryFeature';
 import { TestimonialsCarouselFeature } from './TestimonialsCarouselFeature';
+import { CalendarFeature } from './CalendarFeature';
+import { InteractiveTimelineFeature } from './InteractiveTimelineFeature';
+import { AchievementsShowcaseFeature } from './AchievementsShowcaseFeature';
 
 /**
  * Feature registry for managing CV interactive features
@@ -107,12 +110,16 @@ export class FeatureRegistry {
         // Privacy mode is handled at the data level, not as injected content
         return null;
       
-      // Placeholder for other features - to be implemented
-      case 'interactive-timeline':
-      case 'skills-visualization':
       case 'calendar-integration':
-      case 'language-proficiency':
+        return new CalendarFeature();
+      case 'interactive-timeline':
+        return new InteractiveTimelineFeature();
       case 'achievements-showcase':
+        return new AchievementsShowcaseFeature();
+      
+      // Placeholder for other features - to be implemented
+      case 'skills-visualization':
+      case 'language-proficiency':
         console.warn(`Feature ${type} not yet implemented`);
         return null;
         

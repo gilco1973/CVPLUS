@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Download, FileText, Globe } from 'lucide-react';
 import type { Job } from '../services/cvService';
-import { initializeReactComponents } from '../utils/componentRendererFix';
+import { initializeReactComponents } from '../utils/componentRenderer';
 
 interface GeneratedCVDisplayProps {
   job: Job;
@@ -46,8 +46,8 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
         console.log('🚀 [CV-DISPLAY] Initializing React components with enhanced renderer...');
         
         try {
-          const successCount = await initializeReactComponents(contentRef.current);
-          console.log(`✅ [CV-DISPLAY] Successfully initialized ${successCount} React components`);
+          initializeReactComponents();
+          console.log(`✅ [CV-DISPLAY] Successfully initialized React components`);
         } catch (error) {
           console.error('❌ [CV-DISPLAY] Failed to initialize React components:', error);
         }

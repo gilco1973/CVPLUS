@@ -19,7 +19,24 @@ interface CalendarEvent {
 
 interface CalendarIntegrationProps {
   events?: CalendarEvent[];
-  onGenerateEvents: () => Promise<{
+  profileId?: string;
+  jobId?: string;
+  data?: {
+    contactName?: string;
+    totalEvents?: number;
+  };
+  isEnabled?: boolean;
+  customization?: {
+    title?: string;
+    theme?: string;
+    showWorkAnniversaries?: boolean;
+    showCertificationReminders?: boolean;
+    showEducationMilestones?: boolean;
+    providers?: string[];
+  };
+  className?: string;
+  mode?: string;
+  onGenerateEvents?: (() => Promise<{
     events: CalendarEvent[];
     summary: {
       totalEvents: number;
@@ -28,14 +45,21 @@ interface CalendarIntegrationProps {
       certifications: number;
       reminders: number;
     };
-  }>;
-  onSyncGoogle: () => Promise<{ syncUrl: string; instructions: string[] }>;
-  onSyncOutlook: () => Promise<{ syncUrl: string; instructions: string[] }>;
-  onDownloadICal: () => Promise<{ downloadUrl: string; instructions: string[] }>;
+  }>) | string;
+  onSyncGoogle?: (() => Promise<{ syncUrl: string; instructions: string[] }>) | string;
+  onSyncOutlook?: (() => Promise<{ syncUrl: string; instructions: string[] }>) | string;
+  onDownloadICal?: (() => Promise<{ downloadUrl: string; instructions: string[] }>) | string;
 }
 
 export const CalendarIntegration = ({
   events = [],
+  profileId,
+  jobId,
+  data,
+  isEnabled = true,
+  customization,
+  className,
+  mode = 'public',
   onGenerateEvents,
   onSyncGoogle,
   onSyncOutlook,
@@ -53,6 +77,38 @@ export const CalendarIntegration = ({
   const [selectedProvider, setSelectedProvider] = useState<'google' | 'outlook' | 'ical' | null>(null);
   const [syncInstructions, setSyncInstructions] = useState<string[]>([]);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+
+  // Create default handlers for CV mode when functions are passed as strings
+  const createDefaultHandler = (handlerName: string | (() => Promise<any>) | undefined) => {
+    if (typeof handlerName === 'string') {
+      return async () => {
+        console.log(`📅 Calendar handler "${handlerName}" not yet implemented in CV mode`);
+        return {
+          events: events,
+          summary: {
+            totalEvents: events.length,
+            workAnniversaries: events.filter(e => e.type === 'work').length,
+            educationMilestones: events.filter(e => e.type === 'education').length,
+            certifications: events.filter(e => e.type === 'certification').length,
+            reminders: events.filter(e => e.type === 'reminder').length
+          },
+          syncUrl: '#',
+          downloadUrl: '#',
+          instructions: [
+            'Calendar integration is being prepared for your CV',
+            'This feature will be fully functional in the live version',
+            'Contact the CV owner for more details about their calendar availability'
+          ]
+        };
+      };
+    }
+    return handlerName;
+  };
+
+  const actualGenerateHandler = createDefaultHandler(onGenerateEvents);
+  const actualGoogleHandler = createDefaultHandler(onSyncGoogle);
+  const actualOutlookHandler = createDefaultHandler(onSyncOutlook);
+  const actualICalHandler = createDefaultHandler(onDownloadICal);
 
   const providers = [
     {
@@ -95,9 +151,11 @@ export const CalendarIntegration = ({
   };
 
   const handleGenerateEvents = async () => {
+    if (!actualGenerateHandler) return;
+    
     setLoading({ ...loading, generate: true });
     try {
-      const result = await onGenerateEvents();
+      const result = await actualGenerateHandler();
       setSummary(result.summary);
       toast.success(`Generated ${result.summary.totalEvents} calendar events!`);
     } catch {
@@ -115,27 +173,30 @@ export const CalendarIntegration = ({
       let result;
       switch (provider) {
         case 'google':
-          result = await onSyncGoogle();
+          if (!actualGoogleHandler) throw new Error('Google sync not available');
+          result = await actualGoogleHandler();
           break;
         case 'outlook':
-          result = await onSyncOutlook();
+          if (!actualOutlookHandler) throw new Error('Outlook sync not available');
+          result = await actualOutlookHandler();
           break;
         case 'ical':
-          result = await onDownloadICal();
+          if (!actualICalHandler) throw new Error('iCal download not available');
+          result = await actualICalHandler();
           break;
       }
       
       setSyncInstructions(result.instructions);
       
-      if ('syncUrl' in result && result.syncUrl) {
+      if ('syncUrl' in result && result.syncUrl && result.syncUrl !== '#') {
         window.open(result.syncUrl, '_blank');
-      } else if ('downloadUrl' in result && result.downloadUrl) {
+      } else if ('downloadUrl' in result && result.downloadUrl && result.downloadUrl !== '#') {
         window.open(result.downloadUrl, '_blank');
       }
       
       toast.success(`${provider === 'ical' ? 'Calendar file ready for download' : `Syncing with ${provider}`}`);
-    } catch {
-      toast.error(`Failed to sync with ${provider}`);
+    } catch (error) {
+      toast.error(`Failed to sync with ${provider}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading({ ...loading, [provider]: false });
     }
@@ -160,10 +221,10 @@ export const CalendarIntegration = ({
       <div className="bg-gray-800 rounded-xl p-8 text-center">
         <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-100 mb-2">
-          Sync Your Career Milestones
+          {customization?.title || 'Sync Your Career Milestones'}
         </h3>
         <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          Transform your CV into calendar events. Never miss an anniversary, certification renewal, or career milestone.
+          Transform {data?.contactName ? `${data.contactName}'s` : 'your'} CV into calendar events. Never miss an anniversary, certification renewal, or career milestone.
         </p>
         <div className="space-y-4 max-w-sm mx-auto">
           <div className="text-left space-y-2">

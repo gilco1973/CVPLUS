@@ -190,14 +190,6 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             </div>
           </form>
 
-          <ContactFormStatus
-            status={submissionStatus}
-            errorMessage={errorMessage}
-            retryCount={retryCount}
-            maxRetries={maxRetries}
-            contactName={contactName}
-            onRetry={handleRetry}
-          />
         </div>
       </FeatureWrapper>
     </ErrorBoundary>

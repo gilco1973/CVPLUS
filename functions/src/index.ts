@@ -3,8 +3,32 @@ import './utils/polyfills';
 
 import * as admin from 'firebase-admin';
 
-// Initialize Firebase Admin
-admin.initializeApp();
+// Initialize Firebase Admin with emulator support
+if (!admin.apps.length) {
+  // Check if running in emulator environment
+  const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                     process.env.FIREBASE_AUTH_EMULATOR_HOST ||
+                     process.env.FIRESTORE_EMULATOR_HOST;
+
+  if (isEmulator) {
+    // Set emulator environment variables for Storage
+    if (!process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+      process.env.FIREBASE_STORAGE_EMULATOR_HOST = '127.0.0.1:9199';
+    }
+    
+    console.log('Firebase Admin: Initializing for emulator environment');
+    console.log('Storage Emulator Host:', process.env.FIREBASE_STORAGE_EMULATOR_HOST);
+    
+    // Initialize for emulator environment with correct bucket format for emulator
+    admin.initializeApp({
+      projectId: process.env.PROJECT_ID || 'getmycv-ai',
+      storageBucket: 'getmycv-ai.firebasestorage.app'  // Use firebasestorage.app suffix for emulator
+    });
+  } else {
+    // Initialize for production
+    admin.initializeApp();
+  }
+}
 
 // Export all functions
 export { processCV } from './functions/processCV';

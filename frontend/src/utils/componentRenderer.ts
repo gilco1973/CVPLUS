@@ -8,6 +8,9 @@ import { ContactForm } from '../components/features/ContactForm';
 import { SocialMediaLinks } from '../components/features/SocialMediaLinks';
 import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode';
 import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
+import { CalendarIntegration } from '../components/features/CalendarIntegration';
+import { InteractiveTimeline } from '../components/features/InteractiveTimeline';
+import { AchievementCards } from '../components/features/Visual/AchievementCards';
 import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';
 
 // Component registry for available components - properly typed
@@ -15,7 +18,10 @@ const COMPONENT_REGISTRY: ComponentRegistry = {
   ContactForm: ContactForm,
   SocialMediaLinks: SocialMediaLinks,
   DynamicQRCode: DynamicQRCode,
-  SkillsVisualization: SkillsVisualization
+  SkillsVisualization: SkillsVisualization,
+  CalendarIntegration: CalendarIntegration,
+  InteractiveTimeline: InteractiveTimeline,
+  AchievementCards: AchievementCards
 } as const;
 
 type ComponentName = keyof typeof COMPONENT_REGISTRY;
@@ -69,6 +75,13 @@ export function initializeReactComponents(): void {
   
   console.log(`🔄 Found ${placeholders.length} React component placeholders`);
   
+  if (placeholders.length === 0) {
+    console.log('🔍 No React component placeholders found, looking for other patterns...');
+    // Check for contact form patterns specifically
+    const contactFormElements = document.querySelectorAll('[data-contact-form], .contact-form-container');
+    console.log(`📞 Found ${contactFormElements.length} contact form elements`);
+  }
+  
   placeholders.forEach((placeholder, index) => {
     const componentName = placeholder.getAttribute('data-component') as ComponentName;
     const propsJson = placeholder.getAttribute('data-props');
@@ -86,6 +99,50 @@ export function initializeReactComponents(): void {
         console.error(`Failed to parse props for ${componentName}:`, error);
         return;
       }
+    }
+    
+    // Add debug logging for ContactForm specifically
+    if (componentName === 'ContactForm') {
+      console.log('📞 Initializing ContactForm component with props:', props);
+      
+      // Ensure the component doesn't start in an infinite loading state
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for CalendarIntegration specifically
+    if (componentName === 'CalendarIntegration') {
+      console.log('🗓️ Initializing CalendarIntegration component with props:', props);
+      
+      // Ensure the calendar component has proper event handlers
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for InteractiveTimeline specifically
+    if (componentName === 'InteractiveTimeline') {
+      console.log('📊 Initializing InteractiveTimeline component with props:', props);
+      
+      // Ensure the timeline component has proper configuration
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for AchievementCards specifically
+    if (componentName === 'AchievementCards') {
+      console.log('🏆 Initializing AchievementCards component with props:', props);
+      
+      // Ensure the achievements component has proper configuration
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
     }
     
     renderReactComponent(componentName, props, placeholder);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,16 +11,28 @@ interface SignInDialogProps {
 }
 
 export const SignInDialog: React.FC<SignInDialogProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { signInWithGoogle, error, clearError } = useAuth();
+  const { signInWithGoogle, error, clearError, user } = useAuth();
+
+  // Auto-close dialog when user becomes authenticated
+  useEffect(() => {
+    if (isOpen && user) {
+      console.log('SignInDialog: User authenticated, auto-closing dialog and calling onSuccess');
+      onSuccess();
+    }
+  }, [isOpen, user, onSuccess]);
 
   if (!isOpen) return null;
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('SignInDialog: Starting Google sign in...');
       await signInWithGoogle();
+      console.log('SignInDialog: Sign in successful, calling onSuccess...');
       toast.success('Signed in successfully!');
       onSuccess();
+      console.log('SignInDialog: onSuccess called successfully');
     } catch (error: unknown) {
+      console.error('SignInDialog: Sign in error:', error);
       // Error is already handled by AuthContext, just show the user-friendly message
       const errorMessage = getErrorMessage(error) || 'Failed to sign in. Please try again.';
       toast.error(errorMessage);
