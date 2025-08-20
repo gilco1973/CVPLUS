@@ -264,25 +264,25 @@ export class PortalGenerationService {
             assets: [] // TODO: Add asset processing
           });
           
-          if (huggingFaceResult.success) {
+          if (huggingFaceResult.status === 'deployed') {
             deploymentResult = {
               success: true,
-              spaceUrl: huggingFaceResult.portalUrl,
-              apiUrl: `${huggingFaceResult.portalUrl}/api`,
+              spaceUrl: huggingFaceResult.url,
+              apiUrl: `${huggingFaceResult.url}/api`,
               metadata: {
-                spaceId: huggingFaceResult.spaceId,
+                spaceId: huggingFaceResult.deploymentId,
                 deploymentId: huggingFaceResult.deploymentId
               }
             };
             
             // Update URLs with actual deployment URLs
-            urls.portal = huggingFaceResult.portalUrl;
-            urls.chat = `${huggingFaceResult.portalUrl}/chat`;
-            urls.api.chat = `${huggingFaceResult.portalUrl}/api/chat`;
+            urls.portal = huggingFaceResult.url;
+            urls.chat = `${huggingFaceResult.url}/chat`;
+            urls.api.chat = `${huggingFaceResult.url}/api/chat`;
             
             logger.info('[PORTAL-SERVICE] HuggingFace deployment successful', {
-              spaceId: huggingFaceResult.spaceId,
-              portalUrl: huggingFaceResult.portalUrl
+              spaceId: huggingFaceResult.deploymentId,
+              portalUrl: huggingFaceResult.url
             });
           } else {
             throw new Error(`HuggingFace deployment failed: ${huggingFaceResult.error}`);
@@ -403,7 +403,7 @@ export class PortalGenerationService {
           userMessage = 'Failed to generate AI embeddings for your content. Please try again later.';
         } else if (error.message.includes('template')) {
           errorCode = PortalErrorCode.TEMPLATE_GENERATION_FAILED;
-          errorCategory = ErrorCategory.PROCESSING;
+          errorCategory = ErrorCategory.GENERATION;
           userMessage = 'Failed to generate your portal template. Please try again.';
         } else if (error.message.includes('quota') || error.message.includes('rate limit')) {
           errorCode = PortalErrorCode.HUGGINGFACE_API_ERROR;
@@ -635,18 +635,18 @@ export class PortalGenerationService {
         assets: []
       });
 
-      if (deploymentResult.success) {
+      if (deploymentResult.status === 'deployed') {
         logger.info('[PORTAL-SERVICE] HuggingFace deployment completed successfully', {
-          spaceId: deploymentResult.spaceId,
-          portalUrl: deploymentResult.portalUrl
+          deploymentId: deploymentResult.deploymentId,
+          portalUrl: deploymentResult.url
         });
 
         return {
           success: true,
-          spaceUrl: deploymentResult.portalUrl,
-          apiUrl: `${deploymentResult.portalUrl}/api`,
+          spaceUrl: deploymentResult.url,
+          apiUrl: `${deploymentResult.url}/api`,
           metadata: {
-            spaceId: deploymentResult.spaceId,
+            spaceId: deploymentResult.deploymentId,
             deploymentId: deploymentResult.deploymentId
           }
         };

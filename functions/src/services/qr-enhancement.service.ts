@@ -55,7 +55,7 @@ interface QRCodeUpdateResult {
 
 export class QRCodeEnhancementService {
   private db: admin.firestore.Firestore;
-  private logger: functions.logger.LoggerInterface;
+  private logger: any;
 
   constructor() {
     this.db = admin.firestore();

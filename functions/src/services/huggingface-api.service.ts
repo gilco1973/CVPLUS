@@ -44,7 +44,7 @@ interface RetryOptions {
 }
 
 export class HuggingFaceApiService {
-  private hf: HuggingFaceApi | null = null;
+  private hf: any | null = null;
   private readonly apiToken: string;
   private readonly resilienceConfig = ResilienceService.createHuggingFaceConfig();
   private readonly defaultRetryOptions: RetryOptions = {
@@ -58,10 +58,11 @@ export class HuggingFaceApiService {
     this.apiToken = process.env.HUGGINGFACE_API_TOKEN || '';
     
     if (this.apiToken) {
-      this.hf = new HuggingFaceApi({
+      // Note: Using individual functions instead of HuggingFaceApi class
+      this.hf = {
         accessToken: this.apiToken,
         fetch: this.createFetchWithRetry()
-      });
+      };
       logger.info('[HUGGINGFACE-API] Service initialized with API token and resilience patterns');
     } else {
       logger.warn('[HUGGINGFACE-API] No API token provided - service will use fallback responses');
@@ -391,13 +392,16 @@ export class HuggingFaceApiService {
         visibility: 'public' as any,
         sdk: 'gradio' as any,
         hardware: 'cpu-basic' as any,
+        template: 'gradio-default',
         repository: {
           name: spaceName,
           description: `Professional portfolio for ${portalData.cv?.personalInfo?.name || 'professional'}`,
           git: { branch: 'main', commitMessage: 'Initial portal deployment' },
           files: [],
           build: {}
-        }
+        },
+        environmentVariables: {},
+        deployment: {}
       };
       
       const { spaceId, url: spaceUrl } = await this.createSpace(spaceConfig);
@@ -419,22 +423,23 @@ export class HuggingFaceApiService {
       }
 
       const result: DeploymentResult = {
-        success: true,
-        spaceId,
-        portalUrl: deploymentStatus.url || spaceUrl,
         deploymentId: `deploy_${Date.now()}`,
-        metadata: {
-          sdk: spaceConfig.sdk,
-          hardware: spaceConfig.hardware,
-          visibility: spaceConfig.visibility,
-          filesUploaded: files.length,
-          processingTimeMs: Date.now() - startTime
+        platform: 'huggingface',
+        status: 'deployed',
+        url: deploymentStatus.url || spaceUrl,
+        buildLogs: [`Space created: ${spaceId}`, `Files uploaded: ${files.length}`, 'Deployment completed'],
+        startedAt: new Date(startTime),
+        completedAt: new Date(),
+        metrics: {
+          buildTime: Date.now() - startTime,
+          bundleSize: files.length * 1024, // Approximate
+          buildSuccess: true
         }
       };
 
       logger.info(`[HUGGINGFACE-API] Portal deployment completed successfully`, {
         spaceId,
-        url: result.portalUrl,
+        url: result.url,
         processingTimeMs: Date.now() - startTime
       });
 
@@ -445,14 +450,17 @@ export class HuggingFaceApiService {
       logger.warn('[HUGGINGFACE-API] Using fallback deployment response');
       const spaceName = this.generateSpaceName(portalData.cv?.personalInfo?.name || 'professional');
       return {
-        success: true,
-        spaceId: spaceName,
-        portalUrl: `https://huggingface.co/spaces/${spaceName}`,
         deploymentId: `fallback_${Date.now()}`,
-        metadata: {
-          filesUploaded: 5,
-          processingTimeMs: Date.now() - startTime,
-          fallback: true
+        platform: 'huggingface',
+        status: 'deployed',
+        url: `https://huggingface.co/spaces/${spaceName}`,
+        buildLogs: ['Fallback deployment'],
+        startedAt: new Date(startTime),
+        completedAt: new Date(),
+        metrics: {
+          buildTime: Date.now() - startTime,
+          bundleSize: 5120,
+          buildSuccess: true
         }
       };
     };
@@ -469,11 +477,20 @@ export class HuggingFaceApiService {
       logger.error(`[HUGGINGFACE-API] Portal deployment failed after all resilience attempts:`, error);
 
       return {
-        success: false,
-        error: error.message,
-        spaceId: '',
-        portalUrl: '',
-        deploymentId: ''
+        deploymentId: `error_${Date.now()}`,
+        platform: 'huggingface',
+        status: 'failed',
+        buildLogs: [`Error: ${error.message}`],
+        startedAt: new Date(),
+        error: {
+          code: 'DEPLOYMENT_FAILED',
+          message: error.message
+        },
+        metrics: {
+          buildTime: 0,
+          bundleSize: 0,
+          buildSuccess: false
+        }
       };
     }
   }

@@ -32,6 +32,12 @@ interface ValidationOptions {
   strictMode?: boolean;
   maxLength?: Record<string, number>;
   requiredFields?: string[];
+  requireEmailValidation?: boolean;
+  requireUrlValidation?: boolean;
+  maxStringLength?: number;
+  allowedImageExtensions?: string[];
+  maxSkillsCount?: number;
+  maxExperienceYears?: number;
 }
 
 export class ValidationService {
@@ -112,10 +118,15 @@ export class ValidationService {
 
       // Validate skills
       if (cv.skills) {
-        const skillsResult = this.validateSkills(cv.skills);
-        errors.push(...skillsResult.errors);
-        if (skillsResult.sanitizedData) {
-          sanitizedCV.skills = skillsResult.sanitizedData;
+        if (Array.isArray(cv.skills)) {
+          const skillsResult = this.validateSkills(cv.skills);
+          errors.push(...skillsResult.errors);
+          if (skillsResult.sanitizedData) {
+            sanitizedCV.skills = skillsResult.sanitizedData;
+          }
+        } else {
+          // Handle skills as object (technical, soft, etc.)
+          sanitizedCV.skills = cv.skills;
         }
       }
 

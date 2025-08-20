@@ -1393,13 +1393,8 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
       ...template,
       theme: industryTheme,
       config: {
-        ...template.config,
-        industryOptimization: {
-          industry: analysis.industry,
-          level: analysis.level,
-          focusAreas: analysis.focusAreas,
-          personalityTraits: analysis.personalityTraits
-        }
+        ...template.config
+        // Industry optimization applied via theme
       }
     };
   }
@@ -2187,7 +2182,7 @@ select:focus {
           },
           assets: {
             images: { format: 'webp', quality: 95, lazy: true },
-            fonts: { strategy: 'preload', preload: true, display: 'swap' },
+            fonts: { strategy: 'link', preload: true, display: 'swap' },
             css: { minify: true, inline: true, critical: true },
             javascript: { minify: true, bundle: true, defer: true }
           },

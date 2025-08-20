@@ -18,6 +18,7 @@ import {
   PortalGenerationStep,
   PortalError,
   PortalErrorCode,
+  PrivacyLevel,
   ErrorCategory,
   CVPlusIntegration,
   JobIntegration,
@@ -68,7 +69,7 @@ interface IntegrationStatus {
  */
 export class CVPortalIntegrationService {
   private db: admin.firestore.Firestore;
-  private logger: functions.logger.LoggerInterface;
+  private logger: any;
 
   constructor() {
     this.db = admin.firestore();
@@ -118,7 +119,20 @@ export class CVPortalIntegrationService {
             timestamp: new Date(),
             statistics: {
               totalTimeMs: Date.now() - startTime,
-              stepTimes: {},
+              stepTimes: {
+                validate_input: 0,
+                extract_cv_data: 0,
+                generate_template: 0,
+                customize_design: 0,
+                build_rag_system: 0,
+                create_embeddings: 0,
+                setup_vector_db: 0,
+                deploy_to_huggingface: 0,
+                configure_urls: 0,
+                update_cv_document: 0,
+                generate_qr_codes: 0,
+                finalize_portal: 0
+              },
               embeddingsGenerated: 0,
               vectorDbSizeMB: 0,
               templateSizeKB: 0,
@@ -193,7 +207,20 @@ export class CVPortalIntegrationService {
           timestamp: new Date(),
           statistics: {
             totalTimeMs: Date.now() - startTime,
-            stepTimes: {},
+            stepTimes: {
+              validate_input: 0,
+              extract_cv_data: 0,
+              generate_template: 0,
+              customize_design: 0,
+              build_rag_system: 0,
+              create_embeddings: 0,
+              setup_vector_db: 0,
+              deploy_to_huggingface: 0,
+              configure_urls: 0,
+              update_cv_document: 0,
+              generate_qr_codes: 0,
+              finalize_portal: 0
+            },
             embeddingsGenerated: 0,
             vectorDbSizeMB: 0,
             templateSizeKB: 0,
@@ -302,7 +329,7 @@ export class CVPortalIntegrationService {
         errors.push('CV must contain personal information with name');
       }
 
-      if (!trigger.cvData.sections || Object.keys(trigger.cvData.sections).length === 0) {
+      if (!trigger.cvData.experience && !trigger.cvData.education && !trigger.cvData.skills) {
         errors.push('CV must contain at least one section');
       }
     }
@@ -557,11 +584,11 @@ export class CVPortalIntegrationService {
  */
 class PortalGenerationOrchestrator {
   private db: admin.firestore.Firestore;
-  private logger: functions.logger.LoggerInterface;
+  private logger: any;
 
   constructor(
     db: admin.firestore.Firestore,
-    logger: functions.logger.LoggerInterface
+    logger: any
   ) {
     this.db = db;
     this.logger = logger;
@@ -672,7 +699,7 @@ class PortalGenerationOrchestrator {
           }
         },
         privacy: {
-          level: trigger.preferences?.privacyLevel || 'public',
+          level: (trigger.preferences?.privacyLevel as PrivacyLevel) || PrivacyLevel.PUBLIC,
           masking: {
             maskContactInfo: false,
             maskCompanies: [],
@@ -709,7 +736,20 @@ class PortalGenerationOrchestrator {
           timestamp: new Date(),
           statistics: {
             totalTimeMs: Date.now() - startTime,
-            stepTimes: {},
+            stepTimes: {
+              validate_input: 0,
+              extract_cv_data: 0,
+              generate_template: 0,
+              customize_design: 0,
+              build_rag_system: 0,
+              create_embeddings: 0,
+              setup_vector_db: 0,
+              deploy_to_huggingface: 0,
+              configure_urls: 0,
+              update_cv_document: 0,
+              generate_qr_codes: 0,
+              finalize_portal: 0
+            },
             embeddingsGenerated: ragSystem.embeddings?.dimensions || 0,
             vectorDbSizeMB: 0,
             templateSizeKB: 0,
@@ -759,7 +799,20 @@ class PortalGenerationOrchestrator {
           timestamp: new Date(),
           statistics: {
             totalTimeMs: Date.now() - startTime,
-            stepTimes: {},
+            stepTimes: {
+              validate_input: 0,
+              extract_cv_data: 0,
+              generate_template: 0,
+              customize_design: 0,
+              build_rag_system: 0,
+              create_embeddings: 0,
+              setup_vector_db: 0,
+              deploy_to_huggingface: 0,
+              configure_urls: 0,
+              update_cv_document: 0,
+              generate_qr_codes: 0,
+              finalize_portal: 0
+            },
             embeddingsGenerated: 0,
             vectorDbSizeMB: 0,
             templateSizeKB: 0,
@@ -816,7 +869,11 @@ class PortalGenerationOrchestrator {
     // For now, return a structured format
     return {
       personalInfo: cvData.personalInfo,
-      sections: cvData.sections,
+      experience: cvData.experience,
+      education: cvData.education,
+      skills: cvData.skills,
+      projects: cvData.projects,
+      certifications: cvData.certifications,
       metadata: {
         extractedAt: new Date(),
         completeness: this.calculateCompleteness(cvData)
@@ -1005,13 +1062,13 @@ class PortalGenerationOrchestrator {
     if (cvData.personalInfo?.name) score += 5;
     if (cvData.personalInfo?.email) score += 5;
     if (cvData.personalInfo?.phone) score += 5;
-    if (cvData.personalInfo?.location) score += 5;
+    if (cvData.personalInfo?.address) score += 5;
 
     // Check sections completeness
     const requiredSections = ['experience', 'education', 'skills'];
     requiredSections.forEach(section => {
       maxScore += 20;
-      if (cvData.sections[section] && cvData.sections[section].length > 0) {
+      if ((cvData as any)[section] && (cvData as any)[section].length > 0) {
         score += 20;
       }
     });
@@ -1020,7 +1077,7 @@ class PortalGenerationOrchestrator {
     const optionalSections = ['projects', 'certifications', 'languages'];
     optionalSections.forEach(section => {
       maxScore += 10;
-      if (cvData.sections[section] && cvData.sections[section].length > 0) {
+      if ((cvData as any)[section] && (cvData as any)[section].length > 0) {
         score += 10;
       }
     });

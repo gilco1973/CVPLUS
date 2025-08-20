@@ -12,7 +12,7 @@ import * as admin from 'firebase-admin';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { ParsedCV } from '../types/job';
-import { PortalConfig, FileType, AssetType, AssetProcessingResult, AssetOptimizationConfig } from '../types/portal';
+import { PortalConfig, FileType, AssetType, AssetSource, AssetProcessingResult, AssetOptimizationConfig } from '../types/portal';
 
 // Asset-related types specific to this service
 interface ProcessedAsset {
@@ -42,25 +42,7 @@ interface AssetMetadata {
   tags: string[];
 }
 
-enum AssetType {
-  PROFILE_IMAGE = 'profile_image',
-  COMPANY_LOGO = 'company_logo',
-  PROJECT_IMAGE = 'project_image',
-  PORTFOLIO_ITEM = 'portfolio_item',
-  DOCUMENT = 'document',
-  CERTIFICATE = 'certificate',
-  BACKGROUND_IMAGE = 'background_image',
-  ICON = 'icon',
-  MEDIA_FILE = 'media_file'
-}
-
-enum AssetSource {
-  CV_EXTRACTION = 'cv_extraction',
-  USER_UPLOAD = 'user_upload',
-  AI_GENERATED = 'ai_generated',
-  STOCK_LIBRARY = 'stock_library',
-  TEMPLATE_DEFAULT = 'template_default'
-}
+// AssetType and AssetSource enums are now imported from portal types
 
 interface AssetBundle {
   assets: ProcessedAsset[];
