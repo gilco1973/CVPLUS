@@ -1,37 +1,24 @@
 /**
- * Portal Components Index
+ * Portal Components Export
  * 
- * Main exports for CVPlus Portal system components
- * 
- * @author Gil Klainert
- * @version 1.0.0
+ * Central export file for all portal-related components
  */
 
-export { PortalLayout } from './PortalLayout';
-export { PortalDeploymentStatus } from './PortalDeploymentStatus';
-export { default as PortalDeploymentStatusExample } from './PortalDeploymentStatus.example';
-export { PortalSections } from './PortalSections';
-export { default as PortalSectionsExample } from './PortalSections.example';
-export { PortalQRIntegration } from './PortalQRIntegration';
-export { default as PortalQRIntegrationExample } from './PortalQRIntegration.example';
+export { PortalChatInterface } from './PortalChatInterface';
 
-// Type exports
+// Re-export types for convenience
 export type {
+  PortalChatInterfaceProps,
   PortalLayoutProps,
   PortalDeploymentStatusProps,
   PortalSectionsProps,
-  PortalQRIntegrationProps,
-  PortalChatInterfaceProps,
-  BasePortalComponentProps,
-  PortalComponentWrapperProps,
+  PortalQRIntegrationProps
 } from '../../../types/portal-component-props';
 
 export type {
   PortalConfig,
-  PortalTheme,
-  PortalFeatures,
-  PortalMetadata,
-  DeploymentStatus,
+  ChatConfig,
+  ChatMessage,
   PortalError,
-  PortalOperationResult,
+  RAGSourceDocument
 } from '../../../types/portal-types';

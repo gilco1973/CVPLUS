@@ -1,93 +1,149 @@
-/**
- * Contact Form Status Component
- * Success and error status messages for the contact form
- */
 import React from 'react';
-import { CheckCircle, XCircle, RefreshCw } from 'lucide-react';
-import { ContactFormStatusProps } from './types';
+import { CheckCircle, XCircle, Loader2, Send, RotateCcw } from 'lucide-react';
+
+interface ContactFormStatusProps {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  error?: string | null;
+  onRetry?: () => void;
+  onReset?: () => void;
+  retryCount?: number;
+  maxRetries?: number;
+  buttonText?: string;
+}
 
 export const ContactFormStatus: React.FC<ContactFormStatusProps> = ({
   status,
-  errorMessage,
-  retryCount,
-  maxRetries,
-  contactName,
-  onRetry
+  error,
+  onRetry,
+  onReset,
+  retryCount = 0,
+  maxRetries = 3,
+  buttonText = 'Send Message'
 }) => {
-  if (status === 'success') {
-    return (
-      <div 
-        className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="flex items-center gap-3 text-green-700 dark:text-green-400">
-          <CheckCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-          <div>
-            <p className="font-medium">
-              Message sent successfully!
-            </p>
-            <p className="text-sm mt-1">
-              {contactName} will get back to you soon.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getButtonContent = () => {
+    switch (status) {
+      case 'loading':
+        return (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Sending...
+          </>
+        );
+      case 'success':
+        return (
+          <>
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Message Sent!
+          </>
+        );
+      case 'error':
+        if (retryCount < maxRetries) {
+          return (
+            <>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Retry
+            </>
+          );
+        }
+        return (
+          <>
+            <XCircle className="w-4 h-4 mr-2" />
+            Failed
+          </>
+        );
+      default:
+        return (
+          <>
+            <Send className="w-4 h-4 mr-2" />
+            {buttonText}
+          </>
+        );
+    }
+  };
 
-  if (status === 'error') {
-    return (
-      <div 
-        className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl"
-        role="alert"
-        aria-live="assertive"
+  const getButtonClass = () => {
+    const baseClass = 'w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+    
+    switch (status) {
+      case 'loading':
+        return `${baseClass} bg-blue-600 text-white cursor-not-allowed opacity-75`;
+      case 'success':
+        return `${baseClass} bg-green-600 text-white cursor-default`;
+      case 'error':
+        if (retryCount < maxRetries) {
+          return `${baseClass} bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`;
+        }
+        return `${baseClass} bg-red-600 text-white cursor-not-allowed opacity-75`;
+      default:
+        return `${baseClass} bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500`;
+    }
+  };
+
+  const handleClick = () => {
+    if (status === 'error' && retryCount < maxRetries && onRetry) {
+      onRetry();
+    } else if (status === 'success' && onReset) {
+      onReset();
+    }
+  };
+
+  const isDisabled = status === 'loading' || (status === 'error' && retryCount >= maxRetries);
+  const isClickable = (status === 'error' && retryCount < maxRetries) || status === 'success';
+
+  return (
+    <div className="space-y-3">
+      <button
+        type={isClickable ? 'button' : 'submit'}
+        onClick={isClickable ? handleClick : undefined}
+        disabled={isDisabled}
+        className={getButtonClass()}
+        aria-label={status === 'error' && retryCount < maxRetries ? 'Retry sending message' : buttonText}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 text-red-700 dark:text-red-400 flex-1">
-            <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        {getButtonContent()}
+      </button>
+
+      {/* Error Message */}
+      {status === 'error' && error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start">
+            <XCircle className="w-5 h-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium">
-                Message delivery failed
-              </p>
-              <p className="text-sm mt-1">
-                {errorMessage}
-              </p>
-              {retryCount > 0 && (
-                <p className="text-xs mt-2 opacity-75">
-                  Attempt {retryCount} of {maxRetries}
+              <p className="text-sm text-red-800 font-medium">Message Failed to Send</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              {retryCount < maxRetries && (
+                <p className="text-xs text-red-600 mt-2">
+                  Attempt {retryCount + 1} of {maxRetries + 1}
                 </p>
               )}
             </div>
           </div>
-          
-          {retryCount < maxRetries && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-red-100 dark:bg-red-800 hover:bg-red-200 dark:hover:bg-red-700 text-red-700 dark:text-red-300 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
-              aria-label="Retry sending message"
-            >
-              <RefreshCw className="w-4 h-4" aria-hidden="true" />
-              Retry
-            </button>
-          )}
         </div>
-        
-        {retryCount >= maxRetries && (
-          <div className="mt-4 pt-3 border-t border-red-200 dark:border-red-700">
-            <p className="text-sm text-red-600 dark:text-red-400">
-              <strong>Multiple attempts failed.</strong> Please check your internet connection and try again later. 
-              If the issue persists, you can contact {contactName} directly or refresh the page.
-            </p>
-            <div className="mt-2 text-xs text-red-500 dark:text-red-400">
-              Error details: {errorMessage}
+      )}
+
+      {/* Success Message */}
+      {status === 'success' && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start">
+            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-green-800 font-medium">Message Sent Successfully!</p>
+              <p className="text-sm text-green-700 mt-1">
+                Thank you for your message. I'll get back to you soon.
+              </p>
             </div>
           </div>
-        )}
-      </div>
-    );
-  }
+        </div>
+      )}
 
-  return null;
+      {/* Loading Message */}
+      {status === 'loading' && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center">
+            <Loader2 className="w-5 h-5 text-blue-500 mr-2 animate-spin" />
+            <p className="text-sm text-blue-800">Sending your message...</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };

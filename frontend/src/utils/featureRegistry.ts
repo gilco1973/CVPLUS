@@ -21,8 +21,8 @@ import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode'
 import { SocialMediaLinks } from '../components/features/Interactive/SocialMediaLinks';
 // import { CareerTimeline } from '../components/features/Interactive/CareerTimeline';
 
-// Visual Components (to be implemented)
-// import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
+// Visual Components
+import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
 // import { AchievementCards } from '../components/features/Visual/AchievementCards';
 // import { LanguageProficiency } from '../components/features/Visual/LanguageProficiency';
 // import { CertificationBadges } from '../components/features/Visual/CertificationBadges';
@@ -71,10 +71,10 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
   // 'career-timeline': CareerTimeline,
   // 'interactive-timeline': CareerTimeline,
 
-  // Visual Components (placeholders for now)
-  // 'SkillsVisualization': SkillsVisualization,
-  // 'skills-visualization': SkillsVisualization,
-  // 'interactive-skills-charts': SkillsVisualization,
+  // Visual Components
+  'SkillsVisualization': SkillsVisualization,
+  'skills-visualization': SkillsVisualization,
+  'interactive-skills-charts': SkillsVisualization,
   // 'AchievementCards': AchievementCards,
   // 'achievement-cards': AchievementCards,
   // 'animated-achievement-cards': AchievementCards,

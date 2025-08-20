@@ -7,13 +7,15 @@ import { createRoot } from 'react-dom/client';
 import { ContactForm } from '../components/features/ContactForm';
 import { SocialMediaLinks } from '../components/features/Interactive/SocialMediaLinks';
 import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode';
+import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
 import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';
 
 // Component registry for available components - properly typed
 const COMPONENT_REGISTRY: ComponentRegistry = {
   ContactForm: ContactForm,
   SocialMediaLinks: SocialMediaLinks,
-  DynamicQRCode: DynamicQRCode
+  DynamicQRCode: DynamicQRCode,
+  SkillsVisualization: SkillsVisualization
 } as const;
 
 type ComponentName = keyof typeof COMPONENT_REGISTRY;
