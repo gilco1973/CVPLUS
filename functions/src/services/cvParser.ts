@@ -19,8 +19,8 @@ export interface ParsedCV {
   experience: Array<{
     company: string;
     position: string;
-    duration: string;
-    startDate: string;
+    duration?: string;
+    startDate?: string;
     endDate?: string;
     location: string;
     description?: string;
@@ -31,7 +31,9 @@ export interface ParsedCV {
     institution: string;
     degree: string;
     field: string;
-    graduationDate: string;
+    startDate?: string;
+    endDate?: string;
+    graduationDate?: string;
     gpa?: string;
     honors?: string[];
   }>;
@@ -190,6 +192,8 @@ Return a JSON object with the following structure:
       "company": "Company name",
       "position": "Job title",
       "duration": "Start date - End date",
+      "startDate": "YYYY-MM-DD format start date",
+      "endDate": "YYYY-MM-DD format end date (or null if current)",
       "location": "City, Country",
       "description": "Role description",
       "achievements": ["Achievement 1", "Achievement 2"]
@@ -200,6 +204,8 @@ Return a JSON object with the following structure:
       "institution": "University/School name",
       "degree": "Degree type",
       "field": "Field of study",
+      "startDate": "YYYY-MM-DD format start date",
+      "endDate": "YYYY-MM-DD format graduation/end date",
       "graduationDate": "Graduation date",
       "gpa": "GPA (optional)"
     }
