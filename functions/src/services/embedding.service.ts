@@ -607,7 +607,6 @@ export class EmbeddingService {
         vectorNamespace,
         jobId
       });
-
     } catch (error) {
       logger.error('[EMBEDDING-SERVICE] storeEmbeddings failed', { error, jobId });
       throw error;
