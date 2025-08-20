@@ -37,7 +37,9 @@ export const applyImprovements = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`Applying ${selectedRecommendationIds.length} improvements for job ${jobId}`);
+      console.log(`[applyImprovements] Starting - ${selectedRecommendationIds.length} improvements for job ${jobId}`);
+      console.log(`[applyImprovements] Request from user: ${userId}`);
+      console.log(`[applyImprovements] Selected IDs: ${selectedRecommendationIds.join(', ')}`);
 
       // Get the job document
       const jobDoc = await db.collection('jobs').doc(jobId).get();
@@ -105,12 +107,16 @@ export const applyImprovements = onCall(
         transformationSummary: transformationResult.transformationSummary,
         comparisonReport: transformationResult.comparisonReport,
         lastTransformation: new Date().toISOString(),
-        status: 'improved'
+        status: 'completed', // Use 'completed' instead of 'improved' for better compatibility
+        improvementsApplied: true, // Flag to indicate improvements were applied
+        updatedAt: new Date()
       };
 
       await db.collection('jobs').doc(jobId).update(updateData);
 
-      console.log(`Successfully applied ${transformationResult.appliedRecommendations.length} improvements`);
+      console.log(`[applyImprovements] Successfully applied ${transformationResult.appliedRecommendations.length} improvements`);
+      console.log(`[applyImprovements] Job status updated to: completed`);
+      console.log(`[applyImprovements] Function completing successfully`);
 
       return {
         success: true,
@@ -120,6 +126,7 @@ export const applyImprovements = onCall(
           appliedRecommendations: transformationResult.appliedRecommendations,
           transformationSummary: transformationResult.transformationSummary,
           comparisonReport: transformationResult.comparisonReport,
+          improvementsApplied: true,
           message: `Successfully applied ${transformationResult.appliedRecommendations.length} improvements`
         }
       };

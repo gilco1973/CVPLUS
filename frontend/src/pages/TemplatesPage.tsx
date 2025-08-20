@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { generateCV } from '../services/cvService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
 import { Loader2, Clock } from 'lucide-react';
+import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
 const templates = [
@@ -98,7 +99,7 @@ export const TemplatesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-neutral-900 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Choose Your CV Template</h1>
@@ -110,7 +111,7 @@ export const TemplatesPage = () => {
             <div
               key={template.id}
               onClick={() => setSelectedTemplate(template.id)}
-              className={`bg-white rounded-lg shadow-lg p-6 cursor-pointer transition-all ${
+              className={`${designSystem.components.card.base} ${designSystem.components.card.variants.interactive} ${designSystem.components.card.padding.md} cursor-pointer transition-all ${
                 selectedTemplate === template.id
                   ? 'ring-2 ring-blue-600 transform scale-105'
                   : 'hover:shadow-xl'
@@ -127,7 +128,7 @@ export const TemplatesPage = () => {
           <button
             onClick={handleGenerateCV}
             disabled={isGenerating || isInitializing}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className={`${designSystem.components.button.base} ${designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.lg} font-medium transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
           >
             {isInitializing ? (
               <>

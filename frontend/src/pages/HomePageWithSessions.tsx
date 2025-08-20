@@ -350,12 +350,12 @@ export const HomePage = () => {
             {/* Trust Indicators */}
             <div className="flex flex-wrap justify-center gap-8 mb-16 trust-indicators">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">10,000+</div>
-                <div className="text-sm text-gray-400">CVs Transformed</div>
+                <div className="text-3xl font-bold text-blue-400">AI-Powered</div>
+                <div className="text-sm text-gray-400">CV Enhancement</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">4.9/5</div>
-                <div className="text-sm text-gray-400">User Rating</div>
+                <div className="text-3xl font-bold text-blue-400">Professional</div>
+                <div className="text-sm text-gray-400">Results</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-400">30 sec</div>

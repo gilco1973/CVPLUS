@@ -1,11 +1,11 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
-import { CVGenerator } from '../services/cvGenerator';
+// CVGenerator import removed - using direct JSON data processing
 
 /**
- * Firebase Function to generate real-time CV preview HTML
- * Lightweight version of generateCV optimized for preview updates
+ * Firebase Function to generate real-time CV preview JSON data
+ * Lightweight version optimized for React SPA consumption
  */
 export const generateCVPreview = onCall(
   {
@@ -35,14 +35,14 @@ export const generateCVPreview = onCall(
       // Get job data and validate user ownership
       const { cvData } = await validateJobAndGetData(jobId, userId);
 
-      // Generate preview HTML (no file saving)
-      const previewHTML = await generatePreviewHTML(cvData, templateId, features, jobId);
+      // Generate preview JSON data for React SPA
+      const previewData = await generatePreviewData(cvData, templateId, features, jobId);
 
       console.log(`✅ Preview generated successfully for job ${jobId}`);
       
       return {
         success: true,
-        html: previewHTML,
+        data: previewData,
         template: templateId || 'modern',
         features: features || [],
         timestamp: new Date().toISOString()
@@ -93,75 +93,41 @@ async function validateJobAndGetData(jobId: string, userId: string) {
 }
 
 /**
- * Generate lightweight preview HTML (no file generation)
+ * Generate lightweight preview JSON data for React SPA
  */
-async function generatePreviewHTML(
+async function generatePreviewData(
   cvData: any,
   templateId: string | undefined,
   features: string[] | undefined,
   jobId: string
-): Promise<string> {
-  console.log('🎨 [PREVIEW] Generating HTML preview with template:', templateId || 'modern');
+): Promise<any> {
+  console.log('🎨 [PREVIEW] Generating JSON preview data with template:', templateId || 'modern');
   
   try {
-    // Use CV generator but only for HTML generation
-    const generator = new CVGenerator();
-    const htmlContent = await generator.generateHTML(
-      cvData, 
-      templateId || 'modern', 
-      features || [], 
-      jobId
-    );
+    // Return structured CV data for React components
+    const previewData = {
+      personalInfo: cvData.personalInfo || {},
+      experience: cvData.experience || [],
+      skills: cvData.skills || {},
+      education: cvData.education || [],
+      summary: cvData.summary || '',
+      enhancedFeatures: features || [],
+      template: templateId || 'modern',
+      metadata: {
+        jobId,
+        preview: true,
+        timestamp: new Date().toISOString()
+      }
+    };
     
-    console.log(`✅ [PREVIEW] HTML preview generated successfully (${htmlContent.length} characters)`);
+    console.log(`✅ [PREVIEW] JSON preview data generated successfully`);
     
-    // Add preview-specific styling to indicate this is a preview
-    const previewHTML = addPreviewStyling(htmlContent);
-    
-    return previewHTML;
+    return previewData;
     
   } catch (error: any) {
-    console.error('❌ [PREVIEW] Error generating HTML preview:', error);
+    console.error('❌ [PREVIEW] Error generating JSON preview data:', error);
     throw error;
   }
 }
 
-/**
- * Add preview-specific styling and indicators
- */
-function addPreviewStyling(htmlContent: string): string {
-  // Add a subtle preview indicator
-  const previewIndicator = `
-    <style>
-      .preview-indicator {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: rgba(59, 130, 246, 0.9);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 500;
-        z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-      
-      @media print {
-        .preview-indicator {
-          display: none !important;
-        }
-      }
-    </style>
-    <div class="preview-indicator">Preview</div>
-  `;
-
-  // Insert the preview indicator just before the closing body tag
-  const updatedHTML = htmlContent.replace(
-    '</body>',
-    `${previewIndicator}</body>`
-  );
-
-  return updatedHTML;
-}
+// Legacy HTML styling function removed - React SPA handles all UI rendering

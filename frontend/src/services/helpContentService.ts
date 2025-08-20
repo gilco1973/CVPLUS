@@ -312,7 +312,7 @@ export const HELP_TOURS: Record<string, HelpTour> = {
         id: 'step-3',
         target: '.trust-indicators',
         title: 'Join Thousands of Users',
-        content: 'Over 10,000 professionals have already transformed their CVs with CVPlus, with an average 4.9/5 rating.',
+        content: 'CVPlus helps professionals transform their CVs with AI-powered analysis and enhancement tools.',
         position: 'bottom',
         nextLabel: 'Continue'
       },

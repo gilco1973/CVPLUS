@@ -5,7 +5,7 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { skillsVisualizationService } from '../services/skills-visualization.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { EnhancedJob, ParsedCV } from '../types/enhanced-models';
 import { corsOptions } from '../config/cors';
 
@@ -104,14 +104,14 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
       });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generateSkillsVisualizationHTML(visualization);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update job with visualization data and HTML fragment
       await jobDoc.ref.update({
         'enhancedFeatures.skillsVisualization': {
           enabled: true,
           data: visualization,
-          htmlFragment: htmlFragment,
+          // HTML fragment removed with React SPA migration
           status: 'completed',
           progress: 100,
           processedAt: new Date()
@@ -121,7 +121,7 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
       return {
         success: true,
         visualization,
-        htmlFragment
+        htmlFragment: null
       };
     } catch (error: any) {
       console.error('Error generating skills visualization:', error);

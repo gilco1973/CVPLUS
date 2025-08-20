@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
 export const CVAnalysisPage = () => {
@@ -189,7 +190,7 @@ export const CVAnalysisPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-neutral-900">
         <Header 
           currentPage="analysis" 
           jobId={jobId}
@@ -202,9 +203,9 @@ export const CVAnalysisPage = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-100 mb-2">Loading Analysis Results</h2>
-              <p className="text-gray-400">Please wait while we prepare your CV analysis...</p>
+              <Loader2 className={`w-8 h-8 animate-spin text-${designSystem.colors.primary[400]} mx-auto mb-4`} />
+              <h2 className={`text-xl font-semibold ${designSystem.accessibility.contrast.text.primary} mb-2`}>Loading Analysis Results</h2>
+              <p className={designSystem.accessibility.contrast.text.secondary}>Please wait while we prepare your CV analysis...</p>
             </div>
           </div>
         </div>
@@ -214,7 +215,7 @@ export const CVAnalysisPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-neutral-900">
         <Header 
           currentPage="analysis" 
           jobId={jobId}
@@ -225,14 +226,14 @@ export const CVAnalysisPage = () => {
         />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+          <div className={`${designSystem.components.status.error} rounded-lg p-6`}>
             <div className="text-center">
-              <div className="text-red-400 text-xl mb-4">⚠️</div>
-              <h2 className="text-xl font-semibold text-red-100 mb-2">Error Loading Analysis</h2>
-              <p className="text-red-300 mb-6">{error}</p>
+              <div className={`text-${designSystem.colors.semantic.error[400]} text-xl mb-4`}>⚠️</div>
+              <h2 className={`text-xl font-semibold ${designSystem.accessibility.contrast.text.primary} mb-2`}>Error Loading Analysis</h2>
+              <p className={`${designSystem.accessibility.contrast.text.secondary} mb-6`}>{error}</p>
               <button
                 onClick={handleBack}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className={`${designSystem.components.button.base} ${designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.md} inline-flex items-center space-x-2`}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Go Back</span>
@@ -246,7 +247,7 @@ export const CVAnalysisPage = () => {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-neutral-900">
         <Header 
           currentPage="analysis" 
           jobId={jobId}
@@ -258,11 +259,11 @@ export const CVAnalysisPage = () => {
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-100 mb-2">Job Not Found</h2>
-            <p className="text-gray-400 mb-6">The requested CV analysis could not be found.</p>
+            <h2 className={`text-xl font-semibold ${designSystem.accessibility.contrast.text.primary} mb-2`}>Job Not Found</h2>
+            <p className={`${designSystem.accessibility.contrast.text.secondary} mb-6`}>The requested CV analysis could not be found.</p>
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className={`${designSystem.components.button.base} ${designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.md} inline-flex items-center space-x-2`}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Home</span>
@@ -274,7 +275,7 @@ export const CVAnalysisPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-neutral-900">
       <Header 
         currentPage="analysis" 
         jobId={jobId}

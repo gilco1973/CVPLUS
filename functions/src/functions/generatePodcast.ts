@@ -2,8 +2,9 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 import { podcastGenerationService } from '../services/podcast-generation.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 
 export const generatePodcast = onCall(
@@ -13,7 +14,7 @@ export const generatePodcast = onCall(
     secrets: ['ELEVENLABS_API_KEY', 'ELEVENLABS_HOST1_VOICE_ID', 'ELEVENLABS_HOST2_VOICE_ID', 'OPENAI_API_KEY'],
     ...corsOptions
   },
-  async (request) => {
+  withPremiumAccess('podcast', async (request) => {
     console.log('🎙️ generatePodcast function called with data:', request.data);
     
     if (!request.auth) {
@@ -99,11 +100,11 @@ export const generatePodcast = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generatePodcastHTML(podcastResult);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Sanitize podcast result data before Firestore write
       const sanitizedPodcastData = sanitizeForFirestore(podcastResult);
-      const sanitizedHtmlFragment = sanitizeForFirestore(htmlFragment);
+      const sanitizedHtmlFragment = null; // HTML fragment removed with React SPA migration
       
       // Create safe update object
       const updateData = sanitizeForFirestore({
@@ -143,7 +144,7 @@ export const generatePodcast = onCall(
         transcript: podcastResult.transcript,
         duration: podcastResult.duration,
         chapters: podcastResult.chapters,
-        htmlFragment
+        htmlFragment: sanitizedHtmlFragment
       };
     } catch (error: any) {
       console.error('Error generating podcast:', error);
@@ -175,4 +176,5 @@ export const generatePodcast = onCall(
       
       throw new Error(`Failed to generate podcast: ${error.message}`);
     }
-  });
+  })
+);

@@ -9,8 +9,8 @@ if (import.meta.env.DEV) {
   import('./utils/testRecommendationBlocking');
 }
 
-// Import enhanced component renderer to make it globally available
-import('./utils/componentRendererFix');
+// Legacy component renderer no longer needed with React SPA
+// import('./utils/componentRendererFix');
 
 // Import contact form debugger in development
 if (import.meta.env.DEV) {

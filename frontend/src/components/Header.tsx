@@ -4,6 +4,7 @@ import { UserMenu } from './UserMenu';
 import { Breadcrumb } from './Breadcrumb';
 import { generateBreadcrumbs } from '../utils/breadcrumbs';
 import { ChevronLeft } from 'lucide-react';
+import { designSystem } from '../config/designSystem';
 
 interface HeaderProps {
   currentPage?: string;
@@ -56,9 +57,9 @@ export const Header: React.FC<HeaderProps> = ({
   const getHeaderClasses = () => {
     switch (variant) {
       case 'dark':
-        return 'bg-gray-800/95 backdrop-blur-md border-b border-gray-700';
+        return designSystem.components.navigation.header.background + ' ' + designSystem.components.navigation.header.border;
       case 'gradient':
-        return 'bg-gradient-to-r from-blue-600 to-purple-600 border-b border-blue-500/20';
+        return 'bg-gradient-to-r from-primary-500 to-secondary-500 border-b border-primary-500/20';
       default:
         return 'bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm';
     }
@@ -123,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="flex items-center space-x-1 text-xs">
                     <span className={`px-2 py-1 rounded-full font-medium ${
                       variant === 'default' 
-                        ? 'bg-blue-100 text-blue-700' 
+                        ? 'bg-primary-100 text-primary-700' 
                         : 'bg-white/20 text-white'
                     }`}>
                       {getStepNumber(currentPage)}/4
@@ -161,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className={variant === 'default' ? 'text-gray-600' : 'text-gray-200'}>
                       Step {getStepNumber(currentPage)} of 4:
                     </span>
-                    <span className={`font-medium ${variant === 'default' ? 'text-blue-600' : 'text-blue-200'}`}>
+                    <span className={`font-medium ${variant === 'default' ? 'text-primary-600' : 'text-primary-200'}`}>
                       {getStepLabel(currentPage)}
                     </span>
                   </div>

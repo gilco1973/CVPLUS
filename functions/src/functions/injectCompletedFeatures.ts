@@ -122,12 +122,12 @@ export const injectCompletedFeatures = onCall(
  */
 async function getCompletedFeaturesWithFragments(jobData: any): Promise<Array<{
   featureName: string;
-  htmlFragment: string;
+  // HTML fragment removed with React SPA migration
   featureType: string;
 }>> {
   const completedFeatures: Array<{
     featureName: string;
-    htmlFragment: string;
+    // HTML fragment removed with React SPA migration
     featureType: string;
   }> = [];
 
@@ -139,15 +139,16 @@ async function getCompletedFeaturesWithFragments(jobData: any): Promise<Array<{
   for (const [featureName, featureData] of Object.entries(jobData.enhancedFeatures)) {
     const feature = featureData as any;
     
-    if (feature.status === 'completed' && feature.htmlFragment) {
-      console.log(`Found completed feature with HTML fragment: ${featureName}`);
+    // With React SPA migration, we no longer check for HTML fragments
+    if (feature.status === 'completed') {
+      console.log(`Found completed feature: ${featureName}`);
       completedFeatures.push({
         featureName,
-        htmlFragment: feature.htmlFragment,
+        // HTML fragment removed with React SPA migration
         featureType: featureName
       });
     } else {
-      console.log(`Skipping feature ${featureName}: status=${feature.status}, hasFragment=${!!feature.htmlFragment}`);
+      console.log(`Skipping feature ${featureName}: status=${feature.status}`);
     }
   }
 
@@ -160,7 +161,7 @@ async function getCompletedFeaturesWithFragments(jobData: any): Promise<Array<{
  */
 async function injectFeatureFragments(
   originalHTML: string,
-  features: Array<{ featureName: string; htmlFragment: string; featureType: string }>
+  features: Array<{ featureName: string; featureType: string; }> // HTML fragment removed with React SPA migration
 ): Promise<string> {
   let updatedHTML = originalHTML;
   
@@ -178,7 +179,7 @@ async function injectFeatureFragments(
         // Inject before the download section
         updatedHTML = updatedHTML.replace(
           interactiveFeaturesPattern,
-          `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n        <div class="download-section"`
+          `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n        <div class="download-section"`
         );
         console.log(`Successfully injected ${feature.featureName} before download section`);
       } else {
@@ -187,7 +188,7 @@ async function injectFeatureFragments(
         if (containerEndPattern.test(updatedHTML)) {
           updatedHTML = updatedHTML.replace(
             containerEndPattern,
-            `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n    </div>\n</body>`
+            `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n    </div>\n</body>`
           );
           console.log(`Successfully injected ${feature.featureName} before container end`);
         } else {

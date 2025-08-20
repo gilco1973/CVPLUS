@@ -335,6 +335,9 @@ export class TimelineGenerationService {
    * Check if date string represents recent/current position
    */
   private isRecent(dateStr: string): boolean {
+    if (!dateStr || typeof dateStr !== 'string') {
+      return false;
+    }
     const keywords = ['present', 'current', 'now', 'ongoing'];
     return keywords.some(keyword => dateStr.toLowerCase().includes(keyword));
   }
@@ -725,9 +728,44 @@ export class TimelineGenerationService {
   }
   
   /**
+   * Clean timeline data by removing undefined values for Firestore storage
+   */
+  private cleanTimelineData(timelineData: TimelineData): any {
+    const cleanEvents = timelineData.events.map(event => {
+      const cleanEvent: any = {
+        id: event.id,
+        type: event.type,
+        title: event.title,
+        organization: event.organization,
+        startDate: event.startDate
+      };
+      
+      // Only add optional fields if they're not undefined
+      if (event.endDate !== undefined) cleanEvent.endDate = event.endDate;
+      if (event.current !== undefined) cleanEvent.current = event.current;
+      if (event.description !== undefined) cleanEvent.description = event.description;
+      if (event.achievements !== undefined) cleanEvent.achievements = event.achievements;
+      if (event.skills !== undefined) cleanEvent.skills = event.skills;
+      if (event.location !== undefined) cleanEvent.location = event.location;
+      if (event.logo !== undefined) cleanEvent.logo = event.logo;
+      if (event.impact !== undefined) cleanEvent.impact = event.impact;
+      
+      return cleanEvent;
+    });
+    
+    return {
+      events: cleanEvents,
+      summary: timelineData.summary,
+      insights: timelineData.insights
+    };
+  }
+
+  /**
    * Store timeline data in Firestore
    */
   private async storeTimelineData(jobId: string, timelineData: TimelineData): Promise<void> {
+    const cleanData = this.cleanTimelineData(timelineData);
+    
     await admin.firestore()
       .collection('jobs')
       .doc(jobId)
@@ -735,7 +773,7 @@ export class TimelineGenerationService {
         'enhancedFeatures.timeline': {
           enabled: true,
           status: 'completed',
-          data: timelineData,
+          data: cleanData,
           generatedAt: FieldValue.serverTimestamp()
         }
       });

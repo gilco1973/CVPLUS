@@ -11,6 +11,12 @@ import { SkillsVisualization } from '../components/features/Visual/SkillsVisuali
 import { CalendarIntegration } from '../components/features/CalendarIntegration';
 import { InteractiveTimeline } from '../components/features/InteractiveTimeline';
 import { AchievementCards } from '../components/features/Visual/AchievementCards';
+import { AIPodcastPlayer } from '../components/features/AI-Powered/AIPodcastPlayer';
+import { VideoIntroduction } from '../components/features/VideoIntroduction';
+import { PortfolioGallery } from '../components/features/PortfolioGallery';
+import { TestimonialsCarousel } from '../components/features/TestimonialsCarousel';
+import { CertificationBadges } from '../components/features/CertificationBadges';
+import { PersonalityInsights } from '../components/features/PersonalityInsights';
 import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';
 
 // Component registry for available components - properly typed
@@ -21,7 +27,13 @@ const COMPONENT_REGISTRY: ComponentRegistry = {
   SkillsVisualization: SkillsVisualization,
   CalendarIntegration: CalendarIntegration,
   InteractiveTimeline: InteractiveTimeline,
-  AchievementCards: AchievementCards
+  AchievementCards: AchievementCards,
+  AIPodcastPlayer: AIPodcastPlayer,
+  VideoIntroduction: VideoIntroduction,
+  PortfolioGallery: PortfolioGallery,
+  TestimonialsCarousel: TestimonialsCarousel,
+  CertificationBadges: CertificationBadges,
+  PersonalityInsights: PersonalityInsights
 } as const;
 
 type ComponentName = keyof typeof COMPONENT_REGISTRY;
@@ -37,31 +49,47 @@ export function renderReactComponent(
   props: any,
   container: Element
 ): void {
+  console.log(`🔄 Attempting to render component: ${componentName}`);
+  console.log('🔍 Available components in registry:', Object.keys(COMPONENT_REGISTRY));
+  console.log('🎯 Props for component:', props);
+  
   const Component = COMPONENT_REGISTRY[componentName];
   
   if (!Component) {
-    console.error(`Component "${componentName}" not found in registry`);
+    console.error(`❌ Component "${componentName}" not found in registry`);
+    console.error('🔍 Registry contains:', Object.keys(COMPONENT_REGISTRY));
     return;
   }
+  
+  console.log(`✅ Found component in registry:`, Component);
   
   try {
     // Clear the placeholder content
     container.innerHTML = '';
+    console.log(`🧹 Cleared container content for ${componentName}`);
     
     // Create React element and render using React 18+ createRoot
     const element = React.createElement(Component, props);
-    const root = createRoot(container);
-    root.render(element);
+    console.log(`⚛️ Created React element for ${componentName}:`, element);
     
-    console.log(`✅ Successfully rendered ${componentName} component`);
+    const root = createRoot(container);
+    console.log(`🌱 Created root for ${componentName}`);
+    
+    root.render(element);
+    console.log(`🎉 Successfully rendered ${componentName} component`);
   } catch (error) {
     console.error(`❌ Failed to render ${componentName} component:`, error);
+    console.error('📍 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     // Show error message in container
     container.innerHTML = `
       <div class="component-error">
         <p>Failed to load ${componentName} component</p>
         <p class="error-details">${error instanceof Error ? error.message : 'Unknown error'}</p>
+        <details>
+          <summary>Error Details</summary>
+          <pre>${error instanceof Error ? error.stack : 'No stack trace available'}</pre>
+        </details>
       </div>
     `;
   }
@@ -71,6 +99,7 @@ export function renderReactComponent(
  * Initialize all React component placeholders on the page
  */
 export function initializeReactComponents(): void {
+  console.log('🚀 Starting React component initialization...');
   const placeholders = document.querySelectorAll('.react-component-placeholder');
   
   console.log(`🔄 Found ${placeholders.length} React component placeholders`);
@@ -80,14 +109,24 @@ export function initializeReactComponents(): void {
     // Check for contact form patterns specifically
     const contactFormElements = document.querySelectorAll('[data-contact-form], .contact-form-container');
     console.log(`📞 Found ${contactFormElements.length} contact form elements`);
+    // Also check for any QR code specific elements
+    const qrElements = document.querySelectorAll('[data-component="DynamicQRCode"], .qr-code-feature');
+    console.log(`📱 Found ${qrElements.length} QR code elements`);
+    return;
   }
   
   placeholders.forEach((placeholder, index) => {
+    console.log(`\n🔎 Processing placeholder ${index + 1}/${placeholders.length}`);
+    console.log('🗺 Placeholder element:', placeholder);
+    
     const componentName = placeholder.getAttribute('data-component') as ComponentName;
     const propsJson = placeholder.getAttribute('data-props');
     
+    console.log(`🏷️ Component name from data-component: "${componentName}"`);
+    console.log(`📝 Props JSON: ${propsJson ? propsJson.substring(0, 100) + '...' : 'null'}`);
+    
     if (!componentName) {
-      console.warn(`Placeholder ${index + 1} missing data-component attribute`);
+      console.warn(`⚠️ Placeholder ${index + 1} missing data-component attribute`);
       return;
     }
     
@@ -139,6 +178,40 @@ export function initializeReactComponents(): void {
       console.log('🏆 Initializing AchievementCards component with props:', props);
       
       // Ensure the achievements component has proper configuration
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for AIPodcastPlayer specifically
+    if (componentName === 'AIPodcastPlayer') {
+      console.log('🎙️ Initializing AIPodcastPlayer component with props:', props);
+      
+      // Ensure the podcast component has proper configuration
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for DynamicQRCode specifically
+    if (componentName === 'DynamicQRCode') {
+      console.log('📱 Initializing DynamicQRCode component with props:', props);
+      console.log('📱 QRCode Component from registry:', COMPONENT_REGISTRY[componentName]);
+      
+      // Ensure the QR code component has proper configuration
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+      };
+    }
+    
+    // Add debug logging for other key components
+    if (['VideoIntroduction', 'PortfolioGallery', 'TestimonialsCarousel', 'CertificationBadges', 'PersonalityInsights'].includes(componentName)) {
+      console.log(`🎯 Initializing ${componentName} component with props:`, props);
+      
+      // Ensure all components have proper configuration
       props = {
         ...props,
         isEnabled: props.isEnabled !== false, // Default to true

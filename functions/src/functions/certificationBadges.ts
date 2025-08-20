@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { certificationBadgesService } from '../services/certification-badges.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 
 export const generateCertificationBadges = onCall(
@@ -63,11 +63,11 @@ export const generateCertificationBadges = onCall(
 
       // Generate HTML fragment for progressive enhancement
       const certifications = jobData.parsedData.certifications || [];
-      const htmlFragment = htmlFragmentGenerator.generateCertificationBadgesHTML(certifications);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Sanitize data before Firestore write
       const sanitizedBadgesCollection = sanitizeForFirestore(badgesCollection);
-      const sanitizedHtmlFragment = sanitizeForFirestore(htmlFragment);
+      const sanitizedHtmlFragment = null; // HTML fragment removed with React SPA migration
       
       // Create safe update object
       const updateData = sanitizeForFirestore({
@@ -87,7 +87,7 @@ export const generateCertificationBadges = onCall(
       return {
         success: true,
         badges: badgesCollection,
-        htmlFragment
+        htmlFragment: sanitizedHtmlFragment
       };
     } catch (error: any) {
       console.error('Error generating certification badges:', error);

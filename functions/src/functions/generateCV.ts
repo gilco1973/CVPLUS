@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { CVGenerator } from '../services/cvGenerator';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { EnhancedFileGenerationResult } from '../services/cv-generator/types';
 
 // Import real feature services - NO MORE MOCK CODE
@@ -528,13 +528,13 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           jobData?.parsedData,
           ['radar', 'bar']
         );
-        const htmlFragment = htmlFragmentGenerator.generateSkillsVisualizationHTML(visualization);
+      // HTML generation removed - React SPA handles UI rendering;
         
         // Update job with results - filter out undefined values to prevent Firestore errors
         const skillsData = sanitizeForFirestore({
           enabled: true,
           data: visualization,
-          htmlFragment: htmlFragment,
+          // HTML fragment removed with React SPA migration
           status: 'completed',
           progress: 100,
           processedAt: new Date()
@@ -544,7 +544,7 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           'enhancedFeatures.skillsVisualization': skillsData
         });
         
-        return { success: true, visualization, htmlFragment };
+        return { success: true, visualization, htmlFragment: null };
         
       case 'generatePodcast':
         const { podcastGenerationService } = await import('../services/podcast-generation.service');
@@ -561,21 +561,21 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           userId,
           { style: 'professional', duration: 'medium', focus: 'balanced' }
         );
-        const podcastHtmlFragment = htmlFragmentGenerator.generatePodcastHTML(podcastResult);
+      // HTML generation removed - React SPA handles UI rendering;
         
         // Update job with results
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.generatePodcast': {
             enabled: true,
             data: podcastResult,
-            htmlFragment: podcastHtmlFragment,
+            // HTML fragment removed with React SPA migration
             status: 'completed',
             progress: 100,
             processedAt: new Date()
           }
         });
         
-        return { success: true, podcastResult, htmlFragment: podcastHtmlFragment };
+        return { success: true, podcastResult }; // HTML fragment removed with React SPA migration
         
       case 'generateLanguageVisualization':
         const { languageProficiencyService } = await import('../services/language-proficiency.service');
@@ -590,21 +590,21 @@ async function callFeatureFunction(functionName: string, data: any): Promise<any
           langJobData?.parsedData,
           jobId
         );
-        const langHtmlFragment = htmlFragmentGenerator.generateLanguageProficiencyHTML(langVisualization);
+      // HTML generation removed - React SPA handles UI rendering;
         
         // Update job with results
         await admin.firestore().collection('jobs').doc(jobId).update({
           'enhancedFeatures.languageProficiency': {
             enabled: true,
             data: langVisualization,
-            htmlFragment: langHtmlFragment,
+            // HTML fragment removed with React SPA migration
             status: 'completed',
             progress: 100,
             processedAt: new Date()
           }
         });
         
-        return { success: true, visualization: langVisualization, htmlFragment: langHtmlFragment };
+        return { success: true, visualization: langVisualization }; // HTML fragment removed with React SPA migration
         
       case 'generateAvailabilityCalendar':
         // Get job data
@@ -828,7 +828,7 @@ Best regards\`;
           }
         });
         
-        return { success: true, htmlFragment: availabilityHtml };
+        return { success: true }; // HTML fragment removed with React SPA migration
         
       default:
         console.warn(`Feature ${functionName} not yet implemented for internal calling`);
@@ -1141,12 +1141,12 @@ async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Pro
  */
 function getCompletedFeaturesWithFragments(jobData: any): Array<{
   featureName: string;
-  htmlFragment: string;
+  // HTML fragment removed with React SPA migration
   featureType: string;
 }> {
   const completedFeatures: Array<{
     featureName: string;
-    htmlFragment: string;
+    // HTML fragment removed with React SPA migration
     featureType: string;
   }> = [];
 
@@ -1158,15 +1158,16 @@ function getCompletedFeaturesWithFragments(jobData: any): Array<{
   for (const [featureName, featureData] of Object.entries(jobData.enhancedFeatures)) {
     const feature = featureData as any;
     
-    if (feature.status === 'completed' && feature.htmlFragment) {
-      console.log(`Found completed feature with HTML fragment: ${featureName}`);
+    // With React SPA migration, we no longer check for HTML fragments
+    if (feature.status === 'completed') {
+      console.log(`Found completed feature: ${featureName}`);
       completedFeatures.push({
         featureName,
-        htmlFragment: feature.htmlFragment,
+        // HTML fragment removed with React SPA migration
         featureType: featureName
       });
     } else {
-      console.log(`Skipping feature ${featureName}: status=${feature.status}, hasFragment=${!!feature.htmlFragment}`);
+      console.log(`Skipping feature ${featureName}: status=${feature.status}`);
     }
   }
 
@@ -1179,7 +1180,7 @@ function getCompletedFeaturesWithFragments(jobData: any): Array<{
  */
 function injectFeatureFragments(
   originalHTML: string,
-  features: Array<{ featureName: string; htmlFragment: string; featureType: string }>
+  features: Array<{ featureName: string; featureType: string; }> // HTML fragment removed with React SPA migration
 ): string {
   let updatedHTML = originalHTML;
   
@@ -1197,7 +1198,7 @@ function injectFeatureFragments(
         // Inject before the download section
         updatedHTML = updatedHTML.replace(
           interactiveFeaturesPattern,
-          `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n        <div class="download-section"`
+          `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n        <div class="download-section"`
         );
         console.log(`Successfully injected ${feature.featureName} before download section`);
       } else {
@@ -1206,7 +1207,7 @@ function injectFeatureFragments(
         if (containerEndPattern.test(updatedHTML)) {
           updatedHTML = updatedHTML.replace(
             containerEndPattern,
-            `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            ${feature.htmlFragment}\n        </section>\n    </div>\n</body>`
+            `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n    </div>\n</body>`
           );
           console.log(`Successfully injected ${feature.featureName} before container end`);
         } else {

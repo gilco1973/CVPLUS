@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { languageProficiencyService } from '../services/language-proficiency.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 
 export const generateLanguageVisualization = onCall(
   {
@@ -61,7 +61,7 @@ export const generateLanguageVisualization = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generateLanguageProficiencyHTML(visualization);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update with final results
       await admin.firestore()
@@ -71,14 +71,14 @@ export const generateLanguageVisualization = onCall(
           'enhancedFeatures.languageProficiency.status': 'completed',
           'enhancedFeatures.languageProficiency.progress': 100,
           'enhancedFeatures.languageProficiency.data': visualization,
-          'enhancedFeatures.languageProficiency.htmlFragment': htmlFragment,
+          'enhancedFeatures.languageProficiency.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.languageProficiency.processedAt': FieldValue.serverTimestamp()
         });
 
       return {
         success: true,
         visualization,
-        htmlFragment
+        data: visualization
       };
     } catch (error: any) {
       console.error('Error generating language visualization:', error);

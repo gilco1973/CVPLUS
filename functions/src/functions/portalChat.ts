@@ -18,6 +18,7 @@ import { enhancedDbService } from '../services/enhanced-db.service';
 import { EnhancedJob, UserRAGProfile, ChatMessage } from '../types/enhanced-models';
 import { PortalConfig, PortalStatus } from '../types/portal';
 import { corsOptions, addCorsHeaders } from '../config/cors';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 import { nanoid } from 'nanoid';
 
 // ============================================================================
@@ -317,7 +318,7 @@ async function getPortalConfig(portalId: string): Promise<{ portal: PortalConfig
       throw new HttpsError('failed-precondition', 'Portal is not active');
     }
 
-    if (!portal.customization?.features?.enableChat) {
+    if (!portal.customization?.features?.chatbot) {
       throw new HttpsError('permission-denied', 'Chat is disabled for this portal');
     }
 
@@ -554,7 +555,7 @@ export const portalChat = onCall(
     memory: '1GiB',
     ...corsOptions
   },
-  async (request: CallableRequest<PortalChatRequest>): Promise<PortalChatResponse> => {
+  withPremiumAccess('aiChat', async (request: CallableRequest<PortalChatRequest>): Promise<PortalChatResponse> => {
     const startTime = Date.now();
 
     try {
@@ -668,7 +669,7 @@ export const portalChat = onCall(
 
       throw new HttpsError('internal', 'Chat service temporarily unavailable');
     }
-  }
+  })
 );
 
 /**

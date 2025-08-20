@@ -20,6 +20,7 @@ import {
   useFeatureAvailability
 } from '../components/results';
 import type { SelectedFeatures, SelectedFormats } from '../types/results';
+import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
 export const ResultsPage = () => {
@@ -291,10 +292,10 @@ export const ResultsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mx-auto mb-4" />
-          <p className="text-gray-400">Loading your results...</p>
+          <Loader2 className={`w-8 h-8 animate-spin text-${designSystem.colors.primary[400]} mx-auto mb-4`} />
+          <p className={designSystem.accessibility.contrast.text.secondary}>Loading your results...</p>
         </div>
       </div>
     );
@@ -302,16 +303,16 @@ export const ResultsPage = () => {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400">Job not found</p>
+          <p className={designSystem.accessibility.contrast.text.secondary}>Job not found</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-neutral-900">
       <ResultsPageHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -328,7 +329,10 @@ export const ResultsPage = () => {
 
         {/* Quick Create Success Banner */}
         {job.quickCreate && (
-          <div className="bg-gradient-to-r from-purple-900/20 to-cyan-900/20 border border-purple-700/50 rounded-lg p-4 mb-6">
+          <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.glass} ${designSystem.components.card.padding.sm} mb-6`} style={{
+            background: 'linear-gradient(to right, rgba(147, 51, 234, 0.2), rgba(6, 182, 212, 0.2))',
+            borderColor: 'rgba(147, 51, 234, 0.5)'
+          }}>
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-purple-400" />
               <div>
@@ -342,12 +346,12 @@ export const ResultsPage = () => {
         )}
 
         {/* Feature Selection Guide */}
-        <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
+        <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.elevated} ${designSystem.components.card.padding.md} mb-6 shadow-xl`}>
           <div className="flex items-center gap-3">
-            <Wand2 className="w-5 h-5 text-cyan-400" />
+            <Wand2 className={`w-5 h-5 text-${designSystem.colors.primary[400]}`} />
             <div>
-              <h1 className="text-2xl font-bold text-gray-100 mb-2">Select Interactive Features</h1>
-              <p className="text-gray-400">
+              <h1 className={`text-2xl font-bold ${designSystem.accessibility.contrast.text.primary} mb-2`}>Select Interactive Features</h1>
+              <p className={designSystem.accessibility.contrast.text.secondary}>
                 Choose the interactive features to enhance your CV. Currently selected: {Object.keys(selectedFeatures).filter(key => selectedFeatures[key as keyof SelectedFeatures]).length} features
               </p>
             </div>
@@ -383,7 +387,7 @@ export const ResultsPage = () => {
                 handleGenerateCV();
               }}
               disabled={isGenerating || isInitializing}
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg"
+              className={`w-full ${designSystem.components.button.base} ${(isGenerating || isInitializing) ? designSystem.components.button.variants.primary.disabled : designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.xl} flex items-center justify-center gap-3 shadow-lg rounded-xl py-4`}
             >
               {isInitializing ? (
                 <>
@@ -407,7 +411,7 @@ export const ResultsPage = () => {
             {/* Mode Indicator */}
             {asyncMode && (
               <div className="text-center mt-3">
-                <p className="text-sm text-gray-400">
+                <p className={`text-sm ${designSystem.accessibility.contrast.text.secondary}`}>
                   ⚡ Fast Track Mode: Real-time progress tracking enabled
                 </p>
               </div>

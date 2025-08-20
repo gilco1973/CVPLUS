@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { Brain, Sparkles, Shield, QrCode, Clock, BarChart3, Video, FolderOpen, MessageSquare, Share2, Calendar, Globe, Trophy, Target, Zap, FileSearch, Mic, ChevronRight, Home, Users, Award } from 'lucide-react';
-import { Logo } from '../components/Logo';
-import { UserMenu } from '../components/UserMenu';
+import { Brain, Sparkles, Shield, QrCode, Clock, BarChart3, Video, FolderOpen, MessageSquare, Share2, Calendar, Globe, Trophy, Target, Zap, FileSearch, Mic, ChevronRight, Home, Users, Award, Crown } from 'lucide-react';
+import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
-import toast from 'react-hot-toast';
+import { usePremiumStatus, useFeatureAccess } from '../hooks/usePremiumStatus';
+import { InlinePremiumPrompt } from '../components/common/PremiumUpgradePrompt';
 
 interface Feature {
   id: string;
@@ -12,6 +12,8 @@ interface Feature {
   icon: React.ReactNode;
   category: 'ai' | 'interactive' | 'visual' | 'media';
   benefits: string[];
+  isPremium?: boolean;
+  premiumFeature?: 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
 }
 
 const features: Feature[] = [
@@ -22,6 +24,8 @@ const features: Feature[] = [
     description: 'Transform your career journey into an engaging audio narrative. Our AI creates a personalized podcast that tells your professional story in a compelling way.',
     icon: <Mic className="w-6 h-6" />,
     category: 'ai',
+    isPremium: true,
+    premiumFeature: 'podcast',
     benefits: [
       'Engaging audio format for recruiters on-the-go',
       'Highlights key achievements naturally',
@@ -87,6 +91,8 @@ const features: Feature[] = [
     description: 'Let visitors chat with an AI that knows everything about your experience and can answer questions about your background.',
     icon: <MessageSquare className="w-6 h-6" />,
     category: 'ai',
+    isPremium: true,
+    premiumFeature: 'aiChat',
     benefits: [
       '24/7 availability',
       'Instant responses',
@@ -96,10 +102,12 @@ const features: Feature[] = [
   },
   {
     id: 'public-profile',
-    title: 'Public Profile',
-    description: 'Share your CV with a custom link, QR code, and built-in contact form for easy sharing and networking.',
+    title: 'Personal Web Portal',
+    description: 'Get your own custom web portal with professional URL, advanced analytics, and branding-free experience.',
     icon: <Users className="w-6 h-6" />,
     category: 'ai',
+    isPremium: true,
+    premiumFeature: 'webPortal',
     benefits: [
       'Custom URL',
       'Analytics tracking',
@@ -299,7 +307,7 @@ const features: Feature[] = [
 
 export const CVFeaturesPage = () => {
   const navigate = useNavigate();
-  const { user, signInWithGoogle } = useAuth();
+  const { isPremium } = usePremiumStatus();
 
   const featureCategories = [
     { id: 'ai', title: '🤖 AI-Powered Features', icon: <Brain className="w-5 h-5" /> },
@@ -309,41 +317,9 @@ export const CVFeaturesPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50 animate-fade-in-down">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo size="small" />
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">Home</a>
-              <a href="/features" className="text-cyan-400 font-medium">Features</a>
-              <a href="/about" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">About</a>
-              {user ? (
-                <UserMenu />
-              ) : (
-                <button 
-                  onClick={async () => {
-                    try {
-                      await signInWithGoogle();
-                      toast.success('Signed in successfully!');
-                    } catch {
-                      toast.error('Failed to sign in');
-                    }
-                  }}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors font-medium shadow-sm"
-                >
-                  Sign In
-                </button>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Hero Section */}
-      <section className="relative py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Section variant="hero" background="gradient" spacing="lg">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6 animate-fade-in-up">
             CV Enhancement Features
@@ -359,10 +335,10 @@ export const CVFeaturesPage = () => {
             Start Creating Your CV
           </button>
         </div>
-      </section>
+      </Section>
 
       {/* Features Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <Section variant="content" background="transparent" spacing="lg">
         <div className="max-w-7xl mx-auto">
           {featureCategories.map((category, categoryIndex) => (
             <div key={category.id} className="mb-16">
@@ -385,17 +361,37 @@ export const CVFeaturesPage = () => {
                   .map((feature, featureIndex) => (
                     <div 
                       key={feature.id}
-                      className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all group animate-fade-in-up hover-lift"
+                      className={`bg-gray-800 rounded-xl p-6 border transition-all group animate-fade-in-up hover-lift ${
+                        feature.isPremium 
+                          ? 'border-yellow-500/30 hover:border-yellow-500' 
+                          : 'border-gray-700 hover:border-cyan-500'
+                      }`}
                       style={{ animationDelay: `${(categoryIndex * 200) + (featureIndex * 100) + 100}ms` }}
                     >
                       <div className="flex items-start gap-4 mb-4">
-                        <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all">
+                        <div className={`relative p-3 rounded-lg transition-all ${
+                          feature.isPremium 
+                            ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 group-hover:from-yellow-500/30 group-hover:to-yellow-600/30'
+                            : 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 group-hover:from-cyan-500/30 group-hover:to-blue-500/30'
+                        }`}>
                           {feature.icon}
+                          {feature.isPremium && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                              <Crown className="w-2.5 h-2.5 text-yellow-900" />
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                            {feature.title}
-                          </h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xl font-semibold text-gray-100">
+                              {feature.title}
+                            </h3>
+                            {feature.isPremium && (
+                              <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900 text-xs px-2 py-1 rounded-full font-semibold">
+                                PREMIUM
+                              </span>
+                            )}
+                          </div>
                           <p className="text-gray-400 text-sm mb-4">
                             {feature.description}
                           </p>
@@ -407,22 +403,31 @@ export const CVFeaturesPage = () => {
                         <ul className="space-y-1">
                           {feature.benefits.map((benefit, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm text-gray-400">
-                              <ChevronRight className="w-4 h-4 text-cyan-500 flex-shrink-0 mt-0.5" />
+                              <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                                feature.isPremium ? 'text-yellow-500' : 'text-cyan-500'
+                              }`} />
                               <span>{benefit}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
+                      
+                      {/* Premium Upgrade Prompt */}
+                      {feature.isPremium && !isPremium && (
+                        <div className="mt-4">
+                          <InlinePremiumPrompt feature={feature.title} className="text-xs" />
+                        </div>
+                      )}
                     </div>
                   ))}
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </Section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-800">
+      <Section variant="content" background="neutral-800" spacing="lg">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full mb-6 animate-bounce-in">
             <Zap className="w-8 h-8 text-white" />
@@ -449,16 +454,7 @@ export const CVFeaturesPage = () => {
             </button>
           </div>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-400">
-            <p>&copy; 2025 CVPlus. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </Section>
+    </>
   );
 };

@@ -5,6 +5,7 @@ import JobDescriptionParser from '../components/JobDescriptionParser';
 import KeywordManager from '../components/KeywordManager';
 import { useJob } from '../hooks/useJob';
 import { analyzeATSCompatibility } from '../services/cvService';
+import { designSystem } from '../config/designSystem';
 
 interface KeywordResults {
   all: string[];
@@ -129,7 +130,7 @@ export const KeywordOptimization: React.FC = () => {
 
   if (jobLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading your CV...</p>
@@ -140,13 +141,13 @@ export const KeywordOptimization: React.FC = () => {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <p className="text-gray-400">CV not found</p>
           <button
             onClick={() => navigate('/')}
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
+            className="mt-4 px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg text-white transition-colors"
           >
             Go Home
           </button>
@@ -156,21 +157,21 @@ export const KeywordOptimization: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-neutral-900 text-neutral-100">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-neutral-800 border-b border-neutral-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(`/results/${job.id}`)}
-                className="flex items-center gap-2 text-gray-400 hover:text-gray-300 transition-colors"
+                className="flex items-center gap-2 text-gray-400 hover:text-neutral-300 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back to Results
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-100">Keyword Optimization</h1>
+                <h1 className="text-2xl font-bold text-neutral-100">Keyword Optimization</h1>
                 <p className="text-gray-400">Optimize your CV for ATS systems and target roles</p>
               </div>
             </div>
@@ -190,15 +191,15 @@ export const KeywordOptimization: React.FC = () => {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-neutral-800 border-b border-neutral-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-300">Progress</span>
+            <span className="text-sm font-medium text-neutral-300">Progress</span>
             <span className="text-sm text-gray-400">{getStepProgress()}%</span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-neutral-700 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${getStepProgress()}%` }}
             ></div>
           </div>
@@ -217,7 +218,7 @@ export const KeywordOptimization: React.FC = () => {
           <div className="space-y-8">
             <div className="text-center mb-8">
               <Target className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-gray-100 mb-2">Analyze Target Job</h2>
+              <h2 className="text-3xl font-bold text-neutral-100 mb-2">Analyze Target Job</h2>
               <p className="text-xl text-gray-400">
                 Paste a job description to extract relevant keywords and requirements
               </p>
@@ -236,7 +237,7 @@ export const KeywordOptimization: React.FC = () => {
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <CheckCircle className="w-8 h-8 text-green-500" />
-                <h2 className="text-3xl font-bold text-gray-100">Manage Keywords</h2>
+                <h2 className="text-3xl font-bold text-neutral-100">Manage Keywords</h2>
               </div>
               <p className="text-xl text-gray-400">
                 Review extracted keywords and customize your keyword strategy
@@ -253,7 +254,7 @@ export const KeywordOptimization: React.FC = () => {
                 <button
                   onClick={handleOptimizeCV}
                   disabled={optimizing}
-                  className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-colors"
+                  className="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-600 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-colors"
                 >
                   {optimizing ? (
                     <>
@@ -277,7 +278,7 @@ export const KeywordOptimization: React.FC = () => {
           <div className="space-y-8">
             <div className="text-center mb-8">
               <TrendingUp className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-gray-100 mb-2">Optimization Complete</h2>
+              <h2 className="text-3xl font-bold text-neutral-100 mb-2">Optimization Complete</h2>
               <p className="text-xl text-gray-400">
                 Here's how to improve your CV based on the keyword analysis
               </p>
@@ -286,7 +287,7 @@ export const KeywordOptimization: React.FC = () => {
             {/* Optimization Suggestions */}
             <div className="space-y-6">
               {getOptimizationSuggestions().map((suggestion, index) => (
-                <div key={index} className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div key={index} className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
                   <div className="flex items-start gap-4">
                     <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${
                       suggestion.type === 'high' ? 'bg-red-600' : 'bg-yellow-600'
@@ -297,7 +298,7 @@ export const KeywordOptimization: React.FC = () => {
                       }
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                      <h3 className="text-lg font-semibold text-neutral-100 mb-2">
                         {suggestion.title}
                       </h3>
                       <p className="text-gray-400 mb-4">{suggestion.description}</p>
@@ -330,13 +331,13 @@ export const KeywordOptimization: React.FC = () => {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => navigate(`/results/${job.id}`)}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium text-white transition-colors"
+                className="px-6 py-3 bg-semantic-success-500 hover:bg-semantic-success-600 rounded-lg font-medium text-white transition-colors"
               >
                 Apply Changes to CV
               </button>
               <button
                 onClick={() => setCurrentStep('manage')}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium text-gray-300 transition-colors"
+                className="px-6 py-3 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium text-neutral-300 transition-colors"
               >
                 Refine Keywords
               </button>

@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { portfolioGalleryService } from '../services/portfolio-gallery.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 
 export const generatePortfolioGallery = onCall(
   {
@@ -61,7 +61,7 @@ export const generatePortfolioGallery = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generatePortfolioGalleryHTML(gallery);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update with final results
       await admin.firestore()
@@ -71,14 +71,14 @@ export const generatePortfolioGallery = onCall(
           'enhancedFeatures.portfolioGallery.status': 'completed',
           'enhancedFeatures.portfolioGallery.progress': 100,
           'enhancedFeatures.portfolioGallery.data': gallery,
-          'enhancedFeatures.portfolioGallery.htmlFragment': htmlFragment,
+          'enhancedFeatures.portfolioGallery.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.portfolioGallery.processedAt': FieldValue.serverTimestamp()
         });
 
       return {
         success: true,
         gallery,
-        htmlFragment
+        htmlFragment: null
       };
     } catch (error: any) {
       console.error('Error generating portfolio gallery:', error);

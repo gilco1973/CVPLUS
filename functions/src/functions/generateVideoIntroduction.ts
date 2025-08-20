@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { videoGenerationService } from '../services/video-generation.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 
 export const generateVideoIntroduction = onCall(
   {
@@ -79,7 +79,7 @@ export const generateVideoIntroduction = onCall(
         });
 
       // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generateVideoIntroductionHTML(videoResult);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update job with video completion
       await admin.firestore()
@@ -89,7 +89,7 @@ export const generateVideoIntroduction = onCall(
           'enhancedFeatures.videoIntroduction.status': 'completed',
           'enhancedFeatures.videoIntroduction.progress': 100,
           'enhancedFeatures.videoIntroduction.data': videoResult,
-          'enhancedFeatures.videoIntroduction.htmlFragment': htmlFragment,
+          'enhancedFeatures.videoIntroduction.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.videoIntroduction.processedAt': FieldValue.serverTimestamp(),
           videoStatus: 'completed',
           video: {
@@ -116,7 +116,7 @@ export const generateVideoIntroduction = onCall(
       return {
         success: true,
         video: videoResult,
-        htmlFragment
+        htmlFragment: null
       };
     } catch (error: any) {
       console.error('Error generating video introduction:', error);

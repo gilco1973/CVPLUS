@@ -1,7 +1,39 @@
-import { useState } from 'react';
-import { Calendar, Download, Check, Loader2, Clock, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Download, Check, Loader2, Clock, ChevronRight, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { CVFeatureProps } from '../../types/cv-features';
+import { FeatureWrapper } from './Common/FeatureWrapper';
+import { LoadingSpinner } from './Common/LoadingSpinner';
+import { ErrorBoundary } from './Common/ErrorBoundary';
+import { useFeatureData } from '../../hooks/useFeatureData';
+
+// Enhanced calendar data structure
+interface EnhancedCalendarData {
+  events: CalendarEvent[];
+  availability?: {
+    timeSlots: Array<{
+      date: string;
+      slots: Array<{
+        startTime: string;
+        endTime: string;
+        available: boolean;
+      }>;
+    }>;
+  };
+  integrations?: {
+    calendly?: string;
+    googleCalendar?: boolean;
+    outlook?: boolean;
+  };
+  summary?: {
+    totalEvents: number;
+    workAnniversaries: number;
+    educationMilestones: number;
+    certifications: number;
+    reminders: number;
+  };
+}
 
 interface CalendarEvent {
   id: string;
@@ -17,15 +49,9 @@ interface CalendarEvent {
   };
 }
 
-interface CalendarIntegrationProps {
+interface CalendarIntegrationProps extends CVFeatureProps {
   events?: CalendarEvent[];
-  profileId?: string;
-  jobId?: string;
-  data?: {
-    contactName?: string;
-    totalEvents?: number;
-  };
-  isEnabled?: boolean;
+  enhancedData?: EnhancedCalendarData | null;
   customization?: {
     title?: string;
     theme?: string;
@@ -34,8 +60,6 @@ interface CalendarIntegrationProps {
     showEducationMilestones?: boolean;
     providers?: string[];
   };
-  className?: string;
-  mode?: string;
   onGenerateEvents?: (() => Promise<{
     events: CalendarEvent[];
     summary: {
@@ -51,32 +75,51 @@ interface CalendarIntegrationProps {
   onDownloadICal?: (() => Promise<{ downloadUrl: string; instructions: string[] }>) | string;
 }
 
-export const CalendarIntegration = ({
-  events = [],
-  profileId,
+export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
   jobId,
-  data,
+  profileId,
   isEnabled = true,
-  customization,
-  className,
+  data,
+  events = [],
+  enhancedData,
+  customization = {},
+  onUpdate,
+  onError,
+  className = '',
   mode = 'public',
   onGenerateEvents,
   onSyncGoogle,
   onSyncOutlook,
   onDownloadICal
-}: CalendarIntegrationProps) => {
+}) => {
+  // Enhanced data fetching
+  const {
+    data: fetchedCalendarData,
+    loading: dataLoading,
+    error: dataError,
+    refresh: refreshData
+  } = useFeatureData<EnhancedCalendarData>({
+    jobId,
+    featureName: 'calendar-integration',
+    initialData: enhancedData,
+    params: { profileId }
+  });
+
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [summary, setSummary] = useState<{ 
-    totalEvents: number; 
-    workAnniversaries: number;
-    educationMilestones: number;
-    certifications: number;
-    reminders: number;
-    eventsByType?: Record<string, number>;
-  } | null>(null);
+  // Use enhanced data if available
+  const calendarData = enhancedData || fetchedCalendarData;
+  const calendarEvents = calendarData?.events || events;
+  const [summary, setSummary] = useState(calendarData?.summary || null);
   const [selectedProvider, setSelectedProvider] = useState<'google' | 'outlook' | 'ical' | null>(null);
   const [syncInstructions, setSyncInstructions] = useState<string[]>([]);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+
+  // Update summary when calendar data changes
+  useEffect(() => {
+    if (calendarData?.summary) {
+      setSummary(calendarData.summary);
+    }
+  }, [calendarData]);
 
   // Create default handlers for CV mode when functions are passed as strings
   const createDefaultHandler = (handlerName: string | (() => Promise<any>) | undefined) => {
@@ -84,13 +127,13 @@ export const CalendarIntegration = ({
       return async () => {
         console.log(`📅 Calendar handler "${handlerName}" not yet implemented in CV mode`);
         return {
-          events: events,
+          events: calendarEvents,
           summary: {
-            totalEvents: events.length,
-            workAnniversaries: events.filter(e => e.type === 'work').length,
-            educationMilestones: events.filter(e => e.type === 'education').length,
-            certifications: events.filter(e => e.type === 'certification').length,
-            reminders: events.filter(e => e.type === 'reminder').length
+            totalEvents: calendarEvents.length,
+            workAnniversaries: calendarEvents.filter(e => e.type === 'work').length,
+            educationMilestones: calendarEvents.filter(e => e.type === 'education').length,
+            certifications: calendarEvents.filter(e => e.type === 'certification').length,
+            reminders: calendarEvents.filter(e => e.type === 'reminder').length
           },
           syncUrl: '#',
           downloadUrl: '#',
@@ -216,7 +259,47 @@ export const CalendarIntegration = ({
     return `Repeats ${recurring.frequency}${interval > 1 ? ` every ${interval} ${recurring.frequency === 'monthly' ? 'months' : 'years'}` : ''}`;
   };
 
-  if (events.length === 0) {
+  // Component disabled state
+  if (!isEnabled) {
+    return null;
+  }
+
+  // Loading state
+  if (dataLoading && !calendarData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Calendar Integration"
+          description="Loading calendar data..."
+          isLoading={true}
+        >
+          <LoadingSpinner size="large" message="Loading calendar data..." />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // Error state
+  if (dataError && !calendarData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Calendar Integration"
+          error={dataError}
+          onRetry={refreshData}
+        >
+          <div />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // No events state
+  if (calendarEvents.length === 0) {
     return (
       <div className="bg-gray-800 rounded-xl p-8 text-center">
         <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
@@ -265,7 +348,16 @@ export const CalendarIntegration = ({
   }
 
   return (
-    <div className="space-y-6">
+    <ErrorBoundary onError={onError}>
+      <FeatureWrapper
+        className={className}
+        mode={mode}
+        title={customization.title || "Calendar Integration"}
+        description={`Sync ${calendarEvents.length} career events to your calendar`}
+        isLoading={dataLoading || Object.values(loading).some(Boolean)}
+        onRetry={refreshData}
+      >
+        <div className="space-y-6">
       {/* Summary */}
       {summary && (
         <motion.div 
@@ -358,7 +450,7 @@ export const CalendarIntegration = ({
       <div>
         <h3 className="text-lg font-semibold text-gray-100 mb-4">Upcoming Events</h3>
         <div className="space-y-3">
-          {events.slice(0, 10).map((event) => {
+          {calendarEvents.slice(0, 10).map((event) => {
             const config = eventTypeConfig[event.type];
             const isExpanded = expandedEvent === event.id;
             
@@ -403,9 +495,9 @@ export const CalendarIntegration = ({
           })}
         </div>
         
-        {events.length > 10 && (
+        {calendarEvents.length > 10 && (
           <p className="text-center text-gray-500 mt-4 text-sm">
-            And {events.length - 10} more events...
+            And {calendarEvents.length - 10} more events...
           </p>
         )}
       </div>
@@ -432,6 +524,9 @@ export const CalendarIntegration = ({
           </li>
         </ul>
       </div>
-    </div>
+
+        </div>
+      </FeatureWrapper>
+    </ErrorBoundary>
   );
 };

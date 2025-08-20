@@ -125,20 +125,100 @@ export const processCV = onCall(
         allJobDataKeys: Object.keys(jobData || {})
       });
       
-      // If quick create, set flag for frontend to auto-trigger full workflow with all features
+      // If quick create, automatically initiate feature generation with default features
       if (jobData?.quickCreate || jobData?.settings?.applyAllEnhancements) {
-        console.log('🚀 Quick Create: Setting flag for frontend to trigger full workflow with all features');
+        console.log('🚀 Quick Create: Auto-initiating feature generation with default features');
+        
+        // Import the generateCVCore function for background processing
+        const { generateCVCore } = await import('./generateCV');
+        
+        // Default features for Quick Create users
+        const defaultFeatures = [
+          'ats-optimization',
+          'achievement-highlighting', 
+          'skills-visualization',
+          'interactive-timeline',
+          'certification-badges'
+        ];
+        
+        // Initialize feature tracking
+        const enhancedFeatures: Record<string, any> = {};
+        for (const feature of defaultFeatures) {
+          enhancedFeatures[feature] = {
+            status: 'pending',
+            progress: 0,
+            currentStep: 'Queued for processing',
+            enabled: true,
+            queuedAt: new Date()
+          };
+        }
         
         await admin.firestore()
           .collection('jobs')
           .doc(jobId)
           .set({
-            status: 'completed',
-            quickCreateReady: true, // Flag to indicate frontend should auto-trigger full generation
+            status: 'generating',
+            selectedFeatures: defaultFeatures,
+            enhancedFeatures: enhancedFeatures,
+            quickCreateInProgress: true,
+            generationStartedAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp()
           }, { merge: true });
           
-        console.log('✅ Quick Create: Flag set, frontend will auto-trigger full workflow');
+        // Trigger background feature generation
+        setImmediate(async () => {
+          try {
+            console.log('🚀 Background Quick Create generation started for job:', jobId);
+            
+            await generateCVCore(jobId, 'modern-professional', defaultFeatures, user.uid);
+            
+            console.log('✅ Background Quick Create generation completed for job:', jobId);
+          } catch (error: any) {
+            console.error('❌ Background Quick Create generation failed for job:', jobId, error);
+            
+            // Update job with failure status
+            await admin.firestore()
+              .collection('jobs')
+              .doc(jobId)
+              .set({
+                status: 'failed',
+                error: `Quick Create generation failed: ${error.message}`,
+                quickCreateInProgress: false,
+                updatedAt: FieldValue.serverTimestamp()
+              }, { merge: true });
+          }
+        });
+        
+        console.log('✅ Quick Create: Feature generation initiated automatically');
+      }
+      
+      // For regular users, initialize basic enhanced features to show in preview
+      if (!jobData?.quickCreate && !jobData?.settings?.applyAllEnhancements) {
+        console.log('🔧 Regular user: Initializing basic enhanced features for preview');
+        
+        // Basic features that are fast and don't require generation
+        const basicFeatures = ['skills-visualization', 'ats-optimization'];
+        const enhancedFeatures: Record<string, any> = {};
+        
+        for (const feature of basicFeatures) {
+          enhancedFeatures[feature] = {
+            status: 'pending',
+            progress: 0,
+            currentStep: 'Ready for generation',
+            enabled: false, // Not auto-enabled, user can choose to generate
+            queuedAt: new Date()
+          };
+        }
+        
+        await admin.firestore()
+          .collection('jobs')
+          .doc(jobId)
+          .set({
+            enhancedFeatures: enhancedFeatures,
+            updatedAt: FieldValue.serverTimestamp()
+          }, { merge: true });
+          
+        console.log('✅ Regular user: Basic enhanced features initialized');
       }
       
       // Note: Regular users will go through normal flow:

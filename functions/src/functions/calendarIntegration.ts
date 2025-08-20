@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { calendarIntegrationService, CalendarIntegrationService } from '../services/calendar-integration.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { requireGoogleAuth, requireCalendarPermissions } from '../utils/auth';
 
 export const generateCalendarEvents = onCall(
@@ -72,8 +72,8 @@ export const generateCalendarEvents = onCall(
       // Store events
       await calendarIntegrationService.storeCalendarData(jobId, calendarData);
 
-      // Generate HTML fragment for progressive enhancement
-      const htmlFragment = htmlFragmentGenerator.generateCalendarIntegrationHTML(calendarData);
+      // HTML fragment generation removed - React SPA handles all UI rendering
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update with final results
       await admin.firestore()
@@ -83,7 +83,7 @@ export const generateCalendarEvents = onCall(
           'enhancedFeatures.calendarIntegration.status': 'completed',
           'enhancedFeatures.calendarIntegration.progress': 100,
           'enhancedFeatures.calendarIntegration.data': calendarData,
-          'enhancedFeatures.calendarIntegration.htmlFragment': htmlFragment,
+          'enhancedFeatures.calendarIntegration.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.calendarIntegration.processedAt': FieldValue.serverTimestamp()
         });
 
@@ -91,7 +91,7 @@ export const generateCalendarEvents = onCall(
         success: true,
         events,
         summary,
-        htmlFragment
+        data: calendarData
       };
     } catch (error: any) {
       console.error('Error generating calendar events:', error);

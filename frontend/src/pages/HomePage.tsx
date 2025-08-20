@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FileUpload } from '../components/FileUpload';
 import { URLInput } from '../components/URLInput';
 import { SignInDialog } from '../components/SignInDialog';
-import { UserMenu } from '../components/UserMenu';
-import { Logo } from '../components/Logo';
+import { HeroSection } from '../components/HeroSection';
+import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadCV, createJob } from '../services/cvService';
-import { FileText, Globe, Sparkles, Menu } from 'lucide-react';
+import { FileText, Globe, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getErrorMessage, logError } from '../utils/errorHandling';
 
@@ -107,94 +107,18 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo size="small" variant="white" />
-            
-            {/* Mobile menu button */}
-            <button className="md:hidden p-2 rounded-lg hover:bg-gray-700">
-              <Menu className="w-6 h-6 text-gray-300" />
-            </button>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-blue-400 font-medium">Home</a>
-              <a href="/features" className="text-gray-300 hover:text-blue-400 font-medium transition-colors">Features</a>
-              <a href="/about" className="text-gray-300 hover:text-blue-400 font-medium transition-colors">About</a>
-              {user ? (
-                <UserMenu variant="white" />
-              ) : (
-                <button 
-                  onClick={async () => {
-                    try {
-                      await signInWithGoogle();
-                      toast.success('Signed in successfully!');
-                    } catch {
-                      toast.error('Failed to sign in');
-                    }
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors font-medium shadow-sm"
-                >
-                  Sign In
-                </button>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
+    <>
 
       {/* Hero Section */}
-      <main className="flex-1">
-        <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob"></div>
-            <div className="absolute top-40 right-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-          </div>
-          
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-100 mb-6 leading-tight animate-fade-in-up">
-              From Paper to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-400">Powerful</span>
-            </h1>
-            <p className="text-3xl md:text-4xl font-light text-gray-300 mb-8 animate-fade-in-up animation-delay-200">
-              Your CV, Reinvented
-            </p>
-            
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
-              Transform your traditional CV into an interactive masterpiece with AI-powered features, stunning templates, and one-click magic
-            </p>
-            
-            <div className="flex justify-center mb-12 animate-fade-in-up animation-delay-400">
-              <button 
-                onClick={() => document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 hover-glow"
-              >
-                Get Started Free
-              </button>
-            </div>
+      <HeroSection 
+        onScrollToUpload={() => document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' })}
+      />
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center gap-8 mb-16">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">10,000+</div>
-                <div className="text-sm text-gray-400">CVs Transformed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">4.9/5</div>
-                <div className="text-sm text-gray-400">User Rating</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">30 sec</div>
-                <div className="text-sm text-gray-400">Average Time</div>
-              </div>
-            </div>
-
-            {/* Upload Options */}
-            <div id="upload-section" className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 animate-fade-in-up animation-delay-600">
-              <h2 className="text-2xl font-bold text-gray-100 mb-6">Start Your Transformation</h2>
+      {/* Upload Options Section */}
+      <Section variant="content" background="neutral-800" spacing="lg">
+          <div className="max-w-4xl mx-auto">
+            <div id="upload-section" className="bg-gray-900/50 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-100 mb-6 text-center">Start Your Transformation</h2>
               
               {/* Display auth errors */}
               {error && (
@@ -310,13 +234,11 @@ export const HomePage = () => {
                 </div>
               )}
             </div>
-
           </div>
-        </section>
+      </Section>
 
-
-        {/* Original Features Section */}
-        <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
+      {/* Original Features Section */}
+      <Section id="features" variant="features" background="neutral-800" spacing="xl">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl font-bold text-center text-gray-100 mb-4">
               Core Features
@@ -359,10 +281,10 @@ export const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+      </Section>
 
-        {/* How it Works Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+      {/* How it Works Section */}
+      <Section variant="content" background="neutral-900" spacing="xl">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl font-bold text-center text-gray-100 mb-4">
               How It Works
@@ -427,17 +349,7 @@ export const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-400">
-            <p>&copy; 2025 CVPlus. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      </Section>
       
       {/* Sign In Dialog */}
       <SignInDialog 
@@ -445,6 +357,6 @@ export const HomePage = () => {
         onClose={() => setShowSignInDialog(false)}
         onSuccess={handleSignInSuccess}
       />
-    </div>
+    </>
   );
 };

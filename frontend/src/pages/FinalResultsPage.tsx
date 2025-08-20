@@ -17,6 +17,7 @@ import { useCVGeneration } from '../hooks/useCVGeneration';
 import { useFinalResultsPage } from '../hooks/useFinalResultsPage';
 import { useProgressiveEnhancement } from '../hooks/useProgressiveEnhancement';
 import { skipFeature } from '../services/cv/CVServiceCore';
+import { designSystem } from '../config/designSystem';
 import '../styles/final-results-animations.css';
 import toast from 'react-hot-toast';
 import { debugJobState, shouldDisplayCV } from '../utils/jobDebugger';
@@ -99,7 +100,7 @@ export const FinalResultsPage = () => {
                    'Generating your enhanced CV...';
     
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-neutral-900">
         <Header currentPage="final-results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
         <div className="flex items-center justify-center py-20">
           <div className="text-center max-w-md mx-auto">
@@ -134,10 +135,10 @@ export const FinalResultsPage = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-neutral-900">
         <Header currentPage="final-results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="bg-gray-800 rounded-lg shadow-lg p-8 text-center border border-gray-700 error-shake">
+          <div className="bg-neutral-800 rounded-lg shadow-lg p-8 text-center border border-neutral-700 error-shake">
             <FileText className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-100 mb-2">Error Loading CV</h1>
             <p className="text-gray-300 mb-6">{error}</p>
@@ -173,7 +174,7 @@ export const FinalResultsPage = () => {
       }}
     >
       <FinalResultsErrorBoundary>
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-neutral-900">
         <Header 
           currentPage="final-results" 
           jobId={jobId} 
@@ -247,7 +248,7 @@ export const FinalResultsPage = () => {
             {/* Feature Progress Section - Only show if there are progressive enhancement features */}
             {featureQueue.length > 0 && (
               <div className="mb-8">
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-5 h-5 text-cyan-400" />
                     <h2 className="text-lg font-semibold text-gray-100">
@@ -284,7 +285,7 @@ export const FinalResultsPage = () => {
             {/* CV Display */}
             <div className="mb-8 cv-display-fade-in">
               {canDisplayCV ? (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-semibold text-gray-100">Your Enhanced CV</h2>
@@ -310,8 +311,8 @@ export const FinalResultsPage = () => {
                   
                   {/* Show completed features summary */}
                   {featureQueue.length > 0 && (
-                    <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-200 mb-2">Applied Enhancements:</h4>
+                    <div className="mt-4 p-3 bg-neutral-700/50 rounded-lg">
+                      <h4 className="text-sm font-medium text-neutral-200 mb-2">Applied Enhancements:</h4>
                       <div className="flex flex-wrap gap-2">
                         {featureQueue.map(feature => {
                           const progress = progressState[feature.id];
@@ -355,7 +356,7 @@ export const FinalResultsPage = () => {
             </button>
             <button
               onClick={() => navigate(`/results/${jobId}`)}
-              className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-3 px-8 rounded-lg transition-colors"
+              className="bg-neutral-700 hover:bg-gray-600 text-neutral-200 font-semibold py-3 px-8 rounded-lg transition-colors"
             >
               Back to Feature Selection
             </button>

@@ -1,6 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
-import { Calendar, Briefcase, GraduationCap, ChevronLeft, ChevronRight, Maximize2, X, Award } from 'lucide-react';
+import { Calendar, Briefcase, GraduationCap, ChevronLeft, ChevronRight, Maximize2, X, Award, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CVFeatureProps } from '../../types/cv-features';
+import { FeatureWrapper } from './Common/FeatureWrapper';
+import { LoadingSpinner } from './Common/LoadingSpinner';
+import { ErrorBoundary } from './Common/ErrorBoundary';
+import { useFeatureData } from '../../hooks/useFeatureData';
+
+// Enhanced timeline data structure
+interface EnhancedTimelineData {
+  events: TimelineEvent[];
+  categories: Array<{
+    name: string;
+    color: string;
+    eventCount: number;
+  }>;
+  summary?: {
+    totalEvents: number;
+    yearsSpanned: number;
+    mostActiveYear: string;
+  };
+}
 
 interface TimelineEvent {
   id: string;
@@ -17,16 +37,9 @@ interface TimelineEvent {
   logo?: string;
 }
 
-interface InteractiveTimelineProps {
+interface InteractiveTimelineProps extends CVFeatureProps {
   events?: TimelineEvent[];
-  profileId?: string;
-  jobId?: string;
-  data?: {
-    contactName?: string;
-    totalEvents?: number;
-    yearsOfExperience?: number;
-  };
-  isEnabled?: boolean;
+  enhancedData?: EnhancedTimelineData | null;
   customization?: {
     title?: string;
     theme?: string;
@@ -35,24 +48,42 @@ interface InteractiveTimelineProps {
     showMetrics?: boolean;
     animationType?: string;
   };
-  className?: string;
-  mode?: string;
   onEventClick?: ((event: TimelineEvent) => void) | string;
 }
 
-export const InteractiveTimeline = ({ 
-  events = [], 
-  profileId,
+export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
   jobId,
-  data,
+  profileId,
   isEnabled = true,
-  customization,
-  className,
+  data,
+  events = [],
+  enhancedData,
+  customization = {},
+  onUpdate,
+  onError,
+  className = '',
   mode = 'public',
-  onEventClick 
-}: InteractiveTimelineProps) => {
+  onEventClick
+}) => {
+  // Enhanced data fetching
+  const {
+    data: fetchedTimelineData,
+    loading: dataLoading,
+    error: dataError,
+    refresh: refreshData
+  } = useFeatureData<EnhancedTimelineData>({
+    jobId,
+    featureName: 'career-timeline',
+    initialData: enhancedData,
+    params: { profileId }
+  });
+
+  // Use enhanced data if available
+  const timelineData = enhancedData || fetchedTimelineData;
+  const timelineEvents = timelineData?.events || events;
+
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
-  const [viewMode, setViewMode] = useState<'timeline' | 'calendar' | 'chart'>('timeline');
+  const [viewMode, setViewMode] = useState<'timeline' | 'calendar' | 'chart'>(customization?.viewMode || 'timeline');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [filterType, setFilterType] = useState<'all' | 'work' | 'education' | 'achievement'>('all');
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -64,6 +95,13 @@ export const InteractiveTimeline = ({
       setViewMode(customization.viewMode);
     }
   }, [customization?.viewMode, viewMode]);
+
+  // Update data when timeline data changes
+  useEffect(() => {
+    if (timelineData && onUpdate) {
+      onUpdate(timelineData);
+    }
+  }, [timelineData, onUpdate]);
 
   // Create default handler for CV mode when functions are passed as strings
   const createDefaultHandler = (handlerName: string | ((event: TimelineEvent) => void) | undefined) => {
@@ -84,17 +122,23 @@ export const InteractiveTimeline = ({
     return null;
   }
 
-  // Sort events by start date
-  const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  // Sort events by start date, handling null dates
+  const sortedEvents = [...timelineEvents].sort((a, b) => {
+    if (!a.startDate && !b.startDate) return 0;
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return a.startDate.getTime() - b.startDate.getTime();
+  });
   
   // Filter events based on selected type
   const filteredEvents = filterType === 'all' 
     ? sortedEvents 
     : sortedEvents.filter(event => event.type === filterType);
 
-  // Calculate timeline range
-  const startYear = Math.min(...events.map(e => e.startDate.getFullYear()));
-  const endYear = Math.max(...events.map(e => (e.endDate || new Date()).getFullYear()));
+  // Calculate timeline range, handling null dates
+  const validEvents = timelineEvents.filter(e => e.startDate);
+  const startYear = validEvents.length > 0 ? Math.min(...validEvents.map(e => e.startDate.getFullYear())) : new Date().getFullYear();
+  const endYear = validEvents.length > 0 ? Math.max(...validEvents.map(e => (e.endDate || new Date()).getFullYear())) : new Date().getFullYear();
   const yearRange = endYear - startYear + 1;
 
   // Get icon for event type
@@ -161,8 +205,87 @@ export const InteractiveTimeline = ({
     }
   };
 
+  // Component disabled state
+  if (!isEnabled) {
+    return null;
+  }
+
+  // Loading state
+  if (dataLoading && !timelineData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Interactive Timeline"
+          description="Loading timeline data..."
+          isLoading={true}
+        >
+          <LoadingSpinner size="large" message="Loading timeline data..." />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // Error state
+  if (dataError && !timelineData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Interactive Timeline"
+          error={dataError}
+          onRetry={refreshData}
+        >
+          <div />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // No events state
+  if (timelineEvents.length === 0) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Interactive Timeline"
+          description="No timeline events available"
+        >
+          <div className="text-center py-12">
+            <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No Timeline Events
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Add your career events to see them visualized here.
+            </p>
+            <button
+              onClick={refreshData}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 inline mr-2" />
+              Refresh
+            </button>
+          </div>
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <ErrorBoundary onError={onError}>
+      <FeatureWrapper
+        className={className}
+        mode={mode}
+        title={customization?.title || "Interactive Timeline"}
+        description={`Explore ${timelineEvents.length} career events across ${yearRange} years`}
+        isLoading={dataLoading}
+        onRetry={refreshData}
+      >
+        <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* View Mode Selector */}
@@ -551,6 +674,29 @@ export const InteractiveTimeline = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+
+          {/* Timeline Summary */}
+          {timelineData?.summary && (
+            <div className="bg-gray-800 rounded-xl p-6 mt-6">
+              <h4 className="text-lg font-semibold text-gray-100 mb-4">Timeline Summary</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-400">{timelineData.summary.totalEvents}</div>
+                  <div className="text-sm text-gray-400">Total Events</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400">{timelineData.summary.yearsSpanned}</div>
+                  <div className="text-sm text-gray-400">Years Spanned</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-400">{timelineData.summary.mostActiveYear}</div>
+                  <div className="text-sm text-gray-400">Most Active Year</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </FeatureWrapper>
+    </ErrorBoundary>
   );
 };

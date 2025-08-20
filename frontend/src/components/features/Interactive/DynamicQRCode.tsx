@@ -10,13 +10,32 @@ import { LoadingSpinner } from '../Common/LoadingSpinner';
 import { ErrorBoundary, FunctionalErrorBoundary } from '../Common/ErrorBoundary';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 
+// Enhanced JSON data structure for QR Code
+interface EnhancedQRCodeData {
+  qrCode: {
+    imageUrl: string;
+    dataUrl: string;
+    value: string;
+  };
+  contactData: {
+    format: 'vcard' | 'url';
+    data: Record<string, any>;
+  };
+  analytics?: {
+    scanCount: number;
+    uniqueScans: number;
+    lastScanned?: Date;
+  };
+}
+
 interface QRCodeProps extends CVFeatureProps {
-  data: {
+  data?: {
     url: string;
     profileUrl?: string;
     portfolioUrl?: string;
     linkedinUrl?: string;
-  };
+  } | null;
+  enhancedData?: EnhancedQRCodeData | null;
   customization?: {
     size?: number;
     style?: 'square' | 'rounded' | 'circular';
@@ -49,6 +68,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
   profileId,
   isEnabled = true,
   data,
+  enhancedData,
   customization = {},
   onUpdate,
   onError,
@@ -67,13 +87,32 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [analytics, setAnalytics] = useState<QRCodeAnalytics | null>(null);
-  const [selectedUrl, setSelectedUrl] = useState<string>(data.url);
+  const [selectedUrl, setSelectedUrl] = useState<string>(
+    qrData?.qrCode?.value || basicData?.url || ''
+  );
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // Enhanced data fetching using hooks
+  const {
+    data: fetchedQRData,
+    loading: dataLoading,
+    error: dataError,
+    refresh: refreshData
+  } = useFeatureData<EnhancedQRCodeData>({
+    jobId,
+    featureName: 'qr-code',
+    initialData: enhancedData,
+    params: { profileId }
+  });
 
   // Firebase analytics function
   const trackQRScan = httpsCallable(functions, 'trackQRCodeScan');
   const getQRAnalytics = httpsCallable(functions, 'getQRCodeAnalytics');
+
+  // Use enhanced data if available, fall back to basic data
+  const qrData = enhancedData || fetchedQRData;
+  const basicData = data;
 
   // Generate QR code options
   const getQRCodeOptions = useCallback((): QRCodeOptions => {
@@ -237,7 +276,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
     } catch (err) {
       console.warn('Failed to track QR generation:', err);
     }
-  }, [jobId, profileId, trackQRScan]);
+  }, [jobId, profileId]);
 
   // Load analytics data
   const loadAnalytics = useCallback(async () => {
@@ -247,7 +286,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
     } catch (err) {
       console.warn('Failed to load QR analytics:', err);
     }
-  }, [jobId, profileId, getQRAnalytics]);
+  }, [jobId, profileId]);
 
   // Handle URL selection change
   const handleUrlChange = useCallback((url: string) => {
@@ -322,15 +361,23 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
   const handleRefresh = useCallback(() => {
     generateQRCode(selectedUrl);
     loadAnalytics();
-  }, [generateQRCode, selectedUrl, loadAnalytics]);
+  }, [generateQRCode, selectedUrl]);
 
   // Initialize component
   useEffect(() => {
-    if (isEnabled && data.url) {
-      generateQRCode(selectedUrl);
+    const urlToUse = qrData?.qrCode?.value || basicData?.url;
+    if (isEnabled && urlToUse) {
+      if (qrData?.qrCode?.imageUrl) {
+        // Use pre-generated QR code if available
+        setQrDataUrl(qrData.qrCode.dataUrl || qrData.qrCode.imageUrl);
+        setAnalytics(qrData.analytics || null);
+      } else {
+        // Generate QR code locally
+        generateQRCode(selectedUrl);
+      }
       loadAnalytics();
     }
-  }, [isEnabled, data.url, selectedUrl, generateQRCode, loadAnalytics]);
+  }, [isEnabled, qrData, basicData, selectedUrl, generateQRCode]);
 
   // Re-generate when customization changes
   useEffect(() => {
@@ -343,12 +390,94 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
     return null;
   }
 
-  const urlOptions = [
-    { label: 'Profile URL', value: data.url, icon: '👤' },
-    ...(data.profileUrl ? [{ label: 'Public Profile', value: data.profileUrl, icon: '🌐' }] : []),
-    ...(data.portfolioUrl ? [{ label: 'Portfolio', value: data.portfolioUrl, icon: '💼' }] : []),
-    ...(data.linkedinUrl ? [{ label: 'LinkedIn', value: data.linkedinUrl, icon: '💼' }] : [])
-  ];
+  // Build URL options from available data sources
+  const buildUrlOptions = () => {
+    const options = [];
+    
+    if (qrData?.qrCode?.value) {
+      options.push({ label: 'Generated URL', value: qrData.qrCode.value, icon: '🔗' });
+    }
+    
+    if (basicData?.url) {
+      options.push({ label: 'Profile URL', value: basicData.url, icon: '👤' });
+    }
+    
+    if (basicData?.profileUrl) {
+      options.push({ label: 'Public Profile', value: basicData.profileUrl, icon: '🌐' });
+    }
+    
+    if (basicData?.portfolioUrl) {
+      options.push({ label: 'Portfolio', value: basicData.portfolioUrl, icon: '💼' });
+    }
+    
+    if (basicData?.linkedinUrl) {
+      options.push({ label: 'LinkedIn', value: basicData.linkedinUrl, icon: '💼' });
+    }
+    
+    return options;
+  };
+  
+  const urlOptions = buildUrlOptions();
+
+  // Loading state handling
+  if (dataLoading && !qrData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Dynamic QR Code"
+          description="Loading QR code data..."
+          isLoading={true}
+        >
+          <LoadingSpinner size="large" message="Loading QR code data..." />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // Error state handling
+  if ((dataError || error) && !qrData && !basicData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Dynamic QR Code"
+          error={dataError || error}
+          onRetry={refreshData}
+        >
+          <div />
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // No data state
+  if (!qrData && !basicData) {
+    return (
+      <ErrorBoundary onError={onError}>
+        <FeatureWrapper
+          className={className}
+          mode={mode}
+          title="Dynamic QR Code"
+          description="No QR code data available"
+        >
+          <div className="text-center py-8">
+            <QrCode className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600">No QR code data available</p>
+            <button
+              onClick={refreshData}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 inline mr-2" />
+              Retry
+            </button>
+          </div>
+        </FeatureWrapper>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary onError={onError}>
@@ -357,9 +486,12 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
         mode={mode}
         title="Dynamic QR Code"
         description="Customizable QR code with analytics tracking"
-        isLoading={isGenerating}
+        isLoading={isGenerating || dataLoading}
         error={error}
-        onRetry={() => generateQRCode(selectedUrl)}
+        onRetry={() => {
+          refreshData();
+          if (selectedUrl) generateQRCode(selectedUrl);
+        }}
       >
         <div className="space-y-6">
           {/* URL Selection */}
@@ -522,7 +654,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
           )}
 
           {/* Analytics */}
-          {analytics && (
+          {(analytics || qrData?.analytics) && (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="w-5 h-5 text-blue-600" />
@@ -531,19 +663,25 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{analytics.totalScans}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(analytics || qrData?.analytics)?.scanCount || 0}
+                  </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Total Scans</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{analytics.uniqueScans}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {(analytics || qrData?.analytics)?.uniqueScans || 0}
+                  </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Unique Scans</div>
                 </div>
                 
-                {analytics.lastScanned && (
+                {(analytics?.lastScanned || qrData?.analytics?.lastScanned) && (
                   <div className="text-center">
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {new Date(analytics.lastScanned).toLocaleDateString()}
+                      {new Date(
+                        analytics?.lastScanned || qrData?.analytics?.lastScanned!
+                      ).toLocaleDateString()}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Last Scan</div>
                   </div>

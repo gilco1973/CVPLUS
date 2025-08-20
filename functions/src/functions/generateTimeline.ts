@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { timelineGenerationService } from '../services/timeline-generation.service';
-import { htmlFragmentGenerator } from '../services/html-fragment-generator.service';
+// htmlFragmentGenerator import removed - using React SPA architecture
 import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 import { handleFunctionError } from '../utils/enhanced-error-handler';
 
@@ -40,7 +40,7 @@ export const generateTimeline = onCall(
         return {
           success: true,
           timeline: jobData.enhancedFeatures.timeline.data,
-          htmlFragment: jobData.enhancedFeatures.timeline.htmlFragment
+          // HTML fragment removed with React SPA migration
         };
       }
 
@@ -72,7 +72,7 @@ export const generateTimeline = onCall(
 
       // Generate HTML fragment for progressive enhancement
       const experience = jobData.parsedData.experience || [];
-      const htmlFragment = htmlFragmentGenerator.generateTimelineHTML(experience);
+      // HTML generation removed - React SPA handles UI rendering;
 
       // Update with final results
       await admin.firestore()
@@ -82,14 +82,14 @@ export const generateTimeline = onCall(
           'enhancedFeatures.timeline.status': 'completed',
           'enhancedFeatures.timeline.progress': 100,
           'enhancedFeatures.timeline.data': timelineData,
-          'enhancedFeatures.timeline.htmlFragment': htmlFragment,
+          'enhancedFeatures.timeline.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
         });
 
       return {
         success: true,
         timeline: timelineData,
-        htmlFragment
+        htmlFragment: null
       };
     } catch (error: any) {
       console.error('Error generating timeline:', error);

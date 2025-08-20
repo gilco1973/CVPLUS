@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Logo } from '../components/Logo';
-import { UserMenu } from '../components/UserMenu';
+import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Code2, 
@@ -15,6 +14,7 @@ import {
   Users,
   BookOpen
 } from 'lucide-react';
+import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
 export const AboutPage = () => {
@@ -22,64 +22,32 @@ export const AboutPage = () => {
   const { user, signInWithGoogle } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo size="small" />
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">Home</a>
-              <a href="/features" className="text-gray-300 hover:text-cyan-400 font-medium transition-colors">Features</a>
-              <a href="/about" className="text-cyan-400 font-medium">About</a>
-              {user ? (
-                <UserMenu />
-              ) : (
-                <button 
-                  onClick={async () => {
-                    try {
-                      await signInWithGoogle();
-                      toast.success('Signed in successfully!');
-                    } catch {
-                      toast.error('Failed to sign in');
-                    }
-                  }}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors font-medium shadow-sm"
-                >
-                  Sign In
-                </button>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-neutral-900">
       {/* Hero Section */}
-      <section className="relative py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Section variant="hero" background="gradient">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-100 mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-neutral-100 mb-6">
             About CVPlus
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
             An open-source project dedicated to transforming how professionals present themselves
           </p>
         </div>
-      </section>
+      </Section>
 
       {/* Main Content */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <Section variant="content" background="neutral-900">
         <div className="max-w-4xl mx-auto">
           {/* Creator Section */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 mb-12">
+          <div className="bg-neutral-800 rounded-2xl p-8 border border-neutral-700 mb-12">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg">
                 <Code2 className="w-8 h-8 text-cyan-400" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-100">Created by Gil Klainert</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">Created by Gil Klainert</h2>
             </div>
             
-            <div className="space-y-4 text-gray-300">
+            <div className="space-y-4 text-neutral-300">
               <p className="text-lg leading-relaxed">
                 Hi! I'm Gil Klainert, a Software Engineering Leader and AI Expert passionate about leveraging 
                 technology to solve real-world problems. I created CVPlus as an open-source gift to 
@@ -107,7 +75,7 @@ export const AboutPage = () => {
                   href="https://github.com/gilco1973/cvplus" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
                 >
                   <Github className="w-4 h-4" />
                   View on GitHub
@@ -118,15 +86,15 @@ export const AboutPage = () => {
           </div>
 
           {/* Mission Section */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 mb-12">
+          <div className="bg-neutral-800 rounded-2xl p-8 border border-neutral-700 mb-12">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-3 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
                 <Heart className="w-8 h-8 text-purple-400" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-100">Our Mission</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">Our Mission</h2>
             </div>
             
-            <p className="text-lg text-gray-300 leading-relaxed">
+            <p className="text-lg text-neutral-300 leading-relaxed">
               CVPlus was born from a simple belief: your professional story deserves to be told 
               in the most compelling way possible. We're here to democratize access to AI-powered 
               career tools, making them free and accessible to everyone, regardless of their 
@@ -136,14 +104,14 @@ export const AboutPage = () => {
 
           {/* Values Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg">
                   <BookOpen className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">Open Source</h3>
-                  <p className="text-gray-400">
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Open Source</h3>
+                  <p className="text-neutral-400">
                     Released under the MIT License, CVPlus is free to use, modify, and distribute. 
                     We believe in the power of community-driven development.
                   </p>
@@ -151,14 +119,14 @@ export const AboutPage = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
                   <Brain className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">AI-Powered</h3>
-                  <p className="text-gray-400">
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">AI-Powered</h3>
+                  <p className="text-neutral-400">
                     Leveraging Claude AI's advanced capabilities to understand, analyze, and enhance 
                     your professional profile with intelligent insights.
                   </p>
@@ -166,14 +134,14 @@ export const AboutPage = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg">
                   <Lightbulb className="w-6 h-6 text-yellow-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">Innovation First</h3>
-                  <p className="text-gray-400">
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Innovation First</h3>
+                  <p className="text-neutral-400">
                     Constantly pushing boundaries with features like AI career podcasts, interactive 
                     timelines, and dynamic QR codes that bring CVs to life.
                   </p>
@@ -181,14 +149,14 @@ export const AboutPage = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
                   <Users className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">Community Driven</h3>
-                  <p className="text-gray-400">
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Community Driven</h3>
+                  <p className="text-neutral-400">
                     Built for the community, by the community. We welcome contributions, feedback, 
                     and ideas from users worldwide.
                   </p>
@@ -203,10 +171,10 @@ export const AboutPage = () => {
               <div className="p-3 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg">
                 <Sparkles className="w-8 h-8 text-cyan-400" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-100">Want to Contribute?</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">Want to Contribute?</h2>
             </div>
             
-            <p className="text-lg text-gray-300 leading-relaxed mb-6">
+            <p className="text-lg text-neutral-300 leading-relaxed mb-6">
               CVPlus is open to contributions! Whether you're a developer, designer, or just 
               someone with great ideas, we'd love to have you join our mission to revolutionize 
               how people present their professional stories.
@@ -227,7 +195,7 @@ export const AboutPage = () => {
                 href="https://github.com/gilco1973/cvplus/issues" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors font-medium"
               >
                 Report Issues & Ideas
                 <ExternalLink className="w-4 h-4" />
@@ -236,30 +204,30 @@ export const AboutPage = () => {
           </div>
 
           {/* Tech Stack */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700">
-            <h2 className="text-2xl font-bold text-gray-100 mb-6">Built With Modern Technology</h2>
+          <div className="bg-neutral-800 rounded-2xl p-8 border border-neutral-700">
+            <h2 className="text-2xl font-bold text-neutral-100 mb-6">Built With Modern Technology</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 'React', 'TypeScript', 'Tailwind CSS', 'Firebase',
                 'Claude AI', 'Vite', 'React Router', 'PDF Generation'
               ].map((tech) => (
-                <div key={tech} className="bg-gray-700 rounded-lg px-4 py-2 text-center text-gray-300 text-sm font-medium">
+                <div key={tech} className="bg-neutral-700 rounded-lg px-4 py-2 text-center text-neutral-300 text-sm font-medium">
                   {tech}
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-800">
+      <Section variant="content" background="neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-100 mb-4">
+          <h2 className="text-3xl font-bold text-neutral-100 mb-4">
             Ready to Transform Your CV?
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join thousands of professionals who have already revolutionized their career presentation
+          <p className="text-xl text-neutral-300 mb-8">
+            Start your career transformation journey today
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
@@ -270,26 +238,14 @@ export const AboutPage = () => {
             </button>
             <button 
               onClick={() => navigate('/')}
-              className="px-8 py-4 bg-gray-700 text-gray-100 font-semibold rounded-lg shadow-lg hover:shadow-xl border border-gray-600 transform hover:-translate-y-1 transition-all duration-200 hover:bg-gray-600"
+              className="px-8 py-4 bg-neutral-700 text-neutral-100 font-semibold rounded-lg shadow-lg hover:shadow-xl border border-neutral-600 transform hover:-translate-y-1 transition-all duration-200 hover:bg-neutral-600"
             >
               <Home className="inline w-5 h-5 mr-2" />
               Back to Home
             </button>
           </div>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-400">
-            <p>&copy; 2025 CVPlus. Released under MIT License.</p>
-            <p className="mt-2">
-              Created with ❤️ by <a href="https://klainert.com" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">Gil Klainert</a>
-            </p>
-          </div>
-        </div>
-      </footer>
+      </Section>
     </div>
   );
 };

@@ -245,3 +245,27 @@ export {
   autoEnhanceQRCodes,
   generateQRCodePreview
 } from './functions/qrCodeEnhancement';
+
+// Export CV data update function
+export { updateCVData } from './functions/updateCVData';
+
+// Export payment processing functions
+export {
+  createPaymentIntent,
+} from './functions/payments/createPaymentIntent';
+
+export {
+  confirmPayment,
+} from './functions/payments/confirmPayment';
+
+export {
+  checkFeatureAccess,
+} from './functions/payments/checkFeatureAccess';
+
+export {
+  handleStripeWebhook,
+} from './functions/payments/handleStripeWebhook';
+
+export {
+  getUserSubscription,
+} from './functions/payments/getUserSubscription';

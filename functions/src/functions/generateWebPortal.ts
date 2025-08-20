@@ -3,13 +3,15 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { requireGoogleAuth, updateUserLastLogin } from '../utils/auth';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 import { 
   PortalConfig, 
   PortalGenerationResult, 
   PortalStatus, 
   PortalGenerationStep,
   PortalErrorCode,
-  ErrorCategory
+  ErrorCategory,
+  GenerationMetadata
 } from '../types/portal';
 
 /**
@@ -34,7 +36,7 @@ export const generateWebPortal = onCall(
     ...corsOptions,
     secrets: ['ANTHROPIC_API_KEY', 'HUGGINGFACE_API_TOKEN']
   },
-  async (request) => {
+  withPremiumAccess('webPortal', async (request) => {
     console.log('[GENERATE-WEB-PORTAL] Function called');
     console.log('[GENERATE-WEB-PORTAL] Request auth:', request.auth ? 'Present' : 'Missing');
     console.log('[GENERATE-WEB-PORTAL] Request data keys:', Object.keys(request.data || {}));
@@ -221,9 +223,14 @@ export const generateWebPortal = onCall(
       const processingTimeMs = Date.now() - startTime;
       
       // Generate metadata for the portal generation
-      const generationMetadata = {
+      const generationMetadata: GenerationMetadata = {
         version: '1.0.0',
         timestamp: new Date(),
+        cvAnalysis: jobData.parsedData, // Use parsed CV data
+        templateUsed: 'default', // Template selection would be implemented
+        featuresEnabled: ['rag', 'huggingface', 'qr-codes'],
+        filesGenerated: 5, // Approximate count
+        totalSize: 1024000, // Approximate size in bytes
         statistics: {
           totalTimeMs: processingTimeMs,
           stepTimes: stepsCompleted.reduce((acc, step) => ({ ...acc, [step]: 1000 }), {} as Record<PortalGenerationStep, number>),
@@ -234,18 +241,13 @@ export const generateWebPortal = onCall(
         },
         resourceUsage: {
           memoryUsageMB: 0, // Would be actual usage
-          cpuTimeSeconds: Math.floor(processingTimeMs / 1000),
-          networkRequests: 0, // Would be actual count
-          storageUsedMB: 0, // Would be actual usage
-          apiCalls: {} // Would be actual API call counts
+          cpuUsagePercent: Math.min(100, (processingTimeMs / 10000) * 100),
+          diskUsageMB: 0 // Would be actual usage
         },
         quality: {
-          completenessScore: 0.95,
-          designConsistencyScore: 0.90,
-          ragAccuracyScore: 0.88,
-          performanceScore: 0.92,
-          accessibilityScore: 0.85,
-          overallScore: 0.90
+          completionRate: 0.95,
+          accuracyScore: 0.90,
+          performanceScore: 0.92
         }
       };
       
@@ -419,5 +421,5 @@ export const generateWebPortal = onCall(
       
       return errorResult;
     }
-  }
+  })
 );

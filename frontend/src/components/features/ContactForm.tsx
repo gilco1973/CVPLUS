@@ -165,10 +165,10 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             />
 
             {/* Submit Button */}
-            <div className="form-actions text-center pt-4">
+            <div className="form-actions text-center pt-6">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !formData.senderName || !formData.senderEmail || !formData.message}
                 className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:shadow-none transform hover:-translate-y-1 disabled:translate-y-0 transition-all duration-200 min-w-[200px]"
                 aria-describedby={isSubmitting ? 'submitting-status' : undefined}
               >
@@ -190,6 +190,14 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             </div>
           </form>
 
+          {/* Status Display */}
+          <ContactFormStatus 
+            status={submissionStatus} 
+            error={errorMessage || functionError?.message}
+            retryCount={retryCount}
+            maxRetries={maxRetries}
+            onRetry={handleRetry}
+          />
         </div>
       </FeatureWrapper>
     </ErrorBoundary>

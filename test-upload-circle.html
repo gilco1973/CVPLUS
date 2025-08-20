@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Circle Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to match CVPlus design */
+        .profile-upload-circle {
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Header similar to CVPersonalInfo -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8 text-white">
+            <div class="flex flex-col items-center gap-6">
+                <!-- Profile Picture with Overlapping Upload Circle -->
+                <div class="flex-shrink-0 relative">
+                    <div 
+                        class="relative group"
+                        onmouseenter="showUploadCircle()"
+                        onmouseleave="hideUploadCircle()"
+                    >
+                        <!-- Profile Picture (with initials) -->
+                        <div class="w-24 h-24 rounded-full border-4 border-white/20 bg-white/10 flex items-center justify-center text-2xl font-bold transition-opacity duration-200">
+                            GK
+                        </div>
+                        
+                        <!-- Overlapping upload circle - positioned in bottom-right -->
+                        <div 
+                            id="upload-circle"
+                            class="
+                                profile-upload-circle
+                                absolute -bottom-1 -right-1 z-10 cursor-pointer group
+                                w-8 h-8 rounded-full bg-blue-600 border-2 border-white shadow-lg
+                                flex items-center justify-center
+                                opacity-0 hover:opacity-100 transition-opacity duration-200
+                                hover:bg-blue-700 hover:scale-110 transition-all duration-200
+                            "
+                            onclick="handleUploadClick()"
+                        >
+                            <!-- Camera Icon (simplified) -->
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Name and title -->
+                <div class="text-center">
+                    <h1 class="text-3xl font-bold mb-2">Gil Klainert</h1>
+                    <h2 class="text-xl text-white/90 font-medium">Professional Title</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Instructions -->
+    <div class="max-w-md mx-auto mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h3 class="font-bold text-yellow-800 mb-2">🧪 Test Instructions</h3>
+        <ol class="text-sm text-yellow-700 space-y-1">
+            <li>1. Hover over the profile picture (GK circle)</li>
+            <li>2. Upload circle should appear in bottom-right corner</li>
+            <li>3. Upload circle should have blue background with camera icon</li>
+            <li>4. Hovering over upload circle should make it darker and larger</li>
+            <li>5. Upload circle should disappear when not hovering</li>
+        </ol>
+        <p class="mt-2 text-xs text-yellow-600">This replicates the behavior implemented in the React component.</p>
+    </div>
+
+    <script>
+        function showUploadCircle() {
+            const circle = document.getElementById('upload-circle');
+            if (circle) {
+                circle.style.opacity = '1';
+            }
+        }
+
+        function hideUploadCircle() {
+            const circle = document.getElementById('upload-circle');
+            if (circle && !circle.matches(':hover')) {
+                circle.style.opacity = '0';
+            }
+        }
+
+        function handleUploadClick() {
+            alert('Upload clicked! In the real component, this would open the file selector.');
+        }
+    </script>
+</body>
+</html>
