@@ -22,77 +22,53 @@ import { AchievementCards } from '../components/features/Visual/AchievementCards
 // Media Components - IMPLEMENTED
 import { PortfolioGallery } from '../components/features/Media/PortfolioGallery';
 
-// Components to be implemented in future phases
-// import { KeywordEnhancement } from '../components/features/AI-Powered/KeywordEnhancement';
-// import { AchievementHighlighting } from '../components/features/AI-Powered/AchievementHighlighting';
-// import { PrivacyMode } from '../components/features/AI-Powered/PrivacyMode';
-// import { PublicProfile } from '../components/features/AI-Powered/PublicProfile';
-// import { VideoIntroduction } from '../components/features/AI-Powered/VideoIntroduction';
-// import { PersonalityInsights } from '../components/features/AI-Powered/PersonalityInsights';
-// import { LanguageProficiency } from '../components/features/Visual/LanguageProficiency';
-// import { CertificationBadges } from '../components/features/Visual/CertificationBadges';
-// import { TestimonialsCarousel } from '../components/features/Media/TestimonialsCarousel';
-
-// Component Registry
+// Component Registry - All Implemented Components
 export const FEATURE_COMPONENTS: ComponentRegistry = {
-  // Existing components
+  // Core Interactive Components
   'ContactForm': ContactForm,
   'contact-form': ContactForm,
   'built-in-contact-form': ContactForm,
-
-  // AI-Powered Components (placeholders for now)
-  // 'AIPodcastPlayer': AIPodcastPlayer,
-  // 'ai-career-podcast': AIPodcastPlayer,
-  // 'ATSOptimization': ATSOptimization,
-  // 'ats-optimization': ATSOptimization,
-  // 'KeywordEnhancement': KeywordEnhancement,
-  // 'keyword-enhancement': KeywordEnhancement,
-  // 'AchievementHighlighting': AchievementHighlighting,
-  // 'achievement-highlighting': AchievementHighlighting,
-  // 'PrivacyMode': PrivacyMode,
-  // 'privacy-mode': PrivacyMode,
-  // 'AIChatAssistant': AIChatAssistant,
-  // 'ai-chat-assistant': AIChatAssistant,
-  // 'PublicProfile': PublicProfile,
-  // 'public-profile': PublicProfile,
-  // 'SkillsAnalytics': SkillsAnalytics,
-  // 'skills-analytics': SkillsAnalytics,
-  // 'VideoIntroduction': VideoIntroduction,
-  // 'video-introduction': VideoIntroduction,
-  // 'PersonalityInsights': PersonalityInsights,
-  // 'personality-insights': PersonalityInsights,
-
-  // Interactive Components
+  
   'DynamicQRCode': DynamicQRCode,
   'qr-code': DynamicQRCode,
   'dynamic-qr-code': DynamicQRCode,
+  
   'SocialMediaLinks': SocialMediaLinks,
   'social-media-links': SocialMediaLinks,
   'social-media-integration': SocialMediaLinks,
-  // 'CareerTimeline': CareerTimeline,
-  // 'career-timeline': CareerTimeline,
-  // 'interactive-timeline': CareerTimeline,
+  
+  'CareerTimeline': CareerTimeline,
+  'career-timeline': CareerTimeline,
+  'interactive-timeline': CareerTimeline,
 
-  // Visual Components
+  // AI-Powered Components - IMPLEMENTED
+  'AIPodcastPlayer': AIPodcastPlayer,
+  'ai-career-podcast': AIPodcastPlayer,
+  'podcast': AIPodcastPlayer,
+  
+  'ATSOptimization': ATSOptimization,
+  'ats-optimization': ATSOptimization,
+  
+  'SkillsAnalytics': SkillsAnalytics,
+  'skills-analytics': SkillsAnalytics,
+  
+  'AIChatAssistant': AIChatAssistant,
+  'ai-chat-assistant': AIChatAssistant,
+  'chat': AIChatAssistant,
+
+  // Visual Components - IMPLEMENTED
   'SkillsVisualization': SkillsVisualization,
   'skills-visualization': SkillsVisualization,
   'interactive-skills-charts': SkillsVisualization,
-  // 'AchievementCards': AchievementCards,
-  // 'achievement-cards': AchievementCards,
-  // 'animated-achievement-cards': AchievementCards,
-  // 'LanguageProficiency': LanguageProficiency,
-  // 'language-proficiency': LanguageProficiency,
-  // 'language-proficiency-visuals': LanguageProficiency,
-  // 'CertificationBadges': CertificationBadges,
-  // 'certification-badges': CertificationBadges,
-  // 'verified-certification-badges': CertificationBadges,
+  
+  'AchievementCards': AchievementCards,
+  'achievement-cards': AchievementCards,
+  'animated-achievement-cards': AchievementCards,
 
-  // Media Components (placeholders for now)
-  // 'PortfolioGallery': PortfolioGallery,
-  // 'portfolio-gallery': PortfolioGallery,
-  // 'interactive-portfolio-gallery': PortfolioGallery,
-  // 'TestimonialsCarousel': TestimonialsCarousel,
-  // 'testimonials-carousel': TestimonialsCarousel,
+  // Media Components - IMPLEMENTED
+  'PortfolioGallery': PortfolioGallery,
+  'portfolio-gallery': PortfolioGallery,
+  'interactive-portfolio-gallery': PortfolioGallery,
 };
 
 // Feature Registry Class
@@ -151,37 +127,27 @@ export const isFeatureSupported = (name: string): boolean => {
   return FeatureRegistry.getInstance().has(name);
 };
 
-// Feature categories for organization
+// Updated feature categories for organization
 export const FEATURE_CATEGORIES = {
   'ai-powered': [
     'ai-career-podcast',
     'ats-optimization', 
-    'keyword-enhancement',
-    'achievement-highlighting',
-    'privacy-mode',
-    'ai-chat-assistant',
-    'public-profile',
     'skills-analytics',
-    'video-introduction',
-    'personality-insights'
+    'ai-chat-assistant',
+    'podcast'
   ],
   'interactive': [
     'qr-code',
     'career-timeline',
     'contact-form',
-    'availability-calendar',
     'social-media-links'
   ],
   'visual': [
     'skills-visualization',
-    'achievement-cards',
-    'language-proficiency',
-    'certification-badges'
+    'achievement-cards'
   ],
   'media': [
-    'video-introduction',
-    'portfolio-gallery',
-    'testimonials-carousel'
+    'portfolio-gallery'
   ]
 };
 
@@ -192,4 +158,15 @@ export const getFeatureCategory = (featureName: string): string | undefined => {
     }
   }
   return undefined;
+};
+
+// Export implementation statistics
+export const IMPLEMENTATION_STATS = {
+  totalFeatures: Object.keys(FEATURE_COMPONENTS).length,
+  implementedComponents: 10, // ContactForm, DynamicQRCode, SocialMediaLinks, CareerTimeline, AIPodcastPlayer, ATSOptimization, SkillsAnalytics, AIChatAssistant, SkillsVisualization, AchievementCards, PortfolioGallery
+  aiPoweredComponents: 4,
+  interactiveComponents: 4, 
+  visualComponents: 2,
+  mediaComponents: 1,
+  completionPercentage: Math.round((11 / 22) * 100) // 11 components out of planned 22
 };

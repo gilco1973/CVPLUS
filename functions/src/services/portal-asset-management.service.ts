@@ -163,9 +163,9 @@ export class PortalAssetManagementService {
 
     try {
       // Extract profile image
-      if (cvData.personalInfo?.profileImage) {
+      if (cvData.personalInfo?.photo) {
         const profileAsset = await this.processAsset({
-          url: cvData.personalInfo.profileImage,
+          url: cvData.personalInfo.photo,
           type: AssetType.PROFILE_IMAGE,
           source: AssetSource.CV_EXTRACTION,
           jobId,

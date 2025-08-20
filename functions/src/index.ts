@@ -216,7 +216,7 @@ export {
 export {
   enhanceQRCodes,
   getEnhancedQRCodes,
-  trackQRCodeScan,
+  trackQRCodeScanEnhanced,
   getQRCodeAnalytics,
   autoEnhanceQRCodes,
   generateQRCodePreview

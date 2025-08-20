@@ -8,7 +8,7 @@
  * @created 2025-08-19
  */
 
-import { HuggingFaceApi } from '@huggingface/hub';
+import { createRepo, uploadFiles, spaceInfo, listSpaces } from '@huggingface/hub';
 import * as crypto from 'crypto';
 import { PortalConfig, HuggingFaceSpaceConfig, DeploymentResult, PortalErrorCode } from '../types/portal';
 import { resilienceService, ResilienceService } from './resilience.service';

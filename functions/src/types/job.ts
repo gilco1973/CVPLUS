@@ -34,6 +34,7 @@ export interface Job {
 export interface ParsedCV {
   personalInfo?: {
     name?: string;
+    title?: string; // Professional title
     email?: string;
     phone?: string;
     address?: string;
@@ -50,6 +51,7 @@ export interface ParsedCV {
   // Alias for personalInfo for compatibility
   personal?: {
     name?: string;
+    title?: string; // Professional title
     email?: string;
     phone?: string;
     address?: string;
@@ -73,6 +75,7 @@ export interface ParsedCV {
     description?: string;
     achievements?: string[];
     technologies?: string[];
+    companyLogo?: string; // Company logo URL
   }>;
   education?: Array<{
     institution: string;
@@ -97,12 +100,14 @@ export interface ParsedCV {
     issuer: string;
     date: string;
     credentialId?: string;
+    certificateImage?: string; // Certificate image URL
   }>;
   projects?: Array<{
     name: string;
     description: string;
     technologies: string[];
     url?: string;
+    images?: string[]; // Project image URLs
   }>;
   publications?: Array<{
     title: string;

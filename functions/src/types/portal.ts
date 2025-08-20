@@ -310,6 +310,14 @@ export interface PortalTheme {
   
   /** Responsive breakpoints */
   breakpoints: any; // BreakpointConfig - simplified for now
+  
+  /** Background images configuration */
+  backgroundImages?: Array<{
+    url: string;
+    type: 'hero' | 'section' | 'pattern';
+    opacity?: number;
+    position?: string;
+  }>;
 }
 
 /**
@@ -325,12 +333,18 @@ export interface ColorScheme {
   /** Background color */
   background: string;
   
+  /** Dark background color */
+  backgroundDark?: string;
+  
   /** Text colors */
   text: {
     primary: string;
     secondary: string;
     muted: string;
   };
+  
+  /** Secondary text color (alias for text.secondary) */
+  textSecondary?: string;
   
   /** Border colors */
   border: {
@@ -1274,6 +1288,180 @@ export interface QRCodeStyling {
   
   /** Border width */
   borderWidth: number;
+}
+
+// ============================================================================
+// ASSET MANAGEMENT TYPES
+// ============================================================================
+
+/**
+ * Supported asset types for portal generation
+ */
+export enum AssetType {
+  PROFILE_IMAGE = 'profile-image',
+  COMPANY_LOGO = 'company-logo',
+  PROJECT_IMAGE = 'project-image',
+  CERTIFICATE = 'certificate',
+  BACKGROUND_IMAGE = 'background-image',
+  ICON = 'icon',
+  DOCUMENT = 'document',
+  VIDEO = 'video',
+  AUDIO = 'audio'
+}
+
+/**
+ * Source of the asset
+ */
+export enum AssetSource {
+  CV_EXTRACTION = 'cv-extraction',
+  AI_GENERATED = 'ai-generated',
+  TEMPLATE_DEFAULT = 'template-default',
+  USER_UPLOAD = 'user-upload',
+  EXTERNAL_URL = 'external-url'
+}
+
+/**
+ * Result of asset processing operations
+ */
+export interface AssetProcessingResult {
+  /** Original asset URL */
+  originalUrl: string;
+  
+  /** Processed/optimized asset URL */
+  processedUrl: string;
+  
+  /** Asset type */
+  type: AssetType;
+  
+  /** Processing status */
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  
+  /** File size in bytes */
+  fileSize: number;
+  
+  /** Image dimensions (if applicable) */
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  
+  /** Processing metadata */
+  metadata: {
+    processingTime: number;
+    compressionRatio?: number;
+    optimizations: string[];
+  };
+  
+  /** Error information if processing failed */
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * Configuration for asset optimization
+ */
+export interface AssetOptimizationConfig {
+  /** Target image quality (0-100) */
+  quality: number;
+  
+  /** Maximum width in pixels */
+  maxWidth: number;
+  
+  /** Maximum height in pixels */
+  maxHeight: number;
+  
+  /** Output format */
+  format: 'jpeg' | 'png' | 'webp' | 'avif';
+  
+  /** Enable progressive loading */
+  progressive: boolean;
+  
+  /** Compression level */
+  compression: 'low' | 'medium' | 'high';
+}
+
+// ============================================================================
+// DEPLOYMENT TYPES
+// ============================================================================
+
+/**
+ * Result of deployment operations
+ */
+export interface DeploymentResult {
+  /** Deployment ID */
+  deploymentId: string;
+  
+  /** Target platform */
+  platform: 'huggingface' | 'vercel' | 'netlify' | 'custom';
+  
+  /** Deployment status */
+  status: 'pending' | 'building' | 'deployed' | 'failed';
+  
+  /** Deployed URL */
+  url?: string;
+  
+  /** Build logs */
+  buildLogs: string[];
+  
+  /** Deployment start time */
+  startedAt: Date;
+  
+  /** Deployment completion time */
+  completedAt?: Date;
+  
+  /** Error information if deployment failed */
+  error?: {
+    code: string;
+    message: string;
+    stack?: string;
+  };
+  
+  /** Deployment metrics */
+  metrics: {
+    buildTime: number;
+    bundleSize: number;
+    buildSuccess: boolean;
+  };
+}
+
+// ============================================================================
+// COMPONENT CONFIGURATION TYPES
+// ============================================================================
+
+/**
+ * Configuration for portal components
+ */
+export interface ComponentConfiguration {
+  /** Component type identifier */
+  type: string;
+  
+  /** Component display name */
+  name: string;
+  
+  /** Whether component is enabled */
+  enabled: boolean;
+  
+  /** Component-specific properties */
+  props: Record<string, any>;
+  
+  /** Layout configuration */
+  layout: {
+    order: number;
+    span: number;
+    offset?: number;
+  };
+  
+  /** Responsive behavior */
+  responsive: {
+    mobile: boolean;
+    tablet: boolean;
+    desktop: boolean;
+  };
+  
+  /** Theme overrides for this component */
+  themeOverrides?: Partial<PortalTheme>;
 }
 
 // ============================================================================

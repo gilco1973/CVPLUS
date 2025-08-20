@@ -9,7 +9,7 @@
  * @version 1.0
  */
 
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { 
   QRCodeEnhancementService, 
@@ -312,7 +312,7 @@ export const getEnhancedQRCodes = functions
  * 
  * Track when a QR code is scanned for analytics purposes.
  */
-export const trackQRCodeScan = functions
+export const trackQRCodeScanEnhanced = functions
   .region('us-central1')
   .https.onCall(async (data: TrackQRCodeScanRequest, context) => {
     const { jobId, qrCodeId, scanData } = data;

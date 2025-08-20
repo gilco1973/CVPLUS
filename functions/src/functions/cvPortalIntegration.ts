@@ -9,7 +9,7 @@
  * @version 1.0
  */
 
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { 
   CVPortalIntegrationService, 
@@ -86,9 +86,9 @@ async function validateJobAccess(jobId: string, userId?: string): Promise<{
 }
 
 /**
- * Get user preferences for portal generation
+ * Get user preferences for portal generation (internal helper)
  */
-async function getUserPortalPreferences(userId: string): Promise<PortalGenerationPreferences> {
+async function getUserPortalPreferencesInternal(userId: string): Promise<PortalGenerationPreferences> {
   try {
     const db = admin.firestore();
     const prefsDoc = await db
@@ -132,8 +132,13 @@ async function getUserPortalPreferences(userId: string): Promise<PortalGeneratio
 function convertToParsedCV(cvData: any): ParsedCV {
   return {
     personalInfo: cvData.personalInfo || {},
-    sections: cvData.sections || {},
-    metadata: cvData.metadata || {}
+    experience: cvData.experience || [],
+    education: cvData.education || [],
+    skills: cvData.skills || {},
+    certifications: cvData.certifications || [],
+    projects: cvData.projects || [],
+    achievements: cvData.achievements || [],
+    languages: cvData.languages || []
   };
 }
 
@@ -189,7 +194,7 @@ export const generatePortal = functions
       }
 
       // Get user preferences (merge with provided preferences)
-      const userPreferences = await getUserPortalPreferences(effectiveUserId);
+      const userPreferences = await getUserPortalPreferencesInternal(effectiveUserId);
       const finalPreferences = preferences ? { ...userPreferences, ...preferences } : userPreferences;
 
       // Check if portal generation is enabled for this user
@@ -472,7 +477,7 @@ export const retryPortalGeneration = functions
       }
 
       // Get user preferences
-      const userPreferences = await getUserPortalPreferences(effectiveUserId);
+      const userPreferences = await getUserPortalPreferencesInternal(effectiveUserId);
 
       // Convert job data to ParsedCV format
       const cvData = convertToParsedCV(jobValidation.jobData);
@@ -551,7 +556,7 @@ export const getUserPortalPreferences = functions
         );
       }
 
-      const preferences = await getUserPortalPreferences(effectiveUserId);
+      const preferences = await getUserPortalPreferencesInternal(effectiveUserId);
 
       return {
         success: true,
@@ -671,7 +676,7 @@ export const onCVCompletionTriggerPortal = functions
       });
 
       // Get user preferences
-      const userPreferences = await getUserPortalPreferences(afterData.userId);
+      const userPreferences = await getUserPortalPreferencesInternal(afterData.userId);
       
       if (!userPreferences.autoGenerate) {
         functions.logger.info('Automatic portal generation disabled for user', {
