@@ -46,6 +46,12 @@ export interface EnhancedVideoGenerationOptions extends BaseVideoGenerationOptio
   allowFallback?: boolean;
   urgency?: 'low' | 'normal' | 'high';
   qualityLevel?: 'basic' | 'standard' | 'premium';
+  // Additional features for video generation
+  features?: string[];
+  // Video quality settings
+  quality?: 'basic' | 'standard' | 'premium';
+  resolution?: string;
+  format?: string;
 }
 
 export interface EnhancedVideoResult {
@@ -195,15 +201,19 @@ export class EnhancedVideoGenerationService {
    */
   async generateVideoIntroduction(
     parsedCV: ParsedCV,
-    jobId: string,
-    options: EnhancedVideoGenerationOptions = {}
+    options: EnhancedVideoGenerationOptions = {},
+    jobId?: string,
+    userId?: string
   ): Promise<EnhancedVideoResult> {
     const startTime = Date.now();
     let currentAttempt = 0;
     let lastError: VideoProviderError | null = null;
     
+    // Generate jobId if not provided
+    const actualJobId = jobId || `video_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
     try {
-      console.log(`[Enhanced Video Service] Starting intelligent video generation for job ${jobId}`);
+      console.log(`[Enhanced Video Service] Starting intelligent video generation for job ${actualJobId}`);
       
       // Step 1: Generate optimized script using enhanced prompt engine
       let script: string;
@@ -241,7 +251,7 @@ export class EnhancedVideoGenerationService {
       while (currentAttempt < this.fallbackConfig.maxRetryAttempts) {
         try {
           currentAttempt++;
-          console.log(`[Enhanced Video Service] Generation attempt ${currentAttempt} for job ${jobId}`);
+          console.log(`[Enhanced Video Service] Generation attempt ${currentAttempt} for job ${actualJobId}`);
           
           const result = await this.attemptVideoGeneration(
             script,

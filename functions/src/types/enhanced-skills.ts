@@ -93,13 +93,16 @@ export interface LanguageSkill {
   language: string;
   
   /** Proficiency level according to common standards */
-  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native';
+  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native' | 'basic' | 'conversational' | 'professional' | 'fluent';
   
   /** Whether the user has official certification */
   certified?: boolean;
   
   /** Name of the certification if applicable */
   certificationName?: string;
+  
+  /** Alternative property name for certifications (backward compatibility) */
+  certifications?: string[];
 }
 
 /**

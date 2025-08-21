@@ -9,9 +9,10 @@
  */
 
 // Re-export types from other portal files for convenience
-export type { HuggingFaceSpaceConfig, HuggingFaceSDK, HuggingFaceVisibility, HuggingFaceHardware, RepositoryFile, FileType } from './portal-huggingface';
+export type { HuggingFaceSpaceConfig, HuggingFaceHardware, RepositoryFile } from './portal-huggingface';
+export { HuggingFaceSDK, HuggingFaceVisibility, FileType } from './portal-huggingface';
 export type { DeploymentResult, BuildConfig, DeploymentMetadata } from './portal-original';
-export { PortalErrorCode } from './portal-original'; // Export enum as value, not type
+// Note: PortalErrorCode is defined in this file, not re-exported
 
 import { ParsedCV } from './job';
 import type { FieldValue } from 'firebase-admin/firestore';
@@ -342,15 +343,41 @@ export interface PortalError {
  * Portal error codes
  */
 export enum PortalErrorCode {
-  UNKNOWN = 'UNKNOWN',
-  INTERNAL_ERROR = 'INTERNAL_ERROR',
-  INVALID_CONFIG = 'INVALID_CONFIG',
+  // Input validation errors
   INVALID_CV_DATA = 'INVALID_CV_DATA',
+  MISSING_REQUIRED_FIELDS = 'MISSING_REQUIRED_FIELDS',
+  INVALID_TEMPLATE_CONFIG = 'INVALID_TEMPLATE_CONFIG',
+  
+  // Generation errors
+  TEMPLATE_GENERATION_FAILED = 'TEMPLATE_GENERATION_FAILED',
+  CUSTOMIZATION_FAILED = 'CUSTOMIZATION_FAILED',
+  ASSET_PROCESSING_FAILED = 'ASSET_PROCESSING_FAILED',
+  
+  // RAG system errors
+  EMBEDDING_GENERATION_FAILED = 'EMBEDDING_GENERATION_FAILED',
+  VECTOR_DB_SETUP_FAILED = 'VECTOR_DB_SETUP_FAILED',
+  RAG_SYSTEM_FAILED = 'RAG_SYSTEM_FAILED',
+  
+  // Deployment errors
+  HUGGINGFACE_API_ERROR = 'HUGGINGFACE_API_ERROR',
+  DEPLOYMENT_FAILED = 'DEPLOYMENT_FAILED',
+  URL_GENERATION_FAILED = 'URL_GENERATION_FAILED',
+  
+  // Integration errors
+  CV_UPDATE_FAILED = 'CV_UPDATE_FAILED',
+  QR_CODE_UPDATE_FAILED = 'QR_CODE_UPDATE_FAILED',
+  
+  // System errors
+  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
+  RESOURCE_LIMIT_EXCEEDED = 'RESOURCE_LIMIT_EXCEEDED',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+  
+  // Additional error codes for compatibility
+  UNKNOWN = 'UNKNOWN',
+  INVALID_CONFIG = 'INVALID_CONFIG',
   CV_PARSE_FAILED = 'CV_PARSE_FAILED',
   TEMPLATE_NOT_FOUND = 'TEMPLATE_NOT_FOUND',
   RAG_BUILD_FAILED = 'RAG_BUILD_FAILED',
-  DEPLOYMENT_FAILED = 'DEPLOYMENT_FAILED',
-  HUGGINGFACE_API_ERROR = 'HUGGINGFACE_API_ERROR',
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   UNAUTHORIZED = 'UNAUTHORIZED'
 }
@@ -377,7 +404,6 @@ export {
   RAGEmbedding,
   EmbeddingMetadata,
   CVSection,
-  HuggingFaceSpaceConfig,
   PortalUrls,
   PortalAnalytics,
   URLPlacement,

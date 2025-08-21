@@ -169,8 +169,10 @@ export const generateVideoIntroductionWithMonitoring = onCall(
         await monitor.complete({
           success: false,
           error: {
+            code: 'GENERATION_FAILED',
             type: 'generation_error',
-            message: generationError.message || 'Video generation failed'
+            message: generationError.message || 'Video generation failed',
+            retryable: true
           }
         });
 
@@ -192,8 +194,10 @@ export const generateVideoIntroductionWithMonitoring = onCall(
       await monitor.complete({
         success: false,
         error: {
+          code: 'FUNCTION_ERROR',
           type: 'function_error',
-          message: error.message || 'Unknown error'
+          message: error.message || 'Unknown error',
+          retryable: false
         }
       });
 
@@ -274,7 +278,12 @@ export async function generateVideoWithFallbackMonitoring(
     await monitor.recordError(finalError, 'all_providers_failed');
     await monitor.complete({
       success: false,
-      error: { type: 'all_providers_failed', message: finalError.message }
+      error: { 
+        code: 'ALL_PROVIDERS_FAILED',
+        type: 'all_providers_failed', 
+        message: finalError.message,
+        retryable: false 
+      }
     });
     throw finalError;
   }

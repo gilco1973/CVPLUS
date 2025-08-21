@@ -21,6 +21,7 @@ export const generateVideoIntroduction = onCall(
     // Check premium access for video introduction feature
     await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
+    const userId = request.auth.uid;
     const { 
       jobId, 
       duration = 'medium',
@@ -79,8 +80,9 @@ export const generateVideoIntroduction = onCall(
       
       const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
         jobData.parsedData,
+        enhancedOptions,
         jobId,
-        enhancedOptions
+        userId
       );
 
       // Update progress
@@ -175,6 +177,7 @@ export const regenerateVideoIntroduction = onCall(
     // Check premium access for video introduction feature
     await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
+    const userId = request.auth.uid;
     const { 
       jobId,
       customScript,
@@ -268,8 +271,9 @@ export const regenerateVideoIntroduction = onCall(
         
         const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
           jobData!.parsedData,
+          regenerateOptions,
           jobId,
-          regenerateOptions
+          userId
         );
 
         await admin.firestore()

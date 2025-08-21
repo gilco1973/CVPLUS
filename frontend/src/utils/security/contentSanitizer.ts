@@ -147,9 +147,13 @@ export const sanitizeText = (
   const dangerous = /<script|javascript:|data:|vbscript:|onload=|onerror=/gi;
   let sanitized = content.replace(dangerous, '');
   
-  // Limit length to prevent DoS attacks
+  // Limit length to prevent DoS attacks - account for ellipsis
   if (sanitized.length > maxLength) {
-    sanitized = sanitized.substring(0, maxLength).trim() + '...';
+    const trimLength = Math.max(0, maxLength - 3); // Account for '...'
+    sanitized = sanitized.substring(0, trimLength).trim();
+    if (trimLength > 0) {
+      sanitized += '...';
+    }
   }
   
   return sanitized.trim();
@@ -229,6 +233,36 @@ export const sanitizeURL = (url: string): string => {
 };
 
 /**
+ * Deep recursive sanitization helper
+ */
+const deepSanitize = (obj: any, seen = new WeakSet()): any => {
+  // Handle circular references
+  if (obj && typeof obj === 'object' && seen.has(obj)) {
+    return '[Circular Reference Removed]';
+  }
+  
+  if (obj && typeof obj === 'object') {
+    seen.add(obj);
+  }
+
+  if (typeof obj === 'string') {
+    return sanitizeHTML(obj);
+  } else if (Array.isArray(obj)) {
+    return obj.map(item => deepSanitize(item, seen));
+  } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
+    const sanitized: any = {};
+    Object.keys(obj).forEach(key => {
+      // Sanitize the key itself if it's a string
+      const sanitizedKey = typeof key === 'string' ? sanitizeText(key, 100) : key;
+      sanitized[sanitizedKey] = deepSanitize(obj[key], seen);
+    });
+    return sanitized;
+  }
+  
+  return obj;
+};
+
+/**
  * Validates and sanitizes complete CV data structure
  */
 export const sanitizeCVData = (data: any): any => {
@@ -240,55 +274,50 @@ export const sanitizeCVData = (data: any): any => {
       // Proceed with sanitization even if validation fails
     }
 
-    // Deep sanitize all string fields
-    const sanitized = JSON.parse(JSON.stringify(data)); // Deep clone
+    // Deep sanitize all content recursively
+    const sanitized = deepSanitize(data);
 
-    // Sanitize personal info
-    if (sanitized.personalInfo) {
-      Object.keys(sanitized.personalInfo).forEach(key => {
-        if (typeof sanitized.personalInfo[key] === 'string') {
-          if (key === 'linkedin' || key === 'portfolio') {
-            sanitized.personalInfo[key] = sanitizeURL(sanitized.personalInfo[key]);
-          } else {
-            sanitized.personalInfo[key] = sanitizeText(sanitized.personalInfo[key], 200);
+    // Apply specific sanitization rules for CV structure
+    if (sanitized && typeof sanitized === 'object') {
+      // Sanitize personal info with specific rules
+      if (sanitized.personalInfo && typeof sanitized.personalInfo === 'object') {
+        Object.keys(sanitized.personalInfo).forEach(key => {
+          if (typeof sanitized.personalInfo[key] === 'string') {
+            if (key === 'linkedin' || key === 'portfolio') {
+              sanitized.personalInfo[key] = sanitizeURL(sanitized.personalInfo[key]);
+            } else {
+              sanitized.personalInfo[key] = sanitizeText(sanitized.personalInfo[key], 200);
+            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // Sanitize summary
-    if (sanitized.summary) {
-      sanitized.summary = sanitizeHTML(sanitized.summary);
-    }
-
-    // Sanitize experience
-    if (sanitized.experience && Array.isArray(sanitized.experience)) {
-      sanitized.experience = sanitized.experience.map((exp: any) => ({
-        ...exp,
-        description: exp.description ? sanitizeExperienceDescription(exp.description) : undefined,
-        achievements: exp.achievements ? exp.achievements.map(sanitizeAchievement) : undefined,
-        technologies: exp.technologies ? exp.technologies.map((tech: string) => sanitizeSkill(tech)) : undefined,
-        position: exp.position ? sanitizeText(exp.position, 200) : '',
-        company: exp.company ? sanitizeText(exp.company, 200) : '',
-        location: exp.location ? sanitizeText(exp.location, 200) : undefined
-      }));
-    }
-
-    // Sanitize skills
-    if (sanitized.skills?.categories) {
-      Object.keys(sanitized.skills.categories).forEach(category => {
-        const categoryName = sanitizeText(category, 100);
-        const skills = sanitized.skills.categories[category];
-        if (Array.isArray(skills)) {
-          sanitized.skills.categories[categoryName] = skills.map(sanitizeSkill);
-          if (categoryName !== category) {
-            delete sanitized.skills.categories[category];
+      // Additional experience field sanitization
+      if (sanitized.experience && Array.isArray(sanitized.experience)) {
+        sanitized.experience = sanitized.experience.map((exp: any) => {
+          if (exp && typeof exp === 'object') {
+            return {
+              ...exp,
+              position: exp.position ? sanitizeText(exp.position, 200) : '',
+              company: exp.company ? sanitizeText(exp.company, 200) : '',
+              startDate: exp.startDate ? sanitizeText(exp.startDate, 50) : '',
+              endDate: exp.endDate ? sanitizeText(exp.endDate, 50) : '',
+              location: exp.location ? sanitizeText(exp.location, 200) : undefined,
+              description: exp.description ? sanitizeExperienceDescription(exp.description) : undefined,
+              achievements: exp.achievements && Array.isArray(exp.achievements) 
+                ? exp.achievements.map((ach: string) => sanitizeAchievement(ach)) 
+                : undefined,
+              technologies: exp.technologies && Array.isArray(exp.technologies)
+                ? exp.technologies.map((tech: string) => sanitizeSkill(tech))
+                : undefined
+            };
           }
-        }
-      });
+          return exp;
+        });
+      }
     }
 
-    return sanitized;
+    return sanitized || {};
   } catch (error) {
     console.error('CV data sanitization failed:', error);
     return {}; // Return empty object on complete failure

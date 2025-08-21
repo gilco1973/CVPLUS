@@ -20,6 +20,13 @@ import type {
 } from '../../types/cv-templates';
 import { SectionGenerators } from './sectionGenerators';
 import { createPreviewContent, hasPlaceholders } from '../placeholderReplacer';
+import { 
+  sanitizeHTML, 
+  sanitizeText, 
+  safeGet, 
+  isValidString, 
+  isValidArray 
+} from '../security/contentSanitizer';
 
 // ============================================================================
 // TEMPLATE-SPECIFIC SECTION GENERATORS
@@ -522,19 +529,19 @@ export class TemplateSpecificGenerators {
       <div class="timeline-item" data-index="${index}">
         <div class="timeline-dot"></div>
         <div class="timeline-content">
-          <div class="position timeline-position">${exp.position || 'Position'}</div>
-          <div class="company timeline-company">${exp.company || 'Company'}</div>
-          <div class="duration timeline-duration">${exp.startDate || 'Start'} - ${exp.endDate || 'End'}</div>
+          <div class="position timeline-position">${sanitizeHTML(safeGet(exp, 'position', 'Position', isValidString))}</div>
+          <div class="company timeline-company">${sanitizeHTML(safeGet(exp, 'company', 'Company', isValidString))}</div>
+          <div class="duration timeline-duration">${sanitizeHTML(safeGet(exp, 'startDate', 'Start', isValidString))} - ${sanitizeHTML(safeGet(exp, 'endDate', 'End', isValidString))}</div>
           
           ${exp.description ? `<div class="description timeline-description">${createPreviewContent(exp.description)}</div>` : ''}
           
-          ${showTechnologies && exp.technologies ? `
+          ${showTechnologies && exp.technologies && isValidArray(exp.technologies) ? `
             <div class="technologies-used">
-              ${exp.technologies.map((tech: string) => `<span class="tech-tag">${tech}</span>`).join('')}
+              ${exp.technologies.map((tech: string) => `<span class="tech-tag">${sanitizeHTML(tech)}</span>`).join('')}
             </div>
           ` : ''}
           
-          ${showAchievements && exp.achievements ? `
+          ${showAchievements && exp.achievements && isValidArray(exp.achievements) ? `
             <ul class="achievements timeline-achievements">
               ${exp.achievements.map((achievement: string) => `<li>${createPreviewContent(achievement)}</li>`).join('')}
             </ul>
@@ -578,25 +585,25 @@ export class TemplateSpecificGenerators {
     return `
       <div class="experience-card card hover-lift" data-index="${index}">
         <div class="card-header">
-          <div class="position card-position">${exp.position || 'Position'}</div>
-          <div class="company card-company">${exp.company || 'Company'}</div>
-          <div class="duration card-duration">${exp.startDate || 'Start'} - ${exp.endDate || 'End'}</div>
-          ${showLocation && exp.location ? `<div class="location card-location">📍 ${exp.location}</div>` : ''}
+          <div class="position card-position">${sanitizeHTML(safeGet(exp, 'position', 'Position', isValidString))}</div>
+          <div class="company card-company">${sanitizeHTML(safeGet(exp, 'company', 'Company', isValidString))}</div>
+          <div class="duration card-duration">${sanitizeHTML(safeGet(exp, 'startDate', 'Start', isValidString))} - ${sanitizeHTML(safeGet(exp, 'endDate', 'End', isValidString))}</div>
+          ${showLocation && exp.location ? `<div class="location card-location">📍 ${sanitizeHTML(exp.location)}</div>` : ''}
         </div>
         
         <div class="card-content">
           ${exp.description ? `<p class="description card-description">${createPreviewContent(exp.description)}</p>` : ''}
           
-          ${showTechnologies && exp.technologies ? `
+          ${showTechnologies && exp.technologies && isValidArray(exp.technologies) ? `
             <div class="technologies-section">
               <h4>Technologies:</h4>
               <div class="tech-tags">
-                ${exp.technologies.map((tech: string) => `<span class="tech-tag">${tech}</span>`).join('')}
+                ${exp.technologies.map((tech: string) => `<span class="tech-tag">${sanitizeHTML(tech)}</span>`).join('')}
               </div>
             </div>
           ` : ''}
           
-          ${exp.achievements ? `
+          ${exp.achievements && isValidArray(exp.achievements) ? `
             <div class="achievements-section">
               <h4>Key Achievements:</h4>
               <ul class="achievements card-achievements">
@@ -649,16 +656,16 @@ export class TemplateSpecificGenerators {
       <div class="experience-list-item" data-index="${index}">
         <div class="exp-header">
           <div class="exp-title">
-            <span class="position list-position">${exp.position || 'Position'}</span>
+            <span class="position list-position">${sanitizeHTML(safeGet(exp, 'position', 'Position', isValidString))}</span>
             <span class="separator">@</span>
-            <span class="company list-company">${exp.company || 'Company'}</span>
+            <span class="company list-company">${sanitizeHTML(safeGet(exp, 'company', 'Company', isValidString))}</span>
           </div>
-          <div class="duration list-duration">${formattedDuration}</div>
+          <div class="duration list-duration">${sanitizeHTML(formattedDuration)}</div>
         </div>
         
         ${exp.description ? `<div class="description list-description">${createPreviewContent(exp.description)}</div>` : ''}
         
-        ${exp.achievements ? `
+        ${exp.achievements && isValidArray(exp.achievements) ? `
           <ul class="achievements list-achievements">
             ${exp.achievements.map((achievement: string) => `<li>${createPreviewContent(achievement)}</li>`).join('')}
           </ul>
@@ -945,14 +952,28 @@ export class TemplateSpecificGenerators {
   }
 
   private static getSkillLevel(skill: string, index: number): number {
-    // Generate consistent skill levels based on skill name and position
-    const hash = skill.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
+    // SECURITY FIX: Safe skill level calculation with validation
+    if (!skill || typeof skill !== 'string') {
+      return 75; // Safe default
+    }
     
-    // Generate level between 70-95% to look realistic
-    return 70 + Math.abs(hash + index * 7) % 26;
+    try {
+      // Generate consistent skill levels based on skill name and position
+      const sanitizedSkill = sanitizeText(skill, 100);
+      const hash = sanitizedSkill.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+      
+      // Generate level between 70-95% to look realistic
+      const level = 70 + Math.abs(hash + (typeof index === 'number' ? index : 0) * 7) % 26;
+      
+      // Ensure result is within valid range
+      return Math.min(95, Math.max(70, level));
+    } catch (error) {
+      console.warn('Skill level calculation error:', error);
+      return 75; // Safe fallback
+    }
   }
 
   // ============================================================================

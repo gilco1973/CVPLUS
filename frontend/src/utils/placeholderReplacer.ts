@@ -4,6 +4,9 @@
  * NEVER auto-replaces placeholders with fake data - only user-provided real data
  */
 
+// Import sanitization function at the top
+import { sanitizeHTML } from './security/contentSanitizer';
+
 export interface PlaceholderReplacements {
   [key: string]: string;
 }
@@ -68,9 +71,6 @@ export const createPreviewContent = (
   userReplacements: PlaceholderReplacements = {}
 ): string => {
   if (!content) return content;
-  
-  // Import sanitization function
-  const { sanitizeHTML } = require('./security/contentSanitizer');
   
   // Apply ONLY user-provided replacements, never fake data
   let processedContent = replacePlaceholders(content, userReplacements);

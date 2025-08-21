@@ -10,7 +10,7 @@
 
 import { createRepo, uploadFiles, spaceInfo, listSpaces } from '@huggingface/hub';
 import * as crypto from 'crypto';
-import { PortalConfig, HuggingFaceSpaceConfig, DeploymentResult, PortalErrorCode } from '../types/portal';
+import { PortalConfig, HuggingFaceSpaceConfig, DeploymentResult, PortalErrorCode, BuildConfig, DeploymentMetadata } from '../types/portal';
 import { resilienceService, ResilienceService } from './resilience.service';
 import { logger } from 'firebase-functions';
 
@@ -398,10 +398,28 @@ export class HuggingFaceApiService {
           description: `Professional portfolio for ${portalData.cv?.personalInfo?.name || 'professional'}`,
           git: { branch: 'main', commitMessage: 'Initial portal deployment' },
           files: [],
-          build: {}
+          build: {
+            command: 'python app.py',
+            outputDir: '.',
+            env: {},
+            dependencies: [],
+            steps: []
+          }
         },
         environmentVariables: {},
-        deployment: {}
+        deployment: {
+          deploymentId: '',
+          deployedAt: new Date(),
+          status: 'pending' as any,
+          buildLogs: [],
+          resources: {
+            cpu: 0,
+            memory: 0,
+            storage: 0,
+            bandwidth: 0,
+            requests: 0
+          }
+        }
       };
       
       const { spaceId, url: spaceUrl } = await this.createSpace(spaceConfig);
@@ -1293,7 +1311,13 @@ ${this.extractPortfolioData(portalConfig).website ? `- **Website:** ${this.extra
           description: '',
           git: { branch: 'main', commitMessage: '' },
           files: [],
-          build: {}
+          build: {
+            command: 'python app.py',
+            outputDir: '.',
+            env: {},
+            dependencies: [],
+            steps: []
+          }
         }
       }
     } as PortalConfig;
