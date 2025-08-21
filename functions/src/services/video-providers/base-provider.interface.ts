@@ -247,6 +247,7 @@ export interface ProviderSelectionCriteria {
     timeOfDay: number; // 0-23
     isRetry?: boolean;
     previousFailures?: string[]; // Provider IDs that have failed
+    urgency?: 'low' | 'normal' | 'high'; // Request urgency level
   };
 }
 

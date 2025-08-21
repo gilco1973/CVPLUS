@@ -9,6 +9,25 @@
  */
 
 /**
+ * Flexible skills format that supports various skill organization structures
+ * Used throughout the system to handle different ways skills can be structured
+ */
+export type FlexibleSkillsFormat = string[] | {
+  [key: string]: string[];
+  technical?: string[];
+  soft?: string[];
+  languages?: string[];
+  tools?: string[];
+  frontend?: string[];
+  backend?: string[];
+  databases?: string[];
+  cloud?: string[];
+  competencies?: string[];
+  frameworks?: string[];
+  expertise?: string[];
+} | undefined;
+
+/**
  * Skills visualization configuration
  * Controls how skills are displayed in interactive visualizations
  */

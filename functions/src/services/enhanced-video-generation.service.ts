@@ -603,7 +603,7 @@ export class EnhancedVideoGenerationService {
         speedRequirement: options.urgency === 'high' ? 'high' : 'normal',
         userTier: 'premium',
         allowFallback: this.fallbackConfig.fallbackChainEnabled,
-        qualityThreshold: this.fallbackConfig.qualityThreshold
+        minQualityThreshold: this.fallbackConfig.qualityThreshold
       }
     );
     
@@ -782,7 +782,7 @@ export class EnhancedVideoGenerationService {
           circuitBreakerEnabled: this.fallbackConfig.circuitBreakerEnabled,
           performanceTrackingEnabled: this.fallbackConfig.performanceTrackingEnabled,
           maxRetryAttempts: this.fallbackConfig.maxRetryAttempts,
-          qualityThreshold: this.fallbackConfig.qualityThreshold
+          minQualityThreshold: this.fallbackConfig.qualityThreshold
         }
       };
     } catch (error) {

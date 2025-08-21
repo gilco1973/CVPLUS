@@ -3,7 +3,13 @@
  * Addresses: Memory leaks, error handling, and stability issues
  */
 
-import { logger } from '../../../functions/src/utils/logger';
+// Simple logger implementation since utils/logger doesn't exist
+const logger = {
+  error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
+  info: (message: string, ...args: any[]) => console.info(`[INFO] ${message}`, ...args),
+  debug: (message: string, ...args: any[]) => console.log(`[DEBUG] ${message}`, ...args)
+};
 
 export class CVTransformationCriticalPatch {
   private static errorCount = 0;

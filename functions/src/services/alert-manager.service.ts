@@ -72,6 +72,7 @@ export interface AlertInstance {
   suppressedUntil?: Date;
   notificationsSent: NotificationRecord[];
   actionsExecuted: ActionRecord[];
+  id?: string; // Firestore document ID for compatibility
 }
 
 export interface NotificationRecord {

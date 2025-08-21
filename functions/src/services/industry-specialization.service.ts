@@ -210,14 +210,21 @@ export class IndustrySpecializationService {
     return score * 100; // Convert to 0-100 scale
   }
 
-  private getSkillsArray(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getSkillsArray(skills: string[] | { [key: string]: string[]; technical?: string[]; soft?: string[]; languages?: string[]; tools?: string[]; frontend?: string[]; backend?: string[]; databases?: string[]; cloud?: string[]; competencies?: string[]; frameworks?: string[]; expertise?: string[]; } | undefined): string[] {
     if (!skills) return [];
-    return Array.isArray(skills) ? skills : [
-      ...(skills.technical || []),
-      ...(skills.soft || []),
-      ...(skills.languages || []),
-      ...(skills.tools || [])
-    ];
+    if (Array.isArray(skills)) return skills;
+    
+    // Combine all skill categories
+    const allSkills: string[] = [];
+    const categories = ['technical', 'soft', 'languages', 'tools', 'frontend', 'backend', 'databases', 'cloud', 'competencies', 'frameworks', 'expertise'];
+    
+    for (const category of categories) {
+      if (skills[category] && Array.isArray(skills[category])) {
+        allSkills.push(...skills[category]);
+      }
+    }
+    
+    return allSkills;
   }
 
   private calculateSkillsScore(cv: ParsedCV, model: IndustryModel): number {

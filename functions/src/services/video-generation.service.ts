@@ -90,9 +90,21 @@ export class VideoGenerationService {
   /**
    * Helper function to safely extract technical skills
    */
-  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getTechnicalSkills(skills: string[] | { [key: string]: string[]; technical?: string[]; soft?: string[]; languages?: string[]; tools?: string[]; frontend?: string[]; backend?: string[]; databases?: string[]; cloud?: string[]; competencies?: string[]; frameworks?: string[]; expertise?: string[]; } | undefined): string[] {
     if (!skills) return [];
-    return Array.isArray(skills) ? skills : (skills.technical || []);
+    if (Array.isArray(skills)) return skills;
+    
+    // Combine all technical skill categories
+    const technicalCategories = ['technical', 'frontend', 'backend', 'databases', 'cloud', 'frameworks', 'tools', 'expertise'];
+    const allTechnicalSkills: string[] = [];
+    
+    for (const category of technicalCategories) {
+      if (skills[category] && Array.isArray(skills[category])) {
+        allTechnicalSkills.push(...skills[category]);
+      }
+    }
+    
+    return allTechnicalSkills;
   }
   
   /**

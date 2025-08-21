@@ -27,7 +27,12 @@ export type {
 } from './enhanced-job';
 
 export type {
+  FlexibleSkillsFormat
+} from './enhanced-skills';
+
+export type {
   PublicCVProfile,
+  PublicProfileAnalytics,
   FeatureAnalytics,
   FeatureInteraction,
   ContactFormSubmission,

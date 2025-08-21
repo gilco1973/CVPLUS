@@ -8,6 +8,11 @@
  * @version 1.0.0
  */
 
+// Re-export types from other portal files for convenience
+export type { HuggingFaceSpaceConfig, HuggingFaceSDK, HuggingFaceVisibility, HuggingFaceHardware, RepositoryFile, FileType } from './portal-huggingface';
+export type { DeploymentResult, BuildConfig, DeploymentMetadata } from './portal-original';
+export { PortalErrorCode } from './portal-original'; // Export enum as value, not type
+
 import { ParsedCV } from './job';
 import type { FieldValue } from 'firebase-admin/firestore';
 import { PortalTheme, PortalSection } from './portal-theme';
@@ -99,6 +104,21 @@ export interface PortalTemplate {
  * Portal customization options
  */
 export interface PortalCustomization {
+  /** Personal information for the portal */
+  personalInfo?: {
+    name?: string;
+    title?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    summary?: string;
+    profileImage?: string;
+    website?: string;
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+  };
+  
   /** Theme customization */
   theme: PortalTheme;
   
