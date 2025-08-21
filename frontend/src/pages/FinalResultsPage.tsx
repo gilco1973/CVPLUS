@@ -306,6 +306,7 @@ export const FinalResultsPage = () => {
                   <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
                     <ProgressiveEnhancementRenderer
                       htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}
+                      jobId={jobId}
                     />
                   </div>
                   

@@ -293,20 +293,25 @@ export const useFeaturePreviews = (previewData: unknown) => {
         `;
 
       case 'availability-calendar':
+        // Return a placeholder that the ProgressiveEnhancementRenderer can replace with the React component
+        // Extract professional name and email from preview data if available
+        const personalInfo = previewData?.personalInfo || previewData?.personalInformation || {};
+        const professionalName = personalInfo.name || 'Professional';
+        const professionalEmail = personalInfo.email || 'contact@example.com';
+        
         return `
-          <div class="calendar-section feature-preview" data-feature="${featureId}">
+          <div id="availability-calendar-placeholder" data-feature="availability-calendar" data-professional-name="${professionalName}" data-professional-email="${professionalEmail}" class="feature-preview">
             <div class="feature-preview-banner">
-              <span>📅 Preview: Integrated scheduling calendar</span>
+              <span>📅 Preview: Interactive availability calendar will load here</span>
             </div>
-            <h3 class="section-title" onclick="toggleSection('${featureId}')">
-              📅 Schedule Interview
-              <div class="collapse-icon ${isCollapsed ? 'collapsed' : ''}">▼</div>
-            </h3>
-            <div class="section-content ${isCollapsed ? 'collapsed' : ''}">
-              <div class="calendar-widget">
-                <button class="schedule-button">📅 Book 30-min Interview</button>
-                <button class="schedule-button">☕ Schedule Coffee Chat</button>
-                <p class="calendar-note">Powered by Calendly integration</p>
+            <div class="calendar-loading-placeholder">
+              <div class="calendar-header">
+                <h3>📅 Schedule a Meeting</h3>
+                <p>Loading interactive calendar...</p>
+              </div>
+              <div class="calendar-placeholder-content">
+                <div class="placeholder-calendar">📅</div>
+                <p class="placeholder-text">Interactive calendar component will render here</p>
               </div>
             </div>
           </div>

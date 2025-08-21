@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { AvailabilityCalendar } from './AvailabilityCalendar';
+import { AvailabilityCalendarWrapper } from './AvailabilityCalendarWrapper';
 
 interface ProgressiveEnhancementRendererProps {
   htmlContent: string;
+  jobId?: string;
   className?: string;
 }
 
 export const ProgressiveEnhancementRenderer: React.FC<ProgressiveEnhancementRendererProps> = ({
   htmlContent,
+  jobId,
   className = ''
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,7 +29,8 @@ export const ProgressiveEnhancementRenderer: React.FC<ProgressiveEnhancementRend
     containerRef.current.innerHTML = htmlContent;
 
     // Find all availability calendar placeholders and replace them with React components
-    const placeholders = containerRef.current.querySelectorAll('[data-feature="availability-calendar"]');
+    // Look for both data-feature attribute and ID-based placeholders
+    const placeholders = containerRef.current.querySelectorAll('[data-feature="availability-calendar"], #availability-calendar-placeholder');
     
     placeholders.forEach((placeholder) => {
       const professionalName = placeholder.getAttribute('data-professional-name') || 'Professional';
@@ -42,9 +45,10 @@ export const ProgressiveEnhancementRenderer: React.FC<ProgressiveEnhancementRend
       rootsRef.current.set(reactContainer, root);
       
       root.render(
-        <AvailabilityCalendar
+        <AvailabilityCalendarWrapper
           professionalName={professionalName}
           professionalEmail={professionalEmail}
+          jobId={jobId}
           className="my-8"
         />
       );
