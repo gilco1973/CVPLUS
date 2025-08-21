@@ -253,7 +253,8 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
   const handleUrlChange = useCallback((url: string) => {
     setSelectedUrl(url);
     generateQRCode(url);
-  }, [generateQRCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Download QR code
   const handleDownload = useCallback(() => {
@@ -320,24 +321,28 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
 
   // Refresh QR code
   const handleRefresh = useCallback(() => {
-    generateQRCode(selectedUrl);
-    loadAnalytics();
-  }, [generateQRCode, selectedUrl, loadAnalytics]);
-
-  // Initialize component
-  useEffect(() => {
-    if (isEnabled && data.url) {
+    if (selectedUrl) {
       generateQRCode(selectedUrl);
       loadAnalytics();
     }
-  }, [isEnabled, data.url, selectedUrl, generateQRCode, loadAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUrl]);
+
+  // Initialize component
+  useEffect(() => {
+    if (isEnabled && data.url && selectedUrl) {
+      generateQRCode(selectedUrl);
+      loadAnalytics();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEnabled, data.url, selectedUrl]);
 
   // Re-generate when customization changes
   useEffect(() => {
     if (selectedUrl) {
       generateQRCode(selectedUrl);
     }
-  }, [size, backgroundColor, foregroundColor, style, logoUrl, generateQRCode]);
+  }, [size, backgroundColor, foregroundColor, style, logoUrl, selectedUrl]);
 
   if (!isEnabled) {
     return null;
