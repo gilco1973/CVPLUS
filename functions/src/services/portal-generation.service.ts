@@ -178,6 +178,15 @@ export class PortalGenerationService {
     });
 
     try {
+      // Step 0: CRITICAL - Immediately mark portal generation as in progress to prevent infinite loop
+      await this.db.collection('jobs').doc(jobId).update({
+        'portalData.status': 'generating',
+        'portalData.startedAt': FieldValue.serverTimestamp(),
+        'portalData.lastUpdated': FieldValue.serverTimestamp()
+      });
+      
+      logger.info(`[PORTAL-SERVICE] Marked portal generation as in progress for job ${jobId}`);
+
       // Step 1: Extract CV data first
       const cvData = await this.validateAndExtractCVData(jobId);
       stepsCompleted.push(PortalGenerationStep.EXTRACT_CV_DATA);
@@ -315,6 +324,13 @@ export class PortalGenerationService {
       await this.savePortalConfiguration(portalConfig);
       stepsCompleted.push(PortalGenerationStep.FINALIZE_PORTAL);
 
+      // Update job document with completion status
+      await this.db.collection('jobs').doc(jobId).update({
+        'portalData.status': 'completed',
+        'portalData.completedAt': FieldValue.serverTimestamp(),
+        'portalData.lastUpdated': FieldValue.serverTimestamp()
+      });
+
       const processingTimeMs = Date.now() - startTime;
       logger.info(`[PORTAL-SERVICE] Portal generation completed successfully`, {
         jobId,
@@ -377,6 +393,20 @@ export class PortalGenerationService {
 
     } catch (error) {
       const processingTimeMs = Date.now() - startTime;
+      
+      // CRITICAL: Clean up portal generation status on failure to prevent infinite loop
+      try {
+        await this.db.collection('jobs').doc(jobId).update({
+          'portalData.status': 'failed',
+          'portalData.error': error instanceof Error ? error.message : String(error),
+          'portalData.failedAt': FieldValue.serverTimestamp(),
+          'portalData.lastUpdated': FieldValue.serverTimestamp()
+        });
+        logger.info(`[PORTAL-SERVICE] Updated job ${jobId} with failure status`);
+      } catch (updateError) {
+        logger.error(`[PORTAL-SERVICE] Failed to update job ${jobId} failure status:`, updateError);
+      }
+      
       logger.error(`[PORTAL-SERVICE] Portal generation failed for job ${jobId}`, {
         error: error instanceof Error ? error.message : String(error),
         processingTimeMs,

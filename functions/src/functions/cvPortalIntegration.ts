@@ -670,6 +670,29 @@ export const onCVCompletionTriggerPortal = functions
         return; // Job not completed, skip
       }
 
+      // CRITICAL: Prevent infinite loop by checking if portal generation is already in progress, completed, or failed
+      const portalGenerationInProgress = afterData.portalData?.status === 'generating' || 
+                                       afterData.portalData?.status === 'completed' ||
+                                       afterData.portalData?.status === 'failed' ||
+                                       afterData.portalData?.configId;
+
+      if (portalGenerationInProgress) {
+        functions.logger.info('Portal generation already in progress, completed, or failed - skipping trigger', {
+          jobId,
+          portalStatus: afterData.portalData?.status,
+          hasConfigId: !!afterData.portalData?.configId
+        });
+        return;
+      }
+
+      // Additional safety check: If we have portalData but no status, check if it was just updated
+      if (afterData.portalData && !beforeData.portalData) {
+        functions.logger.info('Portal data just added, likely by portal generation process, skipping trigger', {
+          jobId
+        });
+        return;
+      }
+
       functions.logger.info('CV completed, checking for automatic portal generation', {
         jobId,
         userId: afterData.userId
