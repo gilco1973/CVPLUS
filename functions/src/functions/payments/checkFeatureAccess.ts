@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
+import { corsOptions } from '../../config/cors';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction';
 
@@ -11,6 +12,9 @@ interface CheckFeatureAccessData {
 }
 
 export const checkFeatureAccess = onCall<CheckFeatureAccessData>(
+  {
+    ...corsOptions
+  },
   async (request) => {
     const { data, auth } = request;
 

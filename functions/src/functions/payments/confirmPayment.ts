@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
+import { corsOptions } from '../../config/cors';
 import Stripe from 'stripe';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -16,6 +17,7 @@ interface ConfirmPaymentData {
 
 export const confirmPayment = onCall<ConfirmPaymentData>(
   {
+    ...corsOptions,
     secrets: ['STRIPE_SECRET_KEY', 'STRIPE_PUBLISHABLE_KEY']
   },
   async (request) => {

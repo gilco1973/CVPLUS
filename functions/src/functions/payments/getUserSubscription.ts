@@ -1,12 +1,16 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
+import { corsOptions } from '../../config/cors';
 
 interface GetUserSubscriptionData {
   userId: string;
 }
 
 export const getUserSubscription = onCall<GetUserSubscriptionData>(
+  {
+    ...corsOptions
+  },
   async (request) => {
     const { data, auth } = request;
 

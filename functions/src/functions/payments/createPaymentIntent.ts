@@ -7,6 +7,7 @@ import {
   validatePricingConfig,
   logPricingStatus
 } from '../../config/pricing';
+import { corsOptions } from '../../config/cors';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -22,6 +23,7 @@ interface CreatePaymentIntentData {
 
 export const createPaymentIntent = onCall<CreatePaymentIntentData>(
   {
+    ...corsOptions,
     secrets: ['STRIPE_SECRET_KEY', 'STRIPE_PUBLISHABLE_KEY']
   },
   async (request) => {

@@ -39,11 +39,11 @@ export const HomePage = () => {
       const jobId = await createJob(undefined, quickCreate, userInstructions);
       await uploadCV(file, jobId);
       
-      // Navigate to feature selection page first (unless quick create)
+      // Navigate to processing page for CV analysis
       if (quickCreate) {
         navigate(`/process/${jobId}?quickCreate=true`);
       } else {
-        navigate(`/select-features/${jobId}`);
+        navigate(`/process/${jobId}`);
       }
     } catch (error: unknown) {
       logError('uploadFile', error);
@@ -70,8 +70,8 @@ export const HomePage = () => {
       // Create job for URL
       const jobId = await createJob(url, false, userInstructions);
       
-      // Navigate to feature selection page first
-      navigate(`/select-features/${jobId}`);
+      // Navigate to processing page for CV analysis
+      navigate(`/process/${jobId}`);
     } catch (error: unknown) {
       logError('processURL', error);
       toast.error(getErrorMessage(error) || 'Failed to process URL. Please try again.');

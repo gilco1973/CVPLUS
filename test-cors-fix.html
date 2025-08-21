@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Fix Test</title>
+</head>
+<body>
+    <h1>CVPlus CORS Fix Test</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9xVrOYQULmdq8bATlcSo-jWLGkKLTxvE",
+            authDomain: "getmycv-ai.firebaseapp.com",
+            projectId: "getmycv-ai",
+            storageBucket: "getmycv-ai.firebasestorage.app",
+            messagingSenderId: "253913399748",
+            appId: "1:253913399748:web:b7a3bcffb3123456789abc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const functions = getFunctions(app);
+        
+        // Connect to local emulator if running locally
+        if (window.location.hostname === 'localhost') {
+            functions.useEmulator = true;
+            functions.host = 'localhost';
+            functions.port = 5001;
+        }
+
+        const resultsDiv = document.getElementById('results');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.margin = '5px 0';
+            div.style.border = '1px solid #ccc';
+            div.style.borderLeft = type === 'error' ? '5px solid red' : 
+                                   type === 'success' ? '5px solid green' : '5px solid blue';
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testCORS() {
+            try {
+                log('Testing CORS configuration...');
+                
+                // Sign in anonymously first
+                log('Signing in anonymously...');
+                await signInAnonymously(auth);
+                log('Authentication successful', 'success');
+                
+                // Test getUserSubscription function (this was failing with CORS)
+                log('Testing getUserSubscription function...');
+                const getUserSubscription = httpsCallable(functions, 'getUserSubscription');
+                
+                try {
+                    const result = await getUserSubscription({
+                        userId: auth.currentUser.uid
+                    });
+                    log(`getUserSubscription success: ${JSON.stringify(result.data)}`, 'success');
+                } catch (error) {
+                    if (error.message.includes('CORS')) {
+                        log(`CORS error still present: ${error.message}`, 'error');
+                    } else {
+                        log(`getUserSubscription returned expected error (not CORS): ${error.message}`, 'success');
+                    }
+                }
+                
+                // Test processCV function (this should still work)
+                log('Testing processCV function...');
+                const processCV = httpsCallable(functions, 'processCV');
+                
+                try {
+                    const result = await processCV({
+                        jobId: 'test-job-id',
+                        fileUrl: 'test-url',
+                        mimeType: 'application/pdf'
+                    });
+                    log(`processCV success: ${JSON.stringify(result.data)}`, 'success');
+                } catch (error) {
+                    if (error.message.includes('CORS')) {
+                        log(`CORS error in processCV: ${error.message}`, 'error');
+                    } else {
+                        log(`processCV returned expected error (not CORS): ${error.message}`, 'success');
+                    }
+                }
+                
+                log('CORS test completed');
+                
+            } catch (error) {
+                log(`Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Run the test
+        testCORS();
+    </script>
+</body>
+</html>
