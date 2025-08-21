@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -69,10 +68,7 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
     if (keywordData) {
       setAnalysis(keywordData);
       if (data) {
-        setSelectedKeywords(data.selectedKeywords || []);
-      }
-    }
-  }, [keywordData, data]);
+        setSelectedKeywords(data.selectedKeywords || []);>, [keywordData, data]);
 
   const handleKeywordToggle = (keyword: string) => {
     const newSelection = selectedKeywords.includes(keyword)
@@ -117,10 +113,7 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
               isApplied: selectedKeywords.includes(s.keyword)
             }))
           };
-          setAnalysis(updatedAnalysis);
-        }
-      }
-    } catch (err) {
+          setAnalysis(updatedAnalysis);> catch (err) {
       onError?.(err as Error);
     } finally {
       setIsApplying(false);
@@ -212,9 +205,8 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
 
         {/* Missing Critical Keywords Alert */}
         {analysis.missingCritical.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div className="animate-fade-in">
+            }
             className="bg-red-50 border border-red-200 rounded-lg p-4"
           >
             <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
@@ -231,7 +223,7 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Search and Filter Controls */}
@@ -287,17 +279,14 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
           </div>
 
           <div className="grid gap-3">
-            <AnimatePresence>
+            <div>
               {filteredSuggestions.map((suggestion, index) => {
                 const isSelected = selectedKeywords.includes(suggestion.keyword);
                 
                 return (
-                  <motion.div
-                    key={suggestion.keyword}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ delay: index * 0.05 }}
+                  <div className="animate-fade-in"
+                    key={suggestion.keyword}>
+                    }
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
@@ -354,21 +343,18 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
                         )}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
+            </div>
           </div>
         </div>
 
         {/* Preview Panel */}
-        <AnimatePresence>
+        <div>
           {showPreview && selectedCount > 0 && (
-            <motion.div
-              ref={previewRef}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+            <div className="animate-fade-in"
+              ref={previewRef}>
               className="bg-gray-50 border border-gray-200 rounded-lg p-4"
             >
               <h4 className="font-medium text-gray-900 mb-3">Enhancement Preview</h4>
@@ -402,9 +388,9 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
         {/* Competitor Analysis */}
         {analysis.competitorComparison && (

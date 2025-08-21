@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Quote, Star, ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Filter, User, Building2, Calendar, Loader2, Grid3x3, Play, Pause, Award } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface Testimonial {
@@ -152,13 +151,9 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
       : testimonial.content;
 
     return (
-      <motion.div
+      <div 
+        className="animate-fade-in"
         key={testimonial.id}
-        className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-cyan-500 transition-all min-h-[280px] flex flex-col"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
-        whileHover={{ y: -5 }}
       >
         {/* Quote Icon */}
         <div className="mb-4">
@@ -273,7 +268,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -404,14 +399,9 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
       </div>
 
       {/* Filters */}
-      <AnimatePresence>
+      <div>
         {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-gray-800 rounded-lg p-4 border border-gray-700"
-          >
+          <div className="animate-fade-in bg-gray-800 rounded-lg p-4 border border-gray-700">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedFilter('all')}
@@ -438,19 +428,15 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Testimonials Display */}
       {carousel.layout.style === 'carousel' ? (
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <motion.div
-              className="flex gap-6"
-              animate={{ x: `-${currentIndex * (100 / carousel.layout.itemsPerView)}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
+            <div className="flex gap-6">
               {filteredTestimonials.map((testimonial, index) => (
                 <div 
                   key={testimonial.id} 
@@ -460,7 +446,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                   {renderTestimonialCard(testimonial, index)}
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
           
           {/* Navigation */}
@@ -510,20 +496,14 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
       )}
 
       {/* Add Testimonial Modal - Simplified for now */}
-      <AnimatePresence>
+      <div>
         {showAddForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div 
+            className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowAddForm(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-gray-800 rounded-xl p-6 max-w-md w-full"
+            <div 
+              className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold text-gray-100 mb-4">Add Testimonial</h3>
@@ -608,10 +588,10 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

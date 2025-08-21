@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -177,10 +176,9 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
     return (
       <div className="w-full bg-gray-200 rounded-full h-2">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${cefrLevel.percentage}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
+        <div className="animate-fade-in">
+          %` }}
+          }
           className="h-2 rounded-full"
           style={{ backgroundColor: cefrLevel.color }}
         />
@@ -249,12 +247,11 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
         </div>
 
         {/* CEFR Guide */}
-        <AnimatePresence>
+        <div>
           {showCEFRGuide && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="bg-gray-50 border border-gray-200 rounded-lg p-4"
             >
               <h4 className="font-medium text-gray-900 mb-3">
@@ -278,19 +275,16 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
         {/* Language Display */}
         {displayStyle === 'cards' && !groupByProficiency && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {languages.map((language, index) => (
-              <motion.div
-                key={language.code}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+              <div className="animate-fade-in"
+                key={language.code}>
                 className="bg-white p-6 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedLanguage(language)}
               >
@@ -358,7 +352,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -366,11 +360,8 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
         {displayStyle === 'progress' && (
           <div className="space-y-4">
             {languages.map((language, index) => (
-              <motion.div
-                key={language.code}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+              <div className="animate-fade-in"
+                key={language.code}>
                 className="bg-white p-4 rounded-lg border"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -401,7 +392,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
                   <span>{CEFR_LEVELS[language.proficiency]?.description}</span>
                   <span>{CEFR_LEVELS[language.proficiency]?.percentage}%</span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -409,11 +400,8 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
         {displayStyle === 'badges' && (
           <div className="flex flex-wrap gap-3">
             {languages.map((language, index) => (
-              <motion.div
-                key={language.code}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
+              <div className="animate-fade-in"
+                key={language.code}>
                 className="flex items-center gap-2 bg-white p-3 rounded-full border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedLanguage(language)}
               >
@@ -429,7 +417,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -487,19 +475,17 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
         )}
 
         {/* Language Detail Modal */}
-        <AnimatePresence>
+        <div>
           {selectedLanguage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               onClick={() => setSelectedLanguage(null)}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+              <div className="animate-fade-in">
+                }
+                }
                 className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -594,10 +580,10 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
                     </div>
                   )}
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </FeatureWrapper>
   );

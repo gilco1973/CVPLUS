@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Calendar, MapPin, Award, GraduationCap, Briefcase, ChevronDown, ChevronUp, ExternalLink, Star } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { format, parseISO, isValid, differenceInMonths } from 'date-fns';
 import { CVFeatureProps, TimelineData, Experience, Education, Milestone } from '../../../types/cv-features';
@@ -47,19 +46,14 @@ const MilestonePopup: React.FC<MilestonePopupProps> = ({ item, isOpen, onClose }
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <div>
+      <div className="animate-fade-in">
+        }
+        }
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         onClick={onClose}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", duration: 0.3 }}
+        <div className="animate-fade-in">>
           className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-96 overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
@@ -134,9 +128,9 @@ const MilestonePopup: React.FC<MilestonePopupProps> = ({ item, isOpen, onClose }
               )}
             </div>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -177,16 +171,13 @@ const TimelineItemCard: React.FC<TimelineItemCardProps> = ({
       transition: {
         duration: 0.6,
         delay: animateOnScroll ? index * 0.1 : 0,
-        ease: "easeOut"
-      }
-    }
-  };
+        ease: "easeOut">;
 
   return (
-    <motion.div
+    <div className="animate-fade-in"
       ref={ref}
-      initial={animateOnScroll ? "hidden" : "visible"}
-      animate={animateOnScroll ? (inView ? "visible" : "hidden") : "visible"}
+      
+      
       variants={variants}
       className={`timeline-item cursor-pointer group ${
         isLeft ? 'timeline-item-left' : 'timeline-item-right'
@@ -257,7 +248,7 @@ const TimelineItemCard: React.FC<TimelineItemCardProps> = ({
           <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

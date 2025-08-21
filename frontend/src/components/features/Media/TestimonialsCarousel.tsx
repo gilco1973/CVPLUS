@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -242,15 +241,12 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
           ref={carouselRef}
           className="relative overflow-hidden"
         >
-          <AnimatePresence mode="wait" custom={currentIndex}>
+          <div>
             {currentTestimonial && (
-              <motion.div
+              <div className="animate-fade-in"
                 key={currentTestimonial.id}
-                custom={currentIndex}
-                initial={{ opacity: 0, x: 300 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -300 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                custom={currentIndex}>
+                }
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.2}
@@ -408,9 +404,9 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
 
           {/* Navigation Arrows */}
           {showNavigation && filteredTestimonials.length > 1 && (

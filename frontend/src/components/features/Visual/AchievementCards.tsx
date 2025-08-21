@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy,
   Award,
@@ -445,21 +444,11 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
     };
 
     return (
-      <motion.div
+      <div 
+        className={`animate-fade-in ${cardSizeClasses[cardSize]} ${colorSchemeStyle.border} ${
+          isHighlighted ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''
+        } bg-white border rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer relative overflow-hidden`}
         key={achievement.id}
-        layout
-        variants={ANIMATION_VARIANTS[animationType]}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={{ duration: 0.3, delay: index * 0.1 }}
-        whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        className={`
-          ${cardSizeClasses[cardSize]} 
-          ${colorSchemeStyle.border} 
-          ${isHighlighted ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''}
-          bg-white border rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer relative overflow-hidden
-        `}
         onClick={() => handleCardClick(achievement.id)}
       >
         {/* Highlighted Badge */}
@@ -558,7 +547,7 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
         <div className="absolute bottom-2 right-2 text-gray-400">
           <Eye className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -571,31 +560,27 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
         ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
         : 'grid-cols-1 lg:grid-cols-2'
     }`}>
-      <AnimatePresence>
+      <div>
         {paginatedAchievements.map((achievement, index) => (
           <AchievementCard key={achievement.id} achievement={achievement} index={index} />
         ))}
-      </AnimatePresence>
+      </div>
     </div>
   );
 
   const CarouselLayout = () => (
     <div className="relative">
       <div className="overflow-hidden">
-        <AnimatePresence mode="wait">
+        <div>
           {paginatedAchievements.length > 0 && (
-            <motion.div
+            <div 
+              className="animate-fade-in w-full"
               key={currentPage}
-              initial={{ opacity: 0, x: 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -300 }}
-              transition={{ duration: 0.3 }}
-              className="w-full"
             >
               <AchievementCard achievement={paginatedAchievements[0]} index={0} />
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
       
       {/* Carousel Controls */}
@@ -634,13 +619,13 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
         className={`columns-1 md:columns-2 lg:columns-${columnCount} gap-6 space-y-6`}
         style={{ columnFill: 'balance' }}
       >
-        <AnimatePresence>
+        <div>
           {paginatedAchievements.map((achievement, index) => (
             <div key={achievement.id} className="break-inside-avoid mb-6">
               <AchievementCard achievement={achievement} index={index} />
             </div>
           ))}
-        </AnimatePresence>
+        </div>
       </div>
     );
   };

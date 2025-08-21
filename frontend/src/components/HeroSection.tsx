@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroSectionProps {
   onScrollToUpload?: () => void;
@@ -176,42 +175,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Text Content */}
           <div className="text-center lg:text-left">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-100 mb-6 leading-tight"
-            >
+            <h1 className="animate-fade-in text-4xl md:text-6xl lg:text-7xl font-bold text-gray-100 mb-6 leading-tight">
               From Paper to{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-400">
                 Powerful
               </span>
-            </motion.h1>
+            </h1>
             
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-2xl md:text-3xl font-light text-gray-300 mb-6"
-            >
+            <p className="animate-fade-in text-2xl md:text-3xl font-light text-gray-300 mb-6">
               Your CV, Reinvented
-            </motion.p>
+            </p>
             
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0"
-            >
+            <p className="animate-fade-in text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0">
               Transform your traditional CV into an interactive masterpiece with AI-powered features, stunning templates, and one-click magic
-            </motion.p>
+            </p>
             
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
-            >
+            <div className="animate-fade-in flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <button 
                 onClick={handleGetStartedClick}
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 hover-glow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
@@ -232,15 +211,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <><Play className="inline-block w-5 h-5 mr-2" />Watch Demo</>
                 )}
               </button>
-            </motion.div>
+            </div>
 
             {/* Trust Indicators */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex flex-wrap justify-center lg:justify-start gap-8 mb-8"
-            >
+            <div className="animate-fade-in flex flex-wrap justify-center lg:justify-start gap-8 mb-8">
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-blue-400">10,000+</div>
                 <div className="text-sm text-gray-400">CVs Transformed</div>
@@ -253,16 +227,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="text-2xl md:text-3xl font-bold text-blue-400">30 sec</div>
                 <div className="text-sm text-gray-400">Average Time</div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Right Column - Video Player */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative"
-          >
+          <div className="animate-fade-in relative">
             <div 
               className="relative bg-gray-800 rounded-2xl overflow-hidden shadow-2xl border border-gray-700 group"
               onMouseEnter={() => setShowVideoControls(true)}
@@ -302,14 +271,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* Video Controls Overlay */}
-                <AnimatePresence>
+                <div>
                   {showVideoControls && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center"
-                    >
+                    <div className="animate-fade-in absolute inset-0 bg-black/40 flex items-center justify-center">
                       <div className="flex items-center gap-4">
                         <button
                           onClick={handlePlayPause}
@@ -343,9 +307,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <Maximize className="w-5 h-5 text-white" />
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
+                </div>
 
                 {/* Progress Bar */}
                 {videoDuration > 0 && (
@@ -374,16 +338,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <span className="text-white text-sm font-medium">CVPlus Demo</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Features Highlighting Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={showFeatures ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-20"
-        >
+        <div className="animate-fade-in mt-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-100 mb-4">
               Powerful Features at Your Fingertips
@@ -395,12 +354,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <motion.div
+              <div 
                 key={feature.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={showFeatures ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: feature.delay / 1000 }}
-                className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover-lift group"
+                className="animate-fade-in bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover-lift group"
               >
                 <div className={`bg-gradient-to-br ${feature.gradient} rounded-lg p-4 w-14 h-14 mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                   <span className="text-2xl" role="img" aria-label={feature.title}>
@@ -415,10 +371,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <p className="text-gray-400 text-sm leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

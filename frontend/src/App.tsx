@@ -1,23 +1,33 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { lazy, Suspense } from 'react';
 import { HomePage } from './pages/HomePage';
-import { ProcessingPage } from './pages/ProcessingPage';
-import { CVAnalysisPage } from './pages/CVAnalysisPage';
-import { CVPreviewPageNew } from './pages/CVPreviewPageNew';
-import { ResultsPage } from './pages/ResultsPage';
-import { TemplatesPage } from './pages/TemplatesPage';
-import { CVFeaturesPage } from './pages/CVFeaturesPage';
-import { FeatureSelectionPage } from './pages/FeatureSelectionPage';
-import { AboutPage } from './pages/AboutPage';
-import { KeywordOptimization } from './pages/KeywordOptimization';
-import { FinalResultsPage } from './pages/FinalResultsPage';
-import { PricingPage } from './pages/PricingPage';
-import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
-import { FAQPage } from './components/pages/FAQ';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
 import { GlobalLayout } from './components/layout/GlobalLayout';
 import { WorkflowLayout } from './components/layout/WorkflowLayout';
+
+// Lazy load heavy components to reduce initial bundle size
+const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));
+const CVAnalysisPage = lazy(() => import('./pages/CVAnalysisPage').then(m => ({ default: m.CVAnalysisPage })));
+const CVPreviewPageNew = lazy(() => import('./pages/CVPreviewPageNew').then(m => ({ default: m.CVPreviewPageNew })));
+const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ default: m.ResultsPage })));
+const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
+const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
+const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const KeywordOptimization = lazy(() => import('./pages/KeywordOptimization').then(m => ({ default: m.KeywordOptimization })));
+const FinalResultsPage = lazy(() => import('./pages/FinalResultsPage').then(m => ({ default: m.FinalResultsPage })));
+const PricingPage = lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
+const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage').then(m => ({ default: m.PaymentSuccessPage })));
+const FAQPage = lazy(() => import('./components/pages/FAQ').then(m => ({ default: m.FAQPage })));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+  </div>
+);
 
 const router = createBrowserRouter(
   [
@@ -33,7 +43,9 @@ const router = createBrowserRouter(
       path: '/features',
       element: (
         <GlobalLayout variant="full-width" showFooter={true}>
-          <CVFeaturesPage />
+          <Suspense fallback={<PageLoader />}>
+            <CVFeaturesPage />
+          </Suspense>
         </GlobalLayout>
       ),
     },
@@ -41,47 +53,83 @@ const router = createBrowserRouter(
       path: '/about',
       element: (
         <GlobalLayout variant="default" showFooter={true}>
-          <AboutPage />
+          <Suspense fallback={<PageLoader />}>
+            <AboutPage />
+          </Suspense>
         </GlobalLayout>
       ),
     },
     {
       path: '/select-features/:jobId',
-      element: <FeatureSelectionPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <FeatureSelectionPage />
+        </Suspense>
+      ),
     },
     {
       path: '/process/:jobId',
-      element: <ProcessingPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <ProcessingPage />
+        </Suspense>
+      ),
     },
     {
       path: '/analysis/:jobId',
-      element: <CVAnalysisPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <CVAnalysisPage />
+        </Suspense>
+      ),
     },
     {
       path: '/preview/:jobId',
-      element: <CVPreviewPageNew />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <CVPreviewPageNew />
+        </Suspense>
+      ),
     },
     {
       path: '/results/:jobId',
-      element: <ResultsPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <ResultsPage />
+        </Suspense>
+      ),
     },
     {
       path: '/final-results/:jobId',
-      element: <FinalResultsPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <FinalResultsPage />
+        </Suspense>
+      ),
     },
     {
       path: '/templates/:jobId',
-      element: <TemplatesPage />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <TemplatesPage />
+        </Suspense>
+      ),
     },
     {
       path: '/keywords/:id',
-      element: <KeywordOptimization />,
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <KeywordOptimization />
+        </Suspense>
+      ),
     },
     {
       path: '/faq',
       element: (
         <GlobalLayout variant="default" showFooter={true}>
-          <FAQPage />
+          <Suspense fallback={<PageLoader />}>
+            <FAQPage />
+          </Suspense>
         </GlobalLayout>
       ),
     },
@@ -89,7 +137,9 @@ const router = createBrowserRouter(
       path: '/pricing',
       element: (
         <GlobalLayout variant="default" showFooter={true}>
-          <PricingPage />
+          <Suspense fallback={<PageLoader />}>
+            <PricingPage />
+          </Suspense>
         </GlobalLayout>
       ),
     },
@@ -97,7 +147,9 @@ const router = createBrowserRouter(
       path: '/payment-success',
       element: (
         <GlobalLayout variant="default" showFooter={false}>
-          <PaymentSuccessPage />
+          <Suspense fallback={<PageLoader />}>
+            <PaymentSuccessPage />
+          </Suspense>
         </GlobalLayout>
       ),
     },

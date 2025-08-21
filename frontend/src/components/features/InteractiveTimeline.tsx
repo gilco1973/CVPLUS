@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Calendar, Briefcase, GraduationCap, ChevronLeft, ChevronRight, Maximize2, X, Award, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../types/cv-features';
 import { FeatureWrapper } from './Common/FeatureWrapper';
 import { LoadingSpinner } from './Common/LoadingSpinner';
@@ -554,17 +553,14 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                 const row = index % 3; // Distribute events across 3 rows to avoid overlap
                 
                 return (
-                  <motion.div
+                  <div 
+                    className="animate-fade-in absolute cursor-pointer"
                     key={event.id}
-                    className="absolute cursor-pointer"
                     style={{
                       ...position,
                       top: `${row * 100}px`,
                       minHeight: '80px'
                     }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     onMouseEnter={() => setHoveredEvent(event.id)}
                     onMouseLeave={() => setHoveredEvent(null)}
                     onClick={() => {
@@ -597,7 +593,7 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -610,11 +606,9 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
         <div className="bg-gray-800 rounded-xl p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredEvents.map((event) => (
-              <motion.div
+              <div 
+                className="animate-fade-in"
                 key={event.id}
-                className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
                 onClick={() => {
                   setSelectedEvent(event);
                   actualEventHandler?.(event);
@@ -642,7 +636,7 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -721,20 +715,14 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
       )}
 
       {/* Event Details Modal */}
-      <AnimatePresence>
+      <div>
         {selectedEvent && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div 
+            className="animate-fade-in"
             onClick={() => setSelectedEvent(null)}
           >
-            <motion.div
-              className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+            <div 
+              className="animate-fade-in"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between mb-4">
@@ -820,10 +808,10 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                   </div>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
           {/* Timeline Summary */}
           {timelineData?.summary && typeof timelineData.summary === 'object' && (

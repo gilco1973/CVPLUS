@@ -15,7 +15,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
 
 import { CVFeatureProps, PodcastData } from '../../../types/cv-features';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -331,11 +330,6 @@ export const AIPodcastPlayer: React.FC<PodcastPlayerProps> = ({
           <div className="text-center py-8">
             <div className="relative mb-6">
               <Loader2 className="w-16 h-16 mx-auto text-blue-600 animate-spin" />
-              <motion.div
-                className="absolute inset-0 rounded-full border-4 border-blue-200"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Creating Your Podcast
@@ -345,12 +339,7 @@ export const AIPodcastPlayer: React.FC<PodcastPlayerProps> = ({
             </p>
             <div className="max-w-md mx-auto">
               <div className="bg-gray-200 rounded-full h-2 mb-2">
-                <motion.div
-                  className="bg-blue-600 h-2 rounded-full"
-                  initial={{ width: "0%" }}
-                  animate={{ width: "75%" }}
-                  transition={{ duration: 3, ease: "easeInOut" }}
-                />
+                <div className="animate-fade-in bg-blue-600 h-2 rounded-full w-1/3 transition-all duration-300"></div>
               </div>
               <p className="text-xs text-gray-500">Estimated time: 2-3 minutes</p>
             </div>
@@ -636,16 +625,14 @@ export const AIPodcastPlayer: React.FC<PodcastPlayerProps> = ({
                 style={{ scrollBehavior: 'smooth' }}
               >
                 {transcriptSegments.map((segment, index) => (
-                  <motion.div
+                  <div 
                     key={index}
-                    className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                    className={`animate-fade-in p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                       index === currentSegment
                         ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-900'
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                     }`}
                     onClick={() => handleTranscriptClick(segment)}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
                   >
                     <div className="flex items-start justify-between">
                       <p className={`text-sm leading-relaxed ${
@@ -657,7 +644,7 @@ export const AIPodcastPlayer: React.FC<PodcastPlayerProps> = ({
                         {formatTime(segment.start)}
                       </span>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>

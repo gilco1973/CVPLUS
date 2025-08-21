@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
   GitCompare, 
@@ -97,26 +96,13 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
       )}
 
       {/* Content Area */}
-      <AnimatePresence mode="wait">
+      <div>
         {state.viewMode === 'single' || isMobile ? (
-          <motion.div
-            key="single-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div className="animate-fade-in" key="single-view">
             {children}
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            key="comparison-view"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6" key="comparison-view">
             {/* Comparison Summary */}
             <ComparisonSummary 
               comparison={state.comparison} 
@@ -127,12 +113,7 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
             {/* Section Comparisons */}
             <div className="space-y-6">
               {filteredSections.map((section, index) => (
-                <motion.div
-                  key={section.sectionName}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.3 }}
-                >
+                <div className="animate-fade-in" key={section.sectionName}>
                   <SectionComparison
                     section={section}
                     isSelected={state.selectedSection === section.sectionName}
@@ -142,7 +123,7 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
                         : section.sectionName
                     )}
                   />
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -158,9 +139,9 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
                 </p>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Mobile Comparison Toggle */}
       {isMobile && hasComparison && (
@@ -438,15 +419,9 @@ const SectionComparison: React.FC<SectionComparisonProps> = ({
       </button>
 
       {/* Section Content */}
-      <AnimatePresence>
+      <div>
         {isSelected && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="border-t bg-gray-50"
-          >
+          <div className="animate-fade-in border-t bg-gray-50">
             <div className="p-4">
               <DiffStats changes={section.changes} className="mb-4" />
               <SideBySideDiff
@@ -456,9 +431,9 @@ const SectionComparison: React.FC<SectionComparisonProps> = ({
                 sectionName={displayName}
               />
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

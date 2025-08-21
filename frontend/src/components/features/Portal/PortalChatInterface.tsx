@@ -46,7 +46,6 @@ import {
   Minimize2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
 import { PortalChatInterfaceProps } from '../../../types/portal-component-props';
 import { ChatMessage, ChatError, RAGSourceDocument } from '../../../types/portal-types';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -116,10 +115,9 @@ const MessageBubble: React.FC<{
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
+    <div className="animate-fade-in">
+      }
+      }
       className={`flex items-start gap-3 mb-4 ${isUser ? 'flex-row-reverse' : ''}`}
     >
       {/* Avatar */}
@@ -250,7 +248,7 @@ const MessageBubble: React.FC<{
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -258,10 +256,9 @@ const MessageBubble: React.FC<{
  * Typing indicator animation
  */
 const TypingIndicator: React.FC = () => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
+  <div className="animate-fade-in">
+    }
+    }
     className="flex items-center gap-3 mb-4"
   >
     <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
@@ -274,7 +271,7 @@ const TypingIndicator: React.FC = () => (
         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
       </div>
     </div>
-  </motion.div>
+  </div>
 );
 
 /**
@@ -804,10 +801,7 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (canSendMessage) {
-        sendMessage();
-      }
-    }
-  }, [canSendMessage, sendMessage]);
+        sendMessage();>, [canSendMessage, sendMessage]);
 
   const handleSuggestedQuestionClick = useCallback((question: string) => {
     setInputState({
@@ -1096,7 +1090,7 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
                 <LoadingSpinner size="large" text="Connecting to AI assistant..." />
               </div>
             ) : (
-              <AnimatePresence>
+              <div>
                 {/* Display filtered messages if searching, otherwise all messages */}
                 {(searchQuery ? filteredMessages : chatState.messages).map((message) => (
                   <MessageBubble
@@ -1112,7 +1106,7 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
                 
                 {/* Typing Indicator */}
                 {chatState.isTyping && <TypingIndicator />}
-              </AnimatePresence>
+              </div>
             )}
             
             <div ref={messagesEndRef} />

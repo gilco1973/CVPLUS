@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Grid3x3, List, Clock, Tag, Trash2, Share2, Loader2, FileText, ExternalLink, X, Briefcase, Trophy, BookOpen, Mic, Award } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface PortfolioItem {
@@ -260,21 +259,13 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
       </div>
 
       {/* Portfolio Items */}
-      <AnimatePresence mode="wait">
+      <div>
         {viewMode === 'grid' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
+          <div className="animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item, index) => (
-              <motion.div
+              <div 
+                className="animate-fade-in bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-cyan-500 transition-all hover:shadow-lg cursor-pointer"
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-cyan-500 transition-all hover:shadow-lg cursor-pointer"
                 onClick={() => setSelectedItem(item)}
               >
                 {/* Media Preview */}
@@ -327,25 +318,17 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
 
         {viewMode === 'list' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-4"
-          >
+          <div className="animate-fade-in space-y-4">
             {filteredItems.map((item, index) => (
-              <motion.div
+              <div 
+                className="animate-fade-in bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-cyan-500 transition-all cursor-pointer"
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-cyan-500 transition-all cursor-pointer"
                 onClick={() => setSelectedItem(item)}
               >
                 <div className="flex items-start gap-4">
@@ -399,29 +382,21 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
 
         {viewMode === 'timeline' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="relative"
-          >
+          <div className="animate-fade-in relative">
             <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-700"></div>
             
             {filteredItems
               .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
               .map((item, index) => (
-                <motion.div
+                <div 
+                  className="animate-fade-in relative flex items-start mb-8"
                   key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative flex items-start mb-8"
                 >
                   <div className={`absolute left-4 w-8 h-8 rounded-full bg-gradient-to-r ${typeColors[item.type]} flex items-center justify-center`}>
                     <div className="w-6 h-6 flex items-center justify-center text-white text-xs">
@@ -448,27 +423,21 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Item Detail Modal */}
-      <AnimatePresence>
+      <div>
         {selectedItem && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div 
+            className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedItem(null)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-gray-800 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            <div 
+              className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -643,26 +612,20 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                   Delete
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Share Modal */}
-      <AnimatePresence>
+      <div>
         {showShareModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div 
+            className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowShareModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full"
+            <div 
+              className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-2xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-2xl font-bold text-gray-100 mb-6">Share Portfolio Gallery</h3>
@@ -735,10 +698,10 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                   Close
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

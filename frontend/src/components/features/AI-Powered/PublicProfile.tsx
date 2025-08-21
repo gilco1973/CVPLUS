@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -144,10 +143,7 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
               showSkills: true,
               showProjects: true,
               passwordProtected: false,
-              allowedDomains: []
-            }
-          }
-        })
+              allowedDomains: []>)
       });
 
       if (response.ok) {
@@ -367,12 +363,9 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
             </div>
 
             {/* Tab Content */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+            <div>
+              <div className="animate-fade-in"
+                key={activeTab}>
                 className="min-h-[400px]"
               >
                 {activeTab === 'overview' && (
@@ -693,8 +686,8 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
                     </div>
                   </div>
                 )}
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            </div>
           </>
         ) : (
           /* No Profile - Generation Interface */
@@ -758,19 +751,17 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
         )}
 
         {/* QR Code Modal */}
-        <AnimatePresence>
+        <div>
           {showQRCode && profile && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               onClick={() => setShowQRCode(false)}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+              <div className="animate-fade-in">
+                }
+                }
                 className="bg-white rounded-lg p-6 max-w-sm w-full"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -794,10 +785,10 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
                     Close
                   </button>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </FeatureWrapper>
   );

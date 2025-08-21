@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
@@ -187,12 +186,11 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
             </div>
           </div>
           
-          <AnimatePresence>
+          <div>
             {showAnalysisMethod && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
+              <div className="animate-fade-in">
+                }
+                }
                 className="mt-4 p-4 bg-white rounded border text-sm text-gray-600"
               >
                 <p>
@@ -200,9 +198,9 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
                   project descriptions, achievements, and skill usage to identify 
                   personality traits, work preferences, and career alignment.
                 </p>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -224,12 +222,9 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
         </div>
 
         {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+        <div>
+          <div className="animate-fade-in"
+            key={activeTab}>
             className="min-h-[400px]"
           >
             {activeTab === 'overview' && (
@@ -294,11 +289,8 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
             {activeTab === 'traits' && (
               <div className="space-y-4">
                 {profile.primaryTraits.map((trait, index) => (
-                  <motion.div
-                    key={trait.name}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                  <div className="animate-fade-in"
+                    key={trait.name}>
                     className="bg-white p-6 rounded-lg border"
                   >
                     <div
@@ -333,12 +325,11 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
                       </div>
                     </div>
 
-                    <AnimatePresence>
+                    <div>
                       {expandedTrait === trait.name && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
+                        <div className="animate-fade-in">
+                          }
+                          }
                           className="mt-4 pt-4 border-t border-gray-200"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -369,10 +360,10 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
                               </ul>
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       )}
-                    </AnimatePresence>
-                  </motion.div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -524,8 +515,8 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
                 </div>
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </div>
 
         {/* Privacy Notice */}
         {mode === 'public' && (

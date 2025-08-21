@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Shield, CheckCircle, Plus, ExternalLink, Calendar, Clock, Grid3x3, List, Loader2, Share2, AlertCircle, X, Trash2, Award } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface CertificationBadge {
@@ -136,15 +135,11 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
           const isExpired = badge.expiryDate && badge.expiryDate < new Date();
           
           return (
-            <motion.div
-              key={badge.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={collection?.displayOptions.animateOnHover ? { scale: 1.05 } : {}}
-              className={`relative bg-gray-800 rounded-lg p-4 border-2 cursor-pointer transition-all ${
+            <div 
+              className={`animate-fade-in relative bg-gray-800 rounded-lg p-4 border-2 cursor-pointer transition-all ${
                 isExpired ? 'border-gray-600 opacity-60' : 'border-gray-700 hover:border-cyan-500'
               }`}
+              key={badge.id}
               onClick={() => setSelectedBadge(badge)}
             >
               {/* Badge Image */}
@@ -191,7 +186,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                   <p className="text-xs text-red-400 mt-1">Expired</p>
                 )}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -205,14 +200,11 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
           const isExpired = badge.expiryDate && badge.expiryDate < new Date();
           
           return (
-            <motion.div
-              key={badge.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`bg-gray-800 rounded-lg p-4 border transition-all cursor-pointer ${
+            <div 
+              className={`animate-fade-in bg-gray-800 rounded-lg p-4 border transition-all cursor-pointer ${
                 isExpired ? 'border-gray-600 opacity-60' : 'border-gray-700 hover:border-cyan-500'
               }`}
+              key={badge.id}
               onClick={() => setSelectedBadge(badge)}
             >
               <div className="flex items-center gap-4">
@@ -287,7 +279,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -457,20 +449,14 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
       )}
 
       {/* Badge Detail Modal */}
-      <AnimatePresence>
+      <div>
         {selectedBadge && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div 
+            className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedBadge(null)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            <div 
+              className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -641,26 +627,20 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                   Remove
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Add Certification Modal */}
-      <AnimatePresence>
+      <div>
         {showAddForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div 
+            className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowAddForm(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-gray-800 rounded-xl p-6 max-w-md w-full"
+            <div 
+              className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold text-gray-100 mb-4">Add Certification</h3>
@@ -759,10 +739,10 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

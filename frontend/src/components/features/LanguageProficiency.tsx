@@ -7,7 +7,6 @@
 
 import { useState } from 'react';
 import { Globe, Languages, Plus, CheckCircle, Loader2, TrendingUp} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import type { 
   LanguageProficiency as LanguageProficiencyType, 
@@ -57,9 +56,8 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
   if (!visualization) {
     return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      <div className="animate-fade-in">
+        }
         className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center"
       >
         <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -88,16 +86,15 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
             </>
           )}
         </button>
-      </motion.div>
+      </div>
     );
   }
 
   const currentVisualization = visualization.visualizations.find(v => v.type === selectedView);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div className="animate-fade-in">
+      }
       className="space-y-6"
     >
       {/* Header */}
@@ -189,7 +186,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
       </div>
 
       {/* Add Language Form Modal */}
-      <AnimatePresence>
+      <div>
         {showAddForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
@@ -204,7 +201,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
             </div>
           </div>
         )}
-      </AnimatePresence>
-    </motion.div>
+      </div>
+    </div>
   );
 };
