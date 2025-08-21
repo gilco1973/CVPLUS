@@ -33,6 +33,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { SkillsRadarChart } from '../../components/features/SkillsRadarChart';
+import { getFeatureComponent } from '../../utils/featureRegistry';
 
 interface FeatureData {
   status: 'pending' | 'processing' | 'completed' | 'failed';
@@ -304,7 +305,38 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
     }
   };
 
-  // Render feature content based on feature type
+  // Render actual React component if available, otherwise fallback to manual rendering
+  const renderReactComponent = (feature: any) => {
+    const { data, key } = feature;
+    
+    if (data.status !== 'completed' || !data.data) return null;
+
+    // Get the React component from the feature registry
+    const FeatureComponent = getFeatureComponent(key) || getFeatureComponent(`${key}-component`);
+    
+    if (FeatureComponent) {
+      // Render the actual React component
+      const componentProps = {
+        ...data.data,
+        jobId: feature.key,
+        featureId: key,
+        className: "w-full"
+      };
+      
+      try {
+        return <FeatureComponent {...componentProps} />;
+      } catch (error) {
+        console.warn(`Failed to render React component for ${key}:`, error);
+        // Fallback to manual rendering
+        return renderFeatureContent(feature);
+      }
+    }
+    
+    // No React component found, use manual rendering
+    return renderFeatureContent(feature);
+  };
+
+  // Render feature content based on feature type (fallback)
   const renderFeatureContent = (feature: any) => {
     const { data, key } = feature;
     
@@ -513,9 +545,9 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
       <button
         key="view"
         onClick={() => setExpandedFeature(expandedFeature === key ? null : key)}
-        className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border hover:bg-blue-200 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg border hover:bg-blue-200 transition-colors font-medium"
       >
-        <Eye className="w-3 h-3" />
+        <Eye className="w-4 h-4" />
         {expandedFeature === key ? 'Hide' : 'View'}
       </button>
     );
@@ -528,9 +560,9 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
           href={data.url || data.shareableUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-100 text-green-700 rounded border hover:bg-green-200 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg border hover:bg-green-200 transition-colors font-medium"
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-4 h-4" />
           Open
         </a>
       );
@@ -543,86 +575,86 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
           href={data.data.audioUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded border hover:bg-purple-200 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg border hover:bg-purple-200 transition-colors font-medium"
         >
-          <Play className="w-3 h-3" />
+          <Play className="w-4 h-4" />
           Play
         </a>
       );
     }
 
-    return <div className="flex flex-wrap gap-1 mt-2">{actions}</div>;
+    return <div className="flex flex-wrap gap-2 mt-3">{actions}</div>;
   };
 
   if (processedFeatures.length === 0) {
     return (
-      <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Star className="w-5 h-5 text-blue-600" />
+      <section className={`bg-white rounded-xl shadow-sm border border-gray-200 p-8 ${className}`}>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+          <Star className="w-6 h-6 text-blue-600" />
           Enhanced Features
         </h2>
-        <div className="text-center py-8">
-          <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-2">No enhanced features are currently available</p>
-          <p className="text-sm text-gray-400">Enhanced features will appear here as they are generated</p>
+        <div className="text-center py-12">
+          <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-lg text-gray-500 mb-2">No enhanced features are currently available</p>
+          <p className="text-base text-gray-400">Enhanced features will appear here as they are generated</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+    <section className={`bg-white rounded-xl shadow-sm border border-gray-200 p-8 ${className}`}>
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Star className="w-5 h-5 text-blue-600" />
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <Star className="w-6 h-6 text-blue-600" />
           Enhanced Features
         </h2>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
           {processedFeatures.length} features available
         </div>
       </div>
 
       {/* Features by Category */}
-      <div className="space-y-8">
+      <div className="space-y-12">
         {Object.entries(groupedFeatures).map(([category, categoryFeatures]) => (
           <div key={category}>
             {/* Category Header */}
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {categoryConfig[category as keyof typeof categoryConfig].title}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-base text-gray-600">
                 {categoryConfig[category as keyof typeof categoryConfig].description}
               </p>
             </div>
 
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Features Grid - Improved spacing with 2-column max for better readability */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {categoryFeatures.map((feature) => {
                 const IconComponent = feature.config.icon;
                 const isExpanded = expandedFeature === feature.key;
                 
-                // Portfolio Gallery gets special full-width treatment when expanded
-                const isPortfolioExpanded = (feature.key === 'portfolio' || feature.key === 'portfolioGallery') && isExpanded;
-                const portfolioColSpan = isPortfolioExpanded ? 'md:col-span-2 lg:col-span-3' : '';
+                // Portfolio Gallery and Skills Radar get special full-width treatment when expanded
+                const needsFullWidth = ((feature.key === 'portfolio' || feature.key === 'portfolioGallery' || feature.key === 'skillsVisualization') && isExpanded);
+                const fullWidthColSpan = needsFullWidth ? 'lg:col-span-2' : '';
 
                 return (
                   <div
                     key={feature.key}
-                    className={`bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200 ${portfolioColSpan}`}
+                    className={`bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 ${fullWidthColSpan}`}
                   >
-                    {/* Feature Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${getStatusColors(feature.data.status, feature.config.color)} bg-opacity-10`}>
-                          <IconComponent className={`w-5 h-5 text-${feature.config.color}-600`} />
+                    {/* Feature Header - Larger and more spaced */}
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="flex items-start gap-4">
+                        <div className={`p-3 rounded-xl ${getStatusColors(feature.data.status, feature.config.color)} bg-opacity-10`}>
+                          <IconComponent className={`w-6 h-6 text-${feature.config.color}-600`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                          <h4 className="font-semibold text-gray-900 text-base mb-2">
                             {feature.config.title}
                           </h4>
-                          <p className="text-xs text-gray-600 leading-relaxed">
+                          <p className="text-sm text-gray-600 leading-relaxed">
                             {feature.config.description}
                           </p>
                         </div>
@@ -633,17 +665,17 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
                       </div>
                     </div>
 
-                    {/* Status Information */}
-                    <div className="mb-3">
+                    {/* Status Information - More prominent */}
+                    <div className="mb-4">
                       {feature.data.status === 'processing' && (
-                        <div>
-                          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                            <span>{feature.data.currentStep || 'Processing...'}</span>
-                            <span>{feature.data.progress || 0}%</span>
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between text-sm text-blue-700 mb-2">
+                            <span className="font-medium">{feature.data.currentStep || 'Processing...'}</span>
+                            <span className="font-mono">{feature.data.progress || 0}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="w-full bg-blue-200 rounded-full h-2">
                             <div 
-                              className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${feature.data.progress || 0}%` }}
                             />
                           </div>
@@ -651,14 +683,21 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
                       )}
 
                       {feature.data.status === 'failed' && feature.data.error && (
-                        <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded border">
-                          {feature.data.error}
+                        <div className="text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200">
+                          <div className="font-medium mb-1">❌ Failed</div>
+                          <div className="text-xs">{feature.data.error}</div>
                         </div>
                       )}
 
                       {feature.data.status === 'completed' && (
-                        <div className="text-xs text-green-600 font-medium">
-                          ✓ Completed
+                        <div className="text-sm text-green-700 font-medium bg-green-50 px-3 py-2 rounded-lg">
+                          ✓ Completed Successfully
+                        </div>
+                      )}
+
+                      {feature.data.status === 'pending' && (
+                        <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+                          ⏳ Waiting to process...
                         </div>
                       )}
                     </div>
@@ -666,11 +705,11 @@ export const EnhancedFeaturesGrid: React.FC<EnhancedFeaturesGridProps> = memo(({
                     {/* Feature Actions */}
                     {renderFeatureActions(feature)}
 
-                    {/* Expanded Content */}
+                    {/* Expanded Content - More spacious */}
                     {isExpanded && feature.data.status === 'completed' && feature.data.data && (
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <div className="max-h-40 overflow-y-auto">
-                          {renderFeatureContent(feature)}
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div className={`${feature.key === 'skillsVisualization' ? 'min-h-[400px]' : 'max-h-60 overflow-y-auto'}`}>
+                          {renderReactComponent(feature)}
                         </div>
                       </div>
                     )}

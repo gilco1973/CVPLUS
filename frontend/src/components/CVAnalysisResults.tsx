@@ -978,13 +978,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               <>
                 <button
                   onClick={() => applyAll(true)}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-6 py-3 text-base font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  Apply All
+                  Select All
                 </button>
                 <button
                   onClick={() => applyAll(false)}
-                  className="px-4 py-2 text-sm bg-gray-600 text-gray-300 rounded-md hover:bg-gray-500 transition-colors"
+                  className="px-6 py-3 text-base font-semibold bg-gray-600 text-white rounded-lg hover:bg-gray-500 focus:ring-4 focus:ring-gray-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Clear All
                 </button>

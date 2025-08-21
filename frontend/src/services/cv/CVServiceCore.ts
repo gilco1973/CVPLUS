@@ -74,6 +74,10 @@ export class CVServiceCore {
     return CVValidator.getTemplates(category);
   }
 
+  static async updateJobFeatures(jobId: string, selectedFeatures: string[]): Promise<void> {
+    return CVValidator.updateJobFeatures(jobId, selectedFeatures);
+  }
+
   // Analysis operations
   static async analyzeCV(params: CVAnalysisParams) {
     return CVAnalyzer.analyzeCV(params);
@@ -204,6 +208,7 @@ export const subscribeToJob = CVServiceCore.subscribeToJob;
 export const getJob = CVServiceCore.getJob;
 export const generateCV = CVServiceCore.generateCV;
 export const getTemplates = CVServiceCore.getTemplates;
+export const updateJobFeatures = CVServiceCore.updateJobFeatures;
 
 // Analysis operations
 export const analyzeCV = (parsedCV: unknown, targetRole?: string) =>

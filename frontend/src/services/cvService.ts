@@ -21,7 +21,8 @@ export {
   applyImprovements,
   analyzeATSCompatibility,
   applyATSOptimizations,
-  generateATSKeywords
+  generateATSKeywords,
+  updateJobFeatures
 } from './cv';
 
 // Feature services - comprehensive exports

@@ -5,7 +5,8 @@
 
 import { 
   doc, 
-  getDoc
+  getDoc,
+  updateDoc
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../lib/firebase';
@@ -117,5 +118,22 @@ export class CVValidator {
       valid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Update job with selected features
+   */
+  static async updateJobFeatures(jobId: string, selectedFeatures: string[]): Promise<void> {
+    try {
+      const jobRef = doc(db, 'jobs', jobId);
+      await updateDoc(jobRef, {
+        selectedFeatures,
+        updatedAt: new Date()
+      });
+      console.log('Job features updated successfully:', { jobId, selectedFeatures });
+    } catch (error) {
+      console.error('Error updating job features:', error);
+      throw new Error('Failed to update job features');
+    }
   }
 }

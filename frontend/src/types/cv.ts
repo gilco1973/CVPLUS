@@ -40,8 +40,23 @@ export interface Job {
   };
   error?: string;
   appliedRecommendations?: PrioritizedRecommendation[];
-  transformationSummary?: Record<string, unknown>;
+  transformationSummary?: {
+    totalChanges: number;
+    sectionsModified: string[];
+    newSections: string[];
+    keywordsAdded: string[];
+    estimatedScoreIncrease: number;
+  };
+  comparisonReport?: {
+    beforeAfter: Array<{
+      section: string;
+      before: string;
+      after: string;
+      improvement: string;
+    }>;
+  };
   improvedCV?: CVParsedData;
+  improvementsApplied?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

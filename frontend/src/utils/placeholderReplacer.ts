@@ -1,6 +1,7 @@
 /**
  * Utility for handling CV content placeholders from the backend
- * Replaces backend template placeholders with user-friendly preview text
+ * Provides functions to detect, validate, and manage placeholder content
+ * NEVER auto-replaces placeholders with fake data - only user-provided real data
  */
 
 export interface PlaceholderReplacements {
@@ -8,123 +9,27 @@ export interface PlaceholderReplacements {
 }
 
 /**
- * Default replacements for common placeholder patterns
- * These provide more meaningful preview text than raw placeholders
- */
-const DEFAULT_REPLACEMENTS: PlaceholderReplacements = {
-  '[INSERT NUMBER]': '5-10',
-  '[INSERT TEAM SIZE]': '8-12 team members',
-  '[ADD PERCENTAGE]': '25',
-  '[INSERT BUDGET]': '$500K-1M',
-  '[INSERT TIMEFRAME]': '3-6 months',
-  '[INSERT VALUE]': '$2M+',
-  '[ADD SPECIFIC OUTCOME]': 'improved efficiency',
-  '[INSERT METRIC]': '30%',
-  '[INSERT YOUR FIELD]': 'technology leadership',
-  '[LIST KEY SKILLS]': 'team management, strategic planning, technical oversight',
-  '[DESCRIBE KEY ACHIEVEMENT]': 'drive cross-functional collaboration and deliver complex projects',
-  '[INSERT TARGET ROLE]': 'senior management position',
-  '[NUMBER]': '6+',
-};
-
-/**
- * Enhanced replacements with contextual awareness
- */
-const CONTEXTUAL_REPLACEMENTS: { [pattern: string]: (context?: string) => string } = {
-  'team_size': (context) => {
-    if (context?.toLowerCase().includes('developer') || context?.toLowerCase().includes('engineering')) {
-      return '8-15 developers';
-    }
-    if (context?.toLowerCase().includes('sales')) {
-      return '12-20 sales professionals';
-    }
-    if (context?.toLowerCase().includes('marketing')) {
-      return '6-10 marketing specialists';
-    }
-    return '8-12 team members';
-  },
-  'percentage': (context) => {
-    if (context?.toLowerCase().includes('efficiency') || context?.toLowerCase().includes('productivity')) {
-      return '25-35%';
-    }
-    if (context?.toLowerCase().includes('cost') || context?.toLowerCase().includes('savings')) {
-      return '15-20%';
-    }
-    if (context?.toLowerCase().includes('satisfaction') || context?.toLowerCase().includes('retention')) {
-      return '40-50%';
-    }
-    if (context?.toLowerCase().includes('revenue') || context?.toLowerCase().includes('growth')) {
-      return '20-30%';
-    }
-    return '25%';
-  },
-  'budget': (context) => {
-    if (context?.toLowerCase().includes('enterprise') || context?.toLowerCase().includes('large')) {
-      return '$2M+';
-    }
-    if (context?.toLowerCase().includes('startup') || context?.toLowerCase().includes('small')) {
-      return '$100K-500K';
-    }
-    return '$500K-1M';
-  }
-};
-
-/**
- * Replaces backend placeholders with user-friendly preview text
+ * Replaces placeholders ONLY with user-provided real data
+ * NEVER auto-generates fake content - this violates user data integrity
  */
 export const replacePlaceholders = (
   content: string, 
-  customReplacements: PlaceholderReplacements = {}
+  userProvidedReplacements: PlaceholderReplacements = {}
 ): string => {
   if (!content) return content;
+  if (Object.keys(userProvidedReplacements).length === 0) {
+    // NO REPLACEMENTS - return original content with placeholders intact
+    return content;
+  }
 
   let processedContent = content;
-  const allReplacements = { ...DEFAULT_REPLACEMENTS, ...customReplacements };
-
-  // Apply direct replacements first
-  Object.entries(allReplacements).forEach(([placeholder, replacement]) => {
-    // Handle case-insensitive replacement
-    const regex = new RegExp(escapeRegExp(placeholder), 'gi');
-    processedContent = processedContent.replace(regex, replacement);
-  });
-
-  // Apply contextual replacements for remaining placeholders
-  processedContent = processedContent.replace(/\[(INSERT\s+)?(\w+)(\s+\w+)*\]/gi, (match, insert, firstWord, rest) => {
-    const fullMatch = firstWord + (rest || '');
-    const context = content.toLowerCase();
-    
-    // Handle team size variations
-    if (fullMatch.toLowerCase().includes('team') || fullMatch.toLowerCase().includes('size')) {
-      return CONTEXTUAL_REPLACEMENTS.team_size(context);
+  
+  // ONLY apply user-provided replacements - NEVER auto-generate content
+  Object.entries(userProvidedReplacements).forEach(([placeholder, userValue]) => {
+    if (userValue && userValue.trim()) {
+      const regex = new RegExp(escapeRegExp(placeholder), 'gi');
+      processedContent = processedContent.replace(regex, userValue);
     }
-    
-    // Handle percentage variations
-    if (fullMatch.toLowerCase().includes('percentage') || fullMatch.toLowerCase().includes('percent')) {
-      return CONTEXTUAL_REPLACEMENTS.percentage(context);
-    }
-    
-    // Handle budget variations
-    if (fullMatch.toLowerCase().includes('budget') || fullMatch.toLowerCase().includes('value')) {
-      return CONTEXTUAL_REPLACEMENTS.budget(context);
-    }
-    
-    // Handle number variations
-    if (fullMatch.toLowerCase().includes('number') || firstWord.toLowerCase() === 'number') {
-      return '5-8';
-    }
-    
-    // Handle metric variations
-    if (fullMatch.toLowerCase().includes('metric')) {
-      return '30% improvement';
-    }
-    
-    // Handle timeframe variations
-    if (fullMatch.toLowerCase().includes('time') || fullMatch.toLowerCase().includes('duration')) {
-      return '3-6 months';
-    }
-    
-    // Default fallback - make it more user-friendly
-    return `[${fullMatch.toLowerCase().replace(/_/g, ' ')}]`;
   });
 
   return processedContent;
@@ -153,27 +58,37 @@ export const extractPlaceholders = (content: string): string[] => {
 };
 
 /**
- * Creates a more user-friendly display version of content with placeholders
- * This is specifically for preview display - actual data should still be preserved
+ * Creates preview content showing placeholders as interactive elements
+ * NEVER replaces placeholders with fake data - shows them as clickable elements for user input
  */
 export const createPreviewContent = (
   content: string,
-  showPlaceholderHints: boolean = true
+  showPlaceholderHints: boolean = true,
+  userReplacements: PlaceholderReplacements = {}
 ): string => {
   if (!content) return content;
   
-  if (!hasPlaceholders(content)) {
-    return content;
+  // Apply ONLY user-provided replacements, never fake data
+  let processedContent = replacePlaceholders(content, userReplacements);
+  
+  // Make remaining placeholders clickable
+  if (hasPlaceholders(processedContent)) {
+    processedContent = makeInteractivePlaceholders(processedContent);
   }
   
-  const replacedContent = replacePlaceholders(content);
+  return processedContent;
+};
+
+/**
+ * Wraps placeholders with clickable styling and interaction handlers
+ */
+export const makeInteractivePlaceholders = (content: string): string => {
+  if (!content) return content;
   
-  if (showPlaceholderHints && hasPlaceholders(content)) {
-    // Add a subtle hint that this contains placeholder data
-    return `${replacedContent}`;
-  }
-  
-  return replacedContent;
+  // Find all placeholders and wrap them with clickable elements
+  return content.replace(/\[(INSERT|ADD|NUMBER)[^\]]*\]/gi, (match) => {
+    return `<span class="placeholder-text" data-placeholder="${match}" onclick="openPlaceholderInput('${match}')">${match}</span>`;
+  });
 };
 
 /**
@@ -184,24 +99,64 @@ function escapeRegExp(string: string): string {
 }
 
 /**
- * Get meaningful example data for specific professional contexts
+ * Get example formats for placeholder fields (for input hints only)
+ * These are EXAMPLES for user guidance, NEVER used as actual replacements
  */
-export const getContextualExamples = (section: string, role?: string): PlaceholderReplacements => {
-  const examples: PlaceholderReplacements = {};
-  
-  if (role?.toLowerCase().includes('engineer') || role?.toLowerCase().includes('developer')) {
-    examples['[INSERT TEAM SIZE]'] = '12-15 developers';
-    examples['[ADD PERCENTAGE]'] = '35%';
-    examples['[INSERT BUDGET]'] = '$2M+';
-  } else if (role?.toLowerCase().includes('manager') || role?.toLowerCase().includes('lead')) {
-    examples['[INSERT TEAM SIZE]'] = '8-20 professionals';
-    examples['[ADD PERCENTAGE]'] = '25%';
-    examples['[INSERT BUDGET]'] = '$1M+';
-  } else if (role?.toLowerCase().includes('sales')) {
-    examples['[INSERT TEAM SIZE]'] = '15-25 sales professionals';
-    examples['[ADD PERCENTAGE]'] = '40%';
-    examples['[INSERT BUDGET]'] = '$5M+ revenue';
-  }
+export const getPlaceholderExamples = (section: string, role?: string): Record<string, string> => {
+  const examples: Record<string, string> = {
+    '[INSERT NUMBER]': '5, 10, 15',
+    '[INSERT TEAM SIZE]': '8 developers, 12 professionals',
+    '[ADD PERCENTAGE]': '25, 30, 40 (without % symbol)',
+    '[INSERT BUDGET]': '$500K, $1M, $2M+',
+    '[INSERT TIMEFRAME]': '3 months, 6 months, 1 year',
+    '[INSERT VALUE]': '$2M, 500K users, 50% improvement'
+  };
   
   return examples;
+};
+
+/**
+ * Extract placeholder information for form creation
+ */
+export const extractPlaceholderInfo = (content: string): Array<{placeholder: string, type: string, label: string}> => {
+  if (!content) return [];
+  
+  const placeholders = extractPlaceholders(content);
+  return placeholders.map(placeholder => {
+    const cleanPlaceholder = placeholder.replace(/[\[\]]/g, '');
+    const type = detectPlaceholderType(placeholder);
+    const label = formatPlaceholderLabel(cleanPlaceholder);
+    
+    return {
+      placeholder,
+      type,
+      label
+    };
+  });
+};
+
+/**
+ * Detect the type of placeholder for appropriate input field
+ */
+const detectPlaceholderType = (placeholder: string): string => {
+  const lower = placeholder.toLowerCase();
+  
+  if (lower.includes('percentage') || lower.includes('percent')) return 'percentage';
+  if (lower.includes('budget') || lower.includes('value') || lower.includes('$')) return 'currency';
+  if (lower.includes('number') || lower.includes('size') || lower.includes('team')) return 'number';
+  if (lower.includes('time') || lower.includes('duration') || lower.includes('months')) return 'timeframe';
+  
+  return 'text';
+};
+
+/**
+ * Format placeholder for human-readable label
+ */
+const formatPlaceholderLabel = (placeholder: string): string => {
+  return placeholder
+    .replace(/INSERT|ADD/gi, '')
+    .trim()
+    .split(/[_\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };

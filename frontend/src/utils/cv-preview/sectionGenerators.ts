@@ -1,6 +1,6 @@
 import type { QRCodeSettings } from '../../types/cv-preview';
 import type { CVExperienceItem, CVEducationItem, CVSkillsData, CVPersonalInfo } from '../../types/cvData';
-import { createPreviewContent, hasPlaceholders } from '../placeholderReplacer';
+import { createPreviewContent, hasPlaceholders, PlaceholderReplacements } from '../placeholderReplacer';
 
 export class SectionGenerators {
   static generateQRCodeSection(qrCodeSettings: QRCodeSettings, collapsedSections: Record<string, boolean>): string {
@@ -34,6 +34,7 @@ export class SectionGenerators {
     const contentToUse = enhancedSummary || summary;
     const isEnhanced = !!enhancedSummary;
     
+    // Show placeholders as clickable elements for user input
     const displaySummary = contentToUse ? createPreviewContent(contentToUse) : 'Professional summary will be displayed here...';
     const hasPlaceholderContent = contentToUse && hasPlaceholders(contentToUse);
     
@@ -47,7 +48,7 @@ export class SectionGenerators {
         <div class="section-content ${collapsedSections.summary ? 'collapsed' : ''}">
           <div class="${isEnhanced ? 'enhanced-summary' : ''}">
             <p${hasPlaceholderContent ? ' class="preview-content-with-placeholders"' : ''}>${displaySummary}</p>
-            ${hasPlaceholderContent ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual achievements</em></div>' : ''}
+            ${hasPlaceholderContent ? '<div class="placeholder-hint">💡 <em>Click on placeholders like [INSERT NUMBER] to enter your real data</em></div>' : ''}
             ${isEnhanced ? '<div class="improvement-badge">✨ Enhanced with AI</div>' : ''}
           </div>
         </div>
@@ -79,7 +80,7 @@ export class SectionGenerators {
                 <div class="company">${companyName || 'Company'}</div>
                 <div class="duration">${exp.startDate || 'Start'} - ${exp.endDate || 'End'}</div>
                 <div class="enhanced-description${hasEnhancedPlaceholders ? ' preview-content-with-placeholders' : ''}">${createPreviewContent(enhancedContent)}</div>
-                ${hasEnhancedPlaceholders ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual metrics</em></div>' : ''}
+                ${hasEnhancedPlaceholders ? '<div class="placeholder-hint">💡 <em>Click on placeholders like [INSERT TEAM SIZE] to enter your real data</em></div>' : ''}
                 <div class="improvement-badge">✨ Enhanced with AI</div>
               </div>
               `;
@@ -100,7 +101,7 @@ export class SectionGenerators {
                   ${exp.achievements.map((achievement: string) => `<li${hasPlaceholders(achievement) ? ' class="preview-content-with-placeholders"' : ''}>${createPreviewContent(achievement)}</li>`).join('')}
                 </ul>
               ` : ''}
-              ${(hasDescPlaceholders || hasAchievementPlaceholders) ? '<div class="placeholder-hint">💡 <em>Values above are example ranges - customize with your actual metrics</em></div>' : ''}
+              ${(hasDescPlaceholders || hasAchievementPlaceholders) ? '<div class="placeholder-hint">💡 <em>Click on placeholders to enter your real achievements and metrics</em></div>' : ''}
             </div>
             `;
           }).join('')}
@@ -118,13 +119,17 @@ export class SectionGenerators {
           <div class="collapse-icon ${collapsedSections.education ? 'collapsed' : ''}">▼</div>
         </h2>
         <div class="section-content ${collapsedSections.education ? 'collapsed' : ''}">
-          ${education.map(edu => `
+          ${education.map(edu => {
+            const degree = edu.degree || 'Degree';
+            const field = edu.field && edu.field !== 'undefined' ? ` in ${edu.field}` : '';
+            return `
             <div class="education-item">
-              <div class="degree">${edu.degree || 'Degree'}</div>
+              <div class="degree">${degree}${field}</div>
               <div class="institution">${edu.institution || 'Institution'}</div>
               <div class="duration">${edu.startDate || 'Start'} - ${edu.endDate || 'End'}</div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       </div>
     `;

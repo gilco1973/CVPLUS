@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Sparkles, Loader2, Zap, CheckCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles, Loader2, Zap, CheckCircle, GitCompare, Eye, EyeOff } from 'lucide-react';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import { Header } from '../components/Header';
 import { CVMetadata } from '../components/final-results/CVMetadata';
@@ -11,6 +11,7 @@ import { FinalResultsErrorBoundary } from '../components/error-boundaries/FinalR
 import { AsyncGenerationErrorBoundary } from '../components/error-boundaries/AsyncGenerationErrorBoundary';
 import { FirestoreErrorBoundary } from '../components/error-boundaries/FirestoreErrorBoundary';
 import { ProgressiveEnhancementRenderer } from '../components/ProgressiveEnhancementRenderer';
+import { CVComparisonView } from '../components/cv-comparison/CVComparisonView';
 import { useAsyncMode } from '../hooks/useAsyncMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { useCVGeneration } from '../hooks/useCVGeneration';
@@ -25,6 +26,7 @@ import { debugJobState, shouldDisplayCV } from '../utils/jobDebugger';
 export const FinalResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
+  const [showComparison, setShowComparison] = useState(false);
   const { asyncMode, isAsyncInitialization } = useAsyncMode(jobId);
   const { 
     job, loading, error, generationConfig, baseHTML, enhancedHTML, 
@@ -282,7 +284,7 @@ export const FinalResultsPage = () => {
               </div>
             )}
 
-            {/* CV Display */}
+            {/* CV Display with Comparison */}
             <div className="mb-8 cv-display-fade-in">
               {canDisplayCV ? (
                 <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
@@ -296,18 +298,110 @@ export const FinalResultsPage = () => {
                         </div>
                       )}
                     </div>
-                    {isActuallyProcessingFeatures && (
-                      <div className="flex items-center gap-2 text-sm text-cyan-400">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Adding enhancements... ({progressiveEnhancement.completedFeatures.length}/{progressiveEnhancement.features.length})
-                      </div>
-                    )}
+                    <div className="flex items-center gap-4">
+                      {/* Show comparison toggle if we have improvements */}
+                      {job.improvementsApplied && job.comparisonReport && (
+                        <button
+                          onClick={() => setShowComparison(!showComparison)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors text-sm"
+                        >
+                          <GitCompare className="w-4 h-4" />
+                          {showComparison ? 'Hide Comparison' : 'Show Before/After'}
+                        </button>
+                      )}
+                      {isActuallyProcessingFeatures && (
+                        <div className="flex items-center gap-2 text-sm text-cyan-400">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Adding enhancements... ({progressiveEnhancement.completedFeatures.length}/{progressiveEnhancement.features.length})
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Show comparison report if available and toggled */}
+                  {showComparison && job.comparisonReport?.beforeAfter && (
+                    <div className="mb-4 space-y-4">
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-cyan-400 mb-3">Improvements Applied</h3>
+                        <div className="space-y-3">
+                          {job.comparisonReport.beforeAfter.map((comparison, index) => (
+                            <div key={index} className="border border-gray-700 rounded-lg p-3">
+                              <h4 className="text-xs font-medium text-gray-300 mb-2 uppercase">{comparison.section}</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="bg-red-900/20 rounded p-2">
+                                  <div className="text-xs text-red-400 mb-1 flex items-center gap-1">
+                                    <EyeOff className="w-3 h-3" />
+                                    Before
+                                  </div>
+                                  <div className="text-xs text-gray-300 line-through opacity-75">
+                                    {comparison.before}
+                                  </div>
+                                </div>
+                                <div className="bg-green-900/20 rounded p-2">
+                                  <div className="text-xs text-green-400 mb-1 flex items-center gap-1">
+                                    <Eye className="w-3 h-3" />
+                                    After
+                                  </div>
+                                  <div className="text-xs text-gray-100">
+                                    {comparison.after}
+                                  </div>
+                                </div>
+                              </div>
+                              {comparison.improvement && (
+                                <div className="mt-2 text-xs text-cyan-400 italic">
+                                  ✨ {comparison.improvement}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Transformation Summary */}
+                      {job.transformationSummary && (
+                        <div className="bg-gray-900 rounded-lg p-4">
+                          <h3 className="text-sm font-medium text-cyan-400 mb-3">Transformation Summary</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-400">{job.transformationSummary.totalChanges || 0}</div>
+                              <div className="text-xs text-gray-400">Total Changes</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-cyan-400">{job.transformationSummary.sectionsModified?.length || 0}</div>
+                              <div className="text-xs text-gray-400">Sections Modified</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-blue-400">{job.transformationSummary.keywordsAdded?.length || 0}</div>
+                              <div className="text-xs text-gray-400">Keywords Added</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-yellow-400">+{job.transformationSummary.estimatedScoreIncrease || 0}%</div>
+                              <div className="text-xs text-gray-400">Score Increase</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
-                    <ProgressiveEnhancementRenderer
-                      htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}
-                      jobId={jobId}
-                    />
+                    {/* Use CVComparisonView if we have both original and improved data */}
+                    {job.parsedData && job.improvedCV && !showComparison ? (
+                      <CVComparisonView
+                        originalData={job.parsedData}
+                        improvedData={job.improvedCV}
+                      >
+                        <ProgressiveEnhancementRenderer
+                          htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}
+                          jobId={jobId}
+                        />
+                      </CVComparisonView>
+                    ) : (
+                      <ProgressiveEnhancementRenderer
+                        htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}
+                        jobId={jobId}
+                      />
+                    )}
                   </div>
                   
                   {/* Show completed features summary */}

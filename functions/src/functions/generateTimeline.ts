@@ -6,6 +6,7 @@ import { timelineGenerationService } from '../services/timeline-generation.servi
 // htmlFragmentGenerator import removed - using React SPA architecture
 import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 import { handleFunctionError } from '../utils/enhanced-error-handler';
+import { SafeFirestoreService } from '../utils/safe-firestore.service';
 
 export const generateTimeline = onCall(
   {
@@ -44,16 +45,19 @@ export const generateTimeline = onCall(
         };
       }
 
-      // Update status to processing
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          'enhancedFeatures.timeline.status': 'processing',
-          'enhancedFeatures.timeline.progress': 25,
-          'enhancedFeatures.timeline.currentStep': 'Analyzing career progression...',
-          'enhancedFeatures.timeline.startedAt': FieldValue.serverTimestamp()
-        });
+      // Update status to processing with safe Firestore operation
+      const docRef = admin.firestore().collection('jobs').doc(jobId);
+      const processingResult = await SafeFirestoreService.safeTimelineUpdate(docRef, {
+        'enhancedFeatures.timeline.status': 'processing',
+        'enhancedFeatures.timeline.progress': 25,
+        'enhancedFeatures.timeline.currentStep': 'Analyzing career progression...',
+        'enhancedFeatures.timeline.startedAt': FieldValue.serverTimestamp()
+      });
+      
+      if (!processingResult.success) {
+        console.error('[Timeline Generation] Failed to update processing status:', processingResult.errors);
+        throw new Error('Failed to initialize timeline processing status');
+      }
 
       // Generate timeline
       const timelineData = await timelineGenerationService.generateTimeline(
@@ -61,30 +65,50 @@ export const generateTimeline = onCall(
         jobId
       );
 
-      // Update progress
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          'enhancedFeatures.timeline.progress': 75,
-          'enhancedFeatures.timeline.currentStep': 'Creating interactive timeline...'
-        });
+      // Update progress with safe Firestore operation
+      const progressResult = await SafeFirestoreService.safeTimelineUpdate(docRef, {
+        'enhancedFeatures.timeline.progress': 75,
+        'enhancedFeatures.timeline.currentStep': 'Creating interactive timeline...'
+      });
+      
+      if (!progressResult.success) {
+        console.warn('[Timeline Generation] Failed to update progress:', progressResult.errors);
+        // Continue processing even if progress update fails
+      }
 
       // Generate HTML fragment for progressive enhancement
       const experience = jobData.parsedData.experience || [];
       // HTML generation removed - React SPA handles UI rendering;
 
-      // Update with final results
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          'enhancedFeatures.timeline.status': 'completed',
-          'enhancedFeatures.timeline.progress': 100,
-          'enhancedFeatures.timeline.data': timelineData,
-          'enhancedFeatures.timeline.htmlFragment': null, // HTML fragment removed with React SPA migration
-          'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
-        });
+      // Prepare final timeline update with comprehensive validation
+      const finalUpdateData = {
+        'enhancedFeatures.timeline.status': 'completed',
+        'enhancedFeatures.timeline.progress': 100,
+        'enhancedFeatures.timeline.data': timelineData, // Will be validated and sanitized by SafeFirestoreService
+        'enhancedFeatures.timeline.htmlFragment': null, // HTML fragment removed with React SPA migration
+        'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
+      };
+      
+      // Use safe Firestore operation with comprehensive pre-write validation
+      const finalResult = await SafeFirestoreService.safeTimelineUpdate(docRef, finalUpdateData, {
+        validate: true,
+        sanitize: true,
+        logValidation: true,
+        retryAttempts: 3,
+        fallbackOnError: true
+      });
+      
+      if (!finalResult.success) {
+        console.error('[Timeline Generation] CRITICAL: Failed to store final timeline data:', finalResult.errors);
+        throw new Error(`Failed to store timeline data: ${finalResult.errors?.join(', ')}`);
+      }
+      
+      console.log('[Timeline Generation] Timeline data stored successfully with validation:', {
+        validationPassed: finalResult.validation?.isValid,
+        warningsCount: finalResult.validation?.warnings?.length || 0,
+        sanitizationApplied: !!finalResult.sanitizedData,
+        operationTime: finalResult.operationTime
+      });
 
       return {
         success: true,
@@ -104,19 +128,27 @@ export const generateTimeline = onCall(
           timestamp: new Date().toISOString()
         });
         
-        // Create safe error update object
-        const errorUpdateData = sanitizeForFirestore({
+        // Create safe error update with comprehensive validation
+        const errorUpdateData = {
           'enhancedFeatures.timeline.status': 'failed',
           'enhancedFeatures.timeline.error': error.message || 'Unknown error',
           'enhancedFeatures.timeline.errorContext': sanitizedErrorContext,
           'enhancedFeatures.timeline.processedAt': FieldValue.serverTimestamp()
+        };
+        
+        // Use safe Firestore operation for error state
+        const errorDocRef = admin.firestore().collection('jobs').doc(jobId);
+        const errorResult = await SafeFirestoreService.safeTimelineUpdate(errorDocRef, errorUpdateData, {
+          validate: true,
+          sanitize: true,
+          retryAttempts: 2, // Fewer retries for error updates
+          fallbackOnError: true
         });
         
-        // Update status to failed
-        await admin.firestore()
-          .collection('jobs')
-          .doc(jobId)
-          .update(errorUpdateData);
+        if (!errorResult.success) {
+          console.error('[Timeline Generation] Failed to update error status:', errorResult.errors);
+          // Don't throw here to avoid masking the original error
+        }
       } catch (updateError) {
         console.error('Failed to update job status after error:', updateError);
       }
@@ -174,14 +206,29 @@ export const updateTimelineEvent = onCall(
         ...updates
       };
 
-      // Save updated timeline
-      await admin.firestore()
-        .collection('jobs')
-        .doc(jobId)
-        .update({
-          'enhancedFeatures.timeline.data': timeline,
-          'enhancedFeatures.timeline.lastModified': FieldValue.serverTimestamp()
-        });
+      // Update timeline with safe Firestore operation
+      const updateDocRef = admin.firestore().collection('jobs').doc(jobId);
+      const timelineUpdateData = {
+        'enhancedFeatures.timeline.data': timeline, // Will be validated and sanitized
+        'enhancedFeatures.timeline.lastModified': FieldValue.serverTimestamp()
+      };
+      
+      const updateResult = await SafeFirestoreService.safeTimelineUpdate(updateDocRef, timelineUpdateData, {
+        validate: true,
+        sanitize: true,
+        logValidation: true,
+        retryAttempts: 3,
+        fallbackOnError: true
+      });
+      
+      if (!updateResult.success) {
+        throw new Error(`Failed to update timeline: ${updateResult.errors?.join(', ')}`);
+      }
+      
+      console.log('[Timeline Update] Timeline event updated successfully:', {
+        validationPassed: updateResult.validation?.isValid,
+        operationTime: updateResult.operationTime
+      });
 
       return {
         success: true,

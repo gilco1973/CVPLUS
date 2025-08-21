@@ -7,6 +7,7 @@
 
 import React, { memo, useState } from 'react';
 import { Code, Zap, Users, Briefcase, Star, TrendingUp, Filter, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { logger } from '../../utils/logger';
 
 interface SkillItem {
   name: string;
@@ -79,16 +80,13 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
 
   // Process skills data into categories
   const processSkillsData = (): SkillCategory[] => {
-    // Debug: Log what data we're receiving
-    console.log('CVSkills received data:', data);
-    console.log('CVSkills data type:', typeof data);
-    console.log('CVSkills data is array:', Array.isArray(data));
+    const log = logger.component('CVSkills');
     
     const categories: SkillCategory[] = [];
     
     // Early return if data is null, undefined, or empty
     if (!data || (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
-      console.log('CVSkills: No valid data provided');
+      log.warn('No valid skills data provided');
       return categories;
     }
     
@@ -126,11 +124,7 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
     // Handle object format skills data  
     const skillsObj = data as SkillsData;
     
-    // Debug: Log object properties
-    console.log('CVSkills object keys:', Object.keys(skillsObj || {}));
-    console.log('CVSkills technical:', skillsObj?.technical);
-    console.log('CVSkills soft:', skillsObj?.soft);
-    console.log('CVSkills languages:', skillsObj?.languages);
+    log.debug('Processing skills object with keys:', Object.keys(skillsObj || {}));
     
     // Process technical skills
     if (skillsObj.technical && Array.isArray(skillsObj.technical)) {
@@ -251,9 +245,7 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
 
     const filteredCategories = categories.filter(category => category.skills.length > 0);
     
-    // Debug: Log final result
-    console.log('CVSkills final categories:', filteredCategories);
-    console.log('CVSkills categories count:', filteredCategories.length);
+    log.debug(`Processed ${filteredCategories.length} skill categories`);
     
     return filteredCategories;
   };

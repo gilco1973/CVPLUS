@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { logger } from './logger';
 import { ContactForm } from '../components/features/ContactForm';
 import { SocialMediaLinks } from '../components/features/SocialMediaLinks';
 import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode';
@@ -18,6 +19,7 @@ import { TestimonialsCarousel } from '../components/features/TestimonialsCarouse
 import { CertificationBadges } from '../components/features/CertificationBadges';
 import { PersonalityInsights } from '../components/features/PersonalityInsights';
 import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';
+import { MediaService } from '../services/features/MediaService';
 
 // Component registry for available components - properly typed
 const COMPONENT_REGISTRY: ComponentRegistry = {
@@ -49,37 +51,24 @@ export function renderReactComponent(
   props: any,
   container: Element
 ): void {
-  console.log(`🔄 Attempting to render component: ${componentName}`);
-  console.log('🔍 Available components in registry:', Object.keys(COMPONENT_REGISTRY));
-  console.log('🎯 Props for component:', props);
+  const log = logger.component('ComponentRenderer');
+  log.debug(`Attempting to render component: ${componentName}`);
   
   const Component = COMPONENT_REGISTRY[componentName];
   
   if (!Component) {
-    console.error(`❌ Component "${componentName}" not found in registry`);
-    console.error('🔍 Registry contains:', Object.keys(COMPONENT_REGISTRY));
+    log.error(`Component "${componentName}" not found in registry`, Object.keys(COMPONENT_REGISTRY));
     return;
   }
   
-  console.log(`✅ Found component in registry:`, Component);
-  
   try {
-    // Clear the placeholder content
     container.innerHTML = '';
-    console.log(`🧹 Cleared container content for ${componentName}`);
-    
-    // Create React element and render using React 18+ createRoot
     const element = React.createElement(Component, props);
-    console.log(`⚛️ Created React element for ${componentName}:`, element);
-    
     const root = createRoot(container);
-    console.log(`🌱 Created root for ${componentName}`);
-    
     root.render(element);
-    console.log(`🎉 Successfully rendered ${componentName} component`);
+    log.debug(`Successfully rendered ${componentName} component`);
   } catch (error) {
-    console.error(`❌ Failed to render ${componentName} component:`, error);
-    console.error('📍 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    log.error(`Failed to render ${componentName} component:`, error);
     
     // Show error message in container
     container.innerHTML = `
@@ -99,34 +88,26 @@ export function renderReactComponent(
  * Initialize all React component placeholders on the page
  */
 export function initializeReactComponents(): void {
-  console.log('🚀 Starting React component initialization...');
-  const placeholders = document.querySelectorAll('.react-component-placeholder');
+  const log = logger.component('ComponentRenderer');
+  log.debug('Starting React component initialization');
   
-  console.log(`🔄 Found ${placeholders.length} React component placeholders`);
+  const placeholders = document.querySelectorAll('.react-component-placeholder');
+  log.debug(`Found ${placeholders.length} React component placeholders`);
   
   if (placeholders.length === 0) {
-    console.log('🔍 No React component placeholders found, looking for other patterns...');
-    // Check for contact form patterns specifically
-    const contactFormElements = document.querySelectorAll('[data-contact-form], .contact-form-container');
-    console.log(`📞 Found ${contactFormElements.length} contact form elements`);
-    // Also check for any QR code specific elements
-    const qrElements = document.querySelectorAll('[data-component="DynamicQRCode"], .qr-code-feature');
-    console.log(`📱 Found ${qrElements.length} QR code elements`);
+    log.debug('No React component placeholders found');
     return;
   }
   
   placeholders.forEach((placeholder, index) => {
-    console.log(`\n🔎 Processing placeholder ${index + 1}/${placeholders.length}`);
-    console.log('🗺 Placeholder element:', placeholder);
+    const log = logger.component('ComponentRenderer');
+    log.debug(`Processing placeholder ${index + 1}/${placeholders.length}`);
     
     const componentName = placeholder.getAttribute('data-component') as ComponentName;
     const propsJson = placeholder.getAttribute('data-props');
     
-    console.log(`🏷️ Component name from data-component: "${componentName}"`);
-    console.log(`📝 Props JSON: ${propsJson ? propsJson.substring(0, 100) + '...' : 'null'}`);
-    
     if (!componentName) {
-      console.warn(`⚠️ Placeholder ${index + 1} missing data-component attribute`);
+      log.warn(`Placeholder ${index + 1} missing data-component attribute`);
       return;
     }
     
@@ -142,7 +123,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for ContactForm specifically
     if (componentName === 'ContactForm') {
-      console.log('📞 Initializing ContactForm component with props:', props);
+      log.debug('Initializing ContactForm component');
       
       // Ensure the component doesn't start in an infinite loading state
       props = {
@@ -153,7 +134,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for CalendarIntegration specifically
     if (componentName === 'CalendarIntegration') {
-      console.log('🗓️ Initializing CalendarIntegration component with props:', props);
+      log.debug('Initializing CalendarIntegration component');
       
       // Ensure the calendar component has proper event handlers
       props = {
@@ -164,7 +145,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for InteractiveTimeline specifically
     if (componentName === 'InteractiveTimeline') {
-      console.log('📊 Initializing InteractiveTimeline component with props:', props);
+      log.debug('Initializing InteractiveTimeline component');
       
       // Ensure the timeline component has proper configuration
       props = {
@@ -207,8 +188,80 @@ export function initializeReactComponents(): void {
       };
     }
     
+    // Add debug logging and props for VideoIntroduction specifically
+    if (componentName === 'VideoIntroduction') {
+      console.log('🎥 Initializing VideoIntroduction component with props:', props);
+      
+      // Ensure VideoIntroduction has required functions
+      props = {
+        ...props,
+        isEnabled: props.isEnabled !== false, // Default to true
+        onGenerateVideo: async (options: any) => {
+          try {
+            const result = await MediaService.generateVideoIntroduction(
+              props.jobId,
+              options?.duration || 'medium',
+              options?.style || 'professional'
+            );
+            return {
+              videoUrl: result.videoUrl || '',
+              thumbnailUrl: result.thumbnailUrl || '',
+              duration: result.duration || 0,
+              script: result.script || '',
+              subtitles: result.subtitles || '',
+              provider: result.provider || 'heygen',
+              qualityScore: result.qualityScore || 0
+            };
+          } catch (error) {
+            console.error('Video generation error:', error);
+            throw error;
+          }
+        },
+        onRegenerateVideo: async (customScript?: string, options?: any) => {
+          try {
+            const result = await MediaService.regenerateVideoIntroduction(
+              props.jobId,
+              customScript,
+              options
+            );
+            return {
+              videoUrl: result.videoUrl || '',
+              thumbnailUrl: result.thumbnailUrl || '',
+              duration: result.duration || 0
+            };
+          } catch (error) {
+            console.error('Video regeneration error:', error);
+            throw error;
+          }
+        },
+        onGetStatus: async (jobId: string) => {
+          try {
+            const result = await MediaService.getMediaStatus(jobId);
+            return {
+              provider: result.provider || 'heygen',
+              status: result.status || 'queued',
+              progress: result.progress || 0,
+              currentStep: result.currentStep || 'Initializing',
+              estimatedTime: result.estimatedTime,
+              qualityScore: result.qualityScore,
+              error: result.error
+            };
+          } catch (error) {
+            console.error('Status check error:', error);
+            return {
+              provider: 'heygen',
+              status: 'failed' as const,
+              progress: 0,
+              currentStep: 'Error',
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        }
+      };
+    }
+    
     // Add debug logging for other key components
-    if (['VideoIntroduction', 'PortfolioGallery', 'TestimonialsCarousel', 'CertificationBadges', 'PersonalityInsights'].includes(componentName)) {
+    if (['PortfolioGallery', 'TestimonialsCarousel', 'CertificationBadges', 'PersonalityInsights'].includes(componentName)) {
       console.log(`🎯 Initializing ${componentName} component with props:`, props);
       
       // Ensure all components have proper configuration

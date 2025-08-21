@@ -2,9 +2,11 @@
  * Test Contact Form Rendering
  * Standalone test to verify contact form component rendering works
  */
+import { logger } from './logger';
 
 export function testContactFormRendering(): void {
-  console.log('🧪 [TEST] Starting contact form rendering test...');
+  const testLog = logger.test('ContactFormRendering');
+  testLog.start('Starting contact form rendering test');
   
   // Create a test container
   const testContainer = document.createElement('div');

@@ -7,6 +7,7 @@ import { CVPreviewPageNew } from './pages/CVPreviewPageNew';
 import { ResultsPage } from './pages/ResultsPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { CVFeaturesPage } from './pages/CVFeaturesPage';
+import { FeatureSelectionPage } from './pages/FeatureSelectionPage';
 import { AboutPage } from './pages/AboutPage';
 import { KeywordOptimization } from './pages/KeywordOptimization';
 import { FinalResultsPage } from './pages/FinalResultsPage';
@@ -43,6 +44,10 @@ const router = createBrowserRouter(
           <AboutPage />
         </GlobalLayout>
       ),
+    },
+    {
+      path: '/select-features/:jobId',
+      element: <FeatureSelectionPage />,
     },
     {
       path: '/process/:jobId',

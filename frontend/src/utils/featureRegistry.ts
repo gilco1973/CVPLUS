@@ -14,6 +14,7 @@ import { AIChatAssistant } from '../components/features/AI-Powered/AIChatAssista
 import { DynamicQRCode } from '../components/features/Interactive/DynamicQRCode';
 import { SocialMediaLinks } from '../components/features/Interactive/SocialMediaLinks';
 import { CareerTimeline } from '../components/features/Interactive/CareerTimeline';
+import { AvailabilityCalendar } from '../components/features/Interactive/AvailabilityCalendar';
 
 // Visual Components - IMPLEMENTED
 import { SkillsVisualization } from '../components/features/Visual/SkillsVisualization';
@@ -40,46 +41,55 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
   'contact-form': ContactForm,
   'built-in-contact-form': ContactForm,
 
-  // AI-Powered Components (placeholders for now)
-  // 'AIPodcastPlayer': AIPodcastPlayer,
-  // 'ai-career-podcast': AIPodcastPlayer,
-  // 'ATSOptimization': ATSOptimization,
-  // 'ats-optimization': ATSOptimization,
+  // AI-Powered Components - IMPLEMENTED
+  'AIPodcastPlayer': AIPodcastPlayer,
+  'ai-career-podcast': AIPodcastPlayer,
+  'ATSOptimization': ATSOptimization,
+  'ats-optimization': ATSOptimization,
+  'AIChatAssistant': AIChatAssistant,
+  'ai-chat-assistant': AIChatAssistant,
+  'SkillsAnalytics': SkillsAnalytics,
+  'skills-analytics': SkillsAnalytics,
+  
+  // KeywordEnhancement, AchievementHighlighting, PrivacyMode, PublicProfile, 
+  // VideoIntroduction, PersonalityInsights - To be implemented in future phases
   // 'KeywordEnhancement': KeywordEnhancement,
   // 'keyword-enhancement': KeywordEnhancement,
   // 'AchievementHighlighting': AchievementHighlighting,
   // 'achievement-highlighting': AchievementHighlighting,
   // 'PrivacyMode': PrivacyMode,
   // 'privacy-mode': PrivacyMode,
-  // 'AIChatAssistant': AIChatAssistant,
-  // 'ai-chat-assistant': AIChatAssistant,
   // 'PublicProfile': PublicProfile,
   // 'public-profile': PublicProfile,
-  // 'SkillsAnalytics': SkillsAnalytics,
-  // 'skills-analytics': SkillsAnalytics,
   // 'VideoIntroduction': VideoIntroduction,
   // 'video-introduction': VideoIntroduction,
   // 'PersonalityInsights': PersonalityInsights,
   // 'personality-insights': PersonalityInsights,
 
-  // Interactive Components
+  // Interactive Components - IMPLEMENTED
   'DynamicQRCode': DynamicQRCode,
   'qr-code': DynamicQRCode,
   'dynamic-qr-code': DynamicQRCode,
   'SocialMediaLinks': SocialMediaLinks,
   'social-media-links': SocialMediaLinks,
   'social-media-integration': SocialMediaLinks,
-  // 'CareerTimeline': CareerTimeline,
-  // 'career-timeline': CareerTimeline,
-  // 'interactive-timeline': CareerTimeline,
+  'AvailabilityCalendar': AvailabilityCalendar,
+  'availability-calendar': AvailabilityCalendar,
+  'calendar': AvailabilityCalendar,
+  'calendar-integration': AvailabilityCalendar,
+  'CareerTimeline': CareerTimeline,
+  'career-timeline': CareerTimeline,
+  'interactive-timeline': CareerTimeline,
 
-  // Visual Components
+  // Visual Components - IMPLEMENTED
   'SkillsVisualization': SkillsVisualization,
   'skills-visualization': SkillsVisualization,
   'interactive-skills-charts': SkillsVisualization,
-  // 'AchievementCards': AchievementCards,
-  // 'achievement-cards': AchievementCards,
-  // 'animated-achievement-cards': AchievementCards,
+  'AchievementCards': AchievementCards,
+  'achievement-cards': AchievementCards,
+  'animated-achievement-cards': AchievementCards,
+  
+  // LanguageProficiency, CertificationBadges - To be implemented in future phases
   // 'LanguageProficiency': LanguageProficiency,
   // 'language-proficiency': LanguageProficiency,
   // 'language-proficiency-visuals': LanguageProficiency,
@@ -87,10 +97,10 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
   // 'certification-badges': CertificationBadges,
   // 'verified-certification-badges': CertificationBadges,
 
-  // Media Components (placeholders for now)
-  // 'PortfolioGallery': PortfolioGallery,
-  // 'portfolio-gallery': PortfolioGallery,
-  // 'interactive-portfolio-gallery': PortfolioGallery,
+  // Media Components - IMPLEMENTED
+  'PortfolioGallery': PortfolioGallery,
+  'portfolio-gallery': PortfolioGallery,
+  'interactive-portfolio-gallery': PortfolioGallery,
   // 'TestimonialsCarousel': TestimonialsCarousel,
   // 'testimonials-carousel': TestimonialsCarousel,
 };
@@ -99,6 +109,7 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
 export class FeatureRegistry {
   private static instance: FeatureRegistry;
   private components: ComponentRegistry = { ...FEATURE_COMPONENTS };
+
 
   static getInstance(): FeatureRegistry {
     if (!FeatureRegistry.instance) {

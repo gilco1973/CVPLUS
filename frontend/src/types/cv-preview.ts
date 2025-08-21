@@ -9,6 +9,7 @@ export interface CVPreviewProps {
   appliedImprovements?: CVParsedData; // LLM-improved content from analysis step
   onUpdate?: (updates: Partial<Job['parsedData']>) => void;
   onFeatureToggle?: (feature: string, enabled: boolean) => void;
+  disableComparison?: boolean; // Disable complex comparison view for simple preview
   className?: string;
 }
 

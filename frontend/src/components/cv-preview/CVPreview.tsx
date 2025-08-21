@@ -19,6 +19,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
   selectedFeatures,
   appliedImprovements,
   onUpdate,
+  disableComparison = false,
   // onFeatureToggle functionality not implemented yet
   className = ''
 }) => {
@@ -156,8 +157,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
 
   return (
     <div className={`cv-preview-wrapper ${className}`}>
-      {/* Wrap content with comparison view if improvements are available */}
-      {hasComparison ? (
+      {/* Only show comparison view if not disabled and improvements are available */}
+      {hasComparison && !disableComparison ? (
         <CVComparisonView
           originalData={job.parsedData}
           improvedData={appliedImprovements || state.previewData}

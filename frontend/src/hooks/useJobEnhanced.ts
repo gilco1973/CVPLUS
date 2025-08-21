@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getJob } from '../services/cvService';
 import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
+import { logger } from '../utils/logger';
 import type { Job } from '../services/cvService';
 
 interface UseJobEnhancedOptions {
@@ -70,7 +71,7 @@ export const useJobEnhanced = (
     if (!mountedRef.current) return;
 
     if (enableLogging) {
-      console.log(`[useJobEnhanced] Job update for ${jobId}:`, updatedJob?.status);
+      logger.debug(`Job update for ${jobId}: ${updatedJob?.status}`);
     }
 
     setJob(updatedJob);
@@ -94,7 +95,7 @@ export const useJobEnhanced = (
 
     if (currentRetryCount <= maxRetries) {
       if (enableLogging) {
-        console.log(`[useJobEnhanced] Retrying subscription for ${jobId} (attempt ${currentRetryCount}/${maxRetries})`);
+        logger.debug(`Retrying subscription for ${jobId} (attempt ${currentRetryCount}/${maxRetries})`);
       }
 
       retryTimeoutRef.current = setTimeout(() => {
@@ -142,7 +143,7 @@ export const useJobEnhanced = (
       );
 
       if (enableLogging) {
-        console.log(`[useJobEnhanced] Subscription established for job: ${jobId}`);
+        logger.debug(`Subscription established for job: ${jobId}`);
       }
     } catch (err) {
       console.error(`[useJobEnhanced] Failed to setup subscription for ${jobId}:`, err);
@@ -155,7 +156,7 @@ export const useJobEnhanced = (
     if (!pollWhenInactive || pollTimeoutRef.current) return;
 
     if (enableLogging) {
-      console.log(`[useJobEnhanced] Starting polling fallback for job: ${jobId}`);
+      logger.debug(`Starting polling fallback for job: ${jobId}`);
     }
 
     const poll = async () => {
@@ -211,7 +212,7 @@ export const useJobEnhanced = (
         setRetryCount(0);
 
         if (enableLogging) {
-          console.log(`[useJobEnhanced] Loading job: ${jobId}`);
+          logger.debug(`Loading job: ${jobId}`);
         }
         
         // Try to get cached job first
@@ -220,7 +221,7 @@ export const useJobEnhanced = (
           setJob(cachedJob);
           setLastUpdate(new Date());
           if (enableLogging) {
-            console.log(`[useJobEnhanced] Using cached job data for: ${jobId}`);
+            logger.debug(`Using cached job data for: ${jobId}`);
           }
         }
 

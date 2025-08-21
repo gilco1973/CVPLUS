@@ -5,7 +5,7 @@ import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
-import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const CVPreviewPage = () => {
@@ -26,6 +26,7 @@ export const CVPreviewPage = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [selectedRecommendations, setSelectedRecommendations] = useState<string[]>([]);
   const [appliedImprovements, setAppliedImprovements] = useState<object | null>(null);
+  const [showBefore, setShowBefore] = useState(false);
 
   useEffect(() => {
     if (!jobId) {
@@ -215,7 +216,7 @@ export const CVPreviewPage = () => {
       <Header 
         currentPage="preview" 
         jobId={jobId}
-        title="CV Text Improvements Preview"
+        title="CV Preview"
         subtitle="Review your enhanced CV content before selecting features"
         variant="dark"
       />
@@ -226,16 +227,38 @@ export const CVPreviewPage = () => {
         <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-100 mb-2">CV Text Improvements Preview</h1>
+              <h1 className="text-2xl font-bold text-gray-100 mb-2">CV Preview</h1>
               <p className="text-gray-400">
                 {appliedImprovements ? 
-                  `Review your enhanced CV with ${selectedRecommendations.length} applied text improvements. ` :
-                  'Preview your enhanced CV content with applied text improvements. '
+                  `Review your enhanced CV with ${selectedRecommendations.length} applied text improvements.` :
+                  'Preview your enhanced CV content with applied text improvements.'
                 }
-                Choose a template style before proceeding to feature selection.
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Simple Before/After Toggle */}
+              {appliedImprovements && (
+                <button
+                  onClick={() => setShowBefore(!showBefore)}
+                  className={`px-4 py-2 rounded-md border transition-colors flex items-center space-x-2 ${
+                    showBefore
+                      ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700'
+                      : 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                  }`}
+                >
+                  {showBefore ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      <span>Showing: Before</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      <span>Showing: After</span>
+                    </>
+                  )}
+                </button>
+              )}
               <button
                 onClick={handleBackToAnalysis}
                 className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
@@ -318,8 +341,9 @@ export const CVPreviewPage = () => {
             job={job}
             selectedTemplate={selectedTemplate}
             selectedFeatures={{}} // CVPreviewPage shows text improvements only, no feature selection
-            appliedImprovements={appliedImprovements}
+            appliedImprovements={showBefore ? null : appliedImprovements} // Show original when showBefore is true
             onUpdate={handleJobUpdate}
+            disableComparison={false} // Enable comparison view to show before/after
           />
         </div>
 
@@ -328,7 +352,10 @@ export const CVPreviewPage = () => {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               <p>
-                Your CV preview shows enhanced content with {selectedRecommendations.length} applied text improvements.
+                {showBefore ? 
+                  'Showing your original CV content. Toggle to "After" to see improvements.' :
+                  `Your CV preview shows enhanced content with ${selectedRecommendations.length} applied text improvements.`
+                }
               </p>
               <p className="mt-1">Ready to select interactive features for your final CV?</p>
             </div>
@@ -345,7 +372,7 @@ export const CVPreviewPage = () => {
               >
                 <span>Continue to Features</span>
                 <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">
-                  Step 4
+                  Next Step
                 </span>
               </button>
             </div>

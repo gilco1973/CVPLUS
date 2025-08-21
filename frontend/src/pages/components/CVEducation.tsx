@@ -197,7 +197,7 @@ export const CVEducation: React.FC<CVEducationProps> = memo(({
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             {education.degree}
-                            {education.field && (
+                            {education.field && education.field !== 'undefined' && (
                               <span className="text-gray-600 font-normal"> in {education.field}</span>
                             )}
                           </h3>

@@ -37,6 +37,19 @@ interface TimelineEvent {
   logo?: string;
 }
 
+// Data validation utilities
+const isValidString = (value: any): value is string => {
+  return typeof value === 'string' && value.trim().length > 0;
+};
+
+const isValidDate = (value: any): value is Date => {
+  return value instanceof Date && !isNaN(value.getTime());
+};
+
+const isValidArray = (value: any): value is any[] => {
+  return Array.isArray(value) && value.length > 0;
+};
+
 interface InteractiveTimelineProps extends CVFeatureProps {
   events?: TimelineEvent[];
   enhancedData?: EnhancedTimelineData | null;
@@ -78,9 +91,57 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
     params: { profileId }
   });
 
-  // Use enhanced data if available
+  // Use enhanced data if available with validation
   const timelineData = enhancedData || fetchedTimelineData;
-  const timelineEvents = timelineData?.events || events;
+  const rawEvents = timelineData?.events || events;
+  
+  // Validate and sanitize timeline events
+  const validateTimelineEvent = (event: any): TimelineEvent | null => {
+    try {
+      // Check required fields
+      if (!event || typeof event !== 'object') return null;
+      if (!isValidString(event.id)) return null;
+      if (!isValidString(event.title)) return null;
+      if (!isValidString(event.organization)) return null;
+      if (!isValidDate(event.startDate)) return null;
+      if (!['work', 'education', 'achievement', 'certification'].includes(event.type)) return null;
+      
+      // Validate optional fields
+      const endDate = event.endDate && isValidDate(event.endDate) ? event.endDate : undefined;
+      const description = isValidString(event.description) ? event.description.trim() : undefined;
+      const location = isValidString(event.location) ? event.location.trim() : undefined;
+      const logo = isValidString(event.logo) ? event.logo.trim() : undefined;
+      
+      // Validate arrays
+      const achievements = isValidArray(event.achievements) ? 
+        event.achievements.filter(isValidString).map((a: string) => a.trim()) : undefined;
+      const skills = isValidArray(event.skills) ? 
+        event.skills.filter(isValidString).map((s: string) => s.trim()) : undefined;
+      
+      return {
+        id: event.id.trim(),
+        type: event.type,
+        title: event.title.trim(),
+        organization: event.organization.trim(),
+        startDate: event.startDate,
+        endDate,
+        current: Boolean(event.current),
+        description,
+        achievements: achievements && achievements.length > 0 ? achievements : undefined,
+        skills: skills && skills.length > 0 ? skills : undefined,
+        location,
+        logo
+      };
+    } catch (error) {
+      console.warn('Failed to validate timeline event:', error);
+      return null;
+    }
+  };
+  
+  // Filter and validate all events
+  const timelineEvents = rawEvents
+    .map(validateTimelineEvent)
+    .filter((event): event is TimelineEvent => event !== null);
 
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar' | 'chart'>(customization?.viewMode || 'timeline');
@@ -122,24 +183,46 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
     return null;
   }
 
-  // Sort events by start date, handling null dates
-  const sortedEvents = [...timelineEvents].sort((a, b) => {
-    if (!a.startDate && !b.startDate) return 0;
-    if (!a.startDate) return 1;
-    if (!b.startDate) return -1;
-    return a.startDate.getTime() - b.startDate.getTime();
-  });
+  // Sort events by start date with enhanced validation
+  const sortedEvents = [...timelineEvents]
+    .filter(event => event && typeof event === 'object' && isValidDate(event.startDate))
+    .sort((a, b) => {
+      try {
+        return a.startDate.getTime() - b.startDate.getTime();
+      } catch (error) {
+        console.warn('Error sorting timeline events:', error);
+        return 0;
+      }
+    });
   
   // Filter events based on selected type
   const filteredEvents = filterType === 'all' 
     ? sortedEvents 
     : sortedEvents.filter(event => event.type === filterType);
 
-  // Calculate timeline range, handling null dates
-  const validEvents = timelineEvents.filter(e => e.startDate);
-  const startYear = validEvents.length > 0 ? Math.min(...validEvents.map(e => e.startDate.getFullYear())) : new Date().getFullYear();
-  const endYear = validEvents.length > 0 ? Math.max(...validEvents.map(e => (e.endDate || new Date()).getFullYear())) : new Date().getFullYear();
-  const yearRange = endYear - startYear + 1;
+  // Calculate timeline range with enhanced validation
+  const validEvents = timelineEvents.filter(e => e && isValidDate(e.startDate));
+  const currentYear = new Date().getFullYear();
+  
+  let startYear = currentYear;
+  let endYear = currentYear;
+  
+  if (validEvents.length > 0) {
+    try {
+      const startYears = validEvents.map(e => e.startDate.getFullYear()).filter(year => !isNaN(year));
+      const endYears = validEvents.map(e => {
+        const year = (e.endDate && isValidDate(e.endDate) ? e.endDate : new Date()).getFullYear();
+        return isNaN(year) ? currentYear : year;
+      });
+      
+      if (startYears.length > 0) startYear = Math.min(...startYears);
+      if (endYears.length > 0) endYear = Math.max(...endYears);
+    } catch (error) {
+      console.warn('Error calculating timeline range:', error);
+    }
+  }
+  
+  const yearRange = Math.max(1, endYear - startYear + 1);
 
   // Get icon for event type
   const getEventIcon = (type: TimelineEvent['type']) => {
@@ -168,40 +251,83 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
     }
   };
 
-  // Calculate event position on timeline
+  // Calculate event position on timeline with defensive programming
   const getEventPosition = (event: TimelineEvent) => {
-    const startOffset = (event.startDate.getFullYear() - startYear) / yearRange;
-    const duration = event.endDate 
-      ? (event.endDate.getFullYear() - event.startDate.getFullYear()) / yearRange
-      : event.current 
-        ? ((new Date().getFullYear() - event.startDate.getFullYear()) / yearRange)
-        : 0.05; // Default width for point events
-    
-    return {
-      left: `${startOffset * 100}%`,
-      width: `${Math.max(duration * 100, 5)}%` // Minimum 5% width for visibility
-    };
+    try {
+      if (!event || !isValidDate(event.startDate)) {
+        return { left: '0%', width: '5%' };
+      }
+      
+      const eventStartYear = event.startDate.getFullYear();
+      const eventEndYear = event.endDate && isValidDate(event.endDate) 
+        ? event.endDate.getFullYear()
+        : event.current 
+          ? new Date().getFullYear()
+          : eventStartYear;
+      
+      if (isNaN(eventStartYear) || isNaN(eventEndYear)) {
+        return { left: '0%', width: '5%' };
+      }
+      
+      const startOffset = Math.max(0, (eventStartYear - startYear) / yearRange);
+      const duration = Math.max(0.05, (eventEndYear - eventStartYear) / yearRange);
+      
+      return {
+        left: `${Math.min(95, startOffset * 100)}%`,
+        width: `${Math.max(5, Math.min(95, duration * 100))}%`
+      };
+    } catch (error) {
+      console.warn('Error calculating event position:', error);
+      return { left: '0%', width: '5%' };
+    }
   };
 
-  // Format date for display
+  // Format date for display with error handling
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    try {
+      if (!isValidDate(date)) {
+        return 'Invalid Date';
+      }
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    } catch (error) {
+      console.warn('Error formatting date:', error);
+      return 'Invalid Date';
+    }
   };
 
-  // Calculate duration
+  // Calculate duration with error handling
   const calculateDuration = (start: Date, end?: Date) => {
-    const endDate = end || new Date();
-    const months = (endDate.getFullYear() - start.getFullYear()) * 12 + 
-                   (endDate.getMonth() - start.getMonth());
-    
-    if (months < 12) {
-      return `${months} month${months !== 1 ? 's' : ''}`;
-    } else {
-      const years = Math.floor(months / 12);
-      const remainingMonths = months % 12;
-      return remainingMonths > 0 
-        ? `${years} year${years !== 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`
-        : `${years} year${years !== 1 ? 's' : ''}`;
+    try {
+      if (!isValidDate(start)) {
+        return 'Duration unknown';
+      }
+      
+      const endDate = end && isValidDate(end) ? end : new Date();
+      if (!isValidDate(endDate)) {
+        return 'Duration unknown';
+      }
+      
+      const months = Math.max(0, (endDate.getFullYear() - start.getFullYear()) * 12 + 
+                     (endDate.getMonth() - start.getMonth()));
+      
+      if (isNaN(months)) {
+        return 'Duration unknown';
+      }
+      
+      if (months < 1) {
+        return 'Less than 1 month';
+      } else if (months < 12) {
+        return `${months} month${months !== 1 ? 's' : ''}`;
+      } else {
+        const years = Math.floor(months / 12);
+        const remainingMonths = months % 12;
+        return remainingMonths > 0 
+          ? `${years} year${years !== 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`
+          : `${years} year${years !== 1 ? 's' : ''}`;
+      }
+    } catch (error) {
+      console.warn('Error calculating duration:', error);
+      return 'Duration unknown';
     }
   };
 
@@ -458,10 +584,10 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-white text-sm truncate">
-                            {event.title}
+                            {isValidString(event.title) ? event.title : 'Untitled Event'}
                           </h4>
                           <p className="text-xs text-white/80 truncate">
-                            {event.organization}
+                            {isValidString(event.organization) ? event.organization : 'Unknown Organization'}
                           </p>
                           {event.current && (
                             <span className="inline-block mt-1 px-2 py-0.5 bg-white/20 rounded-full text-xs text-white">
@@ -499,12 +625,16 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                     {getEventIcon(event.type)}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-100">{event.title}</h4>
-                    <p className="text-sm text-gray-400">{event.organization}</p>
+                    <h4 className="font-semibold text-gray-100">
+                      {isValidString(event.title) ? event.title : 'Untitled Event'}
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      {isValidString(event.organization) ? event.organization : 'Unknown Organization'}
+                    </p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
                       <Calendar className="w-3 h-3" />
                       <span>
-                        {formatDate(event.startDate)} - {event.endDate ? formatDate(event.endDate) : 'Present'}
+                        {isValidDate(event.startDate) ? formatDate(event.startDate) : 'Start Date Unknown'} - {event.endDate && isValidDate(event.endDate) ? formatDate(event.endDate) : 'Present'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
@@ -534,21 +664,32 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
             {/* Chart Rows */}
             <div className="space-y-2">
               {filteredEvents.map((event) => {
-                const startOffset = (event.startDate.getFullYear() - startYear) * 12 + event.startDate.getMonth();
-                const endOffset = event.endDate 
-                  ? (event.endDate.getFullYear() - startYear) * 12 + event.endDate.getMonth()
-                  : event.current
-                    ? (new Date().getFullYear() - startYear) * 12 + new Date().getMonth()
-                    : startOffset + 1;
+                let startOffset = 0;
+                let endOffset = 1;
                 
-                const totalMonths = yearRange * 12;
-                const widthPercentage = ((endOffset - startOffset) / totalMonths) * 100;
-                const leftPercentage = (startOffset / totalMonths) * 100;
+                try {
+                  if (isValidDate(event.startDate)) {
+                    startOffset = (event.startDate.getFullYear() - startYear) * 12 + event.startDate.getMonth();
+                    endOffset = event.endDate && isValidDate(event.endDate)
+                      ? (event.endDate.getFullYear() - startYear) * 12 + event.endDate.getMonth()
+                      : event.current
+                        ? (new Date().getFullYear() - startYear) * 12 + new Date().getMonth()
+                        : startOffset + 1;
+                  }
+                } catch (error) {
+                  console.warn('Error calculating chart position:', error);
+                }
+                
+                const totalMonths = Math.max(1, yearRange * 12);
+                const widthPercentage = Math.max(1, Math.min(100, ((endOffset - startOffset) / totalMonths) * 100));
+                const leftPercentage = Math.max(0, Math.min(99, (startOffset / totalMonths) * 100));
 
                 return (
                   <div key={event.id} className="relative h-12">
                     <div className="absolute inset-y-0 left-0 w-40 pr-4 flex items-center justify-end">
-                      <span className="text-sm text-gray-300 truncate">{event.title}</span>
+                      <span className="text-sm text-gray-300 truncate">
+                        {isValidString(event.title) ? event.title : 'Untitled Event'}
+                      </span>
                     </div>
                     <div className="ml-40 relative h-full">
                       <div
@@ -566,7 +707,7 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                       >
                         <div className="flex items-center h-full px-2">
                           <span className="text-xs text-white truncate">
-                            {event.organization}
+                            {isValidString(event.organization) ? event.organization : 'Unknown Org'}
                           </span>
                         </div>
                       </div>
@@ -602,10 +743,15 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                     {getEventIcon(selectedEvent.type)}
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-100">{selectedEvent.title}</h3>
-                    <p className="text-gray-400">{selectedEvent.organization}</p>
-                    {selectedEvent.location && (
-                      <p className="text-sm text-gray-500">{selectedEvent.location}</p>
+                    <h3 className="text-xl font-semibold text-gray-100">
+                      {isValidString(selectedEvent.title) ? selectedEvent.title : 'Untitled Event'}
+                    </h3>
+                    <p className="text-gray-400">
+                      {isValidString(selectedEvent.organization) ? selectedEvent.organization : 'Unknown Organization'}
+                    </p>
+                    {selectedEvent.location && 
+                     isValidString(selectedEvent.location) && (
+                      <p className="text-sm text-gray-500">{selectedEvent.location.trim()}</p>
                     )}
                   </div>
                 </div>
@@ -622,10 +768,10 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {formatDate(selectedEvent.startDate)} - {
+                      {isValidDate(selectedEvent.startDate) ? formatDate(selectedEvent.startDate) : 'Start Date Unknown'} - {
                         selectedEvent.current ? 'Present' : 
-                        selectedEvent.endDate ? formatDate(selectedEvent.endDate) : 
-                        formatDate(selectedEvent.startDate)
+                        selectedEvent.endDate && isValidDate(selectedEvent.endDate) ? formatDate(selectedEvent.endDate) : 
+                        isValidDate(selectedEvent.startDate) ? formatDate(selectedEvent.startDate) : 'End Date Unknown'
                       }
                     </span>
                   </div>
@@ -633,37 +779,41 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
                   <span>{calculateDuration(selectedEvent.startDate, selectedEvent.endDate)}</span>
                 </div>
 
-                {selectedEvent.description && (
+                {selectedEvent.description && isValidString(selectedEvent.description) && (
                   <div>
                     <h4 className="font-medium text-gray-200 mb-2">Description</h4>
-                    <p className="text-gray-400">{selectedEvent.description}</p>
+                    <p className="text-gray-400">{selectedEvent.description.trim()}</p>
                   </div>
                 )}
 
-                {selectedEvent.achievements && selectedEvent.achievements.length > 0 && (
+                {selectedEvent.achievements && isValidArray(selectedEvent.achievements) && (
                   <div>
                     <h4 className="font-medium text-gray-200 mb-2">Key Achievements</h4>
                     <ul className="space-y-1">
-                      {selectedEvent.achievements.map((achievement, index) => (
+                      {selectedEvent.achievements
+                        .filter(isValidString)
+                        .map((achievement, index) => (
                         <li key={index} className="flex items-start gap-2 text-gray-400">
                           <span className="text-cyan-500 mt-1">•</span>
-                          <span>{achievement}</span>
+                          <span>{achievement.trim()}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {selectedEvent.skills && selectedEvent.skills.length > 0 && (
+                {selectedEvent.skills && isValidArray(selectedEvent.skills) && (
                   <div>
                     <h4 className="font-medium text-gray-200 mb-2">Skills</h4>
                     <div className="flex flex-wrap gap-2">
-                      {selectedEvent.skills.map((skill, index) => (
+                      {selectedEvent.skills
+                        .filter(isValidString)
+                        .map((skill, index) => (
                         <span 
                           key={index}
                           className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm"
                         >
-                          {skill}
+                          {skill.trim()}
                         </span>
                       ))}
                     </div>
@@ -676,20 +826,26 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({
       </AnimatePresence>
 
           {/* Timeline Summary */}
-          {timelineData?.summary && (
+          {timelineData?.summary && typeof timelineData.summary === 'object' && (
             <div className="bg-gray-800 rounded-xl p-6 mt-6">
               <h4 className="text-lg font-semibold text-gray-100 mb-4">Timeline Summary</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-cyan-400">{timelineData.summary.totalEvents}</div>
+                  <div className="text-2xl font-bold text-cyan-400">
+                    {typeof timelineData.summary.totalEvents === 'number' ? timelineData.summary.totalEvents : '0'}
+                  </div>
                   <div className="text-sm text-gray-400">Total Events</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">{timelineData.summary.yearsSpanned}</div>
+                  <div className="text-2xl font-bold text-blue-400">
+                    {typeof timelineData.summary.yearsSpanned === 'number' ? timelineData.summary.yearsSpanned : '0'}
+                  </div>
                   <div className="text-sm text-gray-400">Years Spanned</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-400">{timelineData.summary.mostActiveYear}</div>
+                  <div className="text-2xl font-bold text-purple-400">
+                    {isValidString(timelineData.summary.mostActiveYear) ? timelineData.summary.mostActiveYear : 'N/A'}
+                  </div>
                   <div className="text-sm text-gray-400">Most Active Year</div>
                 </div>
               </div>

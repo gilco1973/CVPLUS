@@ -27,7 +27,8 @@ export {
   applyImprovements,
   analyzeATSCompatibility,
   applyATSOptimizations,
-  generateATSKeywords
+  generateATSKeywords,
+  updateJobFeatures
 } from './CVServiceCore';
 
 // Feature services

@@ -402,6 +402,34 @@ export const CVTemplateStyles = {
       border-radius: 4px;
       padding: 6px 8px;
       position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .preview-content-with-placeholders:hover {
+      border-color: #2563eb;
+      background: #dbeafe;
+      animation: none;
+      transform: scale(1.02);
+    }
+    
+    /* Make individual placeholders clickable */
+    .placeholder-text {
+      background: #fef3c7;
+      border: 1px dashed #f59e0b;
+      border-radius: 3px;
+      padding: 2px 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-block;
+      margin: 0 1px;
+    }
+    
+    .placeholder-text:hover {
+      background: #fbbf24;
+      border-color: #d97706;
+      color: #92400e;
+      transform: scale(1.05);
     }
     
     @keyframes shimmer {

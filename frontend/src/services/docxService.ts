@@ -127,7 +127,7 @@ export class DOCXService {
           new Paragraph({
             children: [
               new TextRun({
-                text: `${edu?.degree || 'Degree'}${edu?.field ? ` in ${edu.field}` : ''}`,
+                text: `${edu?.degree || 'Degree'}${edu?.field && edu.field !== 'undefined' ? ` in ${edu.field}` : ''}`,
                 bold: true,
                 size: 24,
               }),

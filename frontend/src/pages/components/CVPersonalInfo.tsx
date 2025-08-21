@@ -177,9 +177,7 @@ export const CVPersonalInfo: React.FC<CVPersonalInfoProps> = memo(({
                     size="large"
                     disabled={isUpdatingAvatar}
                     className=""
-                    userName={name}
-                    userTitle={title}
-                    showUserInfo={true}
+                    showUserInfo={false}
                   />
                 </div>
               )}

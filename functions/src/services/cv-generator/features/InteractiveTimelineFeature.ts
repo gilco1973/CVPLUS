@@ -6,6 +6,35 @@ import { ParsedCV } from '../../cvParser';
  */
 export class InteractiveTimelineFeature implements CVFeature {
   
+  /**
+   * Sanitize timeline data to ensure Firestore compatibility
+   * Removes undefined values recursively while preserving null values
+   */
+  private sanitizeTimelineData(data: any): any {
+    if (data === null || data === undefined) {
+      return data === null ? null : undefined;
+    }
+    
+    if (Array.isArray(data)) {
+      return data
+        .map(item => this.sanitizeTimelineData(item))
+        .filter(item => item !== undefined);
+    }
+    
+    if (typeof data === 'object') {
+      const sanitized: any = {};
+      Object.keys(data).forEach(key => {
+        const value = this.sanitizeTimelineData(data[key]);
+        if (value !== undefined) {
+          sanitized[key] = value;
+        }
+      });
+      return sanitized;
+    }
+    
+    return data;
+  }
+  
   async generate(cv: ParsedCV, jobId: string, options?: any): Promise<string> {
     const contactName = cv.personalInfo?.name || 'the CV owner';
     
@@ -18,7 +47,7 @@ export class InteractiveTimelineFeature implements CVFeature {
    */
   private generateReactComponentPlaceholder(jobId: string, contactName: string, cv: ParsedCV, options?: any): string {
     // Extract timeline events from CV data
-    const events = this.extractTimelineEvents(cv);
+    const events = this.extractTimelineEvents(cv, jobId);
     
     const componentProps = {
       profileId: jobId,
@@ -48,7 +77,7 @@ export class InteractiveTimelineFeature implements CVFeature {
       <div class="cv-feature-container interactive-timeline-feature">
         <div class="react-component-placeholder" 
              data-component="InteractiveTimeline" 
-             data-props='${JSON.stringify(componentProps).replace(/'/g, "&apos;")}'
+             data-props='${JSON.stringify(this.sanitizeTimelineData(componentProps)).replace(/'/g, "&apos;")}'
              id="interactive-timeline-${jobId}">
           <!-- React InteractiveTimeline component will be rendered here -->
           <div class="component-loading">
@@ -63,28 +92,49 @@ export class InteractiveTimelineFeature implements CVFeature {
   /**
    * Extract timeline events from CV data
    */
-  private extractTimelineEvents(cv: ParsedCV): any[] {
+  private extractTimelineEvents(cv: ParsedCV, jobId: string): any[] {
     const events: any[] = [];
 
     // Work experience events
     if (cv.experience) {
       cv.experience.forEach((exp, index) => {
+        // Convert dates to ISO strings for Firestore compatibility
         const startDate = new Date(exp.startDate);
         const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
         
-        events.push({
+        const workEvent: any = {
           id: `work-${index}`,
           type: 'work',
           title: exp.position,
           organization: exp.company,
-          startDate: startDate,
-          endDate: endDate,
-          current: !exp.endDate,
-          description: exp.description,
-          achievements: exp.achievements || [],
-          skills: exp.technologies || [],
-          location: exp.location
-        });
+          startDate: startDate.toISOString(),
+          current: !exp.endDate
+        };
+        
+        // Only add optional fields if they have valid values
+        if (endDate) {
+          workEvent.endDate = endDate.toISOString();
+        }
+        
+        if (exp.description && typeof exp.description === 'string' && exp.description.trim().length > 0) {
+          workEvent.description = exp.description;
+        }
+        
+        if (exp.achievements && Array.isArray(exp.achievements) && exp.achievements.length > 0) {
+          workEvent.achievements = exp.achievements.filter(a => a && typeof a === 'string' && a.trim().length > 0);
+        }
+        
+        if (exp.technologies && Array.isArray(exp.technologies) && exp.technologies.length > 0) {
+          workEvent.skills = exp.technologies.filter(t => t && typeof t === 'string' && t.trim().length > 0);
+        }
+        
+        if (exp.location !== undefined && exp.location !== null && 
+            typeof exp.location === 'string' && exp.location.trim().length > 0) {
+          workEvent.location = exp.location.trim();
+        }
+        // Explicitly ensure no undefined assignment - if condition fails, field is not added
+        
+        events.push(workEvent);
       });
     }
 
@@ -98,19 +148,39 @@ export class InteractiveTimelineFeature implements CVFeature {
         const startDate = new Date(graduationDate);
         startDate.setFullYear(startDate.getFullYear() - estimatedDuration);
         
-        events.push({
+        const educationEvent: any = {
           id: `education-${index}`,
           type: 'education',
           title: edu.degree,
           organization: edu.institution,
-          startDate: startDate,
-          endDate: graduationDate,
-          current: false,
-          description: `${edu.field} degree${edu.gpa ? ` (GPA: ${edu.gpa})` : ''}`,
-          achievements: edu.honors || [],
-          skills: [edu.field],
-          location: undefined // Education location not stored in current schema
-        });
+          startDate: startDate.toISOString(),
+          endDate: graduationDate.toISOString(),
+          current: false
+        };
+        
+        // Only add optional fields if they have valid values
+        const description = `${edu.field} degree${edu.gpa ? ` (GPA: ${edu.gpa})` : ''}`;
+        if (description && description.trim().length > 0) {
+          educationEvent.description = description;
+        }
+        
+        if (edu.honors && Array.isArray(edu.honors) && edu.honors.length > 0) {
+          educationEvent.achievements = edu.honors.filter(h => h && typeof h === 'string' && h.trim().length > 0);
+        }
+        
+        if (edu.field && typeof edu.field === 'string' && edu.field.trim().length > 0) {
+          educationEvent.skills = [edu.field];
+        }
+        
+        // Enhanced location validation for education events
+        const eduLocation = (edu as any).location;
+        if (eduLocation !== undefined && eduLocation !== null && 
+            typeof eduLocation === 'string' && eduLocation.trim().length > 0) {
+          educationEvent.location = eduLocation.trim();
+        }
+        // Explicitly ensure no undefined assignment - if condition fails, field is not added
+        
+        events.push(educationEvent);
       });
     }
 
@@ -119,19 +189,35 @@ export class InteractiveTimelineFeature implements CVFeature {
       cv.certifications.forEach((cert, index) => {
         const certDate = new Date(cert.date);
         
-        events.push({
+        const certificationEvent: any = {
           id: `certification-${index}`,
           type: 'certification',
           title: cert.name,
           organization: cert.issuer,
-          startDate: certDate,
-          endDate: undefined, // Certifications are point-in-time
-          current: false,
-          description: `Professional certification${cert.credentialId ? ` (ID: ${cert.credentialId})` : ''}`,
-          achievements: [`Earned ${cert.name} certification`],
-          skills: [cert.name],
-          location: undefined
-        });
+          startDate: certDate.toISOString(),
+          current: false
+        };
+        
+        // Only add optional fields if they have valid values
+        const description = `Professional certification${cert.credentialId ? ` (ID: ${cert.credentialId})` : ''}`;
+        if (description && description.trim().length > 0) {
+          certificationEvent.description = description;
+        }
+        
+        if (cert.name && typeof cert.name === 'string' && cert.name.trim().length > 0) {
+          certificationEvent.achievements = [`Earned ${cert.name} certification`];
+          certificationEvent.skills = [cert.name];
+        }
+        
+        // Enhanced location validation for certification events
+        const certLocation = (cert as any).location;
+        if (certLocation !== undefined && certLocation !== null && 
+            typeof certLocation === 'string' && certLocation.trim().length > 0) {
+          certificationEvent.location = certLocation.trim();
+        }
+        // Explicitly ensure no undefined assignment - if condition fails, field is not added
+        
+        events.push(certificationEvent);
       });
     }
 
@@ -141,24 +227,50 @@ export class InteractiveTimelineFeature implements CVFeature {
         // Projects don't have dates in the schema, so use current date as placeholder
         const projectDate = new Date();
         
-        events.push({
+        const achievementEvent: any = {
           id: `achievement-${index}`,
           type: 'achievement',
           title: project.name,
           organization: 'Personal Project',
-          startDate: projectDate,
-          endDate: undefined,
-          current: false,
-          description: project.description,
-          achievements: [`Completed project: ${project.name}`],
-          skills: project.technologies || [],
-          location: undefined
-        });
+          startDate: projectDate.toISOString(),
+          current: false
+        };
+        
+        // Only add optional fields if they have valid values
+        if (project.description && typeof project.description === 'string' && project.description.trim().length > 0) {
+          achievementEvent.description = project.description;
+        }
+        
+        if (project.name && typeof project.name === 'string' && project.name.trim().length > 0) {
+          achievementEvent.achievements = [`Completed project: ${project.name}`];
+        }
+        
+        if (project.technologies && Array.isArray(project.technologies) && project.technologies.length > 0) {
+          achievementEvent.skills = project.technologies.filter(t => t && typeof t === 'string' && t.trim().length > 0);
+        }
+        
+        // Enhanced location validation for project events
+        const projectLocation = (project as any).location;
+        if (projectLocation !== undefined && projectLocation !== null && 
+            typeof projectLocation === 'string' && projectLocation.trim().length > 0) {
+          achievementEvent.location = projectLocation.trim();
+        }
+        // Explicitly ensure no undefined assignment - if condition fails, field is not added
+        
+        events.push(achievementEvent);
       });
     }
 
-    // Sort events by start date
-    return events.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    // Sort events by start date (now ISO strings) and add sanitization logging
+    const sanitizedEvents = events.map(event => this.sanitizeTimelineData(event));
+    
+    console.log(`🧹 Timeline data sanitized for job ${jobId}:`, {
+      originalEvents: events.length,
+      sanitizedEvents: sanitizedEvents.length,
+      removedUndefinedFields: events.length - sanitizedEvents.length
+    });
+    
+    return sanitizedEvents.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }
 
   /**

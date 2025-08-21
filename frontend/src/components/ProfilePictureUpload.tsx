@@ -254,15 +254,15 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         </div>
       )}
 
-      {/* Upload action buttons */}
+      {/* Upload action buttons - improved positioning */}
       {showUploadButtons && !isUploading && (
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleUpload();
             }}
-            className="p-2 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors"
+            className="p-2 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors border-2 border-white"
             title="Upload image"
           >
             <Check className="w-4 h-4" />
@@ -272,7 +272,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
               e.stopPropagation();
               handleCancel();
             }}
-            className="p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+            className="p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors border-2 border-white"
             title="Cancel"
           >
             <X className="w-4 h-4" />
@@ -280,9 +280,9 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         </div>
       )}
 
-      {/* Drag overlay */}
+      {/* Drag overlay - improved visibility */}
       {dragActive && !disabled && (
-        <div className="absolute -inset-4 border-2 border-dashed border-white/50 rounded-full bg-white/10 flex items-center justify-center pointer-events-none">
+        <div className="absolute -inset-4 border-2 border-dashed border-cyan-400 rounded-full bg-cyan-900/20 backdrop-blur-sm flex items-center justify-center pointer-events-none z-30">
           <div className="text-white text-center">
             <Upload className="w-8 h-8 mx-auto mb-2" />
             <div className="text-sm font-medium">Drop image here</div>
@@ -290,25 +290,15 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         </div>
       )}
 
-      {/* Help text - moved below circle */}
-      {!disabled && !hasImage && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-          <div className="text-xs text-white/70 text-center">
-            Click or drag to upload
-          </div>
-        </div>
-      )}
 
       {/* User info display - when showUserInfo is enabled */}
-      {showUserInfo && (
-        <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap">
-          {userName && (
-            <div className="text-lg font-bold text-white mb-1">
-              {userName}
-            </div>
-          )}
+      {showUserInfo && userName && (
+        <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap pointer-events-none z-10">
+          <div className="text-lg font-bold text-white mb-1 drop-shadow-lg">
+            {userName}
+          </div>
           {userTitle && (
-            <div className="text-sm text-white/80">
+            <div className="text-sm text-white/80 drop-shadow-lg">
               {userTitle}
             </div>
           )}
