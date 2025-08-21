@@ -141,7 +141,8 @@ export class HeuristicPredictor {
       predictedRange: {
         min,
         max,
-        median
+        median,
+        currency: 'USD'
       },
       confidenceInterval: {
         lower: Math.round(min * 0.9),

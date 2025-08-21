@@ -58,6 +58,7 @@ export interface SalaryPrediction {
     min: number;
     max: number;
     median: number;
+    currency: string;
   };
   confidenceInterval: {
     lower: number; // 5th percentile

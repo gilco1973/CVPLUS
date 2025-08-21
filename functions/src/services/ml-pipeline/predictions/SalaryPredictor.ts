@@ -31,7 +31,8 @@ export class SalaryPredictor {
       predictedRange: {
         min: Math.round(estimatedSalary * 0.85),
         max: Math.round(estimatedSalary * 1.2),
-        median: estimatedSalary
+        median: estimatedSalary,
+        currency: 'USD'
       },
       confidenceInterval: {
         lower: Math.round(estimatedSalary * 0.75),

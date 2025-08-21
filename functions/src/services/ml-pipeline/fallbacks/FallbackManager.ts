@@ -152,7 +152,8 @@ export class FallbackManager {
         predictedRange: {
           min: 50000,
           max: 90000,
-          median: 70000
+          median: 70000,
+          currency: 'USD'
         },
         confidenceInterval: {
           lower: 45000,

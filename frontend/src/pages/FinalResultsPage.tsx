@@ -390,6 +390,7 @@ export const FinalResultsPage = () => {
                       <CVComparisonView
                         originalData={job.parsedData}
                         improvedData={job.improvedCV}
+                        comparisonReport={job.comparisonReport}
                       >
                         <ProgressiveEnhancementRenderer
                           htmlContent={progressiveEnhancement.currentHtml || enhancedHTML || baseHTML || job.generatedCV?.html || '<p>CV content loading...</p>'}

@@ -24,7 +24,15 @@ export interface CVComparisonActions {
  */
 export function useCVComparison(
   originalData: unknown,
-  improvedData: unknown | null
+  improvedData: unknown | null,
+  comparisonReport?: {
+    beforeAfter: Array<{
+      section: string;
+      before: string;
+      after: string;
+      improvement: string;
+    }>;
+  }
 ): {
   state: CVComparisonState;
   actions: CVComparisonActions;
@@ -34,8 +42,36 @@ export function useCVComparison(
   const [showOnlyChanged, setShowOnlyChanged] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate comparison data
+  // Generate comparison data - enhanced with comparisonReport if available
   const comparison = useMemo(() => {
+    // If we have a comparisonReport, create an enhanced comparison object
+    if (comparisonReport?.beforeAfter && comparisonReport.beforeAfter.length > 0) {
+      const reportData = comparisonReport.beforeAfter;
+      return {
+        totalChanges: reportData.length,
+        sections: reportData.map(item => ({
+          sectionName: item.section,
+          hasChanges: true,
+          before: item.before,
+          after: item.after,
+          changes: [
+            {
+              type: 'modification' as const,
+              before: item.before,
+              after: item.after,
+              description: item.improvement
+            }
+          ]
+        })),
+        improvementSummary: {
+          enhancedContent: reportData.map(item => item.section),
+          newSections: [],
+          totalImprovements: reportData.length
+        }
+      };
+    }
+    
+    // Fallback to computed comparison if no report available
     if (!originalData || !improvedData) return null;
     
     try {
@@ -44,7 +80,7 @@ export function useCVComparison(
       console.error('Error generating CV comparison:', error);
       return null;
     }
-  }, [originalData, improvedData]);
+  }, [originalData, improvedData, comparisonReport]);
 
   // Calculate stats
   const stats = useMemo(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
@@ -24,6 +24,14 @@ type CVData = unknown;
 export interface CVComparisonViewProps {
   originalData: CVData;
   improvedData: CVData | null;
+  comparisonReport?: {
+    beforeAfter: Array<{
+      section: string;
+      before: string;
+      after: string;
+      improvement: string;
+    }>;
+  };
   children: React.ReactNode; // The actual CV preview content
   className?: string;
 }
@@ -34,15 +42,18 @@ export interface CVComparisonViewProps {
 export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
   originalData,
   improvedData,
+  comparisonReport,
   children,
   className = ''
 }) => {
-  const { state, actions } = useCVComparison(originalData, improvedData);
+  const { state, actions } = useCVComparison(originalData, improvedData, comparisonReport);
   const filteredSections = useFilteredSections(state.comparison, state.showOnlyChanged);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileComparison, setShowMobileComparison] = useState(false);
 
-  const hasComparison = state.comparison && state.comparison.totalChanges > 0;
+  // Enhanced comparison detection - use comparisonReport if available, fallback to computed comparison
+  const hasComparison = (comparisonReport?.beforeAfter && comparisonReport.beforeAfter.length > 0) || 
+                        (state.comparison && state.comparison.totalChanges > 0);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -107,7 +118,11 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
             className="space-y-6"
           >
             {/* Comparison Summary */}
-            <ComparisonSummary comparison={state.comparison} stats={state.stats} />
+            <ComparisonSummary 
+              comparison={state.comparison} 
+              stats={state.stats} 
+              comparisonReport={comparisonReport}
+            />
 
             {/* Section Comparisons */}
             <div className="space-y-6">
@@ -265,13 +280,41 @@ const ComparisonControls: React.FC<ComparisonControlsProps> = ({
 interface ComparisonSummaryProps {
   comparison: CVComparison | null;
   stats: ComparisonStats | null;
+  comparisonReport?: {
+    beforeAfter: Array<{
+      section: string;
+      before: string;
+      after: string;
+      improvement: string;
+    }>;
+  };
 }
 
 const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
   comparison,
-  stats
+  stats,
+  comparisonReport
 }) => {
-  if (!comparison || !stats) return null;
+  // Enhanced summary - use comparisonReport data if available
+  const enhancedStats = useMemo(() => {
+    if (comparisonReport?.beforeAfter) {
+      const reportData = comparisonReport.beforeAfter;
+      return {
+        totalChanges: reportData.length,
+        modifiedSections: reportData.length,
+        newSections: 0,
+        totalSections: reportData.length,
+        improvementPercentage: Math.min(100, Math.round((reportData.length / Math.max(reportData.length, 10)) * 100)),
+        enhancedSections: reportData.map(item => item.section)
+      };
+    }
+    return stats;
+  }, [comparisonReport, stats]);
+  
+  if (!enhancedStats && (!comparison || !stats)) return null;
+  
+  const displayStats = enhancedStats || stats;
+  if (!displayStats) return null;
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
@@ -286,48 +329,62 @@ const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.improvementPercentage}%
+                {displayStats.improvementPercentage}%
               </div>
               <div className="text-sm text-gray-600">Improved</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {stats.modifiedSections}
+                {displayStats.modifiedSections}
               </div>
               <div className="text-sm text-gray-600">Enhanced</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {stats.newSections}
+                {displayStats.newSections || 0}
               </div>
               <div className="text-sm text-gray-600">Added</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-600">
-                {stats.totalSections}
+                {displayStats.totalSections}
               </div>
               <div className="text-sm text-gray-600">Total</div>
             </div>
           </div>
           
-          {comparison.improvementSummary.enhancedContent.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-gray-600">Key improvements:</span>
-              {comparison.improvementSummary.enhancedContent.slice(0, 3).map((section: string) => (
-                <span 
-                  key={section}
-                  className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs"
-                >
-                  {getSectionDisplayName(section)}
-                </span>
-              ))}
-              {comparison.improvementSummary.enhancedContent.length > 3 && (
-                <span className="text-xs text-gray-500">
-                  +{comparison.improvementSummary.enhancedContent.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
+          {/* Enhanced sections display - use comparisonReport or fallback to comparison */}
+          {(() => {
+            const sectionsToShow = comparisonReport?.beforeAfter 
+              ? comparisonReport.beforeAfter.slice(0, 3).map(item => item.section)
+              : comparison?.improvementSummary?.enhancedContent?.slice(0, 3) || [];
+            
+            const totalSections = comparisonReport?.beforeAfter?.length || 
+                                 comparison?.improvementSummary?.enhancedContent?.length || 0;
+            
+            if (sectionsToShow.length > 0) {
+              return (
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-gray-600">Key improvements:</span>
+                  {sectionsToShow.map((section: string, index: number) => (
+                    <span 
+                      key={`${section}-${index}`}
+                      className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs"
+                    >
+                      {getSectionDisplayName(section)}
+                    </span>
+                  ))}
+                  {totalSections > 3 && (
+                    <span className="text-xs text-gray-500">
+                      +{totalSections - 3} more
+                    </span>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()
+          }
         </div>
       </div>
     </div>

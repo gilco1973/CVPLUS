@@ -16,7 +16,7 @@ export type {
 
 export type {
   FeatureVector
-} from './ml-features';
+} from './ml-pipeline-original';
 
 export type {
   Phase2APIResponse,

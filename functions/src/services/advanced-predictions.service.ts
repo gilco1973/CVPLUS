@@ -163,7 +163,8 @@ export class AdvancedPredictionsService {
         predictedRange: {
           min: Math.round(range.min),
           max: Math.round(range.max),
-          median: Math.round(adjustedSalary)
+          median: Math.round(adjustedSalary),
+          currency: request.jobData.salaryRange?.currency || 'USD'
         },
         confidenceInterval: {
           lower: Math.round(range.min * 0.9),
