@@ -293,3 +293,11 @@ export {
 export {
   videoAnalyticsDashboard
 } from './functions/video-analytics-dashboard';
+
+// Export role profile functions
+export {
+  detectRoleProfile,
+  getRoleProfiles,
+  applyRoleProfile,
+  getRoleBasedRecommendations
+} from './functions/role-profile.functions';

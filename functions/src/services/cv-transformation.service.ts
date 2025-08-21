@@ -1,6 +1,14 @@
 import { ParsedCV } from '../types/job';
 import { VerifiedClaudeService } from './verified-claude.service';
 import { PlaceholderManager, PlaceholderInfo } from './placeholder-manager.service';
+import { RoleDetectionService } from './role-detection.service';
+import { RoleProfileService } from './role-profile.service';
+import {
+  RoleProfile,
+  RoleMatchResult,
+  RoleProfileAnalysis,
+  RoleBasedRecommendation
+} from '../types/role-profile.types';
 
 export interface CVRecommendation {
   id: string;
@@ -19,6 +27,10 @@ export interface CVRecommendation {
   actionRequired: 'replace' | 'add' | 'modify' | 'reformat';
   keywords?: string[];
   estimatedScoreImprovement: number;
+  // Enhanced with role profile integration
+  roleBasedRecommendation?: RoleBasedRecommendation;
+  roleProfileId?: string;
+  enhancementTemplate?: string;
 }
 
 export interface CVTransformationResult {
@@ -40,13 +52,82 @@ export interface CVTransformationResult {
       improvement: string;
     }>;
   };
+  // Enhanced with role profile analysis
+  roleAnalysis?: RoleProfileAnalysis;
+  detectedRole?: RoleMatchResult;
+  roleEnhancedRecommendations?: CVRecommendation[];
 }
 
 export class CVTransformationService {
   private claudeService: VerifiedClaudeService;
+  private roleDetectionService: RoleDetectionService;
+  private roleProfileService: RoleProfileService;
 
   constructor() {
     this.claudeService = new VerifiedClaudeService();
+    this.roleDetectionService = new RoleDetectionService();
+    this.roleProfileService = new RoleProfileService();
+  }
+
+  /**
+   * Enhanced method that combines role detection with CV recommendations
+   */
+  async generateRoleEnhancedRecommendations(
+    parsedCV: ParsedCV,
+    enableRoleDetection: boolean = true,
+    targetRole?: string,
+    industryKeywords?: string[]
+  ): Promise<CVRecommendation[]> {
+    console.log('[CV-TRANSFORMATION] Starting role-enhanced recommendation generation');
+    
+    try {
+      let roleAnalysis: RoleProfileAnalysis | null = null;
+      let roleEnhancedRecommendations: CVRecommendation[] = [];
+      
+      // Step 1: Perform role detection if enabled
+      if (enableRoleDetection) {
+        console.log('[CV-TRANSFORMATION] Performing role detection analysis');
+        roleAnalysis = await this.roleDetectionService.detectRoles(parsedCV);
+        
+        if (roleAnalysis.primaryRole.confidence > 0.6) {
+          console.log(`[CV-TRANSFORMATION] Detected primary role: ${roleAnalysis.primaryRole.roleName} (confidence: ${roleAnalysis.primaryRole.confidence})`);
+          
+          // Convert role-based recommendations to CV recommendations
+          roleEnhancedRecommendations = await this.convertRoleRecommendationsToCVRecommendations(
+            roleAnalysis.enhancementSuggestions.immediate,
+            roleAnalysis.primaryRole
+          );
+          
+          // Update target role if not specified
+          if (!targetRole) {
+            targetRole = roleAnalysis.primaryRole.roleName;
+          }
+        }
+      }
+      
+      // Step 2: Generate standard recommendations
+      const standardRecommendations = await this.generateDetailedRecommendations(
+        parsedCV,
+        targetRole,
+        industryKeywords
+      );
+      
+      // Step 3: Merge and prioritize recommendations
+      const mergedRecommendations = this.mergeRecommendations(
+        standardRecommendations,
+        roleEnhancedRecommendations,
+        roleAnalysis?.primaryRole
+      );
+      
+      console.log(`[CV-TRANSFORMATION] Generated ${mergedRecommendations.length} total recommendations (${roleEnhancedRecommendations.length} role-enhanced, ${standardRecommendations.length} standard)`);
+      
+      return mergedRecommendations;
+      
+    } catch (error) {
+      console.error('[CV-TRANSFORMATION] Error in role-enhanced recommendations:', error);
+      // Fallback to standard recommendations
+      return this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
+    }
   }
 
   /**
@@ -1766,5 +1847,238 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
     }
     
     return recommendations;
+  }
+
+  /**
+   * Converts role-based recommendations to CV recommendations format
+   */
+  private async convertRoleRecommendationsToCVRecommendations(
+    roleRecommendations: RoleBasedRecommendation[],
+    primaryRole: RoleMatchResult
+  ): Promise<CVRecommendation[]> {
+    const cvRecommendations: CVRecommendation[] = [];
+    
+    for (const roleRec of roleRecommendations) {
+      const cvRec: CVRecommendation = {
+        id: `role_${roleRec.id}`,
+        type: this.mapRoleRecTypeToCVRecType(roleRec.type),
+        category: this.mapTargetSectionToCategory(roleRec.targetSection),
+        title: `[${primaryRole.roleName}] ${roleRec.title}`,
+        description: `${roleRec.description} (Role-optimized for ${primaryRole.roleName})`,
+        suggestedContent: roleRec.template,
+        impact: roleRec.priority === 'high' ? 'high' : roleRec.priority === 'medium' ? 'medium' : 'low',
+        priority: roleRec.priority === 'high' ? 1 : roleRec.priority === 'medium' ? 5 : 8,
+        section: this.mapTargetSectionToString(roleRec.targetSection),
+        actionRequired: this.determineActionRequired(roleRec.type),
+        keywords: this.extractKeywordsFromTemplate(roleRec.template),
+        estimatedScoreImprovement: roleRec.expectedImpact,
+        roleBasedRecommendation: roleRec,
+        roleProfileId: primaryRole.roleId,
+        enhancementTemplate: roleRec.template
+      };
+      
+      cvRecommendations.push(cvRec);
+    }
+    
+    return cvRecommendations;
+  }
+
+  /**
+   * Merges standard and role-enhanced recommendations, removing duplicates and prioritizing
+   */
+  private mergeRecommendations(
+    standardRecs: CVRecommendation[],
+    roleRecs: CVRecommendation[],
+    primaryRole?: RoleMatchResult
+  ): CVRecommendation[] {
+    const merged: CVRecommendation[] = [];
+    const seenSections = new Set<string>();
+    
+    // Prioritize role-enhanced recommendations
+    roleRecs.forEach(rec => {
+      merged.push(rec);
+      seenSections.add(`${rec.section}_${rec.type}`);
+    });
+    
+    // Add non-duplicate standard recommendations
+    standardRecs.forEach(rec => {
+      const key = `${rec.section}_${rec.type}`;
+      if (!seenSections.has(key)) {
+        // Boost priority if it aligns with detected role
+        if (primaryRole && this.isRecommendationAlignedWithRole(rec, primaryRole)) {
+          rec.priority = Math.max(1, rec.priority - 2);
+          rec.estimatedScoreImprovement += 5;
+        }
+        merged.push(rec);
+        seenSections.add(key);
+      }
+    });
+    
+    // Sort by priority and limit results
+    return merged
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 15); // Limit to top 15 recommendations
+  }
+
+  /**
+   * Helper methods for mapping between role and CV recommendation formats
+   */
+  private mapRoleRecTypeToCVRecType(roleType: string): CVRecommendation['type'] {
+    switch (roleType) {
+      case 'content': return 'content';
+      case 'structure': return 'structure';
+      case 'keyword': return 'keyword_optimization';
+      case 'section': return 'section_addition';
+      default: return 'content';
+    }
+  }
+
+  private mapTargetSectionToCategory(section: any): CVRecommendation['category'] {
+    const sectionStr = section.toString().toLowerCase();
+    if (sectionStr.includes('summary')) return 'professional_summary';
+    if (sectionStr.includes('experience')) return 'experience';
+    if (sectionStr.includes('skills')) return 'skills';
+    if (sectionStr.includes('education')) return 'education';
+    if (sectionStr.includes('achievements')) return 'achievements';
+    return 'ats_optimization';
+  }
+
+  private mapTargetSectionToString(section: any): string {
+    const sectionStr = section.toString();
+    // Convert enum-like values to readable strings
+    return sectionStr.split('.').pop()?.toLowerCase().replace('_', ' ') || sectionStr;
+  }
+
+  private determineActionRequired(type: string): CVRecommendation['actionRequired'] {
+    switch (type) {
+      case 'content': return 'replace';
+      case 'structure': return 'modify';
+      case 'keyword': return 'add';
+      case 'section': return 'add';
+      default: return 'modify';
+    }
+  }
+
+  private extractKeywordsFromTemplate(template: string): string[] {
+    // Extract meaningful keywords from template text
+    const keywords = template
+      .toLowerCase()
+      .replace(/\[.*?\]/g, '') // Remove placeholder brackets
+      .replace(/[^a-zA-Z\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && 
+        !['with', 'that', 'this', 'from', 'were', 'have', 'been', 'will', 'your'].includes(word)
+      )
+      .slice(0, 5);
+    
+    return keywords;
+  }
+
+  private isRecommendationAlignedWithRole(rec: CVRecommendation, role: RoleMatchResult): boolean {
+    // Check if recommendation keywords align with role matching factors
+    const roleKeywords = role.matchingFactors
+      .flatMap(factor => factor.matchedKeywords)
+      .map(kw => kw.toLowerCase());
+    
+    const recKeywords = (rec.keywords || [])
+      .concat(rec.title.toLowerCase().split(' '))
+      .map(kw => kw.toLowerCase());
+    
+    return recKeywords.some(recKw => 
+      roleKeywords.some(roleKw => 
+        roleKw.includes(recKw) || recKw.includes(roleKw)
+      )
+    );
+  }
+
+  /**
+   * Enhanced apply recommendations method that includes role context
+   */
+  async applyRoleEnhancedRecommendations(
+    originalCV: ParsedCV,
+    selectedRecommendations: CVRecommendation[],
+    includeRoleAnalysis: boolean = true
+  ): Promise<CVTransformationResult> {
+    console.log(`[CV-TRANSFORMATION] Applying ${selectedRecommendations.length} role-enhanced recommendations`);
+    
+    // Apply standard recommendations
+    const baseResult = await this.applyRecommendations(originalCV, selectedRecommendations);
+    
+    // Add role analysis if requested
+    if (includeRoleAnalysis) {
+      try {
+        const roleAnalysis = await this.roleDetectionService.detectRoles(baseResult.improvedCV);
+        const detectedRole = roleAnalysis.primaryRole;
+        
+        // Extract role-enhanced recommendations
+        const roleEnhancedRecs = selectedRecommendations.filter(rec => rec.roleBasedRecommendation);
+        
+        const enhancedResult: CVTransformationResult = {
+          ...baseResult,
+          roleAnalysis,
+          detectedRole,
+          roleEnhancedRecommendations: roleEnhancedRecs
+        };
+        
+        console.log(`[CV-TRANSFORMATION] Enhanced result with role analysis: ${detectedRole.roleName} (${detectedRole.confidence})`);
+        return enhancedResult;
+        
+      } catch (error) {
+        console.error('[CV-TRANSFORMATION] Error adding role analysis:', error);
+        return baseResult;
+      }
+    }
+    
+    return baseResult;
+  }
+
+  /**
+   * Get role-specific enhancement templates for a CV
+   */
+  async getRoleEnhancementTemplates(parsedCV: ParsedCV): Promise<{
+    detectedRole: RoleMatchResult | null;
+    templates: {
+      professionalSummary?: string;
+      experienceEnhancements?: string[];
+      skillsOptimization?: string[];
+      achievementTemplates?: string[];
+    };
+  }> {
+    try {
+      const primaryRole = await this.roleDetectionService.detectPrimaryRole(parsedCV);
+      
+      if (!primaryRole || primaryRole.confidence < 0.5) {
+        return {
+          detectedRole: null,
+          templates: {}
+        };
+      }
+      
+      const roleProfile = await this.roleProfileService.getProfileById(primaryRole.roleId);
+      
+      if (!roleProfile) {
+        return {
+          detectedRole: primaryRole,
+          templates: {}
+        };
+      }
+      
+      return {
+        detectedRole: primaryRole,
+        templates: {
+          professionalSummary: roleProfile.enhancementTemplates.professionalSummary,
+          experienceEnhancements: roleProfile.enhancementTemplates.experienceEnhancements.map(exp => exp.bulletPointTemplate),
+          skillsOptimization: roleProfile.enhancementTemplates.keywordOptimization,
+          achievementTemplates: roleProfile.enhancementTemplates.achievementTemplates
+        }
+      };
+      
+    } catch (error) {
+      console.error('[CV-TRANSFORMATION] Error getting role enhancement templates:', error);
+      return {
+        detectedRole: null,
+        templates: {}
+      };
+    }
   }
 }
