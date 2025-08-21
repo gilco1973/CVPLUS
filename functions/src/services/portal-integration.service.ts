@@ -120,17 +120,25 @@ export class CVPortalIntegrationService {
             statistics: {
               totalTimeMs: Date.now() - startTime,
               stepTimes: {
+                init: 0,
                 validate_input: 0,
+                parse_cv: 0,
                 extract_cv_data: 0,
+                select_template: 0,
                 generate_template: 0,
+                customize_theme: 0,
                 customize_design: 0,
+                build_rag: 0,
                 build_rag_system: 0,
                 create_embeddings: 0,
                 setup_vector_db: 0,
+                generate_content: 0,
+                deploy_space: 0,
                 deploy_to_huggingface: 0,
                 configure_urls: 0,
                 update_cv_document: 0,
                 generate_qr_codes: 0,
+                finalize: 0,
                 finalize_portal: 0
               },
               embeddingsGenerated: 0,
@@ -140,19 +148,28 @@ export class CVPortalIntegrationService {
             },
             resourceUsage: {
               memoryUsageMB: 0,
+              cpuUsagePercent: 0,
               cpuTimeSeconds: 0,
+              diskUsageMB: 0,
               networkRequests: 0,
               storageUsedMB: 0,
               apiCalls: {}
             },
             quality: {
+              completionRate: 0,
+              accuracyScore: 0,
+              performanceScore: 0,
               completenessScore: 0,
               designConsistencyScore: 0,
               ragAccuracyScore: 0,
-              performanceScore: 0,
               accessibilityScore: 0,
               overallScore: 0
-            }
+            },
+            cvAnalysis: {},
+            templateUsed: 'default',
+            featuresEnabled: [],
+            filesGenerated: 0,
+            totalSize: 0
           }
         };
       }
@@ -208,17 +225,25 @@ export class CVPortalIntegrationService {
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {
+              init: 0,
               validate_input: 0,
+              parse_cv: 0,
               extract_cv_data: 0,
+              select_template: 0,
               generate_template: 0,
+              customize_theme: 0,
               customize_design: 0,
+              build_rag: 0,
               build_rag_system: 0,
               create_embeddings: 0,
               setup_vector_db: 0,
+              generate_content: 0,
+              deploy_space: 0,
               deploy_to_huggingface: 0,
               configure_urls: 0,
               update_cv_document: 0,
               generate_qr_codes: 0,
+              finalize: 0,
               finalize_portal: 0
             },
             embeddingsGenerated: 0,
@@ -228,19 +253,28 @@ export class CVPortalIntegrationService {
           },
           resourceUsage: {
             memoryUsageMB: 0,
+            cpuUsagePercent: 0,
             cpuTimeSeconds: 0,
+            diskUsageMB: 0,
             networkRequests: 0,
             storageUsedMB: 0,
             apiCalls: {}
           },
           quality: {
+            completionRate: 0,
+            accuracyScore: 0,
+            performanceScore: 0,
             completenessScore: 0,
             designConsistencyScore: 0,
             ragAccuracyScore: 0,
-            performanceScore: 0,
             accessibilityScore: 0,
             overallScore: 0
-          }
+          },
+          cvAnalysis: {},
+          templateUsed: 'default',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0
         }
       };
     }
@@ -638,23 +672,51 @@ class PortalGenerationOrchestrator {
         template: template,
         customization: {
           personalInfo: extractedData.personalInfo,
-          theme: {},
-          sections: {},
-          content: {},
-          layout: {},
+          theme: {
+            id: 'corporate-theme',
+            name: 'Corporate Professional',
+            colors: {
+              primary: '#1e40af',
+              secondary: '#64748b',
+              background: { primary: '#ffffff', secondary: '#f8fafc', accent: '#f1f5f9' },
+              text: { primary: '#1f2937', secondary: '#6b7280', muted: '#9ca3af', accent: '#1e40af' },
+              border: { primary: '#e5e7eb', light: '#f8fafc', accent: '#e0e7ff' },
+              status: { success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#3b82f6' }
+            },
+            typography: {
+              fontFamilies: { heading: 'Inter, sans-serif', body: 'Inter, sans-serif', mono: 'JetBrains Mono, monospace' },
+              fontSizes: { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' },
+              lineHeights: { tight: 1.25, normal: 1.5, relaxed: 1.75 },
+              fontWeights: { light: 300, normal: 400, medium: 500, semibold: 600, bold: 700 }
+            },
+            spacing: {
+              baseUnit: 1,
+              sectionPadding: 2,
+              elementMargin: 1
+            },
+            borderRadius: {
+              sm: '0.25rem',
+              md: '0.5rem',
+              lg: '1rem'
+            },
+            shadows: {
+              sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              lg: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            }
+          },
+          layout: {
+            headerStyle: 'minimal' as const,
+            navigationStyle: 'horizontal' as const,
+            contentLayout: 'single' as const
+          },
           features: {
-            enableChat: true,
-            enableContactForm: true,
-            enablePortfolio: true,
-            enableTestimonials: false,
-            enableBlog: false,
-            enableAnalytics: trigger.preferences?.enableAnalytics || true,
-            enableSocialSharing: true,
-            enableCVDownload: true,
-            enableCalendar: false,
-            enableDarkMode: true,
-            enableMultiLanguage: false,
-            enableAccessibility: true
+            chatbot: true,
+            downloadCV: true,
+            contactForm: true,
+            analytics: trigger.preferences?.enableAnalytics || true,
+            testimonials: false,
+            portfolio: true
           }
         },
         ragConfig: ragSystem,
@@ -672,10 +734,35 @@ class PortalGenerationOrchestrator {
             cvDownloads: 0,
             lastUpdated: new Date()
           },
-          visitors: {},
-          chat: {},
-          features: {},
-          performance: {},
+          visitors: {
+            total: 0,
+            unique: 0,
+            returning: 0,
+            devices: { mobile: 0, tablet: 0, desktop: 0 },
+            locations: [],
+            browsers: {},
+            sources: { direct: 0, search: 0, social: 0, referral: 0, qr: 0 }
+          },
+          chat: {
+            totalSessions: 0,
+            totalMessages: 0,
+            averageMessagesPerSession: 0,
+            averageSessionDuration: 0,
+            topics: []
+          },
+          features: {
+            contactForm: { views: 0, submissions: 0, conversionRate: 0 },
+            cvDownloads: { total: 0, unique: 0, formats: {} },
+            socialLinks: { linkedin: 0, github: 0, twitter: 0 },
+            portfolio: { views: 0, itemViews: {} }
+          },
+          performance: {
+            pageLoadTime: 0,
+            chatResponseTime: 0,
+            apiResponseTimes: { total: 0, byEndpoint: {} as any },
+            errorRates: { total: 0, byEndpoint: {} },
+            uptime: 100
+          },
           qrCodes: {
             totalScans: 0,
             uniqueScans: 0,
@@ -700,17 +787,9 @@ class PortalGenerationOrchestrator {
         },
         privacy: {
           level: (trigger.preferences?.privacyLevel as PrivacyLevel) || PrivacyLevel.PUBLIC,
-          masking: {
-            maskContactInfo: false,
-            maskCompanies: [],
-            maskDates: false,
-            customRules: []
-          },
-          access: {},
-          retention: {},
-          gdpr: {},
-          analyticsConsent: true,
-          chatDataRetention: {}
+          passwordProtected: false,
+          analyticsEnabled: true,
+          cookieConsent: false
         },
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -737,17 +816,25 @@ class PortalGenerationOrchestrator {
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {
+              init: 0,
               validate_input: 0,
+              parse_cv: 0,
               extract_cv_data: 0,
+              select_template: 0,
               generate_template: 0,
+              customize_theme: 0,
               customize_design: 0,
+              build_rag: 0,
               build_rag_system: 0,
               create_embeddings: 0,
               setup_vector_db: 0,
+              generate_content: 0,
+              deploy_space: 0,
               deploy_to_huggingface: 0,
               configure_urls: 0,
               update_cv_document: 0,
               generate_qr_codes: 0,
+              finalize: 0,
               finalize_portal: 0
             },
             embeddingsGenerated: ragSystem.embeddings?.dimensions || 0,
@@ -757,7 +844,9 @@ class PortalGenerationOrchestrator {
           },
           resourceUsage: {
             memoryUsageMB: 0,
+            cpuUsagePercent: 0,
             cpuTimeSeconds: 0,
+            diskUsageMB: 0,
             networkRequests: 0,
             storageUsedMB: 0,
             apiCalls: {}
@@ -800,17 +889,25 @@ class PortalGenerationOrchestrator {
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {
+              init: 0,
               validate_input: 0,
+              parse_cv: 0,
               extract_cv_data: 0,
+              select_template: 0,
               generate_template: 0,
+              customize_theme: 0,
               customize_design: 0,
+              build_rag: 0,
               build_rag_system: 0,
               create_embeddings: 0,
               setup_vector_db: 0,
+              generate_content: 0,
+              deploy_space: 0,
               deploy_to_huggingface: 0,
               configure_urls: 0,
               update_cv_document: 0,
               generate_qr_codes: 0,
+              finalize: 0,
               finalize_portal: 0
             },
             embeddingsGenerated: 0,
@@ -820,19 +917,28 @@ class PortalGenerationOrchestrator {
           },
           resourceUsage: {
             memoryUsageMB: 0,
+            cpuUsagePercent: 0,
             cpuTimeSeconds: 0,
+            diskUsageMB: 0,
             networkRequests: 0,
             storageUsedMB: 0,
             apiCalls: {}
           },
           quality: {
+            completionRate: 0,
+            accuracyScore: 0,
+            performanceScore: 0,
             completenessScore: 0,
             designConsistencyScore: 0,
             ragAccuracyScore: 0,
-            performanceScore: 0,
             accessibilityScore: 0,
             overallScore: 0
-          }
+          },
+          cvAnalysis: {},
+          templateUsed: 'default',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0
         }
       };
     }

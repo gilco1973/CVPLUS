@@ -154,15 +154,44 @@ export interface PersonalityProfile {
   /** Core professional and personal values */
   values: string[];
   
-  /** Personality traits map for detailed analysis */
-  traits?: { [key: string]: number };
+  /** Numerical scores for different personality traits */
+  traits: {
+    leadership: number;
+    communication: number;
+    innovation: number;
+    teamwork: number;
+    problemSolving: number;
+    attention_to_detail: number;
+    adaptability: number;
+    strategic_thinking: number;
+    analytical?: number;
+    creative?: number;
+    decisive?: number;
+    empathetic?: number;
+    [key: string]: number;
+  };
   
-  /** Culture fit analysis */
-  cultureFit?: number;
-  
-  /** Summary of personality insights */
-  summary?: string;
+  /** Primary working style descriptions */
+  workStyle: string[];
   
   /** Team compatibility assessment */
-  teamCompatibility?: number;
+  teamCompatibility: string;
+  
+  /** Leadership potential score (0-1) */
+  leadershipPotential: number;
+  
+  /** Culture fit assessment for different environments */
+  cultureFit: {
+    startup: number;
+    corporate: number;
+    consulting: number;
+    nonprofit: number;
+    agency: number;
+  };
+  
+  /** Comprehensive personality summary */
+  summary: string;
+  
+  /** When this profile was generated */
+  generatedAt: Date;
 }

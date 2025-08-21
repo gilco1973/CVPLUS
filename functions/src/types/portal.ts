@@ -9,9 +9,22 @@
  */
 
 // Re-export types from other portal files for convenience
-export type { HuggingFaceSpaceConfig, HuggingFaceHardware, RepositoryFile } from './portal-huggingface';
-export { HuggingFaceSDK, HuggingFaceVisibility, FileType } from './portal-huggingface';
+export type { HuggingFaceSpaceConfig, RepositoryFile } from './portal-huggingface';
+export { HuggingFaceSDK, HuggingFaceVisibility, HuggingFaceHardware, FileType } from './portal-huggingface';
 export type { DeploymentResult, BuildConfig, DeploymentMetadata } from './portal-original';
+export { 
+  AssetType, 
+  AssetSource,
+  MobileOptimizationLevel
+} from './portal-original';
+export type { 
+  AssetProcessingResult, 
+  AssetOptimizationConfig, 
+  ComponentConfiguration, 
+  FeatureToggles,
+  CVPlusIntegration,
+  JobIntegration
+} from './portal-original';
 // Note: PortalErrorCode is defined in this file, not re-exported
 
 import { ParsedCV } from './job';
@@ -21,6 +34,8 @@ import { RAGConfig, RAGEmbedding, EmbeddingMetadata, CVSection } from './portal-
 import { HuggingFaceSpaceConfig } from './portal-huggingface';
 import { PortalUrls, PortalAnalytics, URLPlacement, QRCodeType, QRCodeStyling, QRCodeAnalytics } from './portal-analytics';
 import { ErrorCategory } from './portal-config';
+import { MobileOptimizationLevel } from './portal-original';
+import type { FeatureToggles } from './portal-original';
 
 /**
  * Main configuration interface for portal generation
@@ -99,6 +114,25 @@ export interface PortalTemplate {
   
   /** Required sections for this template */
   requiredSections: PortalSection[];
+  
+  /** Optional sections for this template */
+  optionalSections?: PortalSection[];
+  
+  /** Template configuration settings */
+  config?: {
+    /** Mobile optimization settings */
+    mobileOptimization?: MobileOptimizationLevel;
+    
+    /** Feature toggles for the template */
+    features?: FeatureToggles;
+    
+    /** Layout configuration */
+    layout?: {
+      columns?: number;
+      sidebar?: boolean;
+      navigation?: 'top' | 'side' | 'both';
+    };
+  };
 }
 
 /**
@@ -172,7 +206,10 @@ export enum PortalTemplateCategory {
   BUSINESS = 'business',
   MINIMAL = 'minimal',
   MODERN = 'modern',
-  CLASSIC = 'classic'
+  CLASSIC = 'classic',
+  CORPORATE_PROFESSIONAL = 'corporate_professional',
+  CREATIVE_PORTFOLIO = 'creative_portfolio',
+  TECHNICAL_EXPERT = 'technical_expert'
 }
 
 /**
@@ -269,7 +306,11 @@ export interface GenerationMetadata {
   resourceUsage?: {
     memoryUsageMB: number;
     cpuUsagePercent: number;
+    cpuTimeSeconds?: number;
     diskUsageMB: number;
+    networkRequests?: number;
+    storageUsedMB?: number;
+    apiCalls?: { [provider: string]: number };
   };
   
   /** Quality metrics */
@@ -277,6 +318,11 @@ export interface GenerationMetadata {
     completionRate: number;
     accuracyScore: number;
     performanceScore: number;
+    completenessScore?: number;
+    designConsistencyScore?: number;
+    ragAccuracyScore?: number;
+    accessibilityScore?: number;
+    overallScore?: number;
   };
 }
 

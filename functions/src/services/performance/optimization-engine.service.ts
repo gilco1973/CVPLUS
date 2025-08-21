@@ -225,7 +225,8 @@ class OptimizationEngineService {
 
       // Generate optimization recommendations for slow collections
       Object.entries(collectionPerformance).forEach(([collection, queries]) => {
-        const avgQueryTime = queries.reduce((sum, q) => sum + q.queryTime, 0) / queries.length;
+        const queryArray = queries as any[];
+        const avgQueryTime = queryArray.reduce((sum, q) => sum + q.queryTime, 0) / queryArray.length;
         
         if (avgQueryTime > 2000) {
           optimizations.push({

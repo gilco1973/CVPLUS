@@ -122,8 +122,14 @@ export interface Certification {
   /** Date when certification was issued */
   issueDate: Date;
   
+  /** Legacy date property for backward compatibility */
+  date: Date;
+  
   /** Optional expiration date for time-limited certifications */
   expirationDate?: Date;
+  
+  /** Legacy expiry date property for backward compatibility */
+  expiryDate?: Date;
   
   /** Credential ID or certificate number */
   credentialId?: string;
@@ -133,6 +139,9 @@ export interface Certification {
   
   /** Optional digital badge URL */
   badgeUrl?: string;
+  
+  /** Legacy badge property for backward compatibility */
+  badge?: string;
   
   /** Whether this certification has been verified */
   isVerified: boolean;

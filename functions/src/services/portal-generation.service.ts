@@ -330,20 +330,33 @@ export class PortalGenerationService {
         metadata: {
           version: '1.0',
           timestamp: new Date(),
+          cvAnalysis: {}, // TODO: Add actual CV analysis
+          templateUsed: portalConfig?.template?.id || 'unknown',
+          featuresEnabled: [], // TODO: Add enabled features
+          filesGenerated: 0, // TODO: Count generated files
+          totalSize: 0, // TODO: Calculate total size
           statistics: {
             totalTimeMs: processingTimeMs,
             stepTimes: {
+              [PortalGenerationStep.INIT]: 0,
               [PortalGenerationStep.VALIDATE_INPUT]: 0,
+              [PortalGenerationStep.PARSE_CV]: 0,
               [PortalGenerationStep.EXTRACT_CV_DATA]: 0,
+              [PortalGenerationStep.SELECT_TEMPLATE]: 0,
               [PortalGenerationStep.GENERATE_TEMPLATE]: 0,
+              [PortalGenerationStep.CUSTOMIZE_THEME]: 0,
               [PortalGenerationStep.CUSTOMIZE_DESIGN]: 0,
+              [PortalGenerationStep.BUILD_RAG]: 0,
               [PortalGenerationStep.BUILD_RAG_SYSTEM]: 0,
               [PortalGenerationStep.CREATE_EMBEDDINGS]: 0,
               [PortalGenerationStep.SETUP_VECTOR_DB]: 0,
+              [PortalGenerationStep.GENERATE_CONTENT]: 0,
+              [PortalGenerationStep.DEPLOY_SPACE]: 0,
               [PortalGenerationStep.DEPLOY_TO_HUGGINGFACE]: 0,
               [PortalGenerationStep.CONFIGURE_URLS]: 0,
               [PortalGenerationStep.UPDATE_CV_DOCUMENT]: 0,
               [PortalGenerationStep.GENERATE_QR_CODES]: 0,
+              [PortalGenerationStep.FINALIZE]: 0,
               [PortalGenerationStep.FINALIZE_PORTAL]: 0
             },
             embeddingsGenerated: ragSystem?.embeddings.length || 0,
@@ -353,7 +366,9 @@ export class PortalGenerationService {
           },
           resourceUsage: {
             memoryUsageMB: 0, // TODO: Track memory usage
+            cpuUsagePercent: 0, // TODO: Track CPU usage
             cpuTimeSeconds: processingTimeMs / 1000,
+            diskUsageMB: 0, // TODO: Calculate disk usage
             networkRequests: 0, // TODO: Count network requests
             storageUsedMB: 0, // TODO: Calculate storage usage
             apiCalls: {
@@ -362,10 +377,12 @@ export class PortalGenerationService {
             }
           },
           quality: {
+            completionRate: 0.95, // Required property
+            accuracyScore: ragSystem ? 0.85 : 0.9, // Required property
+            performanceScore: 0.9,
             completenessScore: 0.9,
             designConsistencyScore: 0.95,
             ragAccuracyScore: ragSystem ? 0.85 : 0,
-            performanceScore: 0.9,
             accessibilityScore: 0.8,
             overallScore: 0.88
           }
@@ -428,20 +445,33 @@ export class PortalGenerationService {
         metadata: {
           version: '1.0',
           timestamp: new Date(),
+          cvAnalysis: {}, // TODO: Add actual CV analysis
+          templateUsed: 'error-context',
+          featuresEnabled: [], // TODO: Add enabled features
+          filesGenerated: 0, // TODO: Count generated files
+          totalSize: 0, // TODO: Calculate total size
           statistics: {
             totalTimeMs: processingTimeMs,
             stepTimes: {
+              [PortalGenerationStep.INIT]: 0,
               [PortalGenerationStep.VALIDATE_INPUT]: 0,
+              [PortalGenerationStep.PARSE_CV]: 0,
               [PortalGenerationStep.EXTRACT_CV_DATA]: 0,
+              [PortalGenerationStep.SELECT_TEMPLATE]: 0,
               [PortalGenerationStep.GENERATE_TEMPLATE]: 0,
+              [PortalGenerationStep.CUSTOMIZE_THEME]: 0,
               [PortalGenerationStep.CUSTOMIZE_DESIGN]: 0,
+              [PortalGenerationStep.BUILD_RAG]: 0,
               [PortalGenerationStep.BUILD_RAG_SYSTEM]: 0,
               [PortalGenerationStep.CREATE_EMBEDDINGS]: 0,
               [PortalGenerationStep.SETUP_VECTOR_DB]: 0,
+              [PortalGenerationStep.GENERATE_CONTENT]: 0,
+              [PortalGenerationStep.DEPLOY_SPACE]: 0,
               [PortalGenerationStep.DEPLOY_TO_HUGGINGFACE]: 0,
               [PortalGenerationStep.CONFIGURE_URLS]: 0,
               [PortalGenerationStep.UPDATE_CV_DOCUMENT]: 0,
               [PortalGenerationStep.GENERATE_QR_CODES]: 0,
+              [PortalGenerationStep.FINALIZE]: 0,
               [PortalGenerationStep.FINALIZE_PORTAL]: 0
             },
             embeddingsGenerated: 0,
@@ -451,16 +481,20 @@ export class PortalGenerationService {
           },
           resourceUsage: {
             memoryUsageMB: 0,
+            cpuUsagePercent: 0,
             cpuTimeSeconds: processingTimeMs / 1000,
+            diskUsageMB: 0,
             networkRequests: 0,
             storageUsedMB: 0,
             apiCalls: {}
           },
           quality: {
+            completionRate: 0,
+            accuracyScore: 0,
+            performanceScore: 0,
             completenessScore: 0,
             designConsistencyScore: 0,
             ragAccuracyScore: 0,
-            performanceScore: 0,
             accessibilityScore: 0,
             overallScore: 0
           }
@@ -799,7 +833,9 @@ export class PortalGenerationService {
             section: CVSection.PERSONAL,
             importance: 10,
             keywords: this.extractKeywords(personalContent),
-            contentType: ContentType.SUMMARY
+            contentType: ContentType.SUMMARY,
+            tags: ['personal', 'contact'],
+            source: 'CV'
           }
         });
       }
@@ -814,7 +850,9 @@ export class PortalGenerationService {
           section: CVSection.SUMMARY,
           importance: 9,
           keywords: this.extractKeywords(processedSummary),
-          contentType: ContentType.SUMMARY
+          contentType: ContentType.SUMMARY,
+          tags: ['summary', 'overview'],
+          source: 'CV'
         }
       });
     }
@@ -830,7 +868,9 @@ export class PortalGenerationService {
             importance: 8,
             technologies: project.technologies,
             keywords: this.extractKeywords(project.description || ''),
-            contentType: ContentType.DESCRIPTION
+            contentType: ContentType.DESCRIPTION,
+            tags: ['projects', 'experience'],
+            source: 'CV'
           }
         });
       });
@@ -846,7 +886,9 @@ export class PortalGenerationService {
             section: CVSection.CERTIFICATIONS,
             importance: 7,
             keywords: this.extractKeywords(cert.name),
-            contentType: ContentType.DESCRIPTION
+            contentType: ContentType.DESCRIPTION,
+            tags: ['certifications', 'qualifications'],
+            source: 'CV'
           }
         });
       });
@@ -864,7 +906,9 @@ export class PortalGenerationService {
           section: CVSection.CUSTOM,
           importance: 5,
           keywords: cvData.languages.map(l => l.language),
-          contentType: ContentType.SKILL
+          contentType: ContentType.SKILL,
+          tags: ['languages', 'skills'],
+          source: 'CV'
         }
       });
     }
@@ -880,7 +924,9 @@ export class PortalGenerationService {
               subsection: sectionName,
               importance: 6,
               keywords: this.extractKeywords(sectionData),
-              contentType: ContentType.DESCRIPTION
+              contentType: ContentType.DESCRIPTION,
+              tags: ['custom', sectionName.toLowerCase()],
+              source: 'CV'
             }
           });
         }
@@ -1175,43 +1221,76 @@ Return as JSON with theme, config, and content customizations.`;
       template,
       customization: {
         personalInfo: cvData.personalInfo,
-        theme: {},
-        sections: {},
-        content: {},
-        layout: {},
-        features: this.createDefaultFeatureToggles(cvData),
-        branding: {}
+        theme: this.createDefaultTheme('corporate'),
+        layout: {
+          headerStyle: 'minimal' as const,
+          navigationStyle: 'horizontal' as const,
+          contentLayout: 'single' as const
+        },
+        features: {
+          chatbot: true,
+          downloadCV: true,
+          contactForm: true,
+          analytics: true,
+          testimonials: false,
+          portfolio: false
+        },
       },
       ragConfig: {
         enabled: !!ragSystem,
         vectorDatabase: {
           provider: 'local_file' as any,
-          index: {},
-          storage: {},
-          search: {}
+          endpoint: 'local',
+          indexName: 'cv_embeddings',
+          dimensions: 384,
+          metric: 'cosine',
+          connection: { apiKey: 'local', timeout: 5000, maxRetries: 3 }
         },
         embeddings: {
           provider: 'sentence_transformers' as any,
-          model: 'all-MiniLM-L6-v2',
           dimensions: 384,
-          chunking: {},
-          preprocessing: {}
+          modelName: 'all-MiniLM-L6-v2',
+          batchSize: 32,
+          settings: { apiKey: 'local' }
         },
         chatService: {
           provider: 'anthropic' as any,
-          model: 'claude-sonnet-4-20250514',
-          parameters: {
-            temperature: 0.7,
-            maxTokens: 1000,
-            topP: 0.9
-          },
-          systemPrompt: {},
-          responseFormat: {},
-          rateLimiting: {}
+          systemPrompt: 'You are a helpful assistant for a professional portfolio.',
+          modelName: 'claude-sonnet-4-20250514',
+          maxTokens: 1000,
+          temperature: 0.7,
+          topP: 0.9,
+          settings: { apiKey: process.env.ANTHROPIC_API_KEY || 'local' }
         },
-        knowledgeBase: {},
-        queryProcessing: {},
-        responseGeneration: {}
+        knowledgeBase: {
+          sources: [],
+          chunking: { 
+            strategy: 'sentence', 
+            chunkSize: 1000,
+            chunkOverlap: 100,
+            minChunkSize: 100,
+            maxChunks: 100
+          },
+          filters: [],
+          updateFrequency: 'daily',
+          versioning: { currentVersion: '1.0.0', autoUpdate: false }
+        },
+        queryProcessing: {
+          expandQuery: false,
+          maxExpansions: 3,
+          rewriteQuery: false,
+          intentClassification: { enabled: false, intents: [], defaultIntent: 'general' },
+          validation: { minLength: 1, maxLength: 1000, blockedPatterns: [] }
+        },
+        responseGeneration: {
+          maxContextChunks: 5,
+          relevanceThreshold: 0.7,
+          responseStyle: 'professional',
+          includeSources: true,
+          citationFormat: 'numbered',
+          fallbackResponses: [],
+          safetyFilters: { enabled: false, level: 'medium', customFilters: [] }
+        }
       },
       huggingFaceConfig: {
         spaceName,
@@ -1227,13 +1306,31 @@ Return as JSON with theme, config, and content customizations.`;
             commitMessage: 'Initial portal deployment'
           },
           files: [],
-          build: {}
+          build: {
+            command: 'npm run build',
+            outputDir: 'dist',
+            env: {},
+            dependencies: [],
+            steps: []
+          }
         },
         environmentVariables: {
           'ANTHROPIC_API_KEY': process.env.ANTHROPIC_API_KEY || '',
           'PORTAL_NAME': cvData.personalInfo?.name || 'Professional'
         },
-        deployment: {}
+        deployment: {
+          deploymentId: '',
+          deployedAt: new Date(),
+          status: 'pending' as any,
+          buildLogs: [],
+          resources: {
+            cpu: 0,
+            memory: 0,
+            storage: 0,
+            bandwidth: 0,
+            requests: 0
+          }
+        }
       },
       status: PortalStatus.GENERATING,
       urls,
@@ -1248,10 +1345,35 @@ Return as JSON with theme, config, and content customizations.`;
           cvDownloads: 0,
           lastUpdated: new Date()
         },
-        visitors: {},
-        chat: {},
-        features: {},
-        performance: {},
+        visitors: {
+          total: 0,
+          unique: 0,
+          returning: 0,
+          devices: { mobile: 0, tablet: 0, desktop: 0 },
+          locations: [],
+          browsers: {},
+          sources: { direct: 0, search: 0, social: 0, referral: 0, qr: 0 }
+        },
+        chat: {
+          totalSessions: 0,
+          totalMessages: 0,
+          averageMessagesPerSession: 0,
+          averageSessionDuration: 0,
+          topics: []
+        },
+        features: {
+          contactForm: { views: 0, submissions: 0, conversionRate: 0 },
+          cvDownloads: { total: 0, unique: 0, formats: {} },
+          socialLinks: { linkedin: 0, github: 0, twitter: 0 },
+          portfolio: { views: 0, itemViews: {} }
+        },
+        performance: {
+          pageLoadTime: 0,
+          chatResponseTime: 0,
+          apiResponseTimes: { total: 0, byEndpoint: {} as any },
+          errorRates: { total: 0, byEndpoint: {} },
+          uptime: 100
+        },
         qrCodes: {
           totalScans: 0,
           uniqueScans: 0,
@@ -1263,17 +1385,9 @@ Return as JSON with theme, config, and content customizations.`;
       },
       privacy: {
         level: PrivacyLevel.PUBLIC,
-        masking: {
-          maskContactInfo: false,
-          maskCompanies: [],
-          maskDates: false,
-          customRules: []
-        },
-        access: {},
-        retention: {},
-        gdpr: {},
-        analyticsConsent: true,
-        chatDataRetention: {}
+        passwordProtected: false,
+        analyticsEnabled: true,
+        cookieConsent: false
       },
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -1312,20 +1426,32 @@ Return as JSON with theme, config, and content customizations.`;
         colors: {
           primary: '#1e40af',
           secondary: '#64748b',
-          background: '#ffffff',
-          text: { primary: '#1f2937', secondary: '#6b7280', muted: '#9ca3af' },
-          border: { primary: '#e5e7eb', secondary: '#f3f4f6' },
+          background: { primary: '#ffffff', secondary: '#f8fafc', accent: '#f1f5f9' },
+          text: { primary: '#1f2937', secondary: '#6b7280', muted: '#9ca3af', accent: '#1e40af' },
+          border: { primary: '#e5e7eb', secondary: '#f3f4f6', light: '#f8fafc', accent: '#e0e7ff' },
           status: { success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#3b82f6' }
         },
         typography: {
-          fontFamilies: { heading: 'Inter, sans-serif', body: 'Inter, sans-serif', code: 'JetBrains Mono, monospace' },
+          fontFamilies: { heading: 'Inter, sans-serif', body: 'Inter, sans-serif', mono: 'JetBrains Mono, monospace' },
           fontSizes: { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' },
           lineHeights: { tight: 1.25, normal: 1.5, relaxed: 1.75 },
-          fontWeights: { normal: 400, medium: 500, semibold: 600, bold: 700 }
+          fontWeights: { light: 300, normal: 400, medium: 500, semibold: 600, bold: 700 }
         },
-        layout: {},
-        animations: {},
-        breakpoints: {}
+        spacing: {
+          baseUnit: 1,
+          sectionPadding: 2,
+          elementMargin: 1
+        },
+        borderRadius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '1rem'
+        },
+        shadows: {
+          sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          lg: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }
       },
       creative: {
         id: 'creative-theme',
@@ -1333,21 +1459,33 @@ Return as JSON with theme, config, and content customizations.`;
         colors: {
           primary: '#8b5cf6',
           secondary: '#06b6d4',
-          background: '#ffffff',
-          text: { primary: '#1f2937', secondary: '#6b7280', muted: '#9ca3af' },
-          border: { primary: '#e5e7eb', secondary: '#f3f4f6' },
+          background: { primary: '#ffffff', secondary: '#f8fafc', accent: '#f1f5f9' },
+          text: { primary: '#1f2937', secondary: '#6b7280', muted: '#9ca3af', accent: '#8b5cf6' },
+          border: { primary: '#e5e7eb', secondary: '#f3f4f6', light: '#f8fafc', accent: '#e0e7ff' },
           status: { success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#3b82f6' },
           gradients: { primary: 'linear-gradient(45deg, #8b5cf6, #06b6d4)', secondary: 'linear-gradient(135deg, #667eea, #764ba2)', hero: 'linear-gradient(135deg, #667eea, #764ba2)' }
         },
         typography: {
-          fontFamilies: { heading: 'Poppins, sans-serif', body: 'Inter, sans-serif', code: 'JetBrains Mono, monospace' },
+          fontFamilies: { heading: 'Poppins, sans-serif', body: 'Inter, sans-serif', mono: 'JetBrains Mono, monospace' },
           fontSizes: { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' },
           lineHeights: { tight: 1.25, normal: 1.5, relaxed: 1.75 },
-          fontWeights: { normal: 400, medium: 500, semibold: 600, bold: 700 }
+          fontWeights: { light: 300, normal: 400, medium: 500, semibold: 600, bold: 700 }
         },
-        layout: {},
-        animations: {},
-        breakpoints: {}
+        spacing: {
+          baseUnit: 1,
+          sectionPadding: 2,
+          elementMargin: 1
+        },
+        borderRadius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '1rem'
+        },
+        shadows: {
+          sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          lg: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }
       },
       technical: {
         id: 'technical-theme',
@@ -1355,20 +1493,32 @@ Return as JSON with theme, config, and content customizations.`;
         colors: {
           primary: '#0f172a',
           secondary: '#475569',
-          background: '#ffffff',
-          text: { primary: '#1e293b', secondary: '#64748b', muted: '#94a3b8' },
-          border: { primary: '#e2e8f0', secondary: '#f1f5f9' },
+          background: { primary: '#ffffff', secondary: '#f8fafc', accent: '#f1f5f9' },
+          text: { primary: '#1e293b', secondary: '#64748b', muted: '#94a3b8', accent: '#0f172a' },
+          border: { primary: '#e2e8f0', secondary: '#f1f5f9', light: '#f8fafc', accent: '#e0e7ff' },
           status: { success: '#059669', warning: '#d97706', error: '#dc2626', info: '#0284c7' }
         },
         typography: {
-          fontFamilies: { heading: 'JetBrains Mono, monospace', body: 'Inter, sans-serif', code: 'JetBrains Mono, monospace' },
+          fontFamilies: { heading: 'JetBrains Mono, monospace', body: 'Inter, sans-serif', mono: 'JetBrains Mono, monospace' },
           fontSizes: { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' },
           lineHeights: { tight: 1.25, normal: 1.5, relaxed: 1.75 },
-          fontWeights: { normal: 400, medium: 500, semibold: 600, bold: 700 }
+          fontWeights: { light: 300, normal: 400, medium: 500, semibold: 600, bold: 700 }
         },
-        layout: {},
-        animations: {},
-        breakpoints: {}
+        spacing: {
+          baseUnit: 1,
+          sectionPadding: 2,
+          elementMargin: 1
+        },
+        borderRadius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '1rem'
+        },
+        shadows: {
+          sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          lg: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }
       }
     };
     

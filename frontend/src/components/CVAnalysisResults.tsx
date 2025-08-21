@@ -978,13 +978,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               <>
                 <button
                   onClick={() => applyAll(true)}
-                  className="px-6 py-3 text-base font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-500/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
                 >
                   Select All
                 </button>
                 <button
                   onClick={() => applyAll(false)}
-                  className="px-6 py-3 text-base font-semibold bg-gray-600 text-white rounded-lg hover:bg-gray-500 focus:ring-4 focus:ring-gray-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 text-base font-bold bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 focus:ring-4 focus:ring-gray-500/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
                 >
                   Clear All
                 </button>
@@ -1020,44 +1020,50 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             <div key={priority} className="mb-6 last:mb-0">
               {/* Priority Header */}
               <div 
-                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${getPriorityColor(priority)}`}
+                className={`flex items-center justify-between p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${getPriorityColor(priority)} ${
+                  isExpanded ? 'rounded-b-none shadow-lg' : ''
+                }`}
                 onClick={() => togglePrioritySection(priority)}
               >
-                <div className="flex items-center space-x-3">
-                  {getPriorityIcon(priority)}
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 rounded-lg bg-white/10">
+                    {getPriorityIcon(priority)}
+                  </div>
                   <div>
-                    <h3 className="font-semibold capitalize">
+                    <h3 className="font-bold text-lg capitalize">
                       {priority} Priority ({priorityRecs.length})
                     </h3>
-                    <p className="text-sm opacity-75">
+                    <p className="text-sm opacity-80 font-medium">
                       {selectedCount} of {priorityRecs.length} selected
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       applyAllPriority(priority, true);
                     }}
-                    className="px-3 py-1 text-xs bg-gray-600 bg-opacity-50 text-gray-300 rounded hover:bg-opacity-75 transition-colors"
+                    className="px-4 py-2 text-sm font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:ring-2 focus:ring-white/50 focus:outline-none"
                   >
                     Select All
                   </button>
-                  {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <div className="p-2 rounded-lg bg-white/10 transition-transform duration-200">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </div>
                 </div>
               </div>
 
               {/* Priority Recommendations */}
               {isExpanded && (
-                <div className="mt-3 space-y-3">
+                <div className={`border-2 border-t-0 rounded-xl rounded-t-none p-4 space-y-3 bg-gradient-to-b from-white/5 to-transparent ${getPriorityColor(priority).replace('bg-', 'border-')}`}>
                   {priorityRecs.map((rec, index) => (
                     <div
                       key={rec.id}
-                      className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] animate-fade-in-up ${
+                      className={`p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-lg animate-fade-in-up ${
                         rec.selected 
-                          ? 'border-blue-400 bg-blue-900/30 shadow-lg shadow-blue-500/20' 
-                          : 'border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/70'
+                          ? 'border-blue-400 bg-gradient-to-r from-blue-900/40 to-blue-800/30 shadow-lg shadow-blue-500/20' 
+                          : 'border-gray-600 bg-gradient-to-r from-gray-700/50 to-gray-800/30 hover:border-gray-500 hover:from-gray-700/70 hover:to-gray-800/50'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                       onClick={() => toggleRecommendation(rec.id)}

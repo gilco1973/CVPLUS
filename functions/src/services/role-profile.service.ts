@@ -15,6 +15,7 @@ import {
   CVSection
 } from '../types/role-profile.types';
 import * as admin from 'firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { roleProfilesData } from '../data/role-profiles.data';
 
 export class RoleProfileService {
@@ -201,7 +202,7 @@ export class RoleProfileService {
     console.log('[ROLE-PROFILE] Creating new profile:', profileData.name);
     
     try {
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
       const docRef = await this.db.collection('roleProfiles').add({
         ...profileData,
         createdAt: now,
@@ -231,7 +232,7 @@ export class RoleProfileService {
     try {
       const updateData = {
         ...updates,
-        updatedAt: admin.firestore.Timestamp.now()
+        updatedAt: Timestamp.now()
       };
 
       // Remove fields that shouldn't be updated
@@ -262,7 +263,7 @@ export class RoleProfileService {
     try {
       await this.db.collection('roleProfiles').doc(id).update({
         isActive: false,
-        updatedAt: admin.firestore.Timestamp.now()
+        updatedAt: Timestamp.now()
       });
 
       // Remove from cache
@@ -416,8 +417,8 @@ export class RoleProfileService {
         const docRef = this.db.collection('roleProfiles').doc();
         batch.set(docRef, {
           ...profile,
-          createdAt: admin.firestore.Timestamp.now(),
-          updatedAt: admin.firestore.Timestamp.now()
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
         });
       });
 

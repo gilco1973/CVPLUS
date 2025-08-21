@@ -223,4 +223,7 @@ export interface QRCodeStyling {
   
   /** Border/margin in pixels */
   margin: number;
+  
+  /** Border width in pixels */
+  borderWidth?: number;
 }

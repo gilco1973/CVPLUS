@@ -371,9 +371,29 @@ export class PortalAssetManagementService {
     try {
       // Generate theme-specific background images
       if (template.theme.backgroundImages) {
-        for (const bgConfig of template.theme.backgroundImages) {
-          const bgAsset = await this.generateBackgroundImage(bgConfig, portalConfig.jobId);
+        // Hero background
+        if (template.theme.backgroundImages.hero) {
+          const bgAsset = await this.generateBackgroundImage(
+            template.theme.backgroundImages.hero, 
+            portalConfig.jobId
+          );
           templateAssets.push(bgAsset);
+        }
+        
+        // Section backgrounds
+        if (template.theme.backgroundImages.sections) {
+          for (const bgConfig of template.theme.backgroundImages.sections) {
+            const bgAsset = await this.generateBackgroundImage(bgConfig, portalConfig.jobId);
+            templateAssets.push(bgAsset);
+          }
+        }
+        
+        // Pattern overlays
+        if (template.theme.backgroundImages.patterns) {
+          for (const bgConfig of template.theme.backgroundImages.patterns) {
+            const bgAsset = await this.generateBackgroundImage(bgConfig, portalConfig.jobId);
+            templateAssets.push(bgAsset);
+          }
         }
       }
 

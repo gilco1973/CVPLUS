@@ -198,11 +198,11 @@ export class CVAnalyzer {
     } catch (error: unknown) {
       console.warn(`[CVAnalyzer] Callable function failed for job: ${jobId}, trying direct HTTP call:`, error);
       
-      // Fallback to direct HTTP call to V2 function  
+      // Fallback to direct HTTP call  
       const baseUrl = import.meta.env.DEV 
         ? 'http://localhost:5001/getmycv-ai/us-central1'
         : 'https://us-central1-getmycv-ai.cloudfunctions.net';
-      const response = await fetch(`${baseUrl}/getRecommendationsV2`, {
+      const response = await fetch(`${baseUrl}/getRecommendations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

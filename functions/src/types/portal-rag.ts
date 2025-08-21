@@ -330,6 +330,15 @@ export interface EmbeddingMetadata {
   
   /** Source page/document */
   source: string;
+  
+  /** Keywords extracted from content */
+  keywords?: string[];
+  
+  /** Technologies mentioned in content */
+  technologies?: string[];
+  
+  /** Type of content */
+  contentType?: string;
 }
 
 /**
@@ -349,5 +358,6 @@ export enum CVSection {
   LANGUAGES = 'languages',
   REFERENCES = 'references',
   PORTFOLIO = 'portfolio',
+  CUSTOM = 'custom',
   OTHER = 'other'
 }

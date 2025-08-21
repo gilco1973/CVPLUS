@@ -59,6 +59,18 @@ export interface PortalTheme {
     /** Heavy shadow */
     lg: string;
   };
+  
+  /** Background images */
+  backgroundImages?: {
+    /** Hero section background */
+    hero?: string;
+    
+    /** Section backgrounds */
+    sections?: string[];
+    
+    /** Pattern overlays */
+    patterns?: string[];
+  };
 }
 
 /**
@@ -70,6 +82,12 @@ export interface ColorScheme {
   
   /** Secondary accent color */
   secondary: string;
+  
+  /** Secondary text color (legacy alias) */
+  textSecondary?: string;
+  
+  /** Dark background color (legacy alias) */
+  backgroundDark?: string;
   
   /** Background colors */
   background: {
@@ -123,6 +141,18 @@ export interface ColorScheme {
     
     /** Info color */
     info: string;
+  };
+  
+  /** Gradient colors */
+  gradients?: {
+    /** Primary gradient */
+    primary: string;
+    
+    /** Secondary gradient */
+    secondary: string;
+    
+    /** Hero gradient */
+    hero: string;
   };
 }
 
@@ -227,5 +257,11 @@ export enum PortalSection {
   FOOTER = 'footer',
   SIDEBAR = 'sidebar',
   CHAT = 'chat',
-  QR_CODE = 'qr_code'
+  QR_CODE = 'qr_code',
+  ACHIEVEMENTS = 'achievements',
+  CERTIFICATIONS = 'certifications',
+  PORTFOLIO = 'portfolio',
+  TESTIMONIALS = 'testimonials',
+  BLOG = 'blog',
+  PUBLICATIONS = 'publications'
 }

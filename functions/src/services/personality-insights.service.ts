@@ -42,6 +42,22 @@ export class PersonalityInsightsService {
     strategic_thinking: {
       indicators: ['strategized', 'planned', 'forecasted', 'envisioned', 'architected', 'roadmap'],
       weight: 1.2
+    },
+    analytical: {
+      indicators: ['analyzed', 'researched', 'investigated', 'examined', 'evaluated', 'assessed', 'data-driven'],
+      weight: 1.0
+    },
+    creative: {
+      indicators: ['creative', 'artistic', 'designed', 'conceptualized', 'brainstormed', 'imaginative'],
+      weight: 0.9
+    },
+    decisive: {
+      indicators: ['decided', 'determined', 'chose', 'selected', 'committed', 'concluded', 'finalized'],
+      weight: 1.0
+    },
+    empathetic: {
+      indicators: ['supported', 'helped', 'mentored', 'coached', 'listened', 'understood', 'caring'],
+      weight: 0.8
     }
   };
   
@@ -72,7 +88,7 @@ export class PersonalityInsightsService {
     const workStyle = await this.determineWorkStyle(cvContent, traits);
     
     // 4. Assess team compatibility
-    const teamCompatibility = await this.assessTeamCompatibility(traits, workStyle);
+    const teamCompatibilityResult = await this.assessTeamCompatibility(traits, workStyle);
     
     // 5. Calculate leadership potential
     const leadershipPotential = this.calculateLeadershipPotential(traits, cvContent);
@@ -84,17 +100,28 @@ export class PersonalityInsightsService {
     const summary = await this.generatePersonalitySummary(
       traits,
       workStyle,
-      teamCompatibility,
+      teamCompatibilityResult.description,
       cultureFit
     );
     
     return {
+      workingStyle: workStyle.join(', '),
+      strengths: this.extractStrengths(traits),
+      motivations: this.extractMotivations(traits, cvContent),
+      communicationPreferences: this.extractCommunicationPreferences(traits),
+      teamRole: teamCompatibilityResult.description,
+      leadershipStyle: leadershipPotential > 7 ? 'Strategic Leader' : 'Collaborative Supporter',
+      problemSolvingApproach: this.extractProblemSolvingApproach(traits),
+      adaptability: this.extractAdaptabilityDescription(traits),
+      stressManagement: this.extractStressManagement(traits),
+      careerAspirations: this.extractCareerAspirations(cvContent),
+      values: this.extractValues(traits, cvContent),
       traits,
-      workStyle,
-      teamCompatibility,
-      leadershipPotential,
       cultureFit,
       summary,
+      teamCompatibility: teamCompatibilityResult.description,
+      workStyle,
+      leadershipPotential,
       generatedAt: new Date()
     };
   }
@@ -169,7 +196,11 @@ export class PersonalityInsightsService {
       problemSolving: 0,
       attention_to_detail: 0,
       adaptability: 0,
-      strategic_thinking: 0
+      strategic_thinking: 0,
+      analytical: 0,
+      creative: 0,
+      decisive: 0,
+      empathetic: 0
     };
     
     // Combine all text for analysis
@@ -315,7 +346,7 @@ Provide refined scores based on the context. Return only the scores in format: t
   private async assessTeamCompatibility(
     traits: PersonalityProfile['traits'],
     workStyle: string[]
-  ): Promise<string> {
+  ): Promise<{ score: number; description: string }> {
     // Determine primary team role based on traits
     const roles = [];
     
@@ -339,18 +370,32 @@ Provide refined scores based on the context. Return only the scores in format: t
       roles.push('Supporter');
     }
     
+    // Calculate compatibility score (0-10)
+    let compatibilityScore = 0;
+    compatibilityScore += Math.min(10, traits.teamwork * 1.2);
+    compatibilityScore += Math.min(10, traits.communication * 1.1);
+    compatibilityScore += Math.min(10, traits.adaptability * 1.0);
+    compatibilityScore += Math.min(10, traits.empathetic * 0.8);
+    compatibilityScore = Math.min(10, compatibilityScore / 4);
+    
     // Generate compatibility description
+    let description: string;
     if (roles.includes('Leader')) {
-      return 'Natural leader who excels at guiding teams and making strategic decisions';
+      description = 'Natural leader who excels at guiding teams and making strategic decisions';
     } else if (roles.includes('Innovator')) {
-      return 'Creative force who brings fresh ideas and innovative solutions to the team';
+      description = 'Creative force who brings fresh ideas and innovative solutions to the team';
     } else if (roles.includes('Facilitator')) {
-      return 'Bridge-builder who enhances team communication and collaboration';
+      description = 'Bridge-builder who enhances team communication and collaboration';
     } else if (roles.includes('Strategist')) {
-      return 'Strategic thinker who ensures team efforts align with long-term goals';
+      description = 'Strategic thinker who ensures team efforts align with long-term goals';
     } else {
-      return 'Versatile team member who adapts to various roles as needed';
+      description = 'Versatile team member who adapts to various roles as needed';
     }
+    
+    return {
+      score: Number(compatibilityScore.toFixed(1)),
+      description
+    };
   }
   
   /**
@@ -394,8 +439,9 @@ Provide refined scores based on the context. Return only the scores in format: t
     const cultureFit = {
       startup: 0,
       corporate: 0,
-      remote: 0,
-      hybrid: 0
+      consulting: 0,
+      nonprofit: 0,
+      agency: 0
     };
     
     // Startup fit
@@ -414,18 +460,27 @@ Provide refined scores based on the context. Return only the scores in format: t
       traits.leadership * 0.3
     );
     
-    // Remote fit
-    cultureFit.remote = (
-      traits.communication * 0.4 +
-      traits.attention_to_detail * 0.3 +
-      traits.adaptability * 0.3
+    // Consulting fit
+    cultureFit.consulting = (
+      traits.communication * 0.3 +
+      traits.problemSolving * 0.3 +
+      traits.adaptability * 0.2 +
+      traits.strategic_thinking * 0.2
     );
     
-    // Hybrid fit (balanced)
-    cultureFit.hybrid = (
-      traits.adaptability * 0.4 +
-      traits.communication * 0.3 +
-      traits.teamwork * 0.3
+    // Nonprofit fit
+    cultureFit.nonprofit = (
+      (traits.empathetic || 5) * 0.4 +
+      traits.teamwork * 0.3 +
+      traits.communication * 0.3
+    );
+    
+    // Agency fit
+    cultureFit.agency = (
+      (traits.creative || 5) * 0.3 +
+      traits.adaptability * 0.3 +
+      traits.teamwork * 0.2 +
+      traits.communication * 0.2
     );
     
     // Adjust based on experience
@@ -433,8 +488,9 @@ Provide refined scores based on the context. Return only the scores in format: t
     
     if (experienceText.includes('startup')) cultureFit.startup += 1;
     if (experienceText.includes('corporate') || experienceText.includes('enterprise')) cultureFit.corporate += 1;
-    if (experienceText.includes('remote')) cultureFit.remote += 1;
-    if (experienceText.includes('hybrid')) cultureFit.hybrid += 1;
+    if (experienceText.includes('consult')) cultureFit.consulting += 1;
+    if (experienceText.includes('nonprofit') || experienceText.includes('ngo')) cultureFit.nonprofit += 1;
+    if (experienceText.includes('agency') || experienceText.includes('marketing')) cultureFit.agency += 1;
     
     // Normalize all scores to 0-10
     for (const key in cultureFit) {
@@ -565,6 +621,103 @@ Make it positive and professional, focusing on strengths.`;
   }
 
   /**
+   * Extract strengths from traits
+   */
+  private extractStrengths(traits: PersonalityProfile['traits']): string[] {
+    const strengths = [];
+    if (traits.leadership >= 7) strengths.push('Strong leadership capabilities');
+    if (traits.communication >= 7) strengths.push('Excellent communication skills');
+    if (traits.innovation >= 7) strengths.push('Creative and innovative thinking');
+    if (traits.problemSolving >= 7) strengths.push('Strong problem-solving abilities');
+    if (traits.teamwork >= 7) strengths.push('Collaborative team player');
+    if (traits.analytical >= 7) strengths.push('Analytical and data-driven approach');
+    return strengths.slice(0, 5);
+  }
+
+  /**
+   * Extract motivations from traits and content
+   */
+  private extractMotivations(traits: PersonalityProfile['traits'], content: any): string[] {
+    const motivations = [];
+    if (traits.innovation >= 7) motivations.push('Creating innovative solutions');
+    if (traits.leadership >= 7) motivations.push('Leading and mentoring others');
+    if (traits.problemSolving >= 7) motivations.push('Solving complex challenges');
+    if (traits.teamwork >= 7) motivations.push('Collaborating with diverse teams');
+    motivations.push('Professional growth and development');
+    return motivations.slice(0, 4);
+  }
+
+  /**
+   * Extract communication preferences
+   */
+  private extractCommunicationPreferences(traits: PersonalityProfile['traits']): string[] {
+    const preferences = [];
+    if (traits.communication >= 8) preferences.push('Clear and direct communication');
+    if (traits.teamwork >= 7) preferences.push('Collaborative discussions');
+    if (traits.analytical >= 7) preferences.push('Data-driven presentations');
+    if (traits.empathetic >= 6) preferences.push('Active listening and empathy');
+    return preferences.slice(0, 3);
+  }
+
+  /**
+   * Extract problem-solving approach
+   */
+  private extractProblemSolvingApproach(traits: PersonalityProfile['traits']): string {
+    if (traits.analytical >= 8) return 'Systematic and data-driven approach';
+    if (traits.creative >= 8) return 'Creative and innovative problem solving';
+    if (traits.teamwork >= 8) return 'Collaborative problem-solving with teams';
+    return 'Balanced approach combining analysis and creativity';
+  }
+
+  /**
+   * Extract adaptability description
+   */
+  private extractAdaptabilityDescription(traits: PersonalityProfile['traits']): string {
+    if (traits.adaptability >= 8) return 'Highly adaptable to change and new environments';
+    if (traits.adaptability >= 6) return 'Comfortable with change and learning new skills';
+    return 'Adapts well with proper support and preparation';
+  }
+
+  /**
+   * Extract stress management approach
+   */
+  private extractStressManagement(traits: PersonalityProfile['traits']): string {
+    if (traits.strategic_thinking >= 7) return 'Strategic planning and prioritization';
+    if (traits.teamwork >= 7) return 'Collaborative support and team communication';
+    if (traits.analytical >= 7) return 'Systematic analysis and problem-solving';
+    return 'Balanced approach with focus on organization';
+  }
+
+  /**
+   * Extract career aspirations
+   */
+  private extractCareerAspirations(content: any): string[] {
+    const aspirations = ['Professional growth and advancement'];
+    if (content.experiences.some((exp: string) => exp.toLowerCase().includes('lead'))) {
+      aspirations.push('Leadership and management roles');
+    }
+    if (content.experiences.some((exp: string) => exp.toLowerCase().includes('innovat'))) {
+      aspirations.push('Innovation and creative challenges');
+    }
+    aspirations.push('Continuous learning and skill development');
+    return aspirations.slice(0, 3);
+  }
+
+  /**
+   * Extract values from traits and content
+   */
+  private extractValues(traits: PersonalityProfile['traits'], content: any): string[] {
+    const values = [];
+    if (traits.teamwork >= 7) values.push('Collaboration and teamwork');
+    if (traits.innovation >= 7) values.push('Innovation and creativity');
+    if (traits.attention_to_detail >= 7) values.push('Quality and excellence');
+    if (traits.empathetic >= 6) values.push('Empathy and understanding');
+    if (traits.leadership >= 7) values.push('Leadership and mentorship');
+    values.push('Professional integrity');
+    return values.slice(0, 4);
+  }
+
+  /**
    * Generate summary from personality profile
    */
   generateSummary(profile: PersonalityProfile): any {
@@ -574,7 +727,7 @@ Make it positive and professional, focusing on strengths.`;
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([trait]) => trait),
-      workStyle: profile.workStyle,
+      workStyle: profile.workingStyle,
       teamRole: profile.teamCompatibility
     };
   }

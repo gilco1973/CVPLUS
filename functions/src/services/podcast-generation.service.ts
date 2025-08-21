@@ -3,7 +3,7 @@
  * Creates conversational podcasts using AI voices
  */
 
-import { ParsedCV } from '../types/enhanced-models';
+import { ParsedCV, FlexibleSkillsFormat } from '../types/enhanced-models';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 import OpenAI from 'openai';
@@ -265,10 +265,23 @@ export class PodcastGenerationService {
   /**
    * Get technical skills from skills union type
    */
-  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getTechnicalSkills(skills: FlexibleSkillsFormat): string[] {
     if (!skills) return [];
     if (Array.isArray(skills)) return skills;
-    return skills.technical || [];
+    
+    // Combine all technical-related skills from the object
+    const technicalSkills: string[] = [];
+    
+    if (skills.technical) technicalSkills.push(...skills.technical);
+    if (skills.frontend) technicalSkills.push(...skills.frontend);
+    if (skills.backend) technicalSkills.push(...skills.backend);
+    if (skills.databases) technicalSkills.push(...skills.databases);
+    if (skills.cloud) technicalSkills.push(...skills.cloud);
+    if (skills.tools) technicalSkills.push(...skills.tools);
+    if (skills.frameworks) technicalSkills.push(...skills.frameworks);
+    if (skills.expertise) technicalSkills.push(...skills.expertise);
+    
+    return technicalSkills;
   }
   
   /**

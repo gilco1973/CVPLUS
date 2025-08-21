@@ -9,6 +9,13 @@ import { config } from '../config/environment';
 export class SkillsVisualizationService {
   private openai: OpenAI | null = null;
   
+  // Color palette for skill categories
+  private readonly categoryColors = [
+    '#4A90E2', '#50C878', '#FF6B6B', '#FFA500', 
+    '#9B59B6', '#1ABC9C', '#E74C3C', '#34495E',
+    '#2ECC71', '#3498DB', '#F39C12', '#8E44AD'
+  ];
+  
   // Common skill categories
   private readonly skillCategories = {
     technical: {
@@ -107,7 +114,8 @@ export class SkillsVisualizationService {
       if (categorySkills.length > 0) {
         categories.push({
           name: this.formatCategoryName(categoryName),
-          skills: categorySkills.sort((a, b) => b.level - a.level)
+          skills: categorySkills.sort((a, b) => b.level - a.level),
+          color: this.categoryColors[categories.length % this.categoryColors.length]
         });
       }
     }
@@ -128,7 +136,8 @@ export class SkillsVisualizationService {
           name: skill,
           level: this.assessSkillLevel(skill, cv),
           yearsOfExperience: this.estimateYearsOfExperience(skill, cv)
-        }))
+        })),
+        color: this.categoryColors[categories.length % this.categoryColors.length]
       });
     }
     
@@ -174,7 +183,8 @@ export class SkillsVisualizationService {
       if (categorySkills.length > 0) {
         categories.push({
           name: this.formatCategoryName(categoryName),
-          skills: categorySkills.sort((a, b) => b.level - a.level)
+          skills: categorySkills.sort((a, b) => b.level - a.level),
+          color: this.categoryColors[categories.length % this.categoryColors.length]
         });
       }
     }
@@ -234,12 +244,17 @@ export class SkillsVisualizationService {
     if (cv.certifications) {
       cv.certifications.forEach(cert => {
         const processed: Certification = {
+          id: `cert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: cert.name,
           issuer: cert.issuer,
+          issueDate: new Date(cert.date),
           date: new Date(cert.date),
           credentialId: cert.credentialId,
           verificationUrl: this.generateVerificationUrl(cert),
-          badge: this.generateBadgeUrl(cert)
+          badgeUrl: this.generateBadgeUrl(cert),
+          badge: this.generateBadgeUrl(cert),
+          isVerified: false,
+          category: this.categorizeCertification(cert.name)
         };
         
         // Estimate expiry date for common certifications
@@ -551,6 +566,23 @@ Technical skills only (languages, frameworks, tools, platforms):`;
     return undefined;
   }
   
+  /**
+   * Categorize certification
+   */
+  private categorizeCertification(certName: string): string {
+    const certLower = certName.toLowerCase();
+    
+    if (certLower.includes('aws') || certLower.includes('azure') || certLower.includes('gcp')) return 'Cloud';
+    if (certLower.includes('microsoft') || certLower.includes('office')) return 'Microsoft';
+    if (certLower.includes('cisco') || certLower.includes('network')) return 'Networking';
+    if (certLower.includes('comptia') || certLower.includes('security')) return 'Security';
+    if (certLower.includes('pmp') || certLower.includes('project')) return 'Project Management';
+    if (certLower.includes('scrum') || certLower.includes('agile')) return 'Agile/Scrum';
+    if (certLower.includes('google') || certLower.includes('analytics')) return 'Google';
+    
+    return 'Other';
+  }
+
   /**
    * Get expiry months for common certifications
    */
