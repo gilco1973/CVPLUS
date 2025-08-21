@@ -728,6 +728,34 @@ export class TimelineGenerationService {
   }
   
   /**
+   * Recursively clean an object by removing undefined values
+   */
+  private removeUndefinedValues(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeUndefinedValues(item)).filter(item => item !== undefined && item !== null);
+    }
+    
+    if (typeof obj === 'object') {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value !== undefined && value !== null) {
+          const cleanedValue = this.removeUndefinedValues(value);
+          if (cleanedValue !== undefined && cleanedValue !== null) {
+            cleaned[key] = cleanedValue;
+          }
+        }
+      }
+      return cleaned;
+    }
+    
+    return obj;
+  }
+
+  /**
    * Clean timeline data by removing undefined values for Firestore storage
    */
   private cleanTimelineData(timelineData: TimelineData): any {
@@ -753,11 +781,14 @@ export class TimelineGenerationService {
       return cleanEvent;
     });
     
-    return {
+    const result = {
       events: cleanEvents,
       summary: timelineData.summary,
       insights: timelineData.insights
     };
+    
+    // Apply deep cleaning to ensure no undefined values remain
+    return this.removeUndefinedValues(result);
   }
 
   /**

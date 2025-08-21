@@ -15,15 +15,14 @@ import { VerifiedClaudeService } from './verified-claude.service';
 import { 
   PortalTemplate, 
   PortalTheme, 
-  ColorScheme, 
-  TypographyConfig,
   PortalTemplateCategory,
-  MobileOptimizationLevel,
   PortalSection,
-  FeatureToggles,
-  HuggingFaceSDK
 } from '../types/portal';
 import { ParsedCV } from '../types/job';
+import {
+  ColorScheme, 
+  TypographyConfig
+} from '../types/portal-theme';
 
 // ============================================================================
 // INTERFACE DEFINITIONS
@@ -392,10 +391,10 @@ export interface SEOConfig {
  */
 export interface PlatformOptimization {
   /** Target deployment platforms */
-  platforms: HuggingFaceSDK[];
+  platforms: string[];
   
   /** Platform-specific optimizations */
-  optimizations: Record<HuggingFaceSDK, PlatformSpecificConfig>;
+  optimizations: Record<string, PlatformSpecificConfig>;
   
   /** Cross-platform compatibility */
   compatibility: CompatibilityConfig;
@@ -860,7 +859,7 @@ export class TemplateCustomizationService {
             validation: 'both'
           },
           portfolio: {
-            enabled: sections.includes(PortalSection.PORTFOLIO),
+            enabled: sections.includes(PortalSection.PROJECTS),
             layout: 'grid',
             filtering: true
           },
@@ -906,7 +905,7 @@ export class TemplateCustomizationService {
    */
   async optimizeForDeployment(
     template: PortalTemplate, 
-    platform: HuggingFaceSDK
+    platform: string
   ): Promise<PortalTemplate> {
     logger.info('[TEMPLATE-CUSTOMIZATION] Optimizing for deployment platform', {
       platform,
@@ -1205,13 +1204,13 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     const industry = this.detectIndustryFromSkills(cvData);
     const level = this.assessProfessionalLevel(cvData);
     
-    if (industry === 'technology') return PortalTemplateCategory.TECHNICAL_EXPERT;
-    if (industry === 'creative') return PortalTemplateCategory.CREATIVE_PORTFOLIO;
-    if (level === ProfessionalLevel.EXECUTIVE) return PortalTemplateCategory.EXECUTIVE_LEADERSHIP;
-    if (industry === 'education') return PortalTemplateCategory.ACADEMIC_RESEARCH;
-    if (industry === 'consulting') return PortalTemplateCategory.CONSULTANT;
+    if (industry === 'technology') return PortalTemplateCategory.TECHNICAL;
+    if (industry === 'creative') return PortalTemplateCategory.CREATIVE;
+    if (level === ProfessionalLevel.EXECUTIVE) return PortalTemplateCategory.BUSINESS;
+    if (industry === 'education') return PortalTemplateCategory.ACADEMIC;
+    if (industry === 'consulting') return PortalTemplateCategory.PROFESSIONAL;
     
-    return PortalTemplateCategory.CORPORATE_PROFESSIONAL;
+    return PortalTemplateCategory.PROFESSIONAL;
   }
 
   private enhanceWithRuleBasedAnalysis(
@@ -1239,69 +1238,69 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
 
   private getBaseTemplate(category: PortalTemplateCategory): PortalTemplate {
     const templates = {
-      [PortalTemplateCategory.CORPORATE_PROFESSIONAL]: {
+      [PortalTemplateCategory.PROFESSIONAL]: {
         id: 'corporate-professional',
         name: 'Corporate Professional',
         description: 'Clean, conservative design perfect for business professionals',
-        category: PortalTemplateCategory.CORPORATE_PROFESSIONAL,
+        category: PortalTemplateCategory.PROFESSIONAL,
         version: '1.0',
         isPremium: false,
         theme: this.createBaseTheme('corporate'),
         config: this.createBaseTemplateConfig(),
         requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EXPERIENCE, PortalSection.SKILLS, PortalSection.CONTACT],
-        optionalSections: [PortalSection.EDUCATION, PortalSection.ACHIEVEMENTS, PortalSection.CERTIFICATIONS]
+        optionalSections: [PortalSection.EDUCATION, PortalSection.PROJECTS, PortalSection.CHAT]
       },
-      [PortalTemplateCategory.CREATIVE_PORTFOLIO]: {
+      [PortalTemplateCategory.CREATIVE]: {
         id: 'creative-portfolio',
         name: 'Creative Portfolio',
         description: 'Visual-focused design for creative professionals and artists',
-        category: PortalTemplateCategory.CREATIVE_PORTFOLIO,
+        category: PortalTemplateCategory.CREATIVE,
         version: '1.0',
         isPremium: false,
         theme: this.createBaseTheme('creative'),
         config: this.createBaseTemplateConfig(),
-        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.PORTFOLIO, PortalSection.SKILLS, PortalSection.CONTACT],
-        optionalSections: [PortalSection.EXPERIENCE, PortalSection.TESTIMONIALS, PortalSection.BLOG]
+        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.PROJECTS, PortalSection.SKILLS, PortalSection.CONTACT],
+        optionalSections: [PortalSection.EXPERIENCE, PortalSection.EDUCATION, PortalSection.CHAT]
       },
-      [PortalTemplateCategory.TECHNICAL_EXPERT]: {
+      [PortalTemplateCategory.TECHNICAL]: {
         id: 'technical-expert',
         name: 'Technical Expert',
         description: 'Developer-focused design with technical project showcases',
-        category: PortalTemplateCategory.TECHNICAL_EXPERT,
+        category: PortalTemplateCategory.TECHNICAL,
         version: '1.0',
         isPremium: false,
         theme: this.createBaseTheme('technical'),
         config: this.createBaseTemplateConfig(),
         requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EXPERIENCE, PortalSection.SKILLS, PortalSection.PROJECTS, PortalSection.CONTACT],
-        optionalSections: [PortalSection.EDUCATION, PortalSection.CERTIFICATIONS, PortalSection.PUBLICATIONS]
+        optionalSections: [PortalSection.EDUCATION, PortalSection.CHAT, PortalSection.SIDEBAR]
       },
-      [PortalTemplateCategory.EXECUTIVE_LEADERSHIP]: {
+      [PortalTemplateCategory.BUSINESS]: {
         id: 'executive-leadership',
         name: 'Executive Leadership',
         description: 'High-level, authoritative design for senior executives',
-        category: PortalTemplateCategory.EXECUTIVE_LEADERSHIP,
+        category: PortalTemplateCategory.BUSINESS,
         version: '1.0',
         isPremium: true,
         theme: this.createBaseTheme('executive'),
         config: this.createBaseTemplateConfig(),
-        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EXPERIENCE, PortalSection.ACHIEVEMENTS, PortalSection.CONTACT],
-        optionalSections: [PortalSection.SPEAKING, PortalSection.AWARDS, PortalSection.TESTIMONIALS]
+        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EXPERIENCE, PortalSection.PROJECTS, PortalSection.CONTACT],
+        optionalSections: [PortalSection.SKILLS, PortalSection.EDUCATION, PortalSection.CHAT]
       },
-      [PortalTemplateCategory.ACADEMIC_RESEARCH]: {
+      [PortalTemplateCategory.ACADEMIC]: {
         id: 'academic-research',
         name: 'Academic Research',
         description: 'Research-focused design for academics and researchers',
-        category: PortalTemplateCategory.ACADEMIC_RESEARCH,
+        category: PortalTemplateCategory.ACADEMIC,
         version: '1.0',
         isPremium: false,
         theme: this.createBaseTheme('academic'),
         config: this.createBaseTemplateConfig(),
-        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EDUCATION, PortalSection.PUBLICATIONS, PortalSection.CONTACT],
-        optionalSections: [PortalSection.EXPERIENCE, PortalSection.AWARDS, PortalSection.SPEAKING]
+        requiredSections: [PortalSection.HERO, PortalSection.ABOUT, PortalSection.EDUCATION, PortalSection.PROJECTS, PortalSection.CONTACT],
+        optionalSections: [PortalSection.EXPERIENCE, PortalSection.SKILLS, PortalSection.CHAT]
       }
     };
     
-    return templates[category] || templates[PortalTemplateCategory.CORPORATE_PROFESSIONAL];
+    return templates[category] || templates[PortalTemplateCategory.PROFESSIONAL];
   }
 
   private createBaseTheme(type: string): PortalTheme {
@@ -1368,7 +1367,7 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     return {
       supportedLanguages: ['en'],
       defaultLanguage: 'en',
-      mobileOptimization: MobileOptimizationLevel.ENHANCED,
+      mobileOptimization: 'enhanced' as const,
       seo: {
         metaTags: {},
         openGraph: {},
@@ -1658,12 +1657,12 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     // Customize order based on content analysis
     const optimizedOrder = [...baseOrder];
     
-    if (contentAnalysis.hasPortfolio && !optimizedOrder.includes(PortalSection.PORTFOLIO)) {
-      optimizedOrder.splice(3, 0, PortalSection.PORTFOLIO); // Add after ABOUT
+    if (contentAnalysis.hasPortfolio && !optimizedOrder.includes(PortalSection.PROJECTS)) {
+      optimizedOrder.splice(3, 0, PortalSection.PROJECTS); // Add after ABOUT
     }
     
-    if (contentAnalysis.hasTestimonials && !optimizedOrder.includes(PortalSection.TESTIMONIALS)) {
-      optimizedOrder.push(PortalSection.TESTIMONIALS);
+    if (contentAnalysis.hasTestimonials && !optimizedOrder.includes(PortalSection.CHAT)) {
+      optimizedOrder.push(PortalSection.CHAT);
     }
     
     // Add chat section if not present
@@ -2056,7 +2055,7 @@ select:focus {
       [PortalSection.ABOUT]: 'default' as const,
       [PortalSection.EXPERIENCE]: 'default' as const,
       [PortalSection.SKILLS]: 'compact' as const,
-      [PortalSection.PORTFOLIO]: 'expanded' as const,
+      [PortalSection.PROJECTS]: 'expanded' as const,
       [PortalSection.CONTACT]: 'compact' as const,
       [PortalSection.CHAT]: 'sidebar' as const
     };
@@ -2070,7 +2069,7 @@ select:focus {
       [PortalSection.ABOUT]: 'slide' as const,
       [PortalSection.EXPERIENCE]: 'fade' as const,
       [PortalSection.SKILLS]: 'scale' as const,
-      [PortalSection.PORTFOLIO]: 'slide' as const,
+      [PortalSection.PROJECTS]: 'slide' as const,
       [PortalSection.CONTACT]: 'fade' as const,
       [PortalSection.CHAT]: 'slide' as const
     };
@@ -2090,7 +2089,7 @@ select:focus {
         showProgress: true,
         groupByCategory: true
       },
-      [PortalSection.PORTFOLIO]: {
+      [PortalSection.PROJECTS]: {
         layoutType: 'masonry',
         enableLightbox: true,
         showCategories: true
@@ -2098,11 +2097,11 @@ select:focus {
     }[section] || {};
   }
 
-  private getPlatformOptimization(platform: HuggingFaceSDK): PlatformOptimization {
+  private getPlatformOptimization(platform: string): PlatformOptimization {
     const baseOptimization: PlatformOptimization = {
       platforms: [platform],
       optimizations: {
-        [HuggingFaceSDK.GRADIO]: {
+        ['gradio']: {
           framework: {
             interfaceType: 'blocks',
             theme: 'default',
@@ -2126,7 +2125,7 @@ select:focus {
             httpsOnly: true
           }
         },
-        [HuggingFaceSDK.STREAMLIT]: {
+        ['streamlit']: {
           framework: {
             layout: 'wide',
             sidebar: true,
@@ -2150,7 +2149,7 @@ select:focus {
             httpsOnly: true
           }
         },
-        [HuggingFaceSDK.DOCKER]: {
+        ['docker']: {
           framework: {
             containerized: true,
             port: 7860,
@@ -2174,7 +2173,7 @@ select:focus {
             httpsOnly: true
           }
         },
-        [HuggingFaceSDK.STATIC]: {
+        ['static']: {
           framework: {
             staticGeneration: true,
             prerender: true,

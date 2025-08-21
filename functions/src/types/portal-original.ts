@@ -11,11 +11,10 @@
 import { ParsedCV } from './job';
 import type { FieldValue } from 'firebase-admin/firestore';
 
-// Import modular types
-import { PortalTheme, ColorScheme, TypographyConfig, PortalSection, THEME_PRESETS } from './portal-theme';
-import { RAGConfig } from './portal-rag';
+// Import modular types (avoiding conflicts with local definitions)
+import { THEME_PRESETS, PortalTheme } from './portal-theme';
 import { HuggingFaceSpaceConfig } from './portal-huggingface';
-import { PortalUrls, PortalAnalytics, PortalMetrics, QRCodeAnalytics } from './portal-analytics';
+import { PortalUrls } from './portal-analytics';
 
 /**
  * Main configuration interface for portal generation
@@ -157,35 +156,7 @@ export interface RAGConfig {
   responseGeneration: any; // ResponseGenerationConfig - simplified for now
 }
 
-/**
- * HuggingFace Spaces deployment configuration
- * Contains all settings for deploying to HuggingFace Spaces
- */
-export interface HuggingFaceSpaceConfig {
-  /** Generated space name */
-  spaceName: string;
-  
-  /** Space visibility setting */
-  visibility: HuggingFaceVisibility;
-  
-  /** SDK type for the space */
-  sdk: HuggingFaceSDK;
-  
-  /** Hardware configuration */
-  hardware: HuggingFaceHardware;
-  
-  /** Space template to use */
-  template: string;
-  
-  /** Repository configuration */
-  repository: RepositoryConfig;
-  
-  /** Environment variables */
-  environmentVariables: Record<string, string>;
-  
-  /** Deployment metadata */
-  deployment: any; // DeploymentMetadata - simplified for now
-}
+// HuggingFaceSpaceConfig is imported from './portal-huggingface'
 
 // ============================================================================
 // PORTAL STATUS AND RESULT TYPES
@@ -289,36 +260,7 @@ export enum PortalTemplateCategory {
 /**
  * Design theme configuration
  */
-export interface PortalTheme {
-  /** Theme identifier */
-  id: string;
-  
-  /** Theme name */
-  name: string;
-  
-  /** Color scheme */
-  colors: ColorScheme;
-  
-  /** Typography settings */
-  typography: TypographyConfig;
-  
-  /** Layout settings */
-  layout: any; // LayoutConfig - simplified for now
-  
-  /** Animation preferences */
-  animations: any; // AnimationConfig - simplified for now
-  
-  /** Responsive breakpoints */
-  breakpoints: any; // BreakpointConfig - simplified for now
-  
-  /** Background images configuration */
-  backgroundImages?: Array<{
-    url: string;
-    type: 'hero' | 'section' | 'pattern';
-    opacity?: number;
-    position?: string;
-  }>;
-}
+// PortalTheme is imported from './portal-theme'
 
 /**
  * Color scheme configuration
@@ -647,36 +589,7 @@ export interface LLMParameters {
 /**
  * Portal URLs structure
  */
-export interface PortalUrls {
-  /** Main portal URL */
-  portal: string;
-  
-  /** Direct chat URL */
-  chat: string;
-  
-  /** Contact form URL */
-  contact: string;
-  
-  /** CV download URL */
-  download: string;
-  
-  /** Multi-purpose QR menu URL */
-  qrMenu: string;
-  
-  /** API endpoints */
-  api: {
-    chat: string;
-    contact: string;
-    analytics: string;
-  };
-  
-  /** Admin/management URLs */
-  admin?: {
-    dashboard: string;
-    analytics: string;
-    settings: string;
-  };
-}
+// PortalUrls is imported from './portal-analytics'
 
 /**
  * HuggingFace visibility options

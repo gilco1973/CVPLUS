@@ -204,9 +204,9 @@ Return a JSON object with the following structure:
       "institution": "University/School name",
       "degree": "Degree type",
       "field": "Field of study",
-      "startDate": "YYYY-MM-DD format start date",
-      "endDate": "YYYY-MM-DD format graduation/end date",
-      "graduationDate": "Graduation date",
+      "startDate": "YYYY-MM-DD format start date (extract from dates like '2018-2022', 'Sep 2018 - May 2022', '2018' etc.)",
+      "endDate": "YYYY-MM-DD format graduation/end date (extract from dates like '2018-2022', 'Sep 2018 - May 2022', '2022' etc.)",
+      "graduationDate": "Graduation date if specifically mentioned",
       "gpa": "GPA (optional)"
     }
   ],

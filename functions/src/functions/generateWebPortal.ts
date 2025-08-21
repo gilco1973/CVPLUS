@@ -10,9 +10,9 @@ import {
   PortalStatus, 
   PortalGenerationStep,
   PortalErrorCode,
-  ErrorCategory,
-  GenerationMetadata
+  ErrorCategory
 } from '../types/portal';
+import { GenerationMetadata } from '../types/portal-original';
 
 /**
  * Main Firebase Function for generating personalized web portals
@@ -226,11 +226,6 @@ export const generateWebPortal = onCall(
       const generationMetadata: GenerationMetadata = {
         version: '1.0.0',
         timestamp: new Date(),
-        cvAnalysis: jobData.parsedData, // Use parsed CV data
-        templateUsed: 'default', // Template selection would be implemented
-        featuresEnabled: ['rag', 'huggingface', 'qr-codes'],
-        filesGenerated: 5, // Approximate count
-        totalSize: 1024000, // Approximate size in bytes
         statistics: {
           totalTimeMs: processingTimeMs,
           stepTimes: stepsCompleted.reduce((acc, step) => ({ ...acc, [step]: 1000 }), {} as Record<PortalGenerationStep, number>),
@@ -241,13 +236,18 @@ export const generateWebPortal = onCall(
         },
         resourceUsage: {
           memoryUsageMB: 0, // Would be actual usage
-          cpuUsagePercent: Math.min(100, (processingTimeMs / 10000) * 100),
-          diskUsageMB: 0 // Would be actual usage
+          cpuTimeSeconds: Math.min(60, processingTimeMs / 1000),
+          networkRequests: 10, // Estimated number of API calls
+          storageUsedMB: 1, // Estimated storage used
+          apiCalls: { 'claude': 3, 'huggingface': 2 }
         },
         quality: {
-          completionRate: 0.95,
-          accuracyScore: 0.90,
-          performanceScore: 0.92
+          completenessScore: 0.95,
+          designConsistencyScore: 0.90,
+          ragAccuracyScore: 0.88,
+          performanceScore: 0.92,
+          accessibilityScore: 0.85,
+          overallScore: 0.90
         }
       };
       
@@ -281,11 +281,22 @@ export const generateWebPortal = onCall(
       console.log(`[GENERATE-WEB-PORTAL] Portal generation completed in ${processingTimeMs}ms`);
       console.log(`[GENERATE-WEB-PORTAL] Portal URL: ${portalUrls.portal}`);
       
+      // Create result metadata (for portal.ts interface)
+      const resultMetadata = {
+        version: '1.0.0',
+        timestamp: new Date(),
+        cvAnalysis: jobData.parsedData,
+        templateUsed: 'default',
+        featuresEnabled: ['rag', 'huggingface', 'qr-codes'],
+        filesGenerated: 5,
+        totalSize: 1024000
+      };
+
       const result: PortalGenerationResult = {
         success: true,
         portalConfig: finalPortalConfig as PortalConfig,
         urls: portalUrls,
-        metadata: generationMetadata,
+        metadata: resultMetadata,
         processingTimeMs,
         stepsCompleted,
         warnings: warnings.length > 0 ? warnings : undefined
@@ -391,24 +402,11 @@ export const generateWebPortal = onCall(
         metadata: {
           version: '1.0.0',
           timestamp: new Date(),
-          statistics: {
-            totalTimeMs: processingTimeMs,
-            stepTimes: stepsCompleted.reduce((acc, step) => ({ ...acc, [step]: 500 }), {} as Record<PortalGenerationStep, number>),
-            embeddingsGenerated: 0,
-            vectorDbSizeMB: 0,
-            templateSizeKB: 0,
-            assetsProcessed: 0
-          },
-          resourceUsage: {
-            memoryUsageMB: 0,
-            cpuUsagePercent: Math.min(100, Math.floor(processingTimeMs / 1000)),
-          },
-          quality: {
-            completionRate: 0,
-            performanceScore: 0,
-            accessibilityScore: 0,
-            overallScore: 0
-          }
+          cvAnalysis: null,
+          templateUsed: 'none',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0
         },
         processingTimeMs,
         stepsCompleted

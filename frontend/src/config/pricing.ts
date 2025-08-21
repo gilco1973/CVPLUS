@@ -291,7 +291,7 @@ const getCurrentEnvironment = (): Environment => {
 const STRIPE_PRICE_IDS: StripePriceConfig = {
   development: import.meta.env.VITE_STRIPE_PRICE_ID_DEV || 'price_dev_placeholder',
   staging: import.meta.env.VITE_STRIPE_PRICE_ID_STAGING || 'price_staging_placeholder',
-  production: import.meta.env.VITE_STRIPE_PRICE_ID_PROD || 'price_1RucLUHjEeKlGm_prod_example'
+  production: import.meta.env.VITE_STRIPE_PRICE_ID_PROD || 'price_14AfZ9bna72qfXvfxX4F200'
 };
 
 // =============================================================================
@@ -370,8 +370,8 @@ export const PRICING_CONFIG: PricingConfig = {
       subtitle: 'Lifetime Access',
       description: 'Unlock all premium features with lifetime access - one-time payment',
       price: {
-        cents: 500, // $5.00 in cents
-        dollars: 5,
+        cents: 4900, // $49.00 in cents
+        dollars: 49,
         currency: 'USD',
         stripeConfig: STRIPE_PRICE_IDS
       },

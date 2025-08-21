@@ -58,33 +58,29 @@ export class ATSScoringService {
         skills: 80,
         achievements: 80
       },
-      confidence,
-      atsSystemScores: {
-        workday: systemSimulations.find(s => s.systemName === 'workday')?.passRate || 0,
-        greenhouse: systemSimulations.find(s => s.systemName === 'greenhouse')?.passRate || 0,
-        lever: systemSimulations.find(s => s.systemName === 'lever')?.passRate || 0,
-        bamboohr: systemSimulations.find(s => s.systemName === 'bamboohr')?.passRate || 0,
-        taleo: systemSimulations.find(s => s.systemName === 'taleo')?.passRate || 0,
-        generic: systemSimulations.find(s => s.systemName === 'generic')?.passRate || overall
-      },
       recommendations: [], // Will be populated by RecommendationService
-      competitorBenchmark: competitorBenchmark || {
-        benchmarkScore: overall,
-        industryAverage: overall * 0.8,
-        topPercentile: overall * 1.2,
-        averageScore: overall * 0.8,
-        gapAnalysis: {
-          missingKeywords: [],
-          weakAreas: [],
-          strengthAreas: []
-        }
+      competitorAnalysis: competitorBenchmark || {
+        similarProfiles: 0,
+        keywordGaps: [],
+        strengthsVsCompetitors: [],
+        improvementOpportunities: [],
+        marketPositioning: 'Standard',
+        competitiveAdvantage: [],
+        benchmarkScore: overall
       },
-      systemSpecificScores: systemSimulations.map((sim: any) => ({
-        systemName: sim.systemName || 'Unknown',
-        score: sim.passRate || 0,
-        strengths: [],
-        weaknesses: sim.issues?.map(issue => issue.description) || []
-      }))
+      semanticKeywords: {
+        primaryKeywords: [],
+        secondaryKeywords: [],
+        missingKeywords: [],
+        keywordDensity: {},
+        synonyms: {},
+        contextualRelevance: {},
+        industryTerms: [],
+        trendingKeywords: []
+      },
+      industryBenchmark: overall * 0.9,
+      estimatedPassRate: overall / 100,
+      simulationResults: systemSimulations || []
     };
   }
 

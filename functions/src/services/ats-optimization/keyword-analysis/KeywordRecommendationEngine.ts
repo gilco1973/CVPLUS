@@ -100,7 +100,7 @@ export class KeywordRecommendationEngine {
       suggestions.push(`Consider adding "${keyword}" to your skills or achievements section`);
     }
 
-    const highRelevanceKeywords = matchedKeywords.filter(kw => kw.relevanceScore > 0.8);
+    const highRelevanceKeywords = matchedKeywords.filter(kw => kw.importance > 0.8);
     if (highRelevanceKeywords.length > 0) {
       suggestions.push('Emphasize high-relevance keywords in section headers when appropriate');
     }
@@ -178,7 +178,7 @@ export class KeywordRecommendationEngine {
     
     // Assess keyword relevance
     const avgRelevance = matchedKeywords.length > 0 ? 
-      matchedKeywords.reduce((sum, kw) => sum + kw.relevanceScore, 0) / matchedKeywords.length : 0;
+      matchedKeywords.reduce((sum, kw) => sum + kw.importance, 0) / matchedKeywords.length : 0;
     
     if (avgRelevance > 0.7) {
       score += 15;

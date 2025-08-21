@@ -82,10 +82,6 @@ export const initializeRAG = onCall(
           allowedTopics: ['experience', 'skills', 'education', 'projects', 'achievements'],
           enablePersonalization: true
         },
-        statistics: {
-          totalQueries: 0,
-          averageResponseTime: 0
-        }
       };
 
       // Store RAG profile

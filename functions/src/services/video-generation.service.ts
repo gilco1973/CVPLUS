@@ -8,6 +8,11 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import OpenAI from 'openai';
 import { config } from '../config/environment';
+import { 
+  advancedPromptEngine, 
+  PromptEngineOptions, 
+  EnhancedScriptResult 
+} from './enhanced-prompt-engine.service';
 
 interface VideoGenerationOptions {
   duration?: 'short' | 'medium' | 'long'; // 30s, 60s, 90s
@@ -16,6 +21,10 @@ interface VideoGenerationOptions {
   background?: 'office' | 'modern' | 'gradient' | 'custom';
   includeSubtitles?: boolean;
   includeNameCard?: boolean;
+  // Enhanced prompt engine options
+  useAdvancedPrompts?: boolean;
+  targetIndustry?: string;
+  optimizationLevel?: 'basic' | 'enhanced' | 'premium';
 }
 
 interface VideoResult {
@@ -29,6 +38,11 @@ interface VideoResult {
     format: string;
     size: number;
   };
+  // Enhanced script generation results
+  enhancedScript?: EnhancedScriptResult;
+  scriptQualityScore?: number;
+  industryAlignment?: number;
+  generationMethod: 'basic' | 'enhanced';
 }
 
 interface AvatarConfig {
@@ -90,8 +104,37 @@ export class VideoGenerationService {
     options: VideoGenerationOptions = {}
   ): Promise<VideoResult> {
     try {
-      // Step 1: Generate optimized script
-      const script = await this.generateVideoScript(parsedCV, options);
+      let script: string;
+      let enhancedScript: EnhancedScriptResult | undefined;
+      let generationMethod: 'basic' | 'enhanced' = 'basic';
+
+      // Step 1: Generate optimized script using enhanced or basic method
+      if (options.useAdvancedPrompts !== false) { // Default to enhanced
+        try {
+          const promptOptions: PromptEngineOptions = {
+            ...options,
+            targetIndustry: options.targetIndustry,
+            optimizationLevel: options.optimizationLevel || 'enhanced'
+          };
+          
+          enhancedScript = await advancedPromptEngine.generateEnhancedScript(
+            parsedCV, 
+            promptOptions
+          );
+          
+          script = enhancedScript.script;
+          generationMethod = 'enhanced';
+          
+          console.log(`Enhanced script generated with quality score: ${enhancedScript.qualityMetrics.overallScore}`);
+        } catch (enhancedError) {
+          console.warn('Enhanced script generation failed, falling back to basic:', enhancedError);
+          script = await this.generateVideoScript(parsedCV, options);
+          generationMethod = 'basic';
+        }
+      } else {
+        script = await this.generateVideoScript(parsedCV, options);
+        generationMethod = 'basic';
+      }
       
       // Step 2: Create video with D-ID
       const videoData = await this.createVideoWithAvatar(script, jobId, options);
@@ -118,11 +161,49 @@ export class VideoGenerationService {
           resolution: '1920x1080',
           format: 'mp4',
           size: videoData.size || 0
-        }
+        },
+        enhancedScript,
+        scriptQualityScore: enhancedScript?.qualityMetrics.overallScore,
+        industryAlignment: enhancedScript?.qualityMetrics.industryAlignment,
+        generationMethod
       };
     } catch (error: any) {
       console.error('Error generating video introduction:', error);
       throw new Error(`Video generation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate enhanced script with quality metrics (without video creation)
+   */
+  async generateEnhancedScriptOnly(
+    parsedCV: ParsedCV,
+    options: VideoGenerationOptions = {}
+  ): Promise<EnhancedScriptResult> {
+    try {
+      const promptOptions: PromptEngineOptions = {
+        ...options,
+        targetIndustry: options.targetIndustry,
+        optimizationLevel: options.optimizationLevel || 'enhanced'
+      };
+      
+      return await advancedPromptEngine.generateEnhancedScript(parsedCV, promptOptions);
+    } catch (error: any) {
+      console.error('Enhanced script-only generation failed:', error);
+      throw new Error(`Enhanced script generation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get industry template recommendations for a CV
+   */
+  getIndustryRecommendations(parsedCV: ParsedCV): any[] {
+    try {
+      const { industryTemplatesService } = require('./industry-templates.service');
+      return industryTemplatesService.analyzeAndRecommendTemplate(parsedCV);
+    } catch (error) {
+      console.error('Industry recommendations failed:', error);
+      return [];
     }
   }
   

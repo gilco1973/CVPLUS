@@ -1,5 +1,5 @@
 import { CVFeature } from '../types';
-import { ParsedCV } from '../../../types/job';
+import { ParsedCV } from '../../cvParser';
 import { certificationBadgesService, CertificationBadgesCollection } from '../../certification-badges.service';
 import * as admin from 'firebase-admin';
 
@@ -11,7 +11,8 @@ export class CertificationBadgesFeature implements CVFeature {
   async generate(cv: ParsedCV, jobId: string, options?: any): Promise<string> {
     try {
       // Generate certification badges collection using the service
-      const badgesCollection = await certificationBadgesService.generateCertificationBadges(cv, jobId);
+      // Note: Type assertion needed due to ParsedCV interface conflicts
+      const badgesCollection = await certificationBadgesService.generateCertificationBadges(cv as any, jobId);
       
       // Always use React component instead of legacy HTML
       return this.generateReactComponentPlaceholder(jobId, badgesCollection, options);

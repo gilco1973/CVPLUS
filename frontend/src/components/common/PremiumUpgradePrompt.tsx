@@ -2,6 +2,7 @@ import React from 'react';
 import { Crown, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePremiumPrompt } from '../../hooks/usePremiumStatus';
+import { getTierConfig, formatPrice } from '../../config/pricing';
 
 interface PremiumUpgradePromptProps {
   feature?: string;
@@ -20,6 +21,8 @@ export const PremiumUpgradePrompt: React.FC<PremiumUpgradePromptProps> = ({
 }) => {
   const navigate = useNavigate();
   const { shouldShowPrompt, dismissPrompt, isPremium } = usePremiumPrompt();
+  const premiumConfig = getTierConfig('PREMIUM');
+  const priceText = formatPrice(premiumConfig.price);
 
   // Don't show for premium users or when prompt is dismissed
   if (isPremium || !shouldShowPrompt) {
@@ -76,7 +79,7 @@ export const PremiumUpgradePrompt: React.FC<PremiumUpgradePromptProps> = ({
           </div>
           
           <p className="text-sm text-yellow-800 mb-3">
-            Get lifetime access to all premium features for just $5. 
+            Get lifetime access to all premium features for just {priceText}. 
             {feature && (
               <span className="font-medium">
                 {` ${feature} `}
@@ -91,7 +94,7 @@ export const PremiumUpgradePrompt: React.FC<PremiumUpgradePromptProps> = ({
               className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
             >
               <Crown className="w-4 h-4" />
-              Upgrade for $5
+              Upgrade for {priceText}
             </button>
             
             <button

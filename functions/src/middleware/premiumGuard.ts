@@ -2,7 +2,7 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
 
-type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
+type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction';
 
 export const premiumGuard = (feature: PremiumFeature) => {
   return async (data: any, context: any) => {

@@ -141,15 +141,18 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
 
       // Create public profile
       const publicProfile: PublicCVProfile = {
+        id: jobId,
         jobId,
         userId: job.userId,
         slug: publicSlug,
-        features: job.enhancedFeatures || {},
-        template: job.selectedTemplate || 'modern',
         isPublic: true,
         allowContactForm: true,
-        qrCodeUrl,
         publicUrl,
+        socialSharing: {
+          enabled: true,
+          platforms: ['linkedin', 'twitter', 'facebook'],
+          customMessage: `Check out my professional CV: ${publicUrl}`
+        },
         createdAt: FieldValue.serverTimestamp() as any,
         updatedAt: FieldValue.serverTimestamp() as any,
         analytics: {
@@ -475,15 +478,18 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
             // Create public profile
             const publicProfile: PublicCVProfile = {
+              id: lookupId,
               jobId: lookupId,
               userId: job.userId,
               slug: publicSlug,
-                    features: job.enhancedFeatures || {},
-              template: job.selectedTemplate || 'modern',
               isPublic: true,
               allowContactForm: true,
-              qrCodeUrl,
               publicUrl,
+              socialSharing: {
+                enabled: true,
+                platforms: ['linkedin', 'twitter', 'facebook'],
+                customMessage: `Check out my professional CV: ${publicUrl}`
+              },
               createdAt: FieldValue.serverTimestamp() as any,
               updatedAt: FieldValue.serverTimestamp() as any,
               analytics: {

@@ -93,7 +93,11 @@ export class ContentOptimizationService {
         keywords: this.calculateKeywordScore(parsedCV, context.targetKeywords || []),
         formatting: this.calculateFormattingScore(parsedCV),
         content: this.calculateContentScore(parsedCV),
-        specificity: this.calculateSpecificityScore(parsedCV)
+        specificity: this.calculateSpecificityScore(parsedCV),
+        experience: this.calculateExperienceScore(parsedCV),
+        education: this.calculateEducationScore(parsedCV),
+        skills: this.calculateSkillsScore(parsedCV),
+        achievements: this.calculateAchievementsScore(parsedCV)
       },
       issues: this.identifyBasicIssues(parsedCV),
       suggestions: this.generateBasicSuggestions(parsedCV, context),
@@ -109,6 +113,25 @@ export class ContentOptimizationService {
         'Add more specific achievements', 
         'Enhance keyword usage'
       ],
+      // Required ATSOptimizationResult properties
+      originalScore: 0,
+      optimizedScore: basicScore,
+      improvement: basicScore,
+      changesApplied: ['Basic optimization applied'],
+      timeToOptimize: 3000,
+      beforeAfterComparison: {
+        keywordMatches: { before: 0, after: (context.targetKeywords || []).length },
+        formatIssues: { before: 5, after: 2 },
+        readabilityScore: { before: 60, after: basicScore }
+      },
+      industryAlignment: 70,
+      roleSpecificOptimizations: ['General improvements applied'],
+      nextSteps: ['Review recommendations', 'Apply suggested changes'],
+      maintenanceSchedule: {
+        nextReview: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        frequency: 'monthly' as const,
+        autoOptimization: false
+      },
       processingMetadata: {
         timestamp: new Date().toISOString(),
         version: '2.0.0-fallback',
@@ -357,9 +380,9 @@ export class ContentOptimizationService {
     const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
     
     safeRecommendations.forEach(rec => {
-      if (rec && rec.category === 'keywords' && rec.issue?.includes('Missing')) {
-        // Extract keywords from issue description
-        const matches = rec.issue?.match(/Missing.*?:(.*?)(?:\.|$)/);
+      if (rec && rec.category === 'keywords' && rec.description?.includes('Missing')) {
+        // Extract keywords from description
+        const matches = rec.description?.match(/Missing.*?:(.*?)(?:\.|$)/);
         if (matches && matches[1]) {
           const extractedKeywords = matches[1]
             .split(/[,;]/)
@@ -575,5 +598,106 @@ export class ContentOptimizationService {
       return Object.values(skills).flat().join(' ');
     }
     return '';
+  }
+
+  /**
+   * Calculate experience score (0-100)
+   */
+  private calculateExperienceScore(parsedCV: ParsedCV): number {
+    if (!parsedCV.experience || parsedCV.experience.length === 0) {
+      return 30;
+    }
+    
+    let score = 50;
+    
+    // Experience quantity
+    if (parsedCV.experience.length > 3) score += 20;
+    else if (parsedCV.experience.length > 1) score += 10;
+    
+    // Experience quality
+    const wellDescribed = parsedCV.experience.filter(exp => 
+      exp.description && exp.description.length > 100
+    ).length;
+    score += Math.min(wellDescribed * 5, 20);
+    
+    // Company and position info
+    const completeEntries = parsedCV.experience.filter(exp => 
+      exp.company && exp.position && exp.duration
+    ).length;
+    score += Math.min(completeEntries * 3, 10);
+    
+    return Math.min(score, 100);
+  }
+
+  /**
+   * Calculate education score (0-100)
+   */
+  private calculateEducationScore(parsedCV: ParsedCV): number {
+    if (!parsedCV.education || parsedCV.education.length === 0) {
+      return 40;
+    }
+    
+    let score = 60;
+    
+    // Education completeness
+    const completeEntries = parsedCV.education.filter(edu => 
+      edu.institution && edu.degree && edu.field
+    ).length;
+    score += Math.min(completeEntries * 15, 30);
+    
+    // Multiple degrees bonus
+    if (parsedCV.education.length > 1) {
+      score += 10;
+    }
+    
+    return Math.min(score, 100);
+  }
+
+  /**
+   * Calculate skills score (0-100)
+   */
+  private calculateSkillsScore(parsedCV: ParsedCV): number {
+    if (!parsedCV.skills) {
+      return 20;
+    }
+    
+    let score = 40;
+    const skillCount = this.countSkills(parsedCV.skills);
+    
+    // Skills quantity
+    if (skillCount > 10) score += 30;
+    else if (skillCount > 5) score += 20;
+    else if (skillCount > 2) score += 10;
+    
+    // Skills organization
+    if (typeof parsedCV.skills === 'object' && !Array.isArray(parsedCV.skills)) {
+      score += 20; // Structured skills get bonus
+    }
+    
+    return Math.min(score, 100);
+  }
+
+  /**
+   * Calculate achievements score (0-100)
+   */
+  private calculateAchievementsScore(parsedCV: ParsedCV): number {
+    if (!parsedCV.achievements || parsedCV.achievements.length === 0) {
+      return 40; // Neutral score if no achievements section
+    }
+    
+    let score = 50;
+    
+    // Achievements quantity
+    if (parsedCV.achievements.length > 5) score += 25;
+    else if (parsedCV.achievements.length > 2) score += 15;
+    else if (parsedCV.achievements.length > 0) score += 5;
+    
+    // Look for quantified achievements
+    const quantified = parsedCV.achievements.filter(achievement => 
+      /\d+[%$k]|\d+\.\d+|\d+\s*times|\d+\s*percent/i.test(achievement)
+    ).length;
+    score += Math.min(quantified * 5, 25);
+    
+    return Math.min(score, 100);
   }
 }

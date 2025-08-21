@@ -8,6 +8,8 @@
  * @version 1.0.0
  */
 
+import { ParsedCV } from './job';
+
 /**
  * Advanced ATS compatibility score
  */
@@ -50,6 +52,15 @@ export interface PrioritizedRecommendation {
     before: string;
     after: string;
   };
+  // Additional optional properties for compatibility
+  estimatedScoreImprovement?: number;
+  actionRequired?: 'add' | 'modify' | 'remove' | 'replace' | 'reformat';
+  section?: string;
+  keywords?: string[];
+  atsSystemsAffected?: string[];
+  currentValue?: string;
+  targetValue?: string;
+  timeToImplement?: string;
 }
 
 /**

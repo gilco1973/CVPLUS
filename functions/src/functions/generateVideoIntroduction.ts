@@ -3,6 +3,8 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { videoGenerationService } from '../services/video-generation.service';
+import { enhancedVideoGenerationService, EnhancedVideoGenerationOptions } from '../services/enhanced-video-generation.service';
+import { premiumGuard } from '../middleware/premiumGuard';
 // htmlFragmentGenerator import removed - using React SPA architecture
 
 export const generateVideoIntroduction = onCall(
@@ -15,6 +17,9 @@ export const generateVideoIntroduction = onCall(
     if (!request.auth) {
       throw new Error('User must be authenticated');
     }
+
+    // Check premium access for video introduction feature
+    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
     const { 
       jobId, 
@@ -55,18 +60,27 @@ export const generateVideoIntroduction = onCall(
           updatedAt: FieldValue.serverTimestamp()
         });
 
-      // Generate video introduction
-      const videoResult = await videoGenerationService.generateVideoIntroduction(
+      // Generate video introduction with enhanced service (HeyGen integration)
+      const enhancedOptions: EnhancedVideoGenerationOptions = {
+        duration,
+        style,
+        avatarStyle,
+        background,
+        includeSubtitles,
+        includeNameCard,
+        jobId,
+        // Enhanced options
+        useAdvancedPrompts: true,
+        optimizationLevel: 'enhanced',
+        allowFallback: true,
+        urgency: 'normal',
+        qualityLevel: 'standard'
+      };
+      
+      const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
         jobData.parsedData,
         jobId,
-        {
-          duration,
-          style,
-          avatarStyle,
-          background,
-          includeSubtitles,
-          includeNameCard
-        }
+        enhancedOptions
       );
 
       // Update progress
@@ -86,12 +100,15 @@ export const generateVideoIntroduction = onCall(
         .collection('jobs')
         .doc(jobId)
         .update({
-          'enhancedFeatures.videoIntroduction.status': 'completed',
-          'enhancedFeatures.videoIntroduction.progress': 100,
+          'enhancedFeatures.videoIntroduction.status': videoResult.status === 'completed' ? 'completed' : 'processing',
+          'enhancedFeatures.videoIntroduction.progress': videoResult.progress,
           'enhancedFeatures.videoIntroduction.data': videoResult,
+          'enhancedFeatures.videoIntroduction.provider': videoResult.providerId,
+          'enhancedFeatures.videoIntroduction.selectionReasoning': videoResult.selectionReasoning,
+          'enhancedFeatures.videoIntroduction.estimatedCost': videoResult.estimatedCost,
           'enhancedFeatures.videoIntroduction.htmlFragment': null, // HTML fragment removed with React SPA migration
           'enhancedFeatures.videoIntroduction.processedAt': FieldValue.serverTimestamp(),
-          videoStatus: 'completed',
+          videoStatus: videoResult.status === 'completed' ? 'completed' : videoResult.status,
           video: {
             url: videoResult.videoUrl,
             thumbnailUrl: videoResult.thumbnailUrl,
@@ -99,15 +116,21 @@ export const generateVideoIntroduction = onCall(
             script: videoResult.script,
             subtitles: videoResult.subtitles,
             metadata: videoResult.metadata,
+            provider: videoResult.providerId,
+            generationMethod: videoResult.generationMethod,
+            scriptQualityScore: videoResult.scriptQualityScore,
             generatedAt: FieldValue.serverTimestamp()
           },
           'enhancedFeatures.video': {
             enabled: true,
-            status: 'completed',
+            status: videoResult.status,
+            provider: videoResult.providerId,
             data: {
               videoUrl: videoResult.videoUrl,
               thumbnailUrl: videoResult.thumbnailUrl,
-              duration: videoResult.duration
+              duration: videoResult.duration,
+              progress: videoResult.progress,
+              error: videoResult.error
             }
           },
           updatedAt: FieldValue.serverTimestamp()
@@ -148,6 +171,9 @@ export const regenerateVideoIntroduction = onCall(
     if (!request.auth) {
       throw new Error('User must be authenticated');
     }
+
+    // Check premium access for video introduction feature
+    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
     const { 
       jobId,
@@ -224,30 +250,48 @@ export const regenerateVideoIntroduction = onCall(
           }
         };
       } else {
-        // Regenerate with new parameters
-        const videoResult = await videoGenerationService.generateVideoIntroduction(
+        // Regenerate with new parameters using enhanced service
+        const regenerateOptions: EnhancedVideoGenerationOptions = {
+          duration: duration || jobData?.video?.duration || 'medium',
+          style: style || jobData?.video?.style || 'professional',
+          avatarStyle: avatarStyle || jobData?.video?.avatarStyle || 'realistic',
+          background: background || jobData?.video?.background || 'office',
+          includeSubtitles: true,
+          includeNameCard: true,
+          jobId,
+          useAdvancedPrompts: true,
+          optimizationLevel: 'enhanced',
+          allowFallback: true,
+          urgency: 'normal',
+          qualityLevel: 'standard'
+        };
+        
+        const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
           jobData!.parsedData,
           jobId,
-          {
-            duration: duration || jobData?.video?.duration || 'medium',
-            style: style || jobData?.video?.style || 'professional',
-            avatarStyle: avatarStyle || jobData?.video?.avatarStyle || 'realistic',
-            background: background || jobData?.video?.background || 'office',
-            includeSubtitles: true,
-            includeNameCard: true
-          }
+          regenerateOptions
         );
 
         await admin.firestore()
           .collection('jobs')
           .doc(jobId)
           .update({
-            videoStatus: 'completed',
+            videoStatus: videoResult.status === 'completed' ? 'completed' : videoResult.status,
             video: {
               ...jobData?.video,
-              ...videoResult,
+              url: videoResult.videoUrl,
+              thumbnailUrl: videoResult.thumbnailUrl,
+              duration: videoResult.duration,
+              script: videoResult.script,
+              subtitles: videoResult.subtitles,
+              metadata: videoResult.metadata,
+              provider: videoResult.providerId,
+              generationMethod: videoResult.generationMethod,
+              scriptQualityScore: videoResult.scriptQualityScore,
               regeneratedAt: FieldValue.serverTimestamp()
             },
+            'enhancedFeatures.videoIntroduction.data': videoResult,
+            'enhancedFeatures.videoIntroduction.provider': videoResult.providerId,
             updatedAt: FieldValue.serverTimestamp()
           });
 
@@ -282,6 +326,9 @@ export const getVideoStatus = onCall(
       throw new Error('User must be authenticated');
     }
 
+    // Check premium access for video introduction feature
+    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
+
     const { jobId } = request.data;
 
     try {
@@ -303,5 +350,68 @@ export const getVideoStatus = onCall(
       };
     } catch (error: any) {
       throw new Error(`Failed to get video status: ${error.message}`);
+    }
+  });
+
+// Enhanced video status check with real-time provider status
+export const getEnhancedVideoStatus = onCall(
+  {
+    ...corsOptions
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('User must be authenticated');
+    }
+
+    // Check premium access for video introduction feature
+    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
+
+    const { jobId } = request.data;
+
+    try {
+      // Check enhanced video generation status
+      const status = await enhancedVideoGenerationService.checkVideoStatus(jobId);
+      
+      // Also get job data from Firestore
+      const jobDoc = await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .get();
+      
+      const jobData = jobDoc.exists ? jobDoc.data() : null;
+      
+      return {
+        providerId: status.providerId,
+        status: status.status,
+        progress: status.progress,
+        videoUrl: status.videoUrl,
+        thumbnailUrl: status.thumbnailUrl,
+        duration: status.duration,
+        error: status.error,
+        lastUpdated: status.lastUpdated,
+        // Include job data for context
+        enhancedFeatures: jobData?.enhancedFeatures?.videoIntroduction
+      };
+    } catch (error: any) {
+      console.error('Enhanced video status check failed:', error);
+      
+      // Fallback to regular status check
+      const jobDoc = await admin.firestore()
+        .collection('jobs')
+        .doc(jobId)
+        .get();
+      
+      if (!jobDoc.exists) {
+        throw new Error('Job not found');
+      }
+      
+      const jobData = jobDoc.data();
+      
+      return {
+        status: jobData?.videoStatus || 'not-started',
+        video: jobData?.video,
+        error: jobData?.videoError || error.message,
+        fallback: true
+      };
     }
   });

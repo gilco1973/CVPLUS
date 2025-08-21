@@ -29,6 +29,7 @@ export { MediaService } from './features/MediaService';
 export { VisualizationService } from './features/VisualizationService';
 export { IntegrationService } from './features/IntegrationService';
 export { ProfileService } from './features/ProfileService';
+export { MagicTransformService } from './features/MagicTransformService';
 
 // Legacy individual function exports for backward compatibility
 import { MediaService } from './features/MediaService';

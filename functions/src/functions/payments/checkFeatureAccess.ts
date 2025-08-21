@@ -2,7 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
 
-type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
+type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction';
 
 interface CheckFeatureAccessData {
   userId: string;

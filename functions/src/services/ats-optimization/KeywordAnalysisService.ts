@@ -113,22 +113,14 @@ Provide keyword analysis with frequency, context, and optimization recommendatio
 
     return {
       primaryKeywords: matchedKeywords,
-      semanticMatches: matchedKeywords,
-      contextualRelevance: 0.8, // Default relevance score
-      densityOptimization: {
-        current: keywordDensity,
-        recommended: optimalDensity,
-        sections: { experience: keywordDensity, skills: keywordDensity * 1.2 }
-      },
-      synonymMapping: {},
-      industrySpecificTerms: [],
+      contextualRelevance: {}, // Will be populated with keyword-specific relevance scores
+      industryTerms: [],
       // Backward compatibility properties
-      matchedKeywords,
+      secondaryKeywords: [],
       missingKeywords,
-      keywordDensity,
-      optimalDensity,
-      semanticVariations: this.keywordExtractor.findSemanticVariations(matchedKeywords, cvText),
-      recommendations
+      keywordDensity: { overall: keywordDensity },
+      synonyms: {},
+      trendingKeywords: []
     };
   }
 
@@ -145,22 +137,14 @@ Provide keyword analysis with frequency, context, and optimization recommendatio
 
     return {
       primaryKeywords: matchedKeywords,
-      semanticMatches: matchedKeywords,
-      contextualRelevance: 0.7, // Default fallback relevance
-      densityOptimization: {
-        current: keywordDensity,
-        recommended: optimalDensity,
-        sections: { experience: keywordDensity, skills: keywordDensity * 1.2 }
-      },
-      synonymMapping: {},
-      industrySpecificTerms: [],
+      contextualRelevance: {}, // Default fallback relevance
+      industryTerms: [],
       // Backward compatibility properties
-      matchedKeywords,
+      secondaryKeywords: [],
       missingKeywords,
-      keywordDensity,
-      optimalDensity,
-      semanticVariations: [],
-      recommendations: ['Add missing target keywords', 'Improve keyword context usage']
+      keywordDensity: { overall: keywordDensity },
+      synonyms: {},
+      trendingKeywords: []
     };
   }
 

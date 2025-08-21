@@ -335,6 +335,20 @@ export enum PortalErrorCode {
   UNAUTHORIZED = 'UNAUTHORIZED'
 }
 
+/**
+ * Content type enumeration for RAG embeddings
+ */
+export enum ContentType {
+  TEXT = 'text',
+  BULLET_POINT = 'bullet_point',
+  DESCRIPTION = 'description',
+  ACHIEVEMENT = 'achievement',
+  SKILL = 'skill',
+  DATE_RANGE = 'date_range',
+  CONTACT_INFO = 'contact_info',
+  SUMMARY = 'summary'
+}
+
 // Re-export types from modular files for backward compatibility
 export {
   PortalTheme,

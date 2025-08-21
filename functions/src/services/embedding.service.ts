@@ -167,8 +167,8 @@ export class EmbeddingService {
         metadata: metadata || {
           section: CVSection.SUMMARY,
           importance: 1.0,
-          contentType: ContentType.TEXT,
-          keywords: []
+          tags: [],
+          source: 'summary'
         },
         vector: response.data[0].embedding,
         tokens: EmbeddingHelpers.estimateTokenCount(text),
@@ -534,13 +534,12 @@ export class EmbeddingService {
         id: embedding.id,
         content: embedding.content,
         metadata: {
-          section: embedding.metadata.section.toLowerCase(),
+          section: embedding.metadata.section,
           subsection: embedding.metadata.subsection,
-          dateRange: embedding.metadata.dateRange,
-          technologies: embedding.metadata.technologies,
-          companies: embedding.metadata.company ? [embedding.metadata.company] : undefined,
           importance: embedding.metadata.importance,
-          keywords: embedding.metadata.keywords
+          dateRange: embedding.metadata.dateRange,
+          tags: embedding.metadata.tags || [],
+          source: embedding.metadata.source || 'unknown'
         },
         embedding: embedding.vector,
         tokens: embedding.tokens
@@ -703,7 +702,7 @@ export class EmbeddingService {
     return response.data.map((embedding, index) => ({
       id: `embed-${Date.now()}-${startIndex + index}`,
       content: texts[index],
-      metadata: { section: CVSection.SUMMARY, importance: 1.0, contentType: ContentType.TEXT, keywords: [] },
+      metadata: { section: CVSection.SUMMARY, importance: 1.0, tags: [], source: 'summary' },
       vector: embedding.embedding,
       tokens: EmbeddingHelpers.estimateTokenCount(texts[index]),
       createdAt: new Date()

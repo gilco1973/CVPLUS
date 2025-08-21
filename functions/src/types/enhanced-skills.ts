@@ -13,17 +13,26 @@
  * Controls how skills are displayed in interactive visualizations
  */
 export interface SkillsVisualization {
-  /** Skill categories with associated data */
-  categories: SkillCategory[];
+  /** Technical skills categorized by type */
+  technical: SkillCategory[];
+  
+  /** Soft skills categorized by type */
+  soft: SkillCategory[];
+  
+  /** Language skills */
+  languages?: LanguageSkill[];
+  
+  /** Professional certifications */
+  certifications?: Certification[];
   
   /** Visualization layout type */
-  layout: 'radar' | 'bar' | 'bubble' | 'tree';
+  layout?: 'radar' | 'bar' | 'bubble' | 'tree';
   
   /** Color scheme identifier */
-  colorScheme: string;
+  colorScheme?: string;
   
   /** Whether to enable animations in the visualization */
-  animations: boolean;
+  animations?: boolean;
 }
 
 /**

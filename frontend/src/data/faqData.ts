@@ -341,7 +341,7 @@ Upload tip: For best results, use PDF or Word formats with standard fonts and cl
 • Multi-format Export (PDF, DOCX, HTML)
 • Basic Analytics & Tracking
 
-**Premium Plan - $5 One-time:**
+**Premium Plan - $49 One-time:**
 • Everything in Free Forever
 • Personal Web Portal (Custom URL)
 • AI Chat Assistant (RAG-powered)

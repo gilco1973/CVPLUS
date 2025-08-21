@@ -41,10 +41,8 @@ export class KeywordExtractor {
           keyword,
           variations: [keyword],
           frequency,
-          relevanceScore: this.calculateKeywordRelevance(keyword, cvText, industry),
-          context: this.extractKeywordContext(keyword, cvText),
-          atsImportance: 0.8,
-          competitorUsage: 0.5
+          importance: this.calculateKeywordRelevance(keyword, cvText, industry),
+          context: this.extractKeywordContext(keyword, cvText)
         });
       }
     }
@@ -60,10 +58,8 @@ export class KeywordExtractor {
               keyword: term,
               variations: [term],
               frequency,
-              relevanceScore: this.calculateKeywordRelevance(term, cvText, industry),
-              context: this.extractKeywordContext(term, cvText),
-              atsImportance: 0.7,
-              competitorUsage: 0.4
+              importance: this.calculateKeywordRelevance(term, cvText, industry),
+              context: this.extractKeywordContext(term, cvText)
             });
           }
         }

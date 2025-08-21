@@ -18,6 +18,24 @@ import { RecommendationParams } from './types';
 export class RecommendationService {
 
   /**
+   * Helper to create a properly structured recommendation
+   */
+  private createRecommendation(base: Partial<PrioritizedRecommendation>): PrioritizedRecommendation {
+    return {
+      effort: 'medium' as const,
+      timeEstimate: '1-2 hours',
+      implementation: ['Apply recommended changes'],
+      ...base,
+      id: base.id || `rec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      category: base.category || 'general',
+      title: base.title || 'Optimization Needed',
+      description: base.description || 'Apply recommended improvements',
+      priority: base.priority || 'medium',
+      impact: base.impact || 50
+    };
+  }
+
+  /**
    * Generate comprehensive prioritized recommendations
    */
   async generatePrioritizedRecommendations(params: RecommendationParams): Promise<PrioritizedRecommendation[]> {
@@ -80,10 +98,13 @@ export class RecommendationService {
       {
         id: `fallback-structure-${Date.now()}`,
         category: 'structure',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Improve CV Structure',
         description: 'Review and enhance the overall structure and organization of your CV',
-        impact: 'medium',
+        impact: 70,
+        effort: 'medium' as const,
+        timeEstimate: '2-4 hours',
+        implementation: ['Review CV structure', 'Reorganize sections logically', 'Ensure ATS-friendly formatting'],
         estimatedScoreImprovement: 10,
         actionRequired: 'modify',
         section: 'structure',
@@ -92,10 +113,13 @@ export class RecommendationService {
       {
         id: `fallback-content-${Date.now()}`,
         category: 'content',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Enhance Content Quality',
         description: 'Add more specific achievements and quantified results to your experience descriptions',
-        impact: 'high',
+        impact: 85,
+        effort: 'high' as const,
+        timeEstimate: '4-6 hours',
+        implementation: ['Review experience descriptions', 'Add quantified achievements', 'Use action verbs and metrics'],
         estimatedScoreImprovement: 15,
         actionRequired: 'modify',
         section: 'experience',
@@ -104,10 +128,13 @@ export class RecommendationService {
       {
         id: `fallback-keywords-${Date.now()}`,
         category: 'keywords',
-        priority: 3,
+        priority: 'low' as const,
         title: 'Optimize Keywords',
         description: 'Include more relevant industry keywords throughout your CV',
-        impact: 'medium',
+        impact: 65,
+        effort: 'medium' as const,
+        timeEstimate: '1-2 hours',
+        implementation: ['Research industry keywords', 'Integrate keywords naturally', 'Optimize keyword density'],
         estimatedScoreImprovement: 8,
         actionRequired: 'modify',
         section: 'content',
@@ -131,70 +158,74 @@ export class RecommendationService {
     if (semanticAnalysis.missingKeywords && semanticAnalysis.missingKeywords.length > 0) {
       const criticalKeywords = semanticAnalysis.missingKeywords.slice(0, 5);
       
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `keyword-missing-${Date.now()}`,
         category: 'keywords',
-        priority: 1,
+        priority: 'high' as const,
         title: `Missing Critical Keywords`,
         description: `Missing ${criticalKeywords.length} critical keywords: ${criticalKeywords.join(', ')}. Integrate these keywords naturally into your experience descriptions and skills section`,
-        impact: 'high',
+        impact: 85,
+        effort: 'medium' as const,
+        timeEstimate: '2-3 hours',
+        implementation: ['Research keyword context', 'Integrate keywords naturally', 'Review and optimize placement'],
         estimatedScoreImprovement: 15,
         actionRequired: 'add',
         section: 'skills',
         keywords: criticalKeywords,
         atsSystemsAffected: ['workday', 'greenhouse', 'lever']
-      });
+      }));
     }
 
     // Keyword density recommendations
-    const currentDensity = semanticAnalysis.keywordDensity || 0;
-    const optimalDensity = semanticAnalysis.optimalDensity || 0.03;
+    const currentDensity = typeof semanticAnalysis.keywordDensity === 'object' ? 
+      Object.values(semanticAnalysis.keywordDensity).reduce((a, b) => a + b, 0) / Object.keys(semanticAnalysis.keywordDensity).length || 0 : 0;
+    const optimalDensity = 0.03; // Standard optimal keyword density
     
     if (currentDensity < optimalDensity * 0.7) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `keyword-density-low-${Date.now()}`,
         category: 'keywords',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Keyword Density Too Low',
         description: `Keyword density too low (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%). Increase keyword frequency by naturally incorporating relevant terms throughout your CV`,
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 10,
         actionRequired: 'modify',
         section: 'content',
         atsSystemsAffected: ['greenhouse', 'lever', 'icims']
-      });
+      }));
     } else if (currentDensity > optimalDensity * 1.3) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `keyword-density-high-${Date.now()}`,
         category: 'keywords',
-        priority: 3,
+        priority: 'low' as const,
         title: 'Keyword Density Too High',
         description: `Keyword density too high (${(currentDensity * 100).toFixed(1)}% vs optimal ${(optimalDensity * 100).toFixed(1)}%). Reduce keyword repetition to avoid appearing as keyword stuffing`,
-        impact: 'medium',
+        impact: 65,
         estimatedScoreImprovement: 8,
         actionRequired: 'modify',
         section: 'content',
         atsSystemsAffected: ['workday', 'bamboohr']
-      });
+      }));
     }
 
     // Low-frequency keyword recommendations
-    if (semanticAnalysis.matchedKeywords) {
-      const lowFreqKeywords = semanticAnalysis.matchedKeywords.filter(kw => kw.frequency === 1);
+    if (semanticAnalysis.primaryKeywords) {
+      const lowFreqKeywords = semanticAnalysis.primaryKeywords.filter(kw => kw.frequency === 1);
       if (lowFreqKeywords.length > 3) {
-        recommendations.push({
+        recommendations.push(this.createRecommendation({
           id: `keyword-frequency-${Date.now()}`,
           category: 'keywords',
-          priority: 3,
+          priority: 'low' as const,
           title: 'Low Keyword Frequency',
           description: `${lowFreqKeywords.length} important keywords appear only once. Increase frequency of critical keywords by using them in multiple relevant contexts`,
-          impact: 'medium',
+          impact: 65,
           estimatedScoreImprovement: 6,
           actionRequired: 'modify',
           section: 'content',
           atsSystemsAffected: ['greenhouse', 'icims'],
           keywords: lowFreqKeywords.map(kw => kw.keyword)
-        });
+        }));
       }
     }
 
@@ -220,51 +251,51 @@ export class RecommendationService {
     if (!parsedCV.skills) missingSections.push('skills');
 
     if (missingSections.length > 0) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `structure-missing-${Date.now()}`,
         category: 'structure',
-        priority: 1,
+        priority: 'high' as const,
         title: 'Missing Essential Sections',
         description: `Missing essential sections: ${missingSections.join(', ')}. Add all missing essential sections to ensure ATS can parse your information`,
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 25,
         actionRequired: 'add',
         section: 'structure',
         atsSystemsAffected: ['workday', 'greenhouse', 'lever', 'bamboohr', 'taleo', 'generic']
-      });
+      }));
     }
 
     // Professional summary missing
     if (!parsedCV.personalInfo?.summary) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `structure-summary-${Date.now()}`,
         category: 'structure',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Missing Professional Summary',
         description: 'Missing professional summary section. Add a compelling 2-3 sentence professional summary at the top of your CV',
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 12,
         actionRequired: 'add',
         section: 'summary',
         atsSystemsAffected: ['workday', 'smartrecruiters']
-      });
+      }));
     }
 
     // Date formatting issues
     const hasInconsistentDates = this.checkDateConsistency(parsedCV);
     if (hasInconsistentDates) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `structure-dates-${Date.now()}`,
         category: 'structure',
-        priority: 3,
+        priority: 'low' as const,
         title: 'Inconsistent Date Formatting',
         description: 'Inconsistent date formatting across sections. Standardize all dates to MM/YYYY format for better ATS parsing',
-        impact: 'medium',
+        impact: 65,
         estimatedScoreImprovement: 5,
         actionRequired: 'modify',
         section: 'formatting',
         atsSystemsAffected: ['workday', 'smartrecruiters', 'bamboohr']
-      });
+      }));
     }
 
     return recommendations;
@@ -282,52 +313,52 @@ export class RecommendationService {
     // Weak experience descriptions
     const weakExperiences = this.identifyWeakExperiences(parsedCV.experience || []);
     if (weakExperiences.length > 0) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `content-experience-${Date.now()}`,
         category: 'content',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Weak Experience Descriptions',
         description: `${weakExperiences.length} experience entries lack detailed descriptions. Enhance experience descriptions with specific achievements, responsibilities, and quantified results`,
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 15,
         actionRequired: 'modify',
         section: 'experience',
         atsSystemsAffected: ['greenhouse', 'icims', 'lever']
-      });
+      }));
     }
 
     // Lack of quantified achievements
     const hasQuantifiedAchievements = this.checkQuantifiedAchievements(parsedCV);
     if (!hasQuantifiedAchievements) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `content-achievements-${Date.now()}`,
         category: 'content',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Lacks Quantified Achievements',
         description: 'Experience lacks quantified achievements and measurable results. Add specific numbers, percentages, and metrics to demonstrate your impact',
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 20,
         actionRequired: 'modify',
         section: 'experience',
         atsSystemsAffected: ['icims', 'greenhouse', 'lever']
-      });
+      }));
     }
 
     // Insufficient skills detail
     const skillsQuality = this.assessSkillsQuality(parsedCV.skills);
     if (skillsQuality < 0.7) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `content-skills-${Date.now()}`,
         category: 'content',
-        priority: 3,
+        priority: 'low' as const,
         title: 'Skills Section Lacks Depth',
         description: 'Skills section lacks depth and organization. Expand and categorize skills by type (Technical, Soft Skills, Tools, etc.)',
-        impact: 'medium',
+        impact: 65,
         estimatedScoreImprovement: 8,
         actionRequired: 'modify',
         section: 'skills',
         atsSystemsAffected: ['greenhouse', 'icims']
-      });
+      }));
     }
 
     return recommendations;
@@ -341,25 +372,25 @@ export class RecommendationService {
   ): PrioritizedRecommendation[] {
     const recommendations: PrioritizedRecommendation[] = [];
     
-    // Find systems with low compatibility scores
-    const problemSystems = systemSimulations.filter(sim => (sim.compatibilityScore || sim.overallScore) < 75);
+    // Find systems with low pass rates
+    const problemSystems = systemSimulations.filter(sim => sim.passRate < 75);
     
     if (problemSystems.length > 0) {
-      const systemNames = problemSystems.map(sys => sys.systemName || sys.system);
+      const systemNames = problemSystems.map(sys => sys.systemName);
       // const commonIssues = this.identifyCommonSystemIssues(problemSystems); // Unused variable
       
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `ats-compatibility-${Date.now()}`,
         category: 'ats-compatibility',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Low ATS Compatibility',
         description: `Low compatibility with ${systemNames.length} ATS systems: ${systemNames.join(', ')}. Address common parsing issues to improve compatibility across multiple ATS platforms`,
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 18,
         actionRequired: 'modify',
         section: 'formatting',
         atsSystemsAffected: systemNames
-      });
+      }));
     }
 
     return recommendations;
@@ -377,38 +408,38 @@ export class RecommendationService {
     if (!competitorBenchmark) return recommendations;
 
     const currentScore = advancedScore.overall;
-    const averageScore = competitorBenchmark.averageScore || 75;
+    const averageScore = competitorBenchmark.benchmarkScore || 75;
     
     // Below average performance
     if (currentScore < averageScore - 5) {
-      recommendations.push({
+      recommendations.push(this.createRecommendation({
         id: `competitive-score-${Date.now()}`,
         category: 'competitive',
-        priority: 2,
+        priority: 'medium' as const,
         title: 'Below Industry Average',
         description: `CV scores ${currentScore} vs industry average of ${averageScore}. Implement targeted improvements to exceed industry benchmarks`,
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 22,
         actionRequired: 'modify',
         section: 'content',
         atsSystemsAffected: ['workday', 'greenhouse', 'lever', 'bamboohr', 'taleo', 'generic']
-      });
+      }));
     }
 
     // Missing competitive advantages
-    if (competitorBenchmark.keyDifferentiators && competitorBenchmark.keyDifferentiators.length < 3) {
-      recommendations.push({
+    if (competitorBenchmark.competitiveAdvantage && competitorBenchmark.competitiveAdvantage.length < 3) {
+      recommendations.push(this.createRecommendation({
         id: `competitive-differentiators-${Date.now()}`,
         category: 'competitive',
-        priority: 3,
+        priority: 'low' as const,
         title: 'Lacks Differentiators',
         description: 'CV lacks clear differentiators from other candidates. Highlight unique achievements and specialized skills that set you apart',
-        impact: 'high',
+        impact: 85,
         estimatedScoreImprovement: 12,
         actionRequired: 'modify',
         section: 'content',
         atsSystemsAffected: ['lever', 'greenhouse']
-      });
+      }));
     }
 
     return recommendations;

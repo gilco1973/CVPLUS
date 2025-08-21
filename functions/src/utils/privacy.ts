@@ -11,33 +11,36 @@ import { PrivacySettings } from '../types/enhanced-models';
 export function maskPII(cv: ParsedCV, settings: PrivacySettings): ParsedCV {
   const masked = JSON.parse(JSON.stringify(cv)); // Deep clone
 
-  // Mask personal information
-  if (settings.maskingRules.name && masked.personalInfo?.name) {
-    masked.personalInfo.name = maskName(masked.personalInfo.name);
+  // Apply masking based on privacy settings
+  // If contact info should not be shown, mask it
+  if (!settings.showContactInfo && masked.personalInfo) {
+    if (masked.personalInfo.name) {
+      masked.personalInfo.name = maskName(masked.personalInfo.name);
+    }
+    
+    if (masked.personalInfo.email) {
+      masked.personalInfo.email = 'Contact via form';
+    }
+
+    if (masked.personalInfo.phone) {
+      masked.personalInfo.phone = 'Available upon request';
+    }
+
+    if (masked.personalInfo.address) {
+      masked.personalInfo.address = maskAddress(masked.personalInfo.address);
+    }
   }
 
-  if (settings.maskingRules.email && masked.personalInfo?.email) {
-    masked.personalInfo.email = settings.publicEmail || 'Contact via form';
-  }
-
-  if (settings.maskingRules.phone && masked.personalInfo?.phone) {
-    masked.personalInfo.phone = settings.publicPhone || 'Available upon request';
-  }
-
-  if (settings.maskingRules.address && masked.personalInfo?.address) {
-    masked.personalInfo.address = maskAddress(masked.personalInfo.address);
-  }
-
-  // Mask company names if requested
-  if (settings.maskingRules.companies && masked.experience) {
+  // For basic privacy, mask sensitive employment details  
+  if (!settings.showContactInfo && masked.experience) {
     masked.experience = masked.experience.map((exp: any) => ({
       ...exp,
       company: maskCompany(exp.company)
     }));
   }
 
-  // Mask dates if requested
-  if (settings.maskingRules.dates) {
+  // Mask dates for enhanced privacy
+  if (!settings.showContactInfo) {
     if (masked.experience) {
       masked.experience = masked.experience.map((exp: any) => ({
         ...exp,
@@ -55,18 +58,7 @@ export function maskPII(cv: ParsedCV, settings: PrivacySettings): ParsedCV {
     }
   }
 
-  // Apply custom masking rules
-  if (settings.maskingRules.customRules) {
-    const maskedString = JSON.stringify(masked);
-    let result = maskedString;
-
-    for (const rule of settings.maskingRules.customRules) {
-      const regex = new RegExp(rule.pattern, 'gi');
-      result = result.replace(regex, rule.replacement);
-    }
-
-    return JSON.parse(result);
-  }
+  // Note: Custom masking rules not available in this privacy settings interface
 
   return masked;
 }

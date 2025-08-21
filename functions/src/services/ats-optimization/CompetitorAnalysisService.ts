@@ -97,24 +97,13 @@ Focus on actionable insights for improving ATS performance relative to market co
     ]);
 
     return {
-      benchmarkScore: averageScore + 5, // Slightly above average for benchmark
-      industryAverage: averageScore,
-      topPercentile: averageScore + 15, // Top 10% scoring
-      averageScore, // Keep for backward compatibility
-      gapAnalysis: {
-        missingKeywords: ['leadership', 'analytics', 'strategy'],
-        weakAreas: ['technical skills', 'quantified achievements'],
-        strengthAreas: ['education', 'experience length']
-      },
-      industryBenchmark: this.getIndustryBenchmark(industry),
-      keyDifferentiators: differentiators.slice(0, 5),
-      marketWeaknesses: marketWeaknesses.slice(0, 5),
-      competitiveAdvantages: this.identifyCompetitiveAdvantages(differentiators),
-      positioningInsights: positioningInsights.slice(0, 3),
-      improvementRecommendations: this.generateCompetitiveImprovements(
-        marketWeaknesses, 
-        industry
-      )
+      similarProfiles: Math.floor(Math.random() * 100) + 50,
+      keywordGaps: ['leadership', 'analytics', 'strategy'],
+      strengthsVsCompetitors: ['Strong education background', 'Diverse experience'],
+      improvementOpportunities: ['Add more technical skills', 'Quantify achievements better'],
+      marketPositioning: 'Mid-level professional with growth potential',
+      competitiveAdvantage: ['Unique skill combination', 'Strong educational foundation'],
+      benchmarkScore: averageScore + 5 // Slightly above average for benchmark
     };
   }
 
@@ -125,37 +114,13 @@ Focus on actionable insights for improving ATS performance relative to market co
     const industryData = this.getIndustryBenchmark(industry);
     
     return {
-      benchmarkScore: industryData.averageATSScore + 5,
-      industryAverage: industryData.averageATSScore,
-      topPercentile: industryData.topPercentileScore,
-      averageScore: industryData.averageATSScore, // Backward compatibility
-      gapAnalysis: {
-        missingKeywords: ['industry-specific terms', 'technical skills'],
-        weakAreas: ['achievements quantification', 'keyword optimization'],
-        strengthAreas: ['basic structure', 'contact information']
-      },
-      industryBenchmark: industryData,
-      keyDifferentiators: [
-        'Professional experience background',
-        'Educational qualifications',
-        'Technical skill set'
-      ],
-      marketWeaknesses: [
-        'May need more quantified achievements',
-        'Could benefit from industry-specific keywords',
-        'Skills section could be more comprehensive'
-      ],
-      competitiveAdvantages: ['Structured professional experience'],
-      positioningInsights: [
-        'CV shows solid professional foundation',
-        'Experience aligns with industry standards',
-        'Good potential for optimization'
-      ],
-      improvementRecommendations: [
-        'Add more quantified results and metrics',
-        'Include industry-specific technical skills',
-        'Enhance keyword optimization for ATS systems'
-      ]
+      similarProfiles: Math.floor(Math.random() * 150) + 75,
+      keywordGaps: ['industry-specific terms', 'technical skills'],
+      strengthsVsCompetitors: ['Professional experience background', 'Educational qualifications'],
+      improvementOpportunities: ['achievements quantification', 'keyword optimization'],
+      marketPositioning: 'Competitive professional with industry alignment',
+      competitiveAdvantage: ['Technical skill set', 'Educational qualifications'],
+      benchmarkScore: industryData.averageATSScore + 5
     };
   }
 

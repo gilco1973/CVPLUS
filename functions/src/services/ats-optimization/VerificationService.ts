@@ -93,7 +93,7 @@ Analysis Results:
 - Content: ${score.breakdown.content}
 
 Top Recommendations (${recommendations.length}):
-${recommendations.slice(0, 5).map(rec => `- ${rec.priority}: ${rec.issue}`).join('\n')}
+${recommendations.slice(0, 5).map(rec => `- ${rec.priority}: ${rec.title}`).join('\n')}
 
 Please evaluate:
 1. Score accuracy - Are the individual scores reasonable for this CV?
@@ -136,7 +136,7 @@ CV Content: ${cvText.substring(0, 1500)}
 Scores:
 Overall: ${score.overall}, Parsing: ${score.breakdown.parsing}, Keywords: ${score.breakdown.keywords}, Formatting: ${score.breakdown.formatting}, Content: ${score.breakdown.content}
 
-Recommendations: ${recommendations.slice(0, 5).map(rec => `${rec.priority}: ${rec.issue}`).join('; ')}
+Recommendations: ${recommendations.slice(0, 5).map(rec => `${rec.priority}: ${rec.title}`).join('; ')}
 
 Evaluate: 1) Score accuracy 2) Recommendation quality 3) Missing elements 4) Confidence level (1-10)
 

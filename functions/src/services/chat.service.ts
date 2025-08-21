@@ -58,6 +58,7 @@ export class ChatService {
       // 5. Create chat message
       const userMessage: ChatMessage = {
         id: nanoid(),
+        sessionId,
         role: 'user',
         content: message,
         timestamp: new Date()
@@ -65,14 +66,14 @@ export class ChatService {
       
       const assistantMessage: ChatMessage = {
         id: nanoid(),
+        sessionId,
         role: 'assistant',
         content: response.content,
         timestamp: new Date(),
         metadata: {
-          tokens: response.tokens,
-          model: 'gpt-4',
-          retrievedChunks: relevantChunks.map(c => c.id),
-          confidence: this.calculateConfidence(relevantChunks)
+          intent: 'response',
+          entities: [],
+          sentiment: 'neutral'
         }
       };
       
@@ -96,24 +97,26 @@ export class ChatService {
     visitorId?: string,
     metadata?: any
   ): Promise<string> {
-    const sessionId = await enhancedDbService.createChatSession({
+    const sessionId = nanoid();
+    await enhancedDbService.createChatSession({
+      id: sessionId,
       jobId,
-      userId,
       visitorId,
-      createdAt: new Date(),
-      lastActivity: new Date(),
+      startedAt: new Date(),
       messages: [],
-      metadata: {
-        ...metadata,
-        startTime: new Date(),
-        source: metadata?.source || 'public'
-      }
+      topics: [],
+      leadGenerated: false,
+      contactInfoShared: false,
+      ipAddress: metadata?.ipAddress,
+      userAgent: metadata?.userAgent,
+      referrer: metadata?.referrer
     });
     
     // Send initial greeting
     const greeting = this.generateGreeting();
     const greetingMessage: ChatMessage = {
       id: nanoid(),
+      sessionId,
       role: 'assistant',
       content: greeting,
       timestamp: new Date()

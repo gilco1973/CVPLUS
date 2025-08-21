@@ -273,3 +273,23 @@ export {
 export {
   getUserSubscription,
 } from './functions/payments/getUserSubscription';
+
+// Export video webhook functions
+export {
+  heygenWebhook,
+  videoWebhook,
+  webhookHealth
+} from './functions/heygen-webhook';
+
+// Export RunwayML status check functions
+export {
+  runwaymlStatusCheck,
+  runwaymlBatchStatusCheck,
+  runwaymlPollingTask,
+  runwaymlCleanupTask
+} from './functions/runwayml-status-check';
+
+// Export video analytics dashboard functions
+export {
+  videoAnalyticsDashboard
+} from './functions/video-analytics-dashboard';

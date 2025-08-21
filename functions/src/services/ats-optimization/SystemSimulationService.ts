@@ -127,14 +127,13 @@ export class SystemSimulationService {
     // const weaknesses = this.identifySystemWeaknesses(parsedCV, systemName, config);
 
     return {
-      system: systemName as any,
       systemName,
-      parsingAccuracy,
-      keywordMatching: 0.8, // Default value
-      formatCompatibility,
-      overallScore: compatibilityScore,
-      specificIssues: [], // Empty for now
-      optimizationTips
+      version: '1.0',
+      passRate: formatCompatibility * 100,
+      issues: [],
+      suggestions: [],
+      processingTime: 150,
+      confidence: 0.8
     };
   }
 

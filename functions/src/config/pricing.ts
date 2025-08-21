@@ -127,7 +127,7 @@ const getStripePriceIds = (): StripePriceConfig => {
   return {
     development: config.stripe.pricing.priceIdDev || 'price_dev_placeholder',
     staging: config.stripe.pricing.priceIdStaging || 'price_staging_placeholder',
-    production: config.stripe.pricing.priceIdProd || 'price_1RucLUHjEeKlGm_prod_placeholder'
+    production: config.stripe.pricing.priceIdProd || 'price_14AfZ9bna72qfXvfxX4F200'
   };
 };
 
@@ -171,8 +171,8 @@ export const BACKEND_PRICING_CONFIG: PricingConfig = {
       name: 'Premium',
       description: 'Unlock all premium features with lifetime access - one-time payment',
       price: {
-        cents: 500, // $5.00 in cents
-        dollars: 5,
+        cents: 4900, // $49.00 in cents
+        dollars: 49,
         currency: 'USD',
         stripeConfig: getStripePriceIds()
       },

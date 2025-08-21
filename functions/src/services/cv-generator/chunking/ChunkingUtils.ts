@@ -61,9 +61,8 @@ export class ChunkingUtils {
             metadata: {
               section: CVSection.SUMMARY,
               importance: 1.0,
-              contentType: ContentType.TEXT,
-              keywords: [],
-              chunkType: 'semantic'
+              tags: ['semantic'],
+              source: 'summary'
             },
             tokenCount: this.estimateTokenCount(currentChunk),
             chunkIndex: chunkIndex++
@@ -79,9 +78,8 @@ export class ChunkingUtils {
               metadata: {
                 section: CVSection.SUMMARY,
                 importance: 1.0,
-                contentType: ContentType.TEXT,
-                keywords: [],
-                chunkType: 'semantic-split'
+                tags: ['semantic-split'],
+                source: 'summary'
               },
               tokenCount: this.estimateTokenCount(subChunk),
               chunkIndex: chunkIndex++
@@ -101,9 +99,8 @@ export class ChunkingUtils {
         metadata: {
           section: CVSection.SUMMARY,
           importance: 1.0,
-          contentType: ContentType.TEXT,
-          keywords: [],
-          chunkType: 'semantic'
+          tags: ['semantic'],
+          source: 'summary'
         },
         tokenCount: this.estimateTokenCount(currentChunk),
         chunkIndex: chunkIndex++
@@ -135,9 +132,8 @@ export class ChunkingUtils {
           metadata: {
             section: CVSection.SUMMARY,
             importance: 1.0,
-            contentType: ContentType.TEXT,
-            keywords: [],
-            chunkType: 'fixed-size'
+            tags: ['fixed-size'],
+            source: 'summary'
           },
           tokenCount: this.estimateTokenCount(content),
           chunkIndex: chunkIndex++
@@ -171,9 +167,8 @@ export class ChunkingUtils {
             metadata: {
               section: CVSection.SUMMARY,
               importance: 1.0,
-              contentType: ContentType.TEXT,
-              keywords: [],
-              chunkType: 'sliding-window'
+              tags: ['sliding-window'],
+              source: 'summary'
             },
             tokenCount: this.estimateTokenCount(currentWindow),
             chunkIndex: chunkIndex++
@@ -196,9 +191,8 @@ export class ChunkingUtils {
         metadata: {
           section: CVSection.SUMMARY,
           importance: 1.0,
-          contentType: ContentType.TEXT,
-          keywords: [],
-          chunkType: 'sliding-window'
+          tags: ['sliding-window'],
+          source: 'summary'
         },
         tokenCount: this.estimateTokenCount(currentWindow),
         chunkIndex: chunkIndex++

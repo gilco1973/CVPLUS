@@ -243,6 +243,8 @@ interface SecureConfig {
   videoGeneration: {
     didApiKey?: string;
     synthesiaApiKey?: string;
+    heygenApiKey?: string;
+    runwaymlApiKey?: string;
     avatars: {
       professional: {
         id?: string;
@@ -382,6 +384,8 @@ class SecureEnvironmentLoader {
       videoGeneration: {
         didApiKey: EnvironmentValidator.validateApiKey(process.env.DID_API_KEY, 'DID_API_KEY'),
         synthesiaApiKey: EnvironmentValidator.validateApiKey(process.env.SYNTHESIA_API_KEY, 'SYNTHESIA_API_KEY'),
+        heygenApiKey: EnvironmentValidator.validateApiKey(process.env.HEYGEN_API_KEY, 'HEYGEN_API_KEY'),
+        runwaymlApiKey: EnvironmentValidator.validateApiKey(process.env.RUNWAYML_API_KEY, 'RUNWAYML_API_KEY'),
         avatars: {
           professional: {
             id: EnvironmentValidator.sanitizeString(process.env.DID_PROFESSIONAL_AVATAR_ID),
@@ -472,7 +476,7 @@ class SecureEnvironmentLoader {
     if (config.openai.apiKey) healthyServices++;
     if (config.email.user && config.email.password) healthyServices++;
     if (config.elevenLabs.apiKey) healthyServices++;
-    if (config.videoGeneration.didApiKey || config.videoGeneration.synthesiaApiKey) healthyServices++;
+    if (config.videoGeneration.didApiKey || config.videoGeneration.synthesiaApiKey || config.videoGeneration.heygenApiKey || config.videoGeneration.runwaymlApiKey) healthyServices++;
     if (config.search.serperApiKey) healthyServices++;
     if (config.rag.openaiApiKey && config.rag.pineconeApiKey) healthyServices++;
     if (config.storage.bucketName) healthyServices++;

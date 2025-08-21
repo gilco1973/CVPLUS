@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Crown, Sparkles, ArrowRight, X } from 'lucide-react';
 import { formatFeatureName } from '../../services/paymentService';
+import { getTierConfig, formatPrice } from '../../config/pricing';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
 
@@ -36,6 +37,8 @@ export const UpgradePrompt = ({
 }: UpgradePromptProps) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const premiumConfig = getTierConfig('PREMIUM');
+  const priceText = formatPrice(premiumConfig.price);
 
   const handleUpgrade = () => {
     navigate('/pricing');
@@ -73,7 +76,7 @@ export const UpgradePrompt = ({
 
             <div className="bg-purple-50 rounded-xl p-4 mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-900 mb-1">$5 Lifetime</div>
+                <div className="text-2xl font-bold text-purple-900 mb-1">{priceText} Lifetime</div>
                 <div className="text-sm text-purple-700">One-time payment • All premium features</div>
               </div>
             </div>
@@ -142,7 +145,7 @@ export const UpgradePrompt = ({
 
       {/* Pricing */}
       <div className="bg-white rounded-xl p-4 mb-6 border border-purple-200">
-        <div className="text-3xl font-bold text-gray-900 mb-1">$5</div>
+        <div className="text-3xl font-bold text-gray-900 mb-1">{priceText}</div>
         <div className="text-purple-700 font-semibold">Lifetime Access</div>
         <div className="text-sm text-gray-500 mt-1">One-time payment • All premium features</div>
       </div>

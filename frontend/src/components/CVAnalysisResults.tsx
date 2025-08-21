@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronDown, ChevronUp, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { applyImprovements } from '../services/cvService';
+import { MagicTransformService, type MagicTransformProgress, type MagicTransformResult } from '../services/features/MagicTransformService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
@@ -62,6 +63,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isMagicTransforming, setIsMagicTransforming] = useState(false);
+  const [magicTransformProgress, setMagicTransformProgress] = useState<MagicTransformProgress | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [loadedJobId, setLoadedJobId] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -507,7 +509,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
     return recommendations.filter(r => r.priority === priority);
   };
 
-  // Magic Transform Handler with robust navigation
+  // Enhanced Magic Transform Handler with comprehensive feature generation
   const handleMagicTransform = async () => {
     if (recommendations.length === 0) {
       toast.error('No recommendations available for magic transformation.');
@@ -515,6 +517,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
     }
     
     setIsMagicTransforming(true);
+    setMagicTransformProgress(null);
     
     try {
       // Auto-select high and medium priority recommendations
@@ -522,19 +525,38 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         .filter(rec => rec.priority === 'high' || rec.priority === 'medium')
         .map(rec => rec.id);
       
-      
       if (magicSelectedRecs.length === 0) {
         toast.error('No high or medium priority recommendations available.');
         setIsMagicTransforming(false);
         return;
       }
       
-      // Apply improvements and get the enhanced content
-      const result = await applyImprovements(job.id, magicSelectedRecs);
+      // Show initial progress
+      toast.loading('🪄 Starting Magic Transform...', { duration: 1000 });
       
-      // Store the improved content for the preview page
-      if (result && result && typeof result === 'object' && 'data' in result) {
-        const resultData = result.data as Record<string, unknown>;
+      // Execute Enhanced Magic Transform with progress tracking
+      const result: MagicTransformResult = await MagicTransformService.executeEnhancedMagicTransform(
+        job.id,
+        magicSelectedRecs,
+        (progress: MagicTransformProgress) => {
+          setMagicTransformProgress(progress);
+          
+          // Show progress updates as toasts
+          if (progress.stage === 'improvements') {
+            toast.loading('🔧 Applying AI improvements...', { duration: 2000 });
+          } else if (progress.stage === 'core_features') {
+            toast.loading('🚀 Generating features...', { duration: 2000 });
+          } else if (progress.stage === 'premium_features') {
+            toast.loading('⭐ Creating premium features...', { duration: 2000 });
+          } else if (progress.stage === 'finalizing') {
+            toast.loading('✨ Finalizing your enhanced CV...', { duration: 1000 });
+          }
+        }
+      );
+      
+      // Store results for preview page
+      if (result.results.improvements) {
+        const resultData = result.results.improvements.data as Record<string, unknown>;
         if (resultData && 'improvedCV' in resultData) {
           sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify(resultData.improvedCV));
         }
@@ -543,10 +565,14 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       // Store selected recommendations
       sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(magicSelectedRecs));
       
-      // Show success message
-      toast.success('✨ Magic transformation complete! Review your enhanced CV.');
+      // Store magic transform results for detailed preview
+      sessionStorage.setItem(`magic-transform-${job.id}`, JSON.stringify(result));
       
-      // Enhanced Magic Transform navigation with same multi-strategy approach
+      // Show success message with details
+      const successMessage = `✨ Magic Transform completed! Applied ${result.appliedImprovements} improvements and generated ${result.generatedFeatures.length} features${result.userTier === 'PREMIUM' ? ' (Premium)' : ''}.`;
+      toast.success(successMessage, { duration: 5000 });
+      
+      // Enhanced navigation with same multi-strategy approach
       
       // Strategy 1: Parent callback
       try {
@@ -571,7 +597,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             if (attempts < maxAttempts) {
               setTimeout(checkNavigation, checkInterval);
             } else {
-              console.warn('⚠️ [DEBUG] Magic transform navigation timeout');
+              console.warn('⚠️ [DEBUG] Enhanced Magic transform navigation timeout');
               resolve(false);
             }
           };
@@ -582,13 +608,14 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         const navigationSucceeded = await navigationPromise;
         
         if (navigationSucceeded) {
-          toast.success('✨ Magic transformation complete! Welcome to preview!', { duration: 4000 });
+          toast.success('🎉 Welcome to your enhanced CV preview!', { duration: 4000 });
           setIsMagicTransforming(false);
+          setMagicTransformProgress(null);
           return;
         }
         
       } catch (callbackError) {
-        console.error('❌ [DEBUG] Magic transform parent callback error:', callbackError);
+        console.error('❌ [DEBUG] Enhanced Magic transform parent callback error:', callbackError);
       }
       
       // Strategy 2: Robust fallback
@@ -602,11 +629,12 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             timeout: 400,
             maxRetries: 2,
             onSuccess: () => {
-              toast.success('✨ Magic transformation complete!');
+              toast.success('✨ Enhanced Magic transformation complete!');
               setIsMagicTransforming(false);
+              setMagicTransformProgress(null);
             },
             onFailure: (error) => {
-              console.error('❌ [DEBUG] Magic transform robust navigation failed:', error);
+              console.error('❌ [DEBUG] Enhanced Magic transform robust navigation failed:', error);
             }
           }
         );
@@ -616,26 +644,28 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         }
         
       } catch (robustError) {
-        console.error('❌ [DEBUG] Magic transform robust navigation error:', robustError);
+        console.error('❌ [DEBUG] Enhanced Magic transform robust navigation error:', robustError);
       }
       
       // Strategy 3: Emergency navigation
-      toast.loading('Completing magic transformation...', { duration: 2000 });
+      toast.loading('Redirecting to your enhanced CV...', { duration: 2000 });
       
       setTimeout(() => {
         try {
           window.location.href = `/preview/${job.id}`;
         } catch (emergencyError) {
-          console.error('💥 [DEBUG] Magic transform emergency navigation failed:', emergencyError);
-          toast.error('Magic transformation applied, but navigation failed. Please refresh.');
+          console.error('💥 [DEBUG] Enhanced Magic transform emergency navigation failed:', emergencyError);
+          toast.error('Magic transformation completed, but navigation failed. Please refresh.');
         }
         setIsMagicTransforming(false);
+        setMagicTransformProgress(null);
       }, 200);
       
     } catch (error: unknown) {
-      logError('magicTransform', error);
-      toast.error(getErrorMessage(error) || 'Failed to apply magic transformation. Please try manual selection.');
+      logError('enhancedMagicTransform', error);
+      toast.error(getErrorMessage(error) || 'Failed to complete magic transformation. Please try manual features.');
       setIsMagicTransforming(false);
+      setMagicTransformProgress(null);
     }
   };
 
@@ -706,23 +736,39 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               <h2 className="text-xl font-bold text-gray-100">1-Click Magic Transform</h2>
             </div>
             <p className="text-gray-300 mb-3">
-              Let our AI instantly apply the most impactful improvements to your CV. 
+              Let our AI create a comprehensive enhanced CV with improvements AND features. 
               <span className="font-semibold text-purple-300">
-                Skip the preview and get your enhanced CV in seconds!
+                Get your complete professional portfolio in one click!
               </span>
             </p>
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span>{magicSelectedRecs.length} premium improvements included</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {/* CV Improvements */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-purple-300">CV Improvements:</h4>
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>{magicSelectedRecs.length} AI recommendations</span>
+                </div>
+                <div className="flex items-center gap-2 text-blue-400">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>+{magicPotentialImprovement} ATS score points</span>
+                </div>
+                <div className="flex items-center gap-2 text-purple-400">
+                  <Target className="w-4 h-4" />
+                  <span>Target score: {magicPredictedScore}%</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-blue-700">
-                <TrendingUp className="w-4 h-4" />
-                <span>+{magicPotentialImprovement} ATS score points</span>
-              </div>
-              <div className="flex items-center gap-2 text-purple-700">
-                <Target className="w-4 h-4" />
-                <span>Predicted score: {magicPredictedScore}%</span>
+              
+              {/* Features Generated */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-cyan-300">Features Generated:</h4>
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div>📊 Skills Visualization</div>
+                  <div>📅 Interactive Timeline</div>
+                  <div>🎨 Portfolio Gallery</div>
+                  <div>📱 QR Code</div>
+                  <div className="text-yellow-400">⭐ + Premium Features</div>
+                </div>
               </div>
             </div>
           </div>
@@ -779,14 +825,88 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
           </div>
         </div>
         
-        {/* Magic Transform Loading State */}
+        {/* Enhanced Magic Transform Progress State */}
         {isMagicTransforming && (
-          <div className="mt-6 p-4 bg-white/50 rounded-lg border border-purple-200">
-            <div className="flex items-center gap-3 text-purple-700">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <div>
-                <p className="font-medium">Applying magical improvements...</p>
-                <p className="text-sm text-purple-600">This will take just a moment. Please don't close this page.</p>
+          <div className="mt-6 p-6 bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-lg border border-purple-500/30">
+            <div className="space-y-4">
+              {/* Progress Header */}
+              <div className="flex items-center gap-3 text-purple-300">
+                <div className="relative">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <div className="absolute inset-0 w-6 h-6 border-2 border-purple-400/30 rounded-full"></div>
+                </div>
+                <div>
+                  <p className="font-bold text-lg">🪄 Magic Transform in Progress</p>
+                  <p className="text-sm text-purple-400">Generating your enhanced CV with AI-powered improvements and features</p>
+                </div>
+              </div>
+              
+              {/* Progress Bar and Details */}
+              {magicTransformProgress && (
+                <div className="space-y-3">
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500 ease-out rounded-full"
+                      style={{ width: `${magicTransformProgress.progress}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Current Task */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">{magicTransformProgress.currentTask}</span>
+                    <span className="text-purple-400 font-mono">{magicTransformProgress.progress}%</span>
+                  </div>
+                  
+                  {/* Stage Indicator */}
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span className={`px-2 py-1 rounded-full ${
+                      magicTransformProgress.stage === 'improvements' ? 'bg-orange-900/50 text-orange-300' :
+                      magicTransformProgress.stage === 'core_features' ? 'bg-blue-900/50 text-blue-300' :
+                      magicTransformProgress.stage === 'premium_features' ? 'bg-purple-900/50 text-purple-300' :
+                      magicTransformProgress.stage === 'finalizing' ? 'bg-green-900/50 text-green-300' :
+                      'bg-gray-700 text-gray-300'
+                    }`}>
+                      {magicTransformProgress.stage.replace('_', ' ').toUpperCase()}
+                    </span>
+                    <span>•</span>
+                    <span>{magicTransformProgress.completedTasks.length} / {magicTransformProgress.totalTasks} tasks completed</span>
+                  </div>
+                  
+                  {/* Completed Tasks */}
+                  {magicTransformProgress.completedTasks.length > 0 && (
+                    <div className="text-xs text-green-400">
+                      ✅ Completed: {magicTransformProgress.completedTasks.slice(-3).join(', ')}
+                      {magicTransformProgress.completedTasks.length > 3 && ` (+${magicTransformProgress.completedTasks.length - 3} more)`}
+                    </div>
+                  )}
+                  
+                  {/* Failed Tasks */}
+                  {magicTransformProgress.failedTasks.length > 0 && (
+                    <div className="text-xs text-orange-400">
+                      ⚠️ Some features may have failed - continuing with available features
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Default Progress (when no detailed progress available) */}
+              {!magicTransformProgress && (
+                <div className="space-y-3">
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse rounded-full w-1/3"></div>
+                  </div>
+                  <p className="text-sm text-gray-300">Initializing comprehensive CV enhancement...</p>
+                </div>
+              )}
+              
+              {/* Warning */}
+              <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-3">
+                <p className="text-sm text-purple-300">
+                  🚀 <span className="font-medium">Enhanced Magic Transform</span> - 
+                  We're applying improvements AND generating features for your CV.
+                  This may take 30-60 seconds depending on your subscription tier.
+                </p>
               </div>
             </div>
           </div>

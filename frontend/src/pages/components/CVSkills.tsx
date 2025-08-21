@@ -79,7 +79,18 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
 
   // Process skills data into categories
   const processSkillsData = (): SkillCategory[] => {
+    // Debug: Log what data we're receiving
+    console.log('CVSkills received data:', data);
+    console.log('CVSkills data type:', typeof data);
+    console.log('CVSkills data is array:', Array.isArray(data));
+    
     const categories: SkillCategory[] = [];
+    
+    // Early return if data is null, undefined, or empty
+    if (!data || (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
+      console.log('CVSkills: No valid data provided');
+      return categories;
+    }
     
     // Handle case where data is a simple array (legacy format)
     if (Array.isArray(data)) {
@@ -108,16 +119,23 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
       'Frameworks': { icon: <Zap className="w-4 h-4" />, color: 'orange' },
       'Tools': { icon: <Briefcase className="w-4 h-4" />, color: 'gray' },
       'Soft Skills': { icon: <Users className="w-4 h-4" />, color: 'pink' },
-      'Languages': { icon: <Users className="w-4 h-4" />, color: 'indigo' }
+      'Languages': { icon: <Users className="w-4 h-4" />, color: 'indigo' },
+      'Expertise': { icon: <Star className="w-4 h-4" />, color: 'purple' }
     };
 
     // Handle object format skills data  
     const skillsObj = data as SkillsData;
     
+    // Debug: Log object properties
+    console.log('CVSkills object keys:', Object.keys(skillsObj || {}));
+    console.log('CVSkills technical:', skillsObj?.technical);
+    console.log('CVSkills soft:', skillsObj?.soft);
+    console.log('CVSkills languages:', skillsObj?.languages);
+    
     // Process technical skills
     if (skillsObj.technical && Array.isArray(skillsObj.technical)) {
       const validSkills = skillsObj.technical
-        .map(validateSkill)
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
         .filter((skill): skill is SkillItem => skill !== null)
         .slice(0, maxSkillsPerCategory);
       
@@ -130,10 +148,27 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
       }
     }
 
+    // Process expertise skills
+    if (skillsObj.expertise && Array.isArray(skillsObj.expertise)) {
+      const validSkills = skillsObj.expertise
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
+        .filter((skill): skill is SkillItem => skill !== null)
+        .slice(0, maxSkillsPerCategory);
+      
+      if (validSkills.length > 0) {
+        categories.push({
+          name: 'Expertise',
+          skills: validSkills,
+          icon: <Star className="w-4 h-4" />,
+          color: 'purple'
+        });
+      }
+    }
+
     // Process frameworks
     if (skillsObj.frameworks && Array.isArray(skillsObj.frameworks)) {
       const validSkills = skillsObj.frameworks
-        .map(validateSkill)
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
         .filter((skill): skill is SkillItem => skill !== null)
         .slice(0, maxSkillsPerCategory);
       
@@ -149,7 +184,7 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
     // Process tools
     if (skillsObj.tools && Array.isArray(skillsObj.tools)) {
       const validSkills = skillsObj.tools
-        .map(validateSkill)
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
         .filter((skill): skill is SkillItem => skill !== null)
         .slice(0, maxSkillsPerCategory);
       
@@ -165,7 +200,7 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
     // Process soft skills
     if (skillsObj.soft && Array.isArray(skillsObj.soft)) {
       const validSkills = skillsObj.soft
-        .map(validateSkill)
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
         .filter((skill): skill is SkillItem => skill !== null)
         .slice(0, maxSkillsPerCategory);
       
@@ -181,7 +216,7 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
     // Process languages
     if (skillsObj.languages && Array.isArray(skillsObj.languages)) {
       const validSkills = skillsObj.languages
-        .map(validateSkill)
+        .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
         .filter((skill): skill is SkillItem => skill !== null)
         .slice(0, maxSkillsPerCategory);
       
@@ -214,7 +249,13 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
       });
     }
 
-    return categories.filter(category => category.skills.length > 0);
+    const filteredCategories = categories.filter(category => category.skills.length > 0);
+    
+    // Debug: Log final result
+    console.log('CVSkills final categories:', filteredCategories);
+    console.log('CVSkills categories count:', filteredCategories.length);
+    
+    return filteredCategories;
   };
 
   const skillCategories = processSkillsData();
