@@ -8,6 +8,21 @@
 import React, { memo, useState } from 'react';
 import { Building2, Calendar, MapPin, ExternalLink, ChevronDown, ChevronUp, Award, TrendingUp } from 'lucide-react';
 
+// Utility function to highlight placeholders in text
+const highlightPlaceholders = (text: string): React.ReactNode[] => {
+  if (!text) return [text];
+  
+  return text.split(/(\[INSERT[^\]]*\]|\[ADD[^\]]*\]|\[NUMBER[^\]]*\])/).map((part, index) => 
+    /\[(INSERT|ADD|NUMBER)[^\]]*\]/.test(part) ? (
+      <span key={index} className="bg-yellow-200 px-1 py-0.5 rounded text-black font-medium border">
+        {part}
+      </span>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+};
+
 interface ExperienceItem {
   id?: string;
   company: string;
@@ -261,7 +276,7 @@ export const CVExperience: React.FC<CVExperienceProps> = memo(({
                               ? 'line-clamp-3' 
                               : ''
                           }`}>
-                            {experience.description}
+                            {highlightPlaceholders(experience.description)}
                           </p>
                         </div>
                       )}
@@ -275,7 +290,7 @@ export const CVExperience: React.FC<CVExperienceProps> = memo(({
                           </h4>
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 ml-6">
                             {experience.achievements.map((achievement, achIndex) => (
-                              <li key={achIndex}>{achievement}</li>
+                              <li key={achIndex}>{highlightPlaceholders(achievement)}</li>
                             ))}
                           </ul>
                         </div>

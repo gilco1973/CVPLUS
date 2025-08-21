@@ -47,12 +47,27 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
 }) => {
   const { state, actions } = useCVComparison(originalData, improvedData, comparisonReport);
   const filteredSections = useFilteredSections(state.comparison, state.showOnlyChanged);
+  
+  // Log comparison data for debugging
+  useEffect(() => {
+    console.log('[CVComparisonView] Component rendered with:', {
+      hasOriginalData: !!originalData,
+      hasImprovedData: !!improvedData,
+      hasComparisonReport: !!comparisonReport,
+      comparisonSections: state.comparison?.sections?.length || 0,
+      filteredSections: filteredSections.length
+    });
+  }, [originalData, improvedData, comparisonReport, state.comparison, filteredSections]);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileComparison, setShowMobileComparison] = useState(false);
 
   // Enhanced comparison detection - use comparisonReport if available, fallback to computed comparison
-  const hasComparison = (comparisonReport?.beforeAfter && comparisonReport.beforeAfter.length > 0) || 
-                        (state.comparison && state.comparison.totalChanges > 0);
+  const hasComparison = useMemo(() => {
+    const hasReport = comparisonReport?.beforeAfter && comparisonReport.beforeAfter.length > 0;
+    const hasComputed = state.comparison && state.comparison.totalChanges > 0;
+    console.log('[CVComparisonView] Comparison data check:', { hasReport, hasComputed, comparisonReport });
+    return hasReport || hasComputed;
+  }, [comparisonReport, state.comparison]);
 
   // Detect mobile screen size
   useEffect(() => {

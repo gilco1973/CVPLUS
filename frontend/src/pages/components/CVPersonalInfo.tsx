@@ -7,6 +7,21 @@
 
 import React, { memo, useState, useCallback } from 'react';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Calendar, Award } from 'lucide-react';
+
+// Utility function to highlight placeholders in text
+const highlightPlaceholders = (text: string): React.ReactNode[] => {
+  if (!text) return [text];
+  
+  return text.split(/(\[INSERT[^\]]*\]|\[ADD[^\]]*\]|\[NUMBER[^\]]*\])/).map((part, index) => 
+    /\[(INSERT|ADD|NUMBER)[^\]]*\]/.test(part) ? (
+      <span key={index} className="bg-yellow-200 px-1 py-0.5 rounded text-black font-medium border">
+        {part}
+      </span>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+};
 import { ProfilePictureUpload } from '../../components/ProfilePictureUpload';
 import { CVUpdateService } from '../../services/cvUpdateService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -82,10 +97,21 @@ export const CVPersonalInfo: React.FC<CVPersonalInfoProps> = memo(({
     }
   }, [jobId, user]);
 
+  // Debug logging for comparison purposes
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[CVPersonalInfo] Raw data received:', {
+      name: data.name,
+      title: data.title,
+      rawDataKeys: Object.keys(data),
+      hasTitle: 'title' in data && data.title,
+      titleValue: data.title
+    });
+  }
+
   // Safely extract data with fallbacks
   const {
     name = 'Professional Name',
-    title = 'Professional Title',
+    title = data.title || 'Professional Title',
     email = '',
     phone = '',
     location = '',
@@ -187,7 +213,7 @@ export const CVPersonalInfo: React.FC<CVPersonalInfoProps> = memo(({
           {/* Name and title */}
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-3xl font-bold mb-2">{name}</h1>
-            <h2 className="text-xl text-white/90 font-medium mb-3">{title}</h2>
+            <h2 className="text-xl text-white/90 font-medium mb-3">{highlightPlaceholders(title)}</h2>
             
             {/* Experience badge */}
             {experienceText && (
@@ -245,7 +271,7 @@ export const CVPersonalInfo: React.FC<CVPersonalInfoProps> = memo(({
       {summary && (
         <div className="px-6 py-5">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">About</h3>
-          <p className="text-gray-700 leading-relaxed">{summary}</p>
+          <p className="text-gray-700 leading-relaxed">{highlightPlaceholders(summary)}</p>
         </div>
       )}
 

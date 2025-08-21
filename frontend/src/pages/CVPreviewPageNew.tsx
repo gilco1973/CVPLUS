@@ -42,6 +42,21 @@ import { CVPreviewLayout } from '../components/common/CVPreviewLayout';
 // Types
 import type { Job } from '../services/cvService';
 
+// Utility function to highlight placeholders in text
+const highlightPlaceholders = (text: string): React.ReactNode[] => {
+  if (!text) return [text];
+  
+  return text.split(/(\[INSERT[^\]]*\]|\[ADD[^\]]*\]|\[NUMBER[^\]]*\])/).map((part, index) => 
+    /\[(INSERT|ADD|NUMBER)[^\]]*\]/.test(part) ? (
+      <span key={index} className="bg-yellow-200 px-1 py-0.5 rounded text-black font-medium border">
+        {part}
+      </span>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+};
+
 interface CVPreviewPageNewProps {
   className?: string;
 }
@@ -136,7 +151,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
       summary: processTextWithPlaceholders(enhancedSourceData.summary || ''),
     } : originalData;
     
-    // Debug logging to help track the data source
+    // Enhanced debug logging to help track the data source and comparison
     if (process.env.NODE_ENV === 'development') {
       console.log('[CVPreview] Data sources:', {
         hasJobImprovedCV: !!job?.improvedCV,
@@ -144,7 +159,10 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
         enhancedDataSource: enhancedSourceData ? 'enhanced' : 'original',
         originalSummaryLength: originalData.summary.length,
         enhancedSummaryLength: enhancedData.summary.length,
-        summaryHasPlaceholders: enhancedData.summary.includes('[')
+        summaryHasPlaceholders: enhancedData.summary.includes('['),
+        originalSummaryPreview: originalData.summary.substring(0, 100) + '...',
+        enhancedSummaryPreview: enhancedData.summary.substring(0, 100) + '...',
+        summariesAreDifferent: originalData.summary !== enhancedData.summary
       });
     }
     
@@ -554,6 +572,47 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
             ) : (
               /* Comparison View - Side by Side */
               <div className="space-y-6">
+                {/* Development Debug Panel for Comparison */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-bold text-black mb-2">🔍 Debug: Comparison Data</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <strong className="text-black">Original Summary (first 200 chars):</strong>
+                        <div className="bg-white p-2 rounded mt-1 max-h-20 overflow-auto text-black border">
+                          {cvData.original.summary.substring(0, 200)}...
+                        </div>
+                      </div>
+                      <div>
+                        <strong className="text-black">Enhanced Summary (first 200 chars):</strong>
+                        <div className="bg-white p-2 rounded mt-1 max-h-20 overflow-auto text-black border">
+                          {cvData.enhanced.summary.substring(0, 200)}...
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm space-y-2">
+                      <div>
+                        <strong className="text-black">Are they different?</strong> 
+                        <span className="text-black font-bold">
+                          {cvData.original.summary !== cvData.enhanced.summary ? '✅ YES' : '❌ NO - IDENTICAL'}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-black">Character count:</strong> 
+                        <span className="text-black">
+                          Original: {cvData.original.summary.length} | Enhanced: {cvData.enhanced.summary.length}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-black">Has placeholders:</strong> 
+                        <span className="text-black">
+                          {cvData.enhanced.summary.includes('[') ? '✅ YES ([INSERT] placeholders found)' : '❌ NO'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Comparison Headers */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -611,7 +670,9 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       </div>
                       <div className="p-6">
                         {cvData.enhanced.summary ? (
-                          <p className="text-gray-700 leading-relaxed">{cvData.enhanced.summary}</p>
+                          <div className="text-gray-700 leading-relaxed">
+                            {highlightPlaceholders(cvData.enhanced.summary)}
+                          </div>
                         ) : (
                           <p className="text-gray-400 italic">No summary provided</p>
                         )}
