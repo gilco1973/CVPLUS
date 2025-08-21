@@ -89,10 +89,18 @@ export interface ParsedCV {
     description?: string;
   }>;
   skills?: string[] | {
-    technical: string[];
-    soft: string[];
+    technical?: string[];
+    soft?: string[];
     languages?: string[];
     tools?: string[];
+    frontend?: string[];
+    backend?: string[];
+    databases?: string[];
+    cloud?: string[];
+    competencies?: string[];
+    frameworks?: string[];
+    expertise?: string[];
+    [key: string]: string[] | undefined;
   };
   achievements?: string[];
   certifications?: Array<{

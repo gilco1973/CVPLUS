@@ -114,9 +114,12 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
       'Programming': { icon: <Code className="w-4 h-4" />, color: 'blue' },
       'Frontend': { icon: <Code className="w-4 h-4" />, color: 'green' },
       'Backend': { icon: <Code className="w-4 h-4" />, color: 'purple' },
+      'Databases': { icon: <Briefcase className="w-4 h-4" />, color: 'indigo' },
+      'Cloud': { icon: <TrendingUp className="w-4 h-4" />, color: 'blue' },
       'Frameworks': { icon: <Zap className="w-4 h-4" />, color: 'orange' },
       'Tools': { icon: <Briefcase className="w-4 h-4" />, color: 'gray' },
       'Soft Skills': { icon: <Users className="w-4 h-4" />, color: 'pink' },
+      'Competencies': { icon: <Users className="w-4 h-4" />, color: 'pink' },
       'Languages': { icon: <Users className="w-4 h-4" />, color: 'indigo' },
       'Expertise': { icon: <Star className="w-4 h-4" />, color: 'purple' }
     };
@@ -222,6 +225,26 @@ export const CVSkills: React.FC<CVSkillsProps> = memo(({
         });
       }
     }
+
+    // Process new categorized skills from backend improvements
+    const newCategories = ['frontend', 'backend', 'databases', 'cloud', 'competencies'];
+    newCategories.forEach(categoryKey => {
+      if (skillsObj[categoryKey] && Array.isArray(skillsObj[categoryKey])) {
+        const validSkills = skillsObj[categoryKey]
+          .map(skill => typeof skill === 'string' ? { name: skill } : validateSkill(skill))
+          .filter((skill): skill is SkillItem => skill !== null)
+          .slice(0, maxSkillsPerCategory);
+        
+        if (validSkills.length > 0) {
+          const displayName = categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+          categories.push({
+            name: displayName,
+            skills: validSkills,
+            ...categoryConfig[displayName] || { icon: <Star className="w-4 h-4" />, color: 'gray' }
+          });
+        }
+      }
+    });
 
     // Process additional categories
     if (skillsObj.categories && typeof skillsObj.categories === 'object') {

@@ -180,8 +180,11 @@ Return a JSON array of recommendations following this exact structure:
       console.log(`Applying ${groupedRecommendations.content.length} content recommendations`);
       for (const rec of groupedRecommendations.content) {
         console.log(`Processing content recommendation: ${rec.id} for section "${rec.section}"`);
-        const result = await this.applyContentRecommendation(improvedCV, rec);
-        if (result.success) {
+        console.log('🚀 About to call applyContentRecommendation...');
+        try {
+          const result = await this.applyContentRecommendation(improvedCV, rec);
+          console.log('🚀 applyContentRecommendation returned:', result);
+          if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
@@ -190,10 +193,13 @@ Return a JSON array of recommendations following this exact structure:
             transformationSummary.sectionsModified.push(rec.section);
           }
 
-          // Comparison will be generated after all transformations
-          console.log(`Successfully applied content recommendation: ${rec.id}`);
-        } else {
-          console.error(`Failed to apply content recommendation ${rec.id}: ${result.error}`);
+            // Comparison will be generated after all transformations
+            console.log(`Successfully applied content recommendation: ${rec.id}`);
+          } else {
+            console.error(`Failed to apply content recommendation ${rec.id}: ${result.error}`);
+          }
+        } catch (error) {
+          console.error('🚨 Exception in applyContentRecommendation:', error);
         }
       }
     }
@@ -202,15 +208,33 @@ Return a JSON array of recommendations following this exact structure:
     if (groupedRecommendations.structure) {
       console.log(`Applying ${groupedRecommendations.structure.length} structural recommendations`);
       for (const rec of groupedRecommendations.structure) {
-        console.log(`Processing structural recommendation: ${rec.id}`);
-        const result = await this.applyStructuralRecommendation(improvedCV, rec);
+        console.log(`Processing structural recommendation: ${rec.id} for section "${rec.section}"`);
+        
+        // Route skills-related structural changes to the enhanced skills handler
+        const isSkillsRec = this.isSkillsSection(rec.section);
+        console.log(`DEBUG: Section "${rec.section}" isSkillsSection: ${isSkillsRec}`);
+        
+        let result;
+        if (isSkillsRec) {
+          console.log(`Routing skills structural recommendation to enhanced skills handler`);
+          result = { success: this.applySkillsRecommendation(improvedCV, rec) };
+        } else {
+          console.log(`Routing to generic structural handler`);
+          result = await this.applyStructuralRecommendation(improvedCV, rec);
+        }
+        
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
+          
+          if (!transformationSummary.sectionsModified.includes(rec.section)) {
+            transformationSummary.sectionsModified.push(rec.section);
+          }
+          
           console.log(`Successfully applied structural recommendation: ${rec.id}`);
         } else {
-          console.error(`Failed to apply structural recommendation ${rec.id}: ${result.error}`);
+          console.error(`Failed to apply structural recommendation ${rec.id}: ${result.error || 'Unknown error'}`);
         }
       }
     }
@@ -344,8 +368,9 @@ Generate specific recommendations with placeholder templates that users can cust
     recommendation: CVRecommendation
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('📋 CONTENT HANDLER CALLED - applyContentRecommendation - UNIQUE-MARKER-12345');
       const section = recommendation.section.toLowerCase().trim();
-      console.log(`Applying content recommendation for section: "${section}"`);
+      console.log(`UNIQUE-MARKER-67890 Applying content recommendation for section: "${section}"`);
       
       // Handle professional summary sections
       if (this.isSummarySection(section)) {
@@ -387,6 +412,15 @@ Generate specific recommendations with placeholder templates that users can cust
         const applied = this.applyAchievementsRecommendation(cv, recommendation);
         if (applied) {
           console.log(`Applied achievements recommendation`);
+          return { success: true };
+        }
+      }
+      
+      // Handle personal info sections (including professional title)
+      if (this.isPersonalInfoSection(section)) {
+        const applied = this.applyPersonalInfoRecommendation(cv, recommendation);
+        if (applied) {
+          console.log(`Applied personal info recommendation for section: "${section}"`);
           return { success: true };
         }
       }
@@ -503,6 +537,16 @@ Generate specific recommendations with placeholder templates that users can cust
       // Handle skills sections
       if (this.isSkillsSection(section)) {
         return { success: this.applySkillsRecommendation(cv, recommendation) };
+      }
+      
+      // Handle education sections
+      if (this.isEducationSection(section)) {
+        return { success: this.applyEducationRecommendation(cv, recommendation) };
+      }
+      
+      // Handle personal info sections (including professional title)
+      if (this.isPersonalInfoSection(section)) {
+        return { success: this.applyPersonalInfoRecommendation(cv, recommendation) };
       }
       
       // For all other sections, add to custom sections
@@ -741,7 +785,7 @@ Enhanced Summary:`;
       'professional_summary', 'summary', 'professional summary',
       'profile', 'objective', 'career_summary', 'career summary'
     ];
-    return summaryPatterns.some(pattern => section.includes(pattern));
+    return summaryPatterns.some(pattern => section.toLowerCase().includes(pattern));
   }
   
   private isExperienceSection(section: string): boolean {
@@ -749,7 +793,7 @@ Enhanced Summary:`;
       'experience', 'work_experience', 'work experience', 'employment',
       'career', 'professional_experience', 'professional experience'
     ];
-    return experiencePatterns.some(pattern => section.includes(pattern));
+    return experiencePatterns.some(pattern => section.toLowerCase().includes(pattern));
   }
   
   private isSkillsSection(section: string): boolean {
@@ -757,14 +801,16 @@ Enhanced Summary:`;
       'skills', 'technical_skills', 'technical skills', 'core_competencies',
       'competencies', 'technologies', 'expertise'
     ];
-    return skillsPatterns.some(pattern => section.includes(pattern));
+    return skillsPatterns.some(pattern => section.toLowerCase().includes(pattern));
   }
   
   private isEducationSection(section: string): boolean {
     const educationPatterns = [
       'education', 'academic', 'qualification', 'training'
     ];
-    return educationPatterns.some(pattern => section.includes(pattern));
+    const isEducation = educationPatterns.some(pattern => section.toLowerCase().includes(pattern));
+    console.log(`🔍 isEducationSection("${section}") = ${isEducation}`);
+    return isEducation;
   }
   
   private isAchievementsSection(section: string): boolean {
@@ -775,13 +821,25 @@ Enhanced Summary:`;
     return achievementPatterns.some(pattern => section.includes(pattern));
   }
   
+  private isPersonalInfoSection(section: string): boolean {
+    const personalInfoPatterns = [
+      'personal', 'personal_info', 'personal info', 'personal information',
+      'contact', 'contact_info', 'contact info', 'contact information', 
+      'professional_title', 'professional title', 'title', 'job_title', 'job title'
+    ];
+    const isPersonalInfo = personalInfoPatterns.some(pattern => section.toLowerCase().includes(pattern));
+    console.log(`🔍 isPersonalInfoSection("${section}") = ${isPersonalInfo}`);
+    return isPersonalInfo;
+  }
+  
   private isCustomSection(section: string): boolean {
     // Any section that doesn't match the standard patterns
     return !this.isSummarySection(section) && 
            !this.isExperienceSection(section) && 
            !this.isSkillsSection(section) && 
            !this.isEducationSection(section) && 
-           !this.isAchievementsSection(section);
+           !this.isAchievementsSection(section) &&
+           !this.isPersonalInfoSection(section);
   }
   
   // Specialized application methods
@@ -831,8 +889,124 @@ Enhanced Summary:`;
   private applySkillsRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     if (!recommendation.suggestedContent) return false;
     
-    // Parse and update skills
-    const skillsToAdd = recommendation.suggestedContent
+    console.log(`Applying skills recommendation: ${recommendation.type} - ${recommendation.title}`);
+    console.log(`Action required: ${recommendation.actionRequired}`);
+    
+    // Handle different types of skills recommendations
+    if (recommendation.type === 'structure' && recommendation.actionRequired === 'modify') {
+      // This is a restructuring recommendation (like categorizing skills)
+      return this.applySkillsRestructuring(cv, recommendation);
+    } else if (recommendation.type === 'section_addition' && recommendation.actionRequired === 'add') {
+      // This is adding a new skills section or core competencies
+      return this.applySkillsSectionAddition(cv, recommendation);
+    } else {
+      // Simple skill addition (legacy behavior)
+      return this.applySimpleSkillsAddition(cv, recommendation);
+    }
+  }
+  
+  private applySkillsRestructuring(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    try {
+      const suggestedContent = recommendation.suggestedContent!;
+      console.log('Restructuring skills with suggested content:', suggestedContent.substring(0, 200) + '...');
+      
+      // Parse markdown-style categorized skills from suggested content
+      const categories = this.parseSkillsCategories(suggestedContent);
+      
+      if (Object.keys(categories).length === 0) {
+        console.warn('No categories found in suggested content, keeping original skills');
+        return false;
+      }
+      
+      console.log('Parsed categories:', Object.keys(categories));
+      
+      // Transform skills to categorized structure
+      const originalSkills = Array.isArray(cv.skills) ? cv.skills as string[] : [];
+      
+      // Create new categorized skills object
+      const newSkillsStructure = {
+        technical: categories['Programming Languages'] || categories['Technical Skills'] || [],
+        frontend: categories['Frontend Technologies'] || categories['Frontend Frameworks'] || [],
+        backend: categories['Backend Technologies'] || categories['Backend Frameworks'] || [],
+        tools: categories['Tools & Platforms'] || categories['Development Tools'] || [],
+        databases: categories['Databases'] || [],
+        cloud: categories['Cloud Platforms'] || categories['Cloud Services'] || [],
+      };
+      
+      // Add any remaining original skills that weren't categorized
+      const allCategorizedSkills = Object.values(newSkillsStructure).flat();
+      const uncategorizedSkills = originalSkills.filter(skill => 
+        !allCategorizedSkills.some(catSkill => 
+          catSkill.toLowerCase().includes(skill.toLowerCase()) ||
+          skill.toLowerCase().includes(catSkill.toLowerCase())
+        )
+      );
+      
+      if (uncategorizedSkills.length > 0) {
+        newSkillsStructure.technical.push(...uncategorizedSkills);
+      }
+      
+      // Filter out empty categories
+      const filteredStructure = Object.fromEntries(
+        Object.entries(newSkillsStructure).filter(([_, skills]) => skills.length > 0)
+      );
+      
+      cv.skills = filteredStructure;
+      console.log('Successfully restructured skills into categories:', Object.keys(filteredStructure));
+      return true;
+      
+    } catch (error) {
+      console.error('Error restructuring skills:', error);
+      return false;
+    }
+  }
+  
+  private applySkillsSectionAddition(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    try {
+      const suggestedContent = recommendation.suggestedContent!;
+      console.log('Adding new skills section:', recommendation.section);
+      
+      // Parse soft skills or competencies from suggested content
+      const competencies = this.parseSoftSkillsList(suggestedContent);
+      
+      if (competencies.length === 0) {
+        console.warn('No competencies found in suggested content');
+        return false;
+      }
+      
+      // Ensure skills is object format to add soft skills
+      if (!cv.skills) {
+        cv.skills = {};
+      }
+      
+      if (Array.isArray(cv.skills)) {
+        // Convert array to object format
+        cv.skills = {
+          technical: cv.skills as string[],
+        };
+      }
+      
+      const skillsObj = cv.skills as any;
+      
+      // Add soft skills or core competencies
+      if (recommendation.section.toLowerCase().includes('competencies')) {
+        skillsObj.competencies = competencies;
+      } else {
+        skillsObj.soft = competencies;
+      }
+      
+      console.log(`Added ${competencies.length} competencies to skills`);
+      return true;
+      
+    } catch (error) {
+      console.error('Error adding skills section:', error);
+      return false;
+    }
+  }
+  
+  private applySimpleSkillsAddition(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    // Legacy behavior for simple skill additions
+    const skillsToAdd = recommendation.suggestedContent!
       .split(',')
       .map(s => s.trim())
       .filter(s => s.length > 0);
@@ -866,16 +1040,204 @@ Enhanced Summary:`;
       skillsObj.technical.push(...newSkills);
     }
     
+    console.log(`Added ${skillsToAdd.length} simple skills`);
     return true;
   }
   
+  private parseSkillsCategories(content: string): Record<string, string[]> {
+    const categories: Record<string, string[]> = {};
+    const lines = content.split('\n');
+    let currentCategory = '';
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      // Look for category headers (bold markdown or with colons)
+      const categoryMatch = trimmed.match(/\*\*([^*]+):\*\*|([^:]+):/);
+      if (categoryMatch) {
+        currentCategory = (categoryMatch[1] || categoryMatch[2]).trim();
+        categories[currentCategory] = [];
+        continue;
+      }
+      
+      // Look for skills in this category
+      if (currentCategory && trimmed) {
+        // Remove bullet points and split on commas
+        const skills = trimmed
+          .replace(/^[•\-*]\s*/, '')
+          .split(',')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.includes('**'));
+        
+        categories[currentCategory].push(...skills);
+      }
+    }
+    
+    return categories;
+  }
+  
+  private parseSoftSkillsList(content: string): string[] {
+    const competencies: string[] = [];
+    const lines = content.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      // Look for bullet points or list items
+      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+        const competency = trimmed
+          .replace(/^[•\-*]\s*/, '')
+          .trim();
+        
+        if (competency && !competency.includes('**') && competency.length > 3) {
+          competencies.push(competency);
+        }
+      }
+    }
+    
+    return competencies;
+  }
+  
   private applyEducationRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
-    if (!cv.education || !recommendation.currentContent || !recommendation.suggestedContent) {
+    console.log('🎓 EDUCATION HANDLER CALLED - applyEducationRecommendation');
+    if (!recommendation.suggestedContent) return false;
+    
+    console.log(`Applying education recommendation: ${recommendation.type} - ${recommendation.title}`);
+    console.log(`Action required: ${recommendation.actionRequired}`);
+    console.log(`CV has education: ${cv.education ? cv.education.length + ' entries' : 'none'}`);
+    console.log(`Current content: ${recommendation.currentContent ? 'present' : 'none'}`);
+    
+    // Handle different types of education recommendations
+    if (recommendation.actionRequired === 'add' || !cv.education || cv.education.length === 0) {
+      // This is adding a new education entry
+      console.log('→ ROUTING: Adding new education entry');
+      return this.addEducationEntry(cv, recommendation);
+    } else if (recommendation.actionRequired === 'replace') {
+      // This is enhancing existing education entries
+      console.log('→ ROUTING: Enhancing existing education entries (replace)');
+      return this.enhanceEducationEntries(cv, recommendation);
+    } else if (recommendation.actionRequired === 'modify' && recommendation.currentContent && cv.education?.[0]?.description?.includes(recommendation.currentContent)) {
+      // Only use legacy modify behavior if the current content actually exists in the education description
+      console.log('→ ROUTING: Modifying specific education content (legacy)');
+      return this.modifyEducationContent(cv, recommendation);
+    } else {
+      // Default to enhancing existing entries (handles 'modify' with placeholder content)
+      console.log('→ ROUTING: Enhancing existing education entries (default)');
+      return this.enhanceEducationEntries(cv, recommendation);
+    }
+  }
+  
+  private addEducationEntry(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    try {
+      const suggestedContent = recommendation.suggestedContent!;
+      console.log('Adding new education entry');
+      
+      // Parse education entry from suggested content
+      const newEducation = this.parseEducationFromContent(suggestedContent);
+      
+      if (newEducation) {
+        if (!cv.education) {
+          cv.education = [];
+        }
+        cv.education.push(newEducation);
+        console.log(`Added new education entry: ${newEducation.degree} at ${newEducation.institution}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error adding education entry:', error);
+      return false;
+    }
+  }
+  
+  private enhanceEducationEntries(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    try {
+      const suggestedContent = recommendation.suggestedContent!;
+      console.log('Enhancing existing education entries');
+      
+      if (!cv.education || cv.education.length === 0) {
+        console.log('No education entries found to enhance');
+        return false;
+      }
+      
+      // Parse enhanced education data from suggested content
+      const enhancedData = this.parseEducationEnhancements(suggestedContent);
+      console.log('Parsed education enhancements:', JSON.stringify(enhancedData, null, 2));
+      
+      // Apply enhancements to the first/most relevant education entry
+      let applied = false;
+      for (let i = 0; i < cv.education.length && !applied; i++) {
+        const edu = cv.education[i];
+        console.log(`Processing education entry ${i}:`, {
+          institution: edu.institution,
+          degree: edu.degree,
+          hasDescription: !!edu.description,
+          hasGpa: !!edu.gpa,
+          hasHonors: !!edu.honors
+        });
+        
+        // Enhance with additional details
+        if (enhancedData.description && !edu.description) {
+          console.log('Adding description:', enhancedData.description);
+          edu.description = enhancedData.description;
+          applied = true;
+        }
+        
+        if (enhancedData.gpa && !edu.gpa) {
+          console.log('Adding GPA:', enhancedData.gpa);
+          edu.gpa = enhancedData.gpa;
+          applied = true;
+        }
+        
+        if (enhancedData.honors && !edu.honors) {
+          console.log('Adding honors:', enhancedData.honors);
+          edu.honors = enhancedData.honors;
+          applied = true;
+        }
+        
+        // Enhance institution name if it's generic
+        if (enhancedData.institution && (edu.institution === 'University' || edu.institution.length < 10)) {
+          console.log('Replacing institution:', edu.institution, '->', enhancedData.institution);
+          edu.institution = enhancedData.institution;
+          applied = true;
+        } else if (enhancedData.institution) {
+          console.log('Skipping institution replacement:', edu.institution, '(length:', edu.institution.length + ')');
+        }
+        
+        // Enhance degree name if it's generic
+        if (enhancedData.degree && (edu.degree === 'Computer Science' || edu.degree.length < 15)) {
+          console.log('Replacing degree:', edu.degree, '->', enhancedData.degree);
+          edu.degree = enhancedData.degree;
+          applied = true;
+        } else if (enhancedData.degree) {
+          console.log('Skipping degree replacement:', edu.degree, '(length:', edu.degree.length + ')');
+        }
+        
+        console.log('After processing entry:', {
+          institution: edu.institution,
+          degree: edu.degree,
+          description: edu.description ? edu.description.substring(0, 50) + '...' : 'none',
+          gpa: edu.gpa || 'none',
+          honors: edu.honors || 'none'
+        });
+      }
+      
+      console.log(`Enhanced education entries: ${applied ? 'success' : 'no changes'}`);
+      return applied;
+    } catch (error) {
+      console.error('Error enhancing education entries:', error);
+      return false;
+    }
+  }
+  
+  private modifyEducationContent(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    // Legacy behavior for specific content replacement
+    if (!cv.education || !recommendation.currentContent) {
       return false;
     }
     
     let applied = false;
-    
     cv.education = cv.education.map(edu => {
       if (edu.description && edu.description.includes(recommendation.currentContent!)) {
         edu.description = edu.description.replace(
@@ -887,7 +1249,157 @@ Enhanced Summary:`;
       return edu;
     });
     
+    console.log(`Modified education content: ${applied ? 'success' : 'no matches'}`);
     return applied;
+  }
+  
+  private parseEducationFromContent(content: string): any | null {
+    try {
+      const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      
+      let institution = '';
+      let degree = '';
+      let year = '';
+      let gpa = '';
+      let description = '';
+      let honors: string[] = [];
+      
+      for (const line of lines) {
+        // Look for degree information
+        if (line.includes('Bachelor') || line.includes('Master') || line.includes('PhD') || line.includes('Associate')) {
+          degree = line.replace(/\*\*/g, '').trim();
+        }
+        // Look for institution and year
+        else if (line.includes('|') && (line.includes('Graduated') || line.includes('20'))) {
+          const parts = line.split('|');
+          if (parts.length >= 2) {
+            institution = parts[0].replace(/\*\*/g, '').trim();
+            const yearPart = parts[1].replace(/\*\*/g, '').trim();
+            const yearMatch = yearPart.match(/20\d{2}/);
+            if (yearMatch) {
+              year = yearMatch[0];
+            }
+          }
+        }
+        // Look for GPA
+        else if (line.toLowerCase().includes('gpa') && line.match(/\d\.\d/)) {
+          const gpaMatch = line.match(/(\d\.\d)/);
+          if (gpaMatch) {
+            gpa = gpaMatch[1];
+          }
+        }
+        // Look for coursework or achievements (combine into description)
+        else if (line.startsWith('•') || line.startsWith('-')) {
+          if (!description) {
+            description = line.replace(/^[•\-]\s*/, '').trim();
+          } else {
+            description += '\n' + line.replace(/^[•\-]\s*/, '').trim();
+          }
+        }
+      }
+      
+      // Return education object if we have minimum required fields
+      if (degree && institution && year) {
+        return {
+          institution,
+          degree,
+          field: degree.includes('Computer Science') ? 'Computer Science' : degree.split(' ').pop(),
+          year,
+          gpa: gpa || undefined,
+          description: description || undefined,
+          honors: honors.length > 0 ? honors : undefined
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error parsing education content:', error);
+      return null;
+    }
+  }
+  
+  private parseEducationEnhancements(content: string): any {
+    const enhancements: any = {};
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    // Helper function to clean placeholders from content
+    const cleanPlaceholders = (text: string): string => {
+      return text.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+    };
+    
+    // Helper function to check if line contains only placeholders
+    const isPlaceholderOnly = (text: string): boolean => {
+      const cleanedText = cleanPlaceholders(text);
+      return cleanedText.length === 0 || !!cleanedText.match(/^[\s\-\|:]+$/);
+    };
+    
+    for (const line of lines) {
+      // Skip lines that are only placeholders
+      if (isPlaceholderOnly(line)) {
+        continue;
+      }
+      
+      // Extract enhanced degree name
+      if (line.includes('Bachelor') || line.includes('Master')) {
+        const cleanedDegree = cleanPlaceholders(line.replace(/\*\*/g, ''));
+        if (cleanedDegree.length > 5) {
+          enhancements.degree = cleanedDegree;
+        }
+      }
+      // Extract enhanced institution name
+      else if (line.includes('|') && line.includes('University')) {
+        const parts = line.split('|');
+        if (parts.length >= 1) {
+          const cleanedInstitution = cleanPlaceholders(parts[0].replace(/\*\*/g, ''));
+          if (cleanedInstitution.length > 3) {
+            enhancements.institution = cleanedInstitution;
+          }
+        }
+      }
+      // Extract actual GPA (only if not a placeholder)
+      else if (line.toLowerCase().includes('gpa') && !line.includes('[') && line.match(/\d\.\d/)) {
+        const gpaMatch = line.match(/(\d\.\d)/);
+        if (gpaMatch) {
+          enhancements.gpa = gpaMatch[1];
+        }
+      }
+      // Extract Dean's List honors
+      else if (line.toLowerCase().includes("dean's list") && !line.includes('[')) {
+        if (!enhancements.honors) {
+          enhancements.honors = [];
+        }
+        enhancements.honors.push("Dean's List");
+      }
+      // Extract coursework for description (skip if templated)
+      else if ((line.toLowerCase().includes('coursework') || line.startsWith('•')) && !line.includes('[')) {
+        const cleanedLine = cleanPlaceholders(line.replace(/^[•\-]\s*/, '').replace(/\*\*/g, ''));
+        if (cleanedLine.length > 10) {
+          if (!enhancements.description) {
+            enhancements.description = cleanedLine;
+          } else {
+            enhancements.description += '\n' + cleanedLine;
+          }
+        }
+      }
+      // Extract capstone/project information
+      else if (line.toLowerCase().includes('capstone') || line.toLowerCase().includes('project:')) {
+        const cleanedProject = cleanPlaceholders(line.replace(/\*\*/g, ''));
+        if (cleanedProject.length > 10) {
+          if (!enhancements.description) {
+            enhancements.description = cleanedProject;
+          } else {
+            enhancements.description += '\n' + cleanedProject;
+          }
+        }
+      }
+    }
+    
+    // Add generic coursework if no specific description was found
+    if (!enhancements.description && content.toLowerCase().includes('coursework')) {
+      enhancements.description = 'Relevant Coursework: Data Structures & Algorithms, Software Engineering, Database Systems, Web Development, Object-Oriented Programming';
+    }
+    
+    return enhancements;
   }
   
   private applyAchievementsRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
@@ -924,6 +1436,168 @@ Enhanced Summary:`;
     
     cv.customSections[recommendation.section] = recommendation.suggestedContent;
     return true;
+  }
+  
+  private applyPersonalInfoRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    console.log('👤 PERSONAL INFO HANDLER CALLED - applyPersonalInfoRecommendation');
+    
+    console.log(`Action required: ${recommendation.actionRequired}`);
+    console.log(`CV has personalInfo: ${cv.personalInfo ? 'yes' : 'no'}`);
+    console.log(`Has suggested content: ${!!recommendation.suggestedContent}`);
+    
+    // Ensure personalInfo exists
+    if (!cv.personalInfo) {
+      cv.personalInfo = {};
+    }
+    
+    // Detect if this is specifically about professional title
+    const section = recommendation.section.toLowerCase();
+    const isForTitle = section.includes('title') || section.includes('professional_title') || section.includes('job_title');
+    
+    if (isForTitle || this.isProfessionalTitlePlaceholder(cv.personalInfo.title)) {
+      return this.generateProfessionalTitle(cv, recommendation);
+    }
+    
+    // Handle other personal info updates (requires suggested content)
+    if (!recommendation.suggestedContent) {
+      console.warn('No suggested content for non-title personal info update');
+      return false;
+    }
+    
+    console.log(`Applied general personal info update for section: "${section}"`);
+    return true;
+  }
+  
+  private isProfessionalTitlePlaceholder(title?: string): boolean {
+    if (!title) return true; // No title is considered a placeholder
+    
+    const placeholderPatterns = [
+      'professional title',
+      'job title', 
+      'your title',
+      'title here',
+      '[insert title]',
+      'add title',
+      'professional'
+    ];
+    
+    const titleLower = title.toLowerCase().trim();
+    const isPlaceholder = placeholderPatterns.some(pattern => titleLower === pattern || titleLower.includes(pattern));
+    
+    console.log(`🏷️ Checking title "${title}" -> isPlaceholder: ${isPlaceholder}`);
+    return isPlaceholder;
+  }
+  
+  private generateProfessionalTitle(cv: ParsedCV, recommendation: CVRecommendation): boolean {
+    console.log('🎯 Generating professional title based on expertise...');
+    
+    try {
+      // Extract key information for title generation
+      const skills = this.extractSkillsArray(cv.skills);
+      const experience = cv.experience?.[0]; // Most recent experience
+      const education = cv.education?.[0]; // Highest education
+      
+      // Generate title based on suggested content or create from CV data
+      let generatedTitle = '';
+      
+      if (recommendation.suggestedContent && recommendation.suggestedContent.trim()) {
+        // Use LLM-provided title if available and not empty
+        generatedTitle = recommendation.suggestedContent.trim();
+        console.log(`Using LLM-generated title: "${generatedTitle}"`);
+      } else {
+        // Generate title based on CV content
+        generatedTitle = this.createTitleFromCVData(skills, experience, education);
+        console.log(`Generated title from CV data: "${generatedTitle}"`);
+      }
+      
+      if (generatedTitle && generatedTitle.length > 0) {
+        cv.personalInfo!.title = generatedTitle;
+        console.log(`✅ Successfully updated professional title to: "${generatedTitle}"`);
+        return true;
+      } else {
+        console.warn('Failed to generate a valid professional title');
+        return false;
+      }
+      
+    } catch (error) {
+      console.error('Error generating professional title:', error);
+      return false;
+    }
+  }
+  
+  private extractSkillsArray(skills?: string[] | object): string[] {
+    if (Array.isArray(skills)) {
+      return skills;
+    } else if (skills && typeof skills === 'object') {
+      // Extract all skills from categorized structure
+      const allSkills: string[] = [];
+      Object.values(skills).forEach(skillArray => {
+        if (Array.isArray(skillArray)) {
+          allSkills.push(...skillArray);
+        }
+      });
+      return allSkills;
+    }
+    return [];
+  }
+  
+  private createTitleFromCVData(skills: string[], experience?: any, education?: any): string {
+    console.log(`Creating title from CV data - Skills: ${skills.slice(0, 3).join(', ')}...`);
+    
+    // Prioritize title generation based on experience
+    if (experience?.position) {
+      const position = experience.position;
+      // If the position is already descriptive, use it
+      if (position.toLowerCase().includes('senior') || 
+          position.toLowerCase().includes('lead') || 
+          position.toLowerCase().includes('manager') ||
+          position.toLowerCase().includes('director') ||
+          position.toLowerCase().includes('engineer') ||
+          position.toLowerCase().includes('developer') ||
+          position.toLowerCase().includes('specialist')) {
+        return position;
+      }
+    }
+    
+    // Generate title based on top skills
+    if (skills.length > 0) {
+      // Look for programming languages and frameworks
+      const techSkills = skills.filter(skill => 
+        ['javascript', 'python', 'react', 'node', 'java', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'rust', 'kotlin', 'swift'].some(tech => 
+          skill.toLowerCase().includes(tech)
+        )
+      );
+      
+      if (techSkills.length > 0) {
+        const primaryTech = techSkills[0];
+        return `${primaryTech} Developer`;
+      }
+      
+      // Look for other professional skills
+      const professionalSkills = skills.filter(skill =>
+        ['marketing', 'sales', 'design', 'management', 'analysis', 'consulting', 'finance', 'operations'].some(domain =>
+          skill.toLowerCase().includes(domain)
+        )
+      );
+      
+      if (professionalSkills.length > 0) {
+        const domain = professionalSkills[0];
+        return `${domain} Specialist`;
+      }
+      
+      // Default based on top skill
+      if (skills[0]) {
+        return `${skills[0]} Professional`;
+      }
+    }
+    
+    // Fallback to education-based title
+    if (education?.field) {
+      return `${education.field} Professional`;
+    }
+    
+    // Ultimate fallback
+    return 'Experienced Professional';
   }
   
   private groupRecommendationsByType(recommendations: CVRecommendation[]): Record<string, CVRecommendation[]> {
