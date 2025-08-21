@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Sparkles, Zap } from 'lucide-react';
-import { FeatureSelectionPanel } from '../components/FeatureSelectionPanel';
+import { ArrowRight, ArrowLeft, Sparkles, Zap, AlertTriangle, Crown } from 'lucide-react';
+import { PremiumFeatureSelectionPanel } from '../components/PremiumFeatureSelectionPanel';
 import { Header } from '../components/Header';
 import { Section } from '../components/layout/Section';
 import { updateJobFeatures, getJob } from '../services/cvService';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureValidation, useBulkFeatureOperations } from '../hooks/useFeatureValidation';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import toast from 'react-hot-toast';
 import { FEATURE_CONFIGS } from '../config/featureConfigs';
 
@@ -13,9 +15,29 @@ export const FeatureSelectionPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = usePremiumStatus();
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [jobData, setJobData] = useState<any>(null);
+  const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
+
+  // Feature validation hook
+  const {
+    isValid: isSelectionValid,
+    restrictedFeatures,
+    warnings,
+    validateAndFilter
+  } = useFeatureValidation({
+    selectedFeatures,
+    enforceRestrictions: true,
+    onFeatureRestricted: (featureId, premiumType) => {
+      toast.error(`${featureId} requires ${premiumType} access. Please upgrade to use this feature.`);
+      setShowPremiumPrompt(true);
+    }
+  });
+
+  // Bulk operations hook
+  const { selectAllAccessible, selectOnlyFree, getAccessibleCount, getPremiumCount } = useBulkFeatureOperations();
 
   // Initialize default feature selections
   useEffect(() => {
@@ -101,19 +123,24 @@ export const FeatureSelectionPage = () => {
   };
 
   const handleSelectAll = () => {
-    const allSelected: Record<string, boolean> = {};
-    Object.keys(selectedFeatures).forEach(key => {
-      allSelected[key] = true;
-    });
-    setSelectedFeatures(allSelected);
+    const allFeatureIds = Object.keys(selectedFeatures);
+    const accessibleFeatures = selectAllAccessible(allFeatureIds);
+    setSelectedFeatures(accessibleFeatures);
+    
+    if (!isPremium && getPremiumCount(allFeatureIds) > 0) {
+      toast.info(`Selected all accessible features. Upgrade to unlock ${getPremiumCount(allFeatureIds)} premium features.`);
+    }
   };
 
   const handleSelectNone = () => {
-    const noneSelected: Record<string, boolean> = {};
-    Object.keys(selectedFeatures).forEach(key => {
-      // Keep core features always enabled
-      noneSelected[key] = ['atsOptimized', 'keywordOptimization', 'achievementsShowcase'].includes(key);
-    });
+    const allFeatureIds = Object.keys(selectedFeatures);
+    const noneSelected = selectOnlyFree(allFeatureIds);
+    
+    // Keep core features always enabled
+    noneSelected['atsOptimized'] = true;
+    noneSelected['keywordOptimization'] = true; 
+    noneSelected['achievementsShowcase'] = true;
+    
     setSelectedFeatures(noneSelected);
   };
 
@@ -123,29 +150,64 @@ export const FeatureSelectionPage = () => {
       return;
     }
 
+    // Critical: Validate and filter features before sending to server
+    const validatedFeatures = validateAndFilter();
+    
+    // Show warnings if any features were filtered out
+    if (restrictedFeatures.length > 0) {
+      toast.error(`${restrictedFeatures.length} premium features were removed. Please upgrade to access them.`);
+      setShowPremiumPrompt(true);
+    }
+
     setIsLoading(true);
     try {
-      // Convert UI selections to kebab-case feature IDs
+      // Convert ONLY validated features to kebab-case feature IDs
       const selectedFeatureIds: string[] = [];
       
-      Object.entries(selectedFeatures).forEach(([camelCaseKey, isSelected]) => {
+      Object.entries(validatedFeatures).forEach(([camelCaseKey, isSelected]) => {
         if (isSelected && FEATURE_CONFIGS[camelCaseKey]) {
           selectedFeatureIds.push(FEATURE_CONFIGS[camelCaseKey].id);
         }
       });
 
-      console.log('Selected features for processing:', selectedFeatureIds);
+      console.log('🔒 Validated features for processing:', selectedFeatureIds);
+      console.log('🚫 Restricted features filtered out:', restrictedFeatures);
 
-      // Update job with selected features
-      await updateJobFeatures(jobId, selectedFeatureIds);
+      // Update job with ONLY accessible features - server will also validate
+      const serverResponse = await updateJobFeatures(jobId, selectedFeatureIds);
 
-      toast.success(`${selectedFeatureIds.length} features selected for your CV!`);
+      // Server response includes server-side validation results
+      const serverValidatedCount = serverResponse.validatedFeatures.length;
+      const serverRemovedCount = serverResponse.removedFeatures.length;
+      
+      console.log('🔒 Server validation results:', {
+        requested: selectedFeatureIds.length,
+        validated: serverValidatedCount,
+        removed: serverRemovedCount,
+        clientRestricted: restrictedFeatures.length
+      });
+
+      // Show appropriate success message based on server response
+      if (serverRemovedCount > 0) {
+        toast.success(serverResponse.message);
+      } else if (restrictedFeatures.length > 0) {
+        toast.success(`${serverValidatedCount} features selected. ${restrictedFeatures.length} premium features require upgrade.`);
+      } else {
+        toast.success(`${serverValidatedCount} features selected for your CV!`);
+      }
       
       // Navigate to processing page
       navigate(`/process/${jobId}`);
     } catch (error: any) {
       console.error('Error updating job features:', error);
-      toast.error(error.message || 'Failed to save feature selections');
+      
+      // Check if error is related to premium access
+      if (error.message?.includes('premium') || error.message?.includes('access')) {
+        toast.error('Some features require premium access. Please upgrade or remove premium features.');
+        setShowPremiumPrompt(true);
+      } else {
+        toast.error(error.message || 'Failed to save feature selections');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +218,8 @@ export const FeatureSelectionPage = () => {
   };
 
   const selectedCount = Object.values(selectedFeatures).filter(Boolean).length;
+  const accessibleCount = getAccessibleCount(Object.keys(selectedFeatures));
+  const premiumCount = getPremiumCount(Object.keys(selectedFeatures));
   const coreFeatures = ['atsOptimized', 'keywordOptimization', 'achievementsShowcase'];
   const coreCount = coreFeatures.filter(key => selectedFeatures[key]).length;
   const enhancementCount = selectedCount - coreCount;
@@ -221,18 +285,53 @@ export const FeatureSelectionPage = () => {
                   <span className="font-semibold text-purple-400">{enhancementCount}</span> Enhancements
                 </span>
               </div>
+              {!isPremium && premiumCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-yellow-400" />
+                  <span className="text-gray-300">
+                    <span className="font-semibold text-yellow-400">{premiumCount}</span> Premium Available
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-2 ml-auto">
                 <span className="text-gray-400">Total:</span>
                 <span className="font-semibold text-white">{selectedCount} features</span>
+                {!isPremium && restrictedFeatures.length > 0 && (
+                  <span className="text-red-400 text-sm ml-2">
+                    ({restrictedFeatures.length} restricted)
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Premium Access Warning */}
+            {!isPremium && restrictedFeatures.length > 0 && (
+              <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-red-300 font-medium mb-1">Premium Features Selected</h4>
+                    <p className="text-red-200 text-sm mb-2">
+                      {restrictedFeatures.length} selected features require premium access and will be removed during processing.
+                    </p>
+                    <button
+                      onClick={() => navigate('/pricing')}
+                      className="text-red-300 hover:text-red-200 underline text-sm"
+                    >
+                      Upgrade to unlock all features →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          <FeatureSelectionPanel
+          <PremiumFeatureSelectionPanel
             selectedFeatures={selectedFeatures}
             onFeatureToggle={handleFeatureToggle}
             onSelectAll={handleSelectAll}
             onSelectNone={handleSelectNone}
+            enforceRestrictions={true}
           />
         </Section>
 
@@ -252,6 +351,8 @@ export const FeatureSelectionPage = () => {
             className={`flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-lg transition-all ${
               isLoading || selectedCount === 0
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : restrictedFeatures.length > 0
+                ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg hover:shadow-xl'
                 : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl'
             }`}
           >
@@ -259,6 +360,11 @@ export const FeatureSelectionPage = () => {
               <>
                 <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                 Processing...
+              </>
+            ) : restrictedFeatures.length > 0 ? (
+              <>
+                Continue with {selectedCount - restrictedFeatures.length} Features
+                <ArrowRight className="w-5 h-5" />
               </>
             ) : (
               <>

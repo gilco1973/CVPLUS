@@ -121,19 +121,66 @@ export class CVValidator {
   }
 
   /**
-   * Update job with selected features
+   * Update job with selected features - now uses Firebase Function with premium validation
    */
-  static async updateJobFeatures(jobId: string, selectedFeatures: string[]): Promise<void> {
+  static async updateJobFeatures(jobId: string, selectedFeatures: string[]): Promise<{
+    validatedFeatures: string[];
+    removedFeatures: string[];
+    message: string;
+  }> {
     try {
-      const jobRef = doc(db, 'jobs', jobId);
-      await updateDoc(jobRef, {
-        selectedFeatures,
-        updatedAt: new Date()
+      // Import functions dynamically to avoid initialization issues
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const functions = getFunctions();
+      
+      // Call the secure Firebase Function with premium validation
+      const updateJobFeaturesFunction = httpsCallable(functions, 'updateJobFeatures');
+      
+      console.log('🔒 Calling secure updateJobFeatures function:', { jobId, selectedFeatures });
+      
+      const result = await updateJobFeaturesFunction({
+        jobId,
+        selectedFeatures
       });
-      console.log('Job features updated successfully:', { jobId, selectedFeatures });
-    } catch (error) {
-      console.error('Error updating job features:', error);
-      throw new Error('Failed to update job features');
+
+      const data = result.data as {
+        success: boolean;
+        validatedFeatures: string[];
+        removedFeatures: string[];
+        message: string;
+      };
+
+      if (!data.success) {
+        throw new Error('Server rejected feature update');
+      }
+
+      console.log('✅ Server validation completed:', {
+        validatedFeatures: data.validatedFeatures.length,
+        removedFeatures: data.removedFeatures.length,
+        message: data.message
+      });
+
+      return {
+        validatedFeatures: data.validatedFeatures,
+        removedFeatures: data.removedFeatures,
+        message: data.message
+      };
+
+    } catch (error: any) {
+      console.error('❌ Error updating job features via secure function:', error);
+      
+      // Handle Firebase Function errors
+      if (error.code === 'functions/permission-denied') {
+        throw new Error('Access denied: You do not have permission to modify this job');
+      } else if (error.code === 'functions/not-found') {
+        throw new Error('Job not found');
+      } else if (error.code === 'functions/invalid-argument') {
+        throw new Error('Invalid parameters provided');
+      } else if (error.message?.includes('premium') || error.message?.includes('access')) {
+        throw new Error(error.message);
+      }
+      
+      throw new Error(error.message || 'Failed to update job features');
     }
   }
 }

@@ -127,9 +127,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
         // 🎯 COMPLETE MONITORING - Record successful completion
         await monitor.complete({
+          jobId,
+          providerId: videoResult.metadata.provider || 'enhanced',
           success: true,
           videoUrl: videoResult.videoUrl,
+          status: videoResult.status,
           metadata: {
+            resolution: videoResult.metadata.resolution || '1920x1080',
+            format: videoResult.metadata.format || 'mp4',
+            generatedAt: new Date(),
             providerId: videoResult.metadata.provider,
             duration: videoResult.duration,
             size: videoResult.metadata.size
@@ -167,7 +173,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
         // 📊 COMPLETE MONITORING - Record failed completion
         await monitor.complete({
+          jobId,
+          providerId: 'enhanced',
           success: false,
+          status: 'failed',
+          metadata: {
+            resolution: '1920x1080',
+            format: 'mp4',
+            generatedAt: new Date()
+          },
           error: {
             code: 'GENERATION_FAILED',
             type: 'generation_error',
@@ -192,7 +206,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
       // Ensure monitoring completion even on error
       await monitor.complete({
+        jobId,
+        providerId: 'enhanced',
         success: false,
+        status: 'failed',
+        metadata: {
+          resolution: '1920x1080',
+          format: 'mp4',
+          generatedAt: new Date()
+        },
         error: {
           code: 'FUNCTION_ERROR',
           type: 'function_error',
@@ -277,7 +299,15 @@ export async function generateVideoWithFallbackMonitoring(
   } catch (finalError) {
     await monitor.recordError(finalError, 'all_providers_failed');
     await monitor.complete({
+      jobId,
+      providerId: 'did',
       success: false,
+      status: 'failed',
+      metadata: {
+        resolution: '1920x1080',
+        format: 'mp4',
+        generatedAt: new Date()
+      },
       error: { 
         code: 'ALL_PROVIDERS_FAILED',
         type: 'all_providers_failed', 

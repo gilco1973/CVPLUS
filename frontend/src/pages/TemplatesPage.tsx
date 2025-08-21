@@ -4,28 +4,129 @@ import { generateCV } from '../services/cvService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
 import { Loader2, Clock, Star, Award, Zap } from 'lucide-react';
 import { designSystem } from '../config/designSystem';
-import { PROFESSIONAL_TEMPLATES } from '../data/professional-templates';
 import toast from 'react-hot-toast';
 
-// Professional template system - all 8 industry-optimized templates
-const getTemplateDisplayData = () => {
-  return Object.values(PROFESSIONAL_TEMPLATES).map(template => ({
-    id: template.id,
-    name: template.name,
-    description: template.description,
-    preview: template.preview.previewEmoji,
-    category: template.category,
-    targetRoles: template.targetRoles,
-    experienceLevel: template.experienceLevel,
-    industries: template.industries,
-    isPremium: template.metadata.isPremium,
-    isDefault: template.metadata.isDefault,
-    popularity: template.metadata.popularity,
-    rating: template.metadata.rating
-  }));
-};
+// Simplified professional templates for immediate display
+const PROFESSIONAL_TEMPLATES_DISPLAY = [
+  {
+    id: 'executive-authority',
+    name: 'Executive Authority',
+    description: 'Commanding presence for C-suite and senior leadership roles. Sophisticated design that projects executive gravitas and strategic thinking.',
+    preview: '👔',
+    category: 'executive',
+    targetRoles: ['CEO', 'CFO', 'CTO', 'VP', 'Director', 'General Manager', 'Senior Executive'],
+    experienceLevel: ['senior', 'executive'],
+    industries: ['Technology', 'Finance', 'Healthcare', 'Manufacturing', 'Consulting'],
+    isPremium: true,
+    isDefault: false,
+    popularity: 95,
+    rating: 4.8
+  },
+  {
+    id: 'tech-innovation',
+    name: 'Tech Innovation',
+    description: 'Clean, systematic design perfect for software engineers, developers, and technology professionals. Skills-first layout with technical project showcases.',
+    preview: '💻',
+    category: 'technical',
+    targetRoles: ['Software Engineer', 'Developer', 'DevOps Engineer', 'Data Scientist', 'Product Manager', 'Technical Lead'],
+    experienceLevel: ['entry', 'mid', 'senior'],
+    industries: ['Technology', 'Software', 'Startups', 'E-commerce', 'Gaming'],
+    isPremium: false,
+    isDefault: true,
+    popularity: 88,
+    rating: 4.7
+  },
+  {
+    id: 'creative-showcase',
+    name: 'Creative Showcase',
+    description: 'Bold, expressive design for creative professionals. Portfolio-integrated layout with vibrant colors and unique visual elements that showcase creativity.',
+    preview: '🎨',
+    category: 'creative',
+    targetRoles: ['Graphic Designer', 'Creative Director', 'UX Designer', 'Art Director', 'Photographer', 'Writer'],
+    experienceLevel: ['mid', 'senior', 'specialized'],
+    industries: ['Design', 'Advertising', 'Media', 'Entertainment', 'Fashion', 'Arts'],
+    isPremium: true,
+    isDefault: false,
+    popularity: 82,
+    rating: 4.6
+  },
+  {
+    id: 'healthcare-professional',
+    name: 'Healthcare Professional',
+    description: 'Clean, trustworthy design for medical professionals. Credentials-focused layout with emphasis on patient care and medical certifications.',
+    preview: '🏥',
+    category: 'healthcare',
+    targetRoles: ['Doctor', 'Nurse', 'Physician Assistant', 'Medical Technician', 'Healthcare Administrator', 'Therapist'],
+    experienceLevel: ['entry', 'mid', 'senior', 'specialized'],
+    industries: ['Healthcare', 'Medical', 'Pharmaceutical', 'Biotechnology', 'Mental Health'],
+    isPremium: false,
+    isDefault: false,
+    popularity: 78,
+    rating: 4.5
+  },
+  {
+    id: 'financial-expert',
+    name: 'Financial Expert',
+    description: 'Conservative, stable design for finance sector professionals. Achievement-focused layout with financial metrics and regulatory compliance emphasis.',
+    preview: '💼',
+    category: 'financial',
+    targetRoles: ['Financial Analyst', 'Investment Banker', 'CPA', 'CFO', 'Portfolio Manager', 'Financial Advisor'],
+    experienceLevel: ['mid', 'senior', 'executive'],
+    industries: ['Banking', 'Investment', 'Insurance', 'Accounting', 'Financial Services', 'Real Estate'],
+    isPremium: true,
+    isDefault: false,
+    popularity: 85,
+    rating: 4.7
+  },
+  {
+    id: 'academic-scholar',
+    name: 'Academic Scholar',
+    description: 'Scholarly design for educators and researchers. Research-focused layout with publication prominence and academic achievement highlights.',
+    preview: '🎓',
+    category: 'academic',
+    targetRoles: ['Professor', 'Researcher', 'PhD Candidate', 'Lecturer', 'Academic Administrator', 'Postdoc'],
+    experienceLevel: ['entry', 'mid', 'senior', 'specialized'],
+    industries: ['Education', 'Research', 'Universities', 'Think Tanks', 'Government Research'],
+    isPremium: false,
+    isDefault: false,
+    popularity: 72,
+    rating: 4.6
+  },
+  {
+    id: 'sales-performance',
+    name: 'Sales Performance',
+    description: 'Dynamic, results-focused design for sales professionals. Performance dashboard layout with achievement metrics and client success stories.',
+    preview: '📈',
+    category: 'sales',
+    targetRoles: ['Sales Representative', 'Account Manager', 'Sales Director', 'Business Development', 'Sales Engineer'],
+    experienceLevel: ['entry', 'mid', 'senior'],
+    industries: ['Sales', 'Business Development', 'Technology Sales', 'Pharmaceutical Sales', 'Real Estate'],
+    isPremium: false,
+    isDefault: false,
+    popularity: 80,
+    rating: 4.5
+  },
+  {
+    id: 'international-professional',
+    name: 'International Professional',
+    description: 'Universal design for global and multicultural roles. Clean, accessible layout with emphasis on cross-cultural competencies and international experience.',
+    preview: '🌍',
+    category: 'international',
+    targetRoles: ['International Manager', 'Global Consultant', 'Diplomat', 'Export Manager', 'Multicultural Specialist'],
+    experienceLevel: ['mid', 'senior', 'executive', 'specialized'],
+    industries: ['International Business', 'Consulting', 'Government', 'NGO', 'Import/Export', 'Tourism'],
+    isPremium: false,
+    isDefault: false,
+    popularity: 68,
+    rating: 4.4
+  }
+];
 
-const templates = getTemplateDisplayData();
+const templates = PROFESSIONAL_TEMPLATES_DISPLAY;
+
+// Debug: Log template data for troubleshooting
+console.log('💼 Templates loaded:', templates.length, 'templates');
+console.log('📋 Template categories:', [...new Set(templates.map(t => t.category))]);
 
 export const TemplatesPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -40,6 +141,25 @@ export const TemplatesPage = () => {
   const filteredTemplates = selectedCategory === 'all' 
     ? templates
     : templates.filter(template => template.category === selectedCategory);
+  
+  // Fallback if no templates are available
+  if (!templates || templates.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Templates Not Available</h2>
+          <p className="text-gray-600">Unable to load professional templates. Please refresh the page or contact support.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show debug info in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📋 Filtered templates:', filteredTemplates.length);
+    console.log('📍 Selected category:', selectedCategory);
+    console.log('🎯 Selected template:', selectedTemplate);
+  }
   
   // Get unique categories for filter buttons
   const categories = ['all', ...Array.from(new Set(templates.map(t => t.category)))];
@@ -115,7 +235,18 @@ export const TemplatesPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Professional CV Template</h1>
-          <p className="text-xl text-gray-600 mb-8">Select from 8 industry-optimized templates designed for maximum impact</p>
+          <p className="text-xl text-gray-600 mb-8">Select from {templates.length} industry-optimized templates designed for maximum impact</p>
+          
+          {/* Template Summary */}
+          <div className="mb-6 text-center">
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-green-600">{templates.filter(t => !t.isPremium).length} Free</span>
+              {" • "}
+              <span className="font-medium text-orange-600">{templates.filter(t => t.isPremium).length} Premium</span>
+              {" • "}
+              <span className="font-medium text-blue-600">{filteredTemplates.length} Available</span>
+            </p>
+          </div>
           
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">

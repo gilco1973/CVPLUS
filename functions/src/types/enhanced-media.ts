@@ -153,4 +153,16 @@ export interface PersonalityProfile {
   
   /** Core professional and personal values */
   values: string[];
+  
+  /** Personality traits map for detailed analysis */
+  traits?: { [key: string]: number };
+  
+  /** Culture fit analysis */
+  cultureFit?: number;
+  
+  /** Summary of personality insights */
+  summary?: string;
+  
+  /** Team compatibility assessment */
+  teamCompatibility?: number;
 }
