@@ -17,10 +17,23 @@ class PreDeploymentValidator {
     this.warnings = [];
     this.info = [];
     this.config = null;
+    this.productionConfig = null;
+    
+    // Production validation mode
+    this.validationMode = process.env.VALIDATION_MODE || 'development';
+    this.targetEnvironment = process.env.TARGET_ENVIRONMENT || 'development';
+    this.strictMode = process.env.STRICT_MODE === 'true';
+    this.requireSecurityScan = process.env.REQUIRE_SECURITY_SCAN === 'true';
+    this.requirePerformanceBaseline = process.env.REQUIRE_PERFORMANCE_BASELINE === 'true';
   }
 
   async validate() {
-    console.log('🔍 Starting pre-deployment validation...');
+    console.log(`🔍 Starting ${this.validationMode} pre-deployment validation...`);
+    console.log(`🎯 Target Environment: ${this.targetEnvironment}`);
+    
+    if (this.validationMode === 'production') {
+      console.log('⚠️  PRODUCTION VALIDATION MODE - Enhanced checks enabled');
+    }
     
     try {
       await this.loadConfig();
@@ -33,6 +46,16 @@ class PreDeploymentValidator {
       await this.validateSecurityRules();
       await this.validateEnvironmentVariables();
       
+      // Production-specific validations
+      if (this.validationMode === 'production' || this.targetEnvironment === 'production') {
+        console.log('🔒 Running production-specific validations...');
+        await this.validateProductionReadiness();
+        await this.validateSecurityCompliance();
+        await this.validatePerformanceBaselines();
+        await this.validateBackupAndRecovery();
+        await this.validateMonitoringSetup();
+      }
+      
       return this.generateReport();
     } catch (error) {
       this.errors.push(`Validation failed: ${error.message}`);
@@ -42,12 +65,27 @@ class PreDeploymentValidator {
 
   async loadConfig() {
     try {
+      // Load base deployment configuration
       const configPath = path.join(this.configDir, 'deployment-config.json');
       const configData = await fs.readFile(configPath, 'utf8');
       this.config = JSON.parse(configData);
+      
+      // Load production-specific configuration for production validation
+      if (this.validationMode === 'production' || this.targetEnvironment === 'production') {
+        try {
+          const prodConfigPath = path.join(this.configDir, 'production-config.json');
+          const prodConfigData = await fs.readFile(prodConfigPath, 'utf8');
+          this.productionConfig = JSON.parse(prodConfigData);
+          console.log('✅ Production configuration loaded');
+        } catch (error) {
+          this.warnings.push('Production configuration not found, using defaults');
+          this.productionConfig = { production: { validation: {} } };
+        }
+      }
     } catch (error) {
       // Use default configuration if config file is not found
       this.config = { validation: { skipTypeCheck: false } };
+      this.productionConfig = { production: { validation: {} } };
     }
   }
 
@@ -640,6 +678,230 @@ class PreDeploymentValidator {
     ];
     
     return secretPatterns.some(pattern => pattern.test(content));
+  }
+
+  async validateProductionReadiness() {
+    console.log('🔒 Validating production readiness...');
+    
+    const prodConfig = this.productionConfig?.production?.validation || {};
+    
+    // Check required environment variables for production
+    const requiredEnvVars = prodConfig.environmentVariableChecks || [
+      'ANTHROPIC_API_KEY',
+      'OPENAI_API_KEY',
+      'ELEVENLABS_API_KEY',
+      'STRIPE_SECRET_KEY'
+    ];
+    
+    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+    if (missingEnvVars.length > 0) {
+      this.errors.push(`Missing required production environment variables: ${missingEnvVars.join(', ')}`);
+    } else {
+      this.info.push(`✅ All required production environment variables are set`);
+    }
+    
+    // Check test coverage if required
+    if (prodConfig.requiredTests?.unitTestCoverage) {
+      try {
+        const testResultsPath = path.join(this.projectRoot, 'coverage', 'coverage-summary.json');
+        const testResults = JSON.parse(await fs.readFile(testResultsPath, 'utf8'));
+        const totalCoverage = testResults.total.lines.pct;
+        
+        if (totalCoverage < prodConfig.requiredTests.unitTestCoverage) {
+          if (this.strictMode) {
+            this.errors.push(`Test coverage ${totalCoverage}% below required ${prodConfig.requiredTests.unitTestCoverage}%`);
+          } else {
+            this.warnings.push(`Test coverage ${totalCoverage}% below recommended ${prodConfig.requiredTests.unitTestCoverage}%`);
+          }
+        } else {
+          this.info.push(`✅ Test coverage ${totalCoverage}% meets requirements`);
+        }
+      } catch (error) {
+        if (this.strictMode) {
+          this.errors.push('Test coverage report not found - run tests before production deployment');
+        } else {
+          this.warnings.push('Test coverage report not available');
+        }
+      }
+    }
+    
+    // Validate production build configuration
+    try {
+      const packageJsonPath = path.join(this.projectRoot, 'frontend', 'package.json');
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+      
+      if (!packageJson.scripts?.build) {
+        this.errors.push('No production build script found in frontend/package.json');
+      } else {
+        this.info.push('✅ Production build script configured');
+      }
+    } catch (error) {
+      this.warnings.push('Could not validate frontend package.json configuration');
+    }
+  }
+
+  async validateSecurityCompliance() {
+    console.log('🔐 Validating security compliance...');
+    
+    const prodConfig = this.productionConfig?.production?.security || {};
+    
+    // Check HTTPS enforcement
+    if (prodConfig.httpsOnly) {
+      try {
+        const firebaseJsonPath = path.join(this.projectRoot, 'firebase.json');
+        const firebaseJson = JSON.parse(await fs.readFile(firebaseJsonPath, 'utf8'));
+        
+        const hostingConfig = firebaseJson.hosting;
+        if (!hostingConfig?.rewrites?.some(r => r.function)) {
+          this.warnings.push('No function rewrites found - ensure HTTPS enforcement is configured');
+        } else {
+          this.info.push('✅ Function rewrites configured for HTTPS enforcement');
+        }
+      } catch (error) {
+        this.warnings.push('Could not validate HTTPS configuration in firebase.json');
+      }
+    }
+    
+    // Security vulnerability scan
+    if (this.requireSecurityScan || prodConfig.vulnerabilityScanning) {
+      try {
+        // Run npm audit for security vulnerabilities
+        execSync('npm audit --audit-level=moderate', { 
+          cwd: this.projectRoot,
+          stdio: 'pipe'
+        });
+        this.info.push('✅ No moderate or high security vulnerabilities found');
+      } catch (error) {
+        if (prodConfig.failOnSecurityVulnerabilities) {
+          this.errors.push('Security vulnerabilities detected - run npm audit for details');
+        } else {
+          this.warnings.push('Security vulnerabilities detected - consider running npm audit');
+        }
+      }
+    }
+    
+    // Check for hardcoded secrets in production code
+    const productionFiles = await this.getFilesRecursive(path.join(this.projectRoot, 'functions', 'src'));
+    let secretsFound = 0;
+    
+    for (const file of productionFiles) {
+      if (file.endsWith('.js') || file.endsWith('.ts')) {
+        try {
+          const content = await fs.readFile(file, 'utf8');
+          if (this.containsHardcodedSecrets(content)) {
+            secretsFound++;
+            this.warnings.push(`Potential hardcoded secrets found in ${path.relative(this.projectRoot, file)}`);
+          }
+        } catch (error) {
+          // Skip files that can't be read
+        }
+      }
+    }
+    
+    if (secretsFound === 0) {
+      this.info.push('✅ No hardcoded secrets detected in source code');
+    } else if (this.strictMode) {
+      this.errors.push(`Hardcoded secrets found in ${secretsFound} files - use environment variables instead`);
+    }
+  }
+
+  async validatePerformanceBaselines() {
+    console.log('⚡ Validating performance baselines...');
+    
+    const prodConfig = this.productionConfig?.production || {};
+    
+    if (!this.requirePerformanceBaseline) {
+      this.info.push('Performance baseline validation skipped');
+      return;
+    }
+    
+    // Check bundle size for frontend
+    try {
+      const frontendDistPath = path.join(this.projectRoot, 'frontend', 'dist');
+      if (await this.directoryExists(frontendDistPath)) {
+        const files = await this.getFilesRecursive(frontendDistPath);
+        const jsFiles = files.filter(f => f.endsWith('.js'));
+        
+        let totalSize = 0;
+        for (const file of jsFiles) {
+          const stats = await fs.stat(file);
+          totalSize += stats.size;
+        }
+        
+        const sizeMB = totalSize / (1024 * 1024);
+        const sizeLimit = 10; // 10MB limit for frontend bundle
+        
+        if (sizeMB > sizeLimit) {
+          this.warnings.push(`Frontend bundle size ${sizeMB.toFixed(2)}MB exceeds recommended ${sizeLimit}MB`);
+        } else {
+          this.info.push(`✅ Frontend bundle size ${sizeMB.toFixed(2)}MB within limits`);
+        }
+      }
+    } catch (error) {
+      this.warnings.push('Could not analyze frontend bundle size');
+    }
+    
+    // Validate function count for batching strategy
+    try {
+      const functionsPath = path.join(this.projectRoot, 'functions', 'src');
+      const functionFiles = await this.getFilesRecursive(functionsPath);
+      const exportedFunctions = functionFiles.filter(f => f.includes('exports.'));
+      
+      if (exportedFunctions.length > 100) {
+        this.info.push(`Large number of functions (${exportedFunctions.length}) - intelligent batching will be used`);
+      } else {
+        this.info.push(`✅ Function count ${exportedFunctions.length} suitable for standard deployment`);
+      }
+    } catch (error) {
+      this.warnings.push('Could not analyze function count');
+    }
+  }
+
+  async validateBackupAndRecovery() {
+    console.log('💾 Validating backup and recovery procedures...');
+    
+    // Check if rollback configuration exists
+    const rollbackConfig = this.productionConfig?.production?.rollback;
+    if (rollbackConfig?.automaticRollbackEnabled) {
+      this.info.push('✅ Automatic rollback configured');
+    } else {
+      this.warnings.push('Automatic rollback not enabled - consider enabling for production safety');
+    }
+    
+    // Check for deployment history tracking
+    const deploymentsDir = path.join(this.projectRoot, 'deployments');
+    if (await this.directoryExists(deploymentsDir)) {
+      this.info.push('✅ Deployment history directory exists');
+    } else {
+      this.info.push('Creating deployment history directory for tracking');
+      await fs.mkdir(deploymentsDir, { recursive: true });
+    }
+  }
+
+  async validateMonitoringSetup() {
+    console.log('📊 Validating monitoring and alerting setup...');
+    
+    const monitoringConfig = this.productionConfig?.production?.monitoring;
+    
+    if (monitoringConfig?.alertingEnabled) {
+      this.info.push('✅ Production alerting enabled');
+    } else {
+      this.warnings.push('Production alerting not configured - consider enabling for production monitoring');
+    }
+    
+    if (monitoringConfig?.performanceBaselines) {
+      this.info.push('✅ Performance baselines configured');
+    } else {
+      this.warnings.push('Performance baselines not configured - consider setting up for production monitoring');
+    }
+    
+    // Validate health check endpoints
+    const healthCheckModule = path.join(path.dirname(__filename), 'health-checker.js');
+    if (await this.fileExists(healthCheckModule)) {
+      this.info.push('✅ Health checking module available');
+    } else {
+      this.warnings.push('Health checking module not found - post-deployment validation may be limited');
+    }
   }
 
   parseSize(sizeStr) {

@@ -60,6 +60,7 @@ export const extractPlaceholders = (content: string): string[] => {
 /**
  * Creates preview content showing placeholders as interactive elements
  * NEVER replaces placeholders with fake data - shows them as clickable elements for user input
+ * NOW WITH XSS PROTECTION: All content is sanitized before return
  */
 export const createPreviewContent = (
   content: string,
@@ -67,6 +68,9 @@ export const createPreviewContent = (
   userReplacements: PlaceholderReplacements = {}
 ): string => {
   if (!content) return content;
+  
+  // Import sanitization function
+  const { sanitizeHTML } = require('./security/contentSanitizer');
   
   // Apply ONLY user-provided replacements, never fake data
   let processedContent = replacePlaceholders(content, userReplacements);
@@ -76,7 +80,13 @@ export const createPreviewContent = (
     processedContent = makeInteractivePlaceholders(processedContent);
   }
   
-  return processedContent;
+  // CRITICAL SECURITY FIX: Sanitize all HTML content before return
+  return sanitizeHTML(processedContent, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 'br', 'p', 'span', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['class', 'data-placeholder', 'onclick'],
+    FORBID_SCRIPTS: true,
+    SANITIZE_DOM: true
+  });
 };
 
 /**

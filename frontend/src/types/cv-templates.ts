@@ -12,6 +12,7 @@ import type {
   CVSkillsData 
 } from './cvData';
 import type { Brand } from './utility-types';
+import type { SelectedFeatures } from './results';
 
 // ============================================================================
 // CORE TEMPLATE TYPES

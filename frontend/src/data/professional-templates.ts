@@ -973,8 +973,7 @@ export const PROFESSIONAL_TEMPLATES: Record<string, CVTemplate> = {
       allowLayoutChanges: true,
       customizableElements: ['colors', 'typography', 'layout-sections', 'animations']
     }
-  }
-};
+  },
 
   'healthcare-professional': {
     id: 'healthcare-professional' as TemplateId,

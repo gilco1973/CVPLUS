@@ -3,6 +3,8 @@ import type { CVPreviewContentProps } from '../../types/cv-preview';
 import { CVTemplateGenerator } from '../../utils/cv-preview/cvTemplateGenerator';
 import { useFeaturePreviews } from '../../hooks/cv-preview/useFeaturePreviews';
 import { PlaceholderBanner } from './PlaceholderBanner';
+import { getTemplateComponent, CORE_TEMPLATE_IDS } from '../templates';
+import { PROFESSIONAL_TEMPLATES } from '../../data/professional-templates';
 
 export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   previewData,
@@ -11,9 +13,12 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   showFeaturePreviews,
   collapsedSections,
   qrCodeSettings,
+  isEditing,
+  editingSection,
   showPlaceholderBanner,
   useBackendPreview = import.meta.env.VITE_USE_BACKEND_PREVIEW === 'true',
   jobId,
+  onSectionEdit,
   onToggleSection,
   onEditQRCode,
   onAnalyzeAchievements,
@@ -23,41 +28,86 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
   const previewRef = useRef<HTMLDivElement>(null);
   const { generateFeaturePreview } = useFeaturePreviews(previewData);
 
+  // Check if we should use the new template system
+  const useNewTemplateSystem = CORE_TEMPLATE_IDS.includes(selectedTemplate as any);
+  const TemplateComponent = useNewTemplateSystem ? getTemplateComponent(selectedTemplate) : null;
+  const templateData = useNewTemplateSystem ? PROFESSIONAL_TEMPLATES[selectedTemplate] : null;
+
   // Create a stable reference for selectedFeatures to track changes properly
   const selectedFeaturesString = useMemo(() => 
     JSON.stringify(selectedFeatures), 
     [selectedFeatures]
   );
   
-  // Generate the HTML content with proper reactivity using useMemo
-  const generatedHTML = useMemo(() => {
-    console.log('🔄 [HTML REGENERATION] Regenerating preview HTML due to dependency changes');
-    console.log('🔄 [HTML REGENERATION] selectedFeatures:', selectedFeatures);
-    console.log('🔄 [HTML REGENERATION] selectedFeaturesString:', selectedFeaturesString);
-    console.log('🔄 [HTML REGENERATION] showFeaturePreviews:', showFeaturePreviews);
-    console.log('🔄 [HTML REGENERATION] selectedTemplate:', selectedTemplate);
-    
-    if (!showFeaturePreviews) {
-      // Return basic CV without feature previews
-      return CVTemplateGenerator.generateHTML(
-        previewData,
-        selectedTemplate,
-        {},
-        qrCodeSettings,
-        collapsedSections,
-        () => '' // No feature previews
-      );
+  // State for generated HTML to handle async generation
+  const [generatedHTML, setGeneratedHTML] = React.useState<string>('');
+  const [isGeneratingHTML, setIsGeneratingHTML] = React.useState<boolean>(false);
+  
+  // Generate HTML asynchronously when dependencies change (for legacy templates only)
+  React.useEffect(() => {
+    // Skip HTML generation for new template system
+    if (useNewTemplateSystem) {
+      setIsGeneratingHTML(false);
+      return;
     }
 
-    return CVTemplateGenerator.generateHTML(
-      previewData,
-      selectedTemplate,
-      selectedFeatures,
-      qrCodeSettings,
-      collapsedSections,
-      generateFeaturePreview
-    );
-  }, [selectedFeaturesString, previewData, selectedTemplate, showFeaturePreviews, qrCodeSettings, collapsedSections, generateFeaturePreview]);
+    let mounted = true;
+    
+    const generateHTML = async () => {
+      console.log('🔄 [HTML REGENERATION] Regenerating preview HTML due to dependency changes');
+      console.log('🔄 [HTML REGENERATION] selectedFeatures:', selectedFeatures);
+      console.log('🔄 [HTML REGENERATION] selectedFeaturesString:', selectedFeaturesString);
+      console.log('🔄 [HTML REGENERATION] showFeaturePreviews:', showFeaturePreviews);
+      console.log('🔄 [HTML REGENERATION] selectedTemplate:', selectedTemplate);
+      
+      setIsGeneratingHTML(true);
+      
+      try {
+        let html: string;
+        
+        if (!showFeaturePreviews) {
+          // Return basic CV without feature previews
+          html = await CVTemplateGenerator.generateHTML(
+            previewData,
+            selectedTemplate,
+            {},
+            qrCodeSettings,
+            collapsedSections,
+            () => '' // No feature previews
+          );
+        } else {
+          html = await CVTemplateGenerator.generateHTML(
+            previewData,
+            selectedTemplate,
+            selectedFeatures,
+            qrCodeSettings,
+            collapsedSections,
+            generateFeaturePreview
+          );
+        }
+        
+        if (mounted) {
+          setGeneratedHTML(html);
+        }
+      } catch (error) {
+        console.error('❌ [HTML GENERATION] Failed to generate HTML:', error);
+        // Fallback to basic template
+        if (mounted) {
+          setGeneratedHTML('<div class="cv-preview-error">Failed to generate preview. Please try again.</div>');
+        }
+      } finally {
+        if (mounted) {
+          setIsGeneratingHTML(false);
+        }
+      }
+    };
+    
+    generateHTML();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [useNewTemplateSystem, selectedFeaturesString, previewData, selectedTemplate, showFeaturePreviews, qrCodeSettings, collapsedSections, generateFeaturePreview]);
 
   // Setup event listeners and DOM interactions
   useEffect(() => {
@@ -138,15 +188,49 @@ export const CVPreviewContent: React.FC<CVPreviewContentProps> = ({
         />
       )}
       
-      {/* CV Preview Content */}
-      <div 
-        ref={previewRef}
-        className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200"
-        dangerouslySetInnerHTML={{ __html: generatedHTML }}
-      />
+      {/* Loading State */}
+      {isGeneratingHTML && (
+        <div className="cv-preview-loading bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Generating enhanced CV preview...</p>
+        </div>
+      )}
+      
+      {/* New Template System - React Components */}
+      {useNewTemplateSystem && TemplateComponent && templateData && !isGeneratingHTML && (
+        <div 
+          ref={previewRef}
+          className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+        >
+          <TemplateComponent
+            cvData={previewData}
+            template={templateData}
+            isEditing={isEditing}
+            selectedFeatures={selectedFeatures}
+            onSectionEdit={onSectionEdit}
+            showFeaturePreviews={showFeaturePreviews}
+            className="w-full h-full"
+          />
+        </div>
+      )}
+      
+      {/* Legacy Template System - Generated HTML */}
+      {!useNewTemplateSystem && !isGeneratingHTML && (
+        <div 
+          ref={previewRef}
+          className="cv-preview-content bg-white rounded-lg shadow-sm border border-gray-200"
+          dangerouslySetInnerHTML={{ __html: generatedHTML }}
+        />
+      )}
     </div>
   );
 };
 
 // Export the component with backward compatibility
 CVPreviewContent.displayName = 'CVPreviewContent';
+
+// Debug logging for template system
+if (process.env.NODE_ENV === 'development') {
+  console.log('🎨 [TEMPLATE SYSTEM] Available core templates:', CORE_TEMPLATE_IDS);
+  console.log('🎨 [TEMPLATE SYSTEM] Professional templates loaded:', Object.keys(PROFESSIONAL_TEMPLATES));
+}
