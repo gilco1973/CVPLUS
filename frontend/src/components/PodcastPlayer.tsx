@@ -49,6 +49,13 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   }, [checkInterval, jobId]);
 
   const checkPodcastStatus = useCallback(async () => {
+    // Only check status for premium users
+    if (!isPremium) {
+      setPodcastStatus({ status: 'not-started' });
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await getPodcastStatus(jobId);
       setPodcastStatus(response as PodcastStatus);
@@ -63,16 +70,24 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
       setPodcastStatus({ status: 'not-started' });
       setLoading(false);
     }
-  }, [jobId, startPolling]);
+  }, [jobId, startPolling, isPremium]);
 
   useEffect(() => {
-    checkPodcastStatus();
+    // Only check podcast status for premium users
+    if (isPremium && !premiumLoading) {
+      checkPodcastStatus();
+    } else if (!premiumLoading) {
+      // For non-premium users, set to not-started and stop loading
+      setPodcastStatus({ status: 'not-started' });
+      setLoading(false);
+    }
+    
     return () => {
       if (checkInterval) {
         clearInterval(checkInterval);
       }
     };
-  }, [jobId]);
+  }, [jobId, isPremium, premiumLoading]);
 
   const handleGeneratePodcast = async () => {
     if (!isPremium) {

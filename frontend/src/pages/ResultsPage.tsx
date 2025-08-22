@@ -52,9 +52,11 @@ export const ResultsPage = () => {
     achievementsShowcase: true,
   });
 
-  // Save feature selection to session storage whenever it changes
+  // Save feature selection to session storage whenever it changes (but not during initial load)
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
   useEffect(() => {
-    if (jobId) {
+    if (jobId && !isInitialLoad) {
       try {
         sessionStorage.setItem(`feature-selection-${jobId}`, JSON.stringify(selectedFeatures));
         console.log('📾 [PHASE 3 PERSIST] Saved feature selection:', selectedFeatures);
@@ -62,7 +64,7 @@ export const ResultsPage = () => {
         console.warn('Failed to save feature selection:', e);
       }
     }
-  }, [selectedFeatures, jobId]);
+  }, [selectedFeatures, jobId, isInitialLoad]);
 
   const [selectedFormats, setSelectedFormats] = useState<SelectedFormats>({
     pdf: true,
@@ -95,6 +97,11 @@ export const ResultsPage = () => {
       } catch (e) {
         console.warn('Failed to load saved feature selection:', e);
       }
+      
+      // Mark initial load as complete after a short delay
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 100);
     }
   }, [jobId]);
 

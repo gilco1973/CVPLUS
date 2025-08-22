@@ -104,7 +104,9 @@ export const updatePlaceholderValue = onCall<PlaceholderUpdateRequest, Promise<P
       const updateContentWithPlaceholder = (obj: any, path: string[] = []): boolean => {
         if (typeof obj === 'string') {
           if (obj.includes(placeholderKey)) {
-            const replacements = { [placeholderKey]: value };
+            // PlaceholderManager.replacePlaceholders expects key without brackets for replacements
+            const keyForReplacement = placeholderKey.startsWith('[') ? placeholderKey.slice(1, -1) : placeholderKey;
+            const replacements = { [keyForReplacement]: value };
             const newContent = PlaceholderManager.replacePlaceholders(obj, replacements);
             
             // Update the content in the nested object
@@ -148,7 +150,9 @@ export const updatePlaceholderValue = onCall<PlaceholderUpdateRequest, Promise<P
         
         const finalKey = pathParts[pathParts.length - 1];
         if (current[finalKey] && typeof current[finalKey] === 'string' && current[finalKey].includes(placeholderKey)) {
-          const replacements = { [placeholderKey]: value };
+          // PlaceholderManager.replacePlaceholders expects key without brackets for replacements
+          const keyForReplacement = placeholderKey.startsWith('[') ? placeholderKey.slice(1, -1) : placeholderKey;
+          const replacements = { [keyForReplacement]: value };
           current[finalKey] = PlaceholderManager.replacePlaceholders(current[finalKey], replacements);
           updatedContent = current[finalKey];
           contentFound = true;
