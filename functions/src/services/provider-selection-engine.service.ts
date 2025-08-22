@@ -54,10 +54,10 @@ interface SelectionContext {
   userTier: 'free' | 'premium' | 'enterprise';
   currentLoad: number;
   timeOfDay: number;
-  isRetry: boolean;
-  previousFailures: string[];
-  urgency: 'low' | 'normal' | 'high';
-  sessionHistory: ProviderUsageHistory[];
+  isRetry?: boolean;
+  previousFailures?: string[];
+  urgency?: 'low' | 'normal' | 'high';
+  sessionHistory?: ProviderUsageHistory[];
 }
 
 interface ProviderUsageHistory {
@@ -174,11 +174,11 @@ class AIProviderScorer {
     let score = 10; // Base reliability score
     
     // Penalty for recent failures
-    const recentFailures = context.previousFailures.filter(id => id === provider.name).length;
+    const recentFailures = (context.previousFailures || []).filter(id => id === provider.name).length;
     score -= recentFailures * 5;
     
     // Bonus for consistent performance in user's history
-    const providerHistory = context.sessionHistory.filter(h => h.providerId === provider.name);
+    const providerHistory = (context.sessionHistory || []).filter(h => h.providerId === provider.name);
     if (providerHistory.length > 0) {
       const successRate = providerHistory.filter(h => h.success).length / providerHistory.length;
       score += successRate * 5;
@@ -416,7 +416,7 @@ export class ProviderSelectionEngine {
     
     return availableProviders.filter(provider => {
       // Skip providers that failed recently
-      if (context.previousFailures?.includes(provider.name)) {
+      if ((context.previousFailures || []).includes(provider.name)) {
         console.log(`[Provider Selection Engine] Skipping ${provider.name} due to recent failure`);
         return false;
       }

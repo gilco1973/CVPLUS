@@ -10,6 +10,7 @@ import { useFeatureValidation, useBulkFeatureOperations } from '../hooks/useFeat
 import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import toast from 'react-hot-toast';
 import { FEATURE_CONFIGS } from '../config/featureConfigs';
+import { RoleProfileIntegration } from '../components/role-profiles/RoleProfileIntegration';
 
 export const FeatureSelectionPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -20,6 +21,7 @@ export const FeatureSelectionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [jobData, setJobData] = useState<any>(null);
   const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
+  const [showRoleProfile, setShowRoleProfile] = useState(false);
 
   // Feature validation hook
   const {
@@ -261,6 +263,20 @@ export const FeatureSelectionPage = () => {
           </div>
         </div>
 
+        {/* Role Profile Integration */}
+        {showRoleProfile && jobData && (
+          <Section variant="content" background="transparent" spacing="lg">
+            <RoleProfileIntegration
+              job={jobData}
+              onContinue={(selectedRecommendations, roleContext) => {
+                setShowRoleProfile(false);
+                // Continue to feature selection
+              }}
+              onBack={() => setShowRoleProfile(false)}
+            />
+          </Section>
+        )}
+
         {/* Feature Selection */}
         <Section variant="content" background="transparent" spacing="lg">
           <div className="mb-6">
@@ -270,6 +286,28 @@ export const FeatureSelectionPage = () => {
             <p className="text-gray-400 mb-4">
               Select the features you want to include in your enhanced CV. You can always change these later.
             </p>
+            
+            {/* Role Profile Integration Button */}
+            {!showRoleProfile && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-500/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                      🎯 Role Profile Analysis
+                    </h3>
+                    <p className="text-gray-300 text-sm">
+                      Get personalized recommendations based on your professional role
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowRoleProfile(true)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Analyze Role
+                  </button>
+                </div>
+              </div>
+            )}
             
             {/* Selection Summary */}
             <div className="flex items-center gap-6 p-4 bg-gray-800 rounded-lg border border-gray-700">

@@ -94,16 +94,44 @@ export default defineConfig({
       'firebase/functions',
       'firebase/storage',
       'dompurify',
-      'zod'
+      'zod',
+      'recharts',
+      'lodash',
+      'lodash/uniqBy',
+      'lodash/isFunction',
+      'lodash/sortBy',
+      'lodash/isNil',
+      'lodash/throttle',
+      'lodash/isObject',
+      'lodash/upperFirst',
+      'lodash/maxBy',
+      'lodash/minBy',
+      'lodash/last',
+      'lodash/first',
+      'lodash/get',
+      'lodash/isEqual',
+      'lodash/some',
+      'lodash/max',
+      'lodash/isNaN',
+      'lodash/omit',
+      'lodash/min',
+      'lodash/isNumber',
+      'lodash/isString',
+      'lodash/range'
     ],
     exclude: [
       'framer-motion',
-      'recharts',
       'firebase/compat',
       'firebase/analytics',
       'firebase/messaging',
       'firebase/performance'
     ]
+  },
+  resolve: {
+    alias: {
+      // Ensure lodash resolves to local node_modules, not global
+      'lodash': '/Users/gklainert/Documents/cvplus/frontend/node_modules/lodash'
+    }
   },
   // Environment variable prefixes that should be exposed to the client
   envPrefix: ['VITE_']

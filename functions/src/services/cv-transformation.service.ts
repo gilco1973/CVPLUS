@@ -125,8 +125,27 @@ export class CVTransformationService {
       
     } catch (error) {
       console.error('[CV-TRANSFORMATION] Error in role-enhanced recommendations:', error);
-      // Fallback to standard recommendations
-      return this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
+      
+      // Try fallback to standard recommendations first
+      try {
+        console.log('[CV-TRANSFORMATION] Attempting fallback to standard recommendations...');
+        return await this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
+      } catch (fallbackError) {
+        console.error('[CV-TRANSFORMATION] Standard recommendations also failed:', fallbackError);
+        
+        // Final fallback to quota-aware recommendations
+        if (this.isQuotaExceededError(error) || this.isQuotaExceededError(fallbackError)) {
+          console.warn('[CV-TRANSFORMATION] Using quota fallback recommendations due to API limits');
+          const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
+          return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
+        }
+        
+        // Ultimate fallback
+        console.warn('[CV-TRANSFORMATION] Using basic fallback recommendations');
+        const basicFallbackRecs = this.generateFallbackRecommendations(parsedCV);
+        const validatedRecs = this.ensureRecommendationsValid(basicFallbackRecs);
+        return this.processRecommendationsWithPlaceholders(validatedRecs);
+      }
     }
   }
 
@@ -138,9 +157,15 @@ export class CVTransformationService {
     targetRole?: string,
     industryKeywords?: string[]
   ): Promise<CVRecommendation[]> {
+    console.log('[CV-TRANSFORMATION] Starting detailed recommendations generation');
+    console.log('[CV-TRANSFORMATION] Target role:', targetRole || 'none specified');
+    console.log('[CV-TRANSFORMATION] Industry keywords:', industryKeywords?.length || 0);
+    
     const analysisPrompt = this.buildAnalysisPrompt(parsedCV, targetRole, industryKeywords);
     
     try {
+      console.log('[CV-TRANSFORMATION] Sending request to Claude API...');
+      
       const response = await this.claudeService.createVerifiedMessage({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
@@ -203,23 +228,52 @@ Return a JSON array of recommendations following this exact structure:
           const parsed = JSON.parse(cleanText);
           const recommendations = parsed.recommendations || [];
           
+          console.log(`[CV-TRANSFORMATION] Successfully parsed ${recommendations.length} recommendations from Claude API`);
+          
+          // Validate and ensure all recommendations have required fields
+          const validatedRecommendations = this.ensureRecommendationsValid(recommendations);
+          console.log(`[CV-TRANSFORMATION] Validated ${validatedRecommendations.length} recommendations`);
+          
           // Process each recommendation to detect placeholders
-          return this.processRecommendationsWithPlaceholders(recommendations);
+          return this.processRecommendationsWithPlaceholders(validatedRecommendations);
         } catch (parseError) {
-          console.error('Failed to parse recommendations JSON:', parseError);
-          console.error('Raw response text:', content.text);
+          console.error('[CV-TRANSFORMATION] Failed to parse recommendations JSON:', parseError);
+          console.error('[CV-TRANSFORMATION] Raw response text length:', content.text?.length || 0);
+          console.error('[CV-TRANSFORMATION] Raw response text preview:', content.text?.substring(0, 200) + '...');
+          
           // Fallback: extract recommendations from text response
+          console.log('[CV-TRANSFORMATION] Attempting to extract recommendations from text response...');
           const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
-          return this.processRecommendationsWithPlaceholders(fallbackRecs);
+          const validatedRecs = this.ensureRecommendationsValid(fallbackRecs);
+          return this.processRecommendationsWithPlaceholders(validatedRecs);
         }
       }
 
       throw new Error('Invalid response format from Claude');
     } catch (error) {
-      console.error('Error generating recommendations:', error);
-      // Return basic recommendations as fallback
+      console.error('[CV-TRANSFORMATION] Error generating recommendations:', error);
+      
+      // Log specific error details for debugging
+      if (error?.response) {
+        console.error('[CV-TRANSFORMATION] Error response status:', error.response.status);
+        console.error('[CV-TRANSFORMATION] Error response data:', error.response.data);
+      }
+      
+      if (error?.message) {
+        console.error('[CV-TRANSFORMATION] Error message:', error.message);
+      }
+      
+      // Enhanced error handling for specific error types
+      if (this.isQuotaExceededError(error)) {
+        console.warn('Claude API quota exceeded - generating enhanced fallback recommendations');
+        const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
+        return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
+      }
+      
+      // Return basic recommendations as fallback for other errors
       const fallbackRecs = this.generateFallbackRecommendations(parsedCV);
-      return this.processRecommendationsWithPlaceholders(fallbackRecs);
+      const validatedFallbackRecs = this.ensureRecommendationsValid(fallbackRecs);
+      return this.processRecommendationsWithPlaceholders(validatedFallbackRecs);
     }
   }
 
@@ -1899,6 +1953,170 @@ Focus on:
 Return JSON only: {"recommendations": [...]} with id, type, category, title, description, section, impact, priority, estimatedScoreImprovement fields.`;
   }
   
+  /**
+   * Check if error is related to API quota exceeded
+   */
+  private isQuotaExceededError(error: any): boolean {
+    const errorMessage = error?.message?.toLowerCase() || '';
+    return (
+      error?.status === 429 ||
+      error?.response?.status === 429 ||
+      errorMessage.includes('quota exceeded') ||
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('429')
+    );
+  }
+
+  /**
+   * Ensure all recommendations have required fields for validation
+   */
+  private ensureRecommendationsValid(recommendations: CVRecommendation[]): CVRecommendation[] {
+    return recommendations.map(rec => {
+      // Ensure all required fields are present and non-empty
+      return {
+        ...rec,
+        id: rec.id || `rec_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: rec.title || 'CV Improvement Recommendation',
+        description: rec.description || 'Improve your CV content to better showcase your professional experience and skills.',
+        section: rec.section || 'general'
+      };
+    });
+  }
+
+  /**
+   * Generate enhanced fallback recommendations specifically for quota exceeded scenarios
+   */
+  private generateQuotaFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
+    const recommendations: CVRecommendation[] = [];
+    let recCount = 1;
+    
+    // Essential recommendations that don't require AI generation
+    
+    // 1. Professional Title (always high priority)
+    if (this.isProfessionalTitlePlaceholder(cv.personalInfo?.title)) {
+      recommendations.push({
+        id: `rec_quota_title_${recCount++}`,
+        type: 'content',
+        category: 'professional_summary',
+        title: 'Add Professional Title',
+        description: 'A professional title is essential for ATS systems and recruiter attention. Add a title that reflects your expertise and career level.',
+        currentContent: cv.personalInfo?.title || '',
+        suggestedContent: 'Professional [Your Field] Specialist',
+        impact: 'high',
+        priority: 1,
+        section: 'professional_title',
+        actionRequired: cv.personalInfo?.title ? 'replace' : 'add',
+        keywords: ['professional', 'specialist', 'expert'],
+        estimatedScoreImprovement: 15
+      });
+    }
+    
+    // 2. Professional Summary
+    if (!cv.summary || cv.summary.length < 50) {
+      recommendations.push({
+        id: `rec_quota_summary_${recCount++}`,
+        type: 'section_addition',
+        category: 'professional_summary',
+        title: 'Add Professional Summary',
+        description: 'A professional summary is crucial for making a strong first impression and improving ATS compatibility.',
+        suggestedContent: 'Experienced professional with proven expertise in [Your Field]. Skilled in [Key Skills] with a track record of [Key Achievement]. Passionate about [Industry Focus] and committed to delivering exceptional results.',
+        impact: 'high',
+        priority: 2,
+        section: 'professional_summary',
+        actionRequired: 'add',
+        keywords: ['experienced', 'professional', 'skilled', 'expertise'],
+        estimatedScoreImprovement: 20
+      });
+    }
+    
+    // 3. Experience Enhancement
+    if (cv.experience && cv.experience.length > 0) {
+      const hasWeakExperience = cv.experience.some(exp => 
+        !exp.description || exp.description.split(' ').length < 15
+      );
+      
+      if (hasWeakExperience) {
+        recommendations.push({
+          id: `rec_quota_experience_${recCount++}`,
+          type: 'content',
+          category: 'experience',
+          title: 'Enhance Experience Descriptions',
+          description: 'Transform basic job descriptions into achievement-focused statements that demonstrate your impact and value.',
+          currentContent: 'Basic job responsibilities',
+          suggestedContent: 'Led [Team/Project] achieving [Specific Result] through [Action Taken]. Improved [Metric] by [Percentage] while [Additional Achievement].',
+          impact: 'high',
+          priority: 3,
+          section: 'experience',
+          actionRequired: 'replace',
+          keywords: ['led', 'achieved', 'improved', 'delivered'],
+          estimatedScoreImprovement: 18
+        });
+      }
+    }
+    
+    // 4. Skills Organization
+    if (cv.skills && Array.isArray(cv.skills) && cv.skills.length > 8) {
+      recommendations.push({
+        id: `rec_quota_skills_${recCount++}`,
+        type: 'structure',
+        category: 'skills',
+        title: 'Organize Skills by Category',
+        description: 'Categorize your skills to improve readability and ATS scanning. Group technical skills, soft skills, and tools separately.',
+        suggestedContent: 'Technical Skills: [Programming Languages, Frameworks]\nTools & Platforms: [Software, Systems]\nSoft Skills: [Leadership, Communication, Problem-solving]',
+        impact: 'medium',
+        priority: 4,
+        section: 'skills',
+        actionRequired: 'modify',
+        keywords: ['technical', 'skills', 'tools', 'platforms'],
+        estimatedScoreImprovement: 12
+      });
+    }
+    
+    // 5. Education Enhancement
+    if (cv.education && cv.education.length > 0) {
+      const hasBasicEducation = cv.education.some(edu => 
+        !edu.description && !edu.gpa && !edu.honors
+      );
+      
+      if (hasBasicEducation) {
+        recommendations.push({
+          id: `rec_quota_education_${recCount++}`,
+          type: 'content',
+          category: 'education',
+          title: 'Enhance Education Details',
+          description: 'Add relevant coursework, achievements, or honors to make your education section more compelling.',
+          suggestedContent: 'Relevant Coursework: [Key Subjects]\nAchievements: [Academic Honors, Projects]\nGPA: [If 3.5 or higher]',
+          impact: 'medium',
+          priority: 5,
+          section: 'education',
+          actionRequired: 'add',
+          keywords: ['coursework', 'achievements', 'academic'],
+          estimatedScoreImprovement: 10
+        });
+      }
+    }
+    
+    // 6. Achievements Section
+    if (!cv.achievements || cv.achievements.length === 0) {
+      recommendations.push({
+        id: `rec_quota_achievements_${recCount++}`,
+        type: 'section_addition',
+        category: 'achievements',
+        title: 'Add Key Achievements Section',
+        description: 'A dedicated achievements section highlights your most impressive accomplishments and sets you apart from other candidates.',
+        suggestedContent: '• [Quantifiable Achievement with Percentage/Numbers]\n• [Award or Recognition Received]\n• [Project Success or Innovation]\n• [Process Improvement or Efficiency Gain]',
+        impact: 'high',
+        priority: 6,
+        section: 'achievements',
+        actionRequired: 'add',
+        keywords: ['achievements', 'accomplishments', 'awards', 'success'],
+        estimatedScoreImprovement: 15
+      });
+    }
+    
+    return recommendations;
+  }
+
   private generateFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
     const recommendations: CVRecommendation[] = [];
     

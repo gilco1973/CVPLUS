@@ -53,6 +53,18 @@ export interface EnhancedSessionState {
   /** Session status */
   status: 'active' | 'paused' | 'completed' | 'failed';
   
+  /** Processing checkpoints */
+  processingCheckpoints?: ProcessingCheckpoint[];
+  
+  /** Action queue */
+  actionQueue?: QueuedAction[];
+  
+  /** Feature states */
+  featureStates?: Record<string, any>;
+  
+  /** Step progress tracking */
+  stepProgress?: Record<CVStep, number>;
+  
   /** Session metadata */
   metadata: {
     startedAt: Date;
@@ -87,6 +99,21 @@ export interface ProcessingCheckpoint {
   
   /** Function name that created the checkpoint */
   functionName?: string;
+  
+  /** Checkpoint parameters */
+  parameters?: Record<string, any>;
+  
+  /** Last attempt timestamp */
+  lastAttemptAt?: Date;
+  
+  /** Checkpoint result */
+  result?: any;
+  
+  /** Maximum retry attempts */
+  maxRetries?: number;
+  
+  /** Checkpoint priority */
+  priority?: 'low' | 'normal' | 'high';
   
   /** Processing state */
   state?: 'pending' | 'processing' | 'completed' | 'failed';
@@ -128,13 +155,16 @@ export interface QueuedAction {
   sessionId: string;
   
   /** Action type */
-  type: 'retry' | 'skip' | 'manual_intervention' | 'rollback';
+  type: 'retry' | 'skip' | 'manual_intervention' | 'rollback' | 'session_update' | 'form_save' | 'feature_toggle';
   
   /** Target step for the action */
   targetStep: CVStep;
   
   /** Action parameters */
   parameters?: any;
+  
+  /** Action payload */
+  payload?: Record<string, any>;
   
   /** Action priority */
   priority: 'low' | 'normal' | 'high';
@@ -144,6 +174,15 @@ export interface QueuedAction {
   
   /** Action status */
   status: 'pending' | 'processing' | 'completed' | 'failed';
+  
+  /** Number of attempts made */
+  attempts?: number;
+  
+  /** Maximum allowed attempts */
+  maxAttempts?: number;
+  
+  /** Whether action requires network */
+  requiresNetwork?: boolean;
 }
 
 export enum CVStep {

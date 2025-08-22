@@ -23,6 +23,8 @@ import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { useAuth } from '../contexts/AuthContext';
 // Placeholder handling - only for user-provided replacements
 import { PlaceholderReplacements } from '../utils/placeholderReplacer';
+import { PlaceholderEditingProvider } from '../contexts/PlaceholderEditingContext';
+import { EditablePlaceholderWrapper } from '../utils/editablePlaceholderUtils';
 
 // Layout and common components
 import { Header } from '../components/Header';
@@ -42,19 +44,16 @@ import { CVPreviewLayout } from '../components/common/CVPreviewLayout';
 // Types
 import type { Job } from '../services/cvService';
 
-// Utility function to highlight placeholders in text
-const highlightPlaceholders = (text: string): React.ReactNode[] => {
-  if (!text) return [text];
-  
-  return text.split(/(\[INSERT[^\]]*\]|\[ADD[^\]]*\]|\[NUMBER[^\]]*\])/).map((part, index) => 
-    /\[(INSERT|ADD|NUMBER)[^\]]*\]/.test(part) ? (
-      <span key={index} className="bg-yellow-200 px-1 py-0.5 rounded text-black font-medium border">
-        {part}
-      </span>
-    ) : (
-      <span key={index}>{part}</span>
-    )
-  );
+// Handler for updating CV content when placeholders are edited
+const handleContentUpdate = async (newContent: string, fieldPath: string, section: string) => {
+  try {
+    console.log('Content updated:', { newContent, fieldPath, section });
+    // TODO: Implement real-time CV update via Firebase function
+    // This will call the backend to update the CV data in the database
+  } catch (error) {
+    console.error('Failed to update CV content:', error);
+    toast.error('Failed to save changes');
+  }
 };
 
 interface CVPreviewPageNewProps {
@@ -535,7 +534,8 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
             toast.error('Error loading CV preview');
           }}
         >
-          <Suspense fallback={<CVPreviewSkeleton />}>
+          <PlaceholderEditingProvider jobId={jobId || ''}>
+            <Suspense fallback={<CVPreviewSkeleton />}>
             {viewMode === 'single' ? (
               /* Single View - Enhanced CV Only */
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -549,13 +549,22 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                   {cvData.enhanced.summary && (
                     <section className="border-b border-gray-200 pb-6">
                       <h2 className="text-xl font-bold text-gray-900 mb-4">Professional Summary</h2>
-                      <p className="text-gray-700 leading-relaxed">{cvData.enhanced.summary}</p>
+                      <div className="text-gray-700 leading-relaxed">
+                        <EditablePlaceholderWrapper
+                          content={cvData.enhanced.summary}
+                          onContentUpdate={(newContent) => handleContentUpdate(newContent, 'summary', 'professional_summary')}
+                          fieldPath="summary"
+                          section="professional_summary"
+                          fallbackToStatic={true}
+                        />
+                      </div>
                     </section>
                   )}
 
                   <CVExperience 
                     data={cvData.enhanced.experience}
                     jobId={jobId}
+                    onContentUpdate={handleContentUpdate}
                   />
 
                   <CVSkills 
@@ -671,7 +680,13 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       <div className="p-6">
                         {cvData.enhanced.summary ? (
                           <div className="text-gray-700 leading-relaxed">
-                            {highlightPlaceholders(cvData.enhanced.summary)}
+                            <EditablePlaceholderWrapper
+                              content={cvData.enhanced.summary}
+                              onContentUpdate={(newContent) => handleContentUpdate(newContent, 'summary', 'professional_summary')}
+                              fieldPath="summary"
+                              section="professional_summary"
+                              fallbackToStatic={true}
+                            />
                           </div>
                         ) : (
                           <p className="text-gray-400 italic">No summary provided</p>
@@ -697,6 +712,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       <CVExperience 
                         data={cvData.enhanced.experience}
                         jobId={jobId}
+                        onContentUpdate={handleContentUpdate}
                       />
                     </div>
                   </div>
@@ -745,7 +761,8 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                 </div>
               </div>
             )}
-          </Suspense>
+            </Suspense>
+          </PlaceholderEditingProvider>
         </ErrorBoundary>
 
         {/* Bottom Actions */}

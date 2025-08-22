@@ -15,7 +15,9 @@ import type {
   LayoutConfiguration,
   FeatureSpecification,
   StylingSystem,
-  ATSCompatibility,
+  ATSCompatibility
+} from '../types/cv-templates';
+import {
   INDUSTRY_COLOR_SCHEMES,
   PROFESSIONAL_TYPOGRAPHY
 } from '../types/cv-templates';

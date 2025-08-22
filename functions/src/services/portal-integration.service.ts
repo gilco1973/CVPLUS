@@ -852,13 +852,20 @@ class PortalGenerationOrchestrator {
             apiCalls: {}
           },
           quality: {
+            completionRate: 1.0,
+            accuracyScore: 0.9,
+            performanceScore: 0.9,
             completenessScore: 0.9,
             designConsistencyScore: 0.8,
             ragAccuracyScore: 0.85,
-            performanceScore: 0.9,
             accessibilityScore: 0.8,
             overallScore: 0.85
-          }
+          },
+          cvAnalysis: {},
+          templateUsed: 'default',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0
         }
       };
 

@@ -96,6 +96,31 @@ export async function getGoogleAccessToken(uid: string): Promise<string | null> 
  */
 export async function updateUserLastLogin(uid: string, email: string, name?: string, picture?: string): Promise<void> {
   try {
+    // Ensure Firebase Admin is properly initialized
+    if (!admin.apps.length) {
+      console.warn('Firebase Admin not initialized in auth.ts');
+      return;
+    }
+
+    // Check if FieldValue.serverTimestamp is available
+    const serverTimestamp = admin.firestore.FieldValue?.serverTimestamp();
+    if (!serverTimestamp) {
+      console.error('Firebase Admin FieldValue.serverTimestamp is undefined');
+      // Use regular timestamp as fallback
+      const now = new Date();
+      await admin.firestore()
+        .collection('users')
+        .doc(uid)
+        .set({
+          email,
+          name: name || null,
+          picture: picture || null,
+          lastLoginAt: now,
+          updatedAt: now
+        }, { merge: true });
+      return;
+    }
+
     await admin.firestore()
       .collection('users')
       .doc(uid)
@@ -103,8 +128,8 @@ export async function updateUserLastLogin(uid: string, email: string, name?: str
         email,
         name: name || null,
         picture: picture || null,
-        lastLoginAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        lastLoginAt: serverTimestamp,
+        updatedAt: serverTimestamp
       }, { merge: true });
   } catch (error) {
     console.error('Failed to update user last login:', error);

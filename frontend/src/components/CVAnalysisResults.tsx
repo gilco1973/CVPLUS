@@ -1044,7 +1044,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                       e.stopPropagation();
                       applyAllPriority(priority, true);
                     }}
-                    className="px-4 py-2 text-sm font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:ring-2 focus:ring-white/50 focus:outline-none"
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:ring-2 focus:outline-none ${
+                      priority === 'high' 
+                        ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500/50' 
+                        : priority === 'medium'
+                        ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500/50'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500/50'
+                    }`}
                   >
                     Select All
                   </button>

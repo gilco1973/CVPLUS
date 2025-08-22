@@ -38,18 +38,14 @@ export class SessionCheckpointService {
     const checkpoint: ProcessingCheckpoint = {
       id: this.generateCheckpointId(sessionId, stepId, functionName),
       sessionId,
-      stepId,
+      step: stepId,
       functionName,
       parameters,
-      featureId,
       state: 'pending',
-      createdAt: new Date(),
       priority: this.determinePriority(stepId, featureId),
-      retryCount: 0,
-      maxRetries: 3,
-      dependencies: this.getDependencies(stepId, featureId),
-      estimatedDuration: this.getEstimatedDuration(functionName),
-      resourceRequirements: this.getResourceRequirements(functionName)
+      data: {},
+      createdAt: new Date(),
+      isRestorable: true
     };
 
     // Store checkpoint in Firestore
@@ -77,11 +73,10 @@ export class SessionCheckpointService {
 
     if (result !== undefined) {
       updates.result = result;
-      updates.completedAt = new Date();
     }
 
     if (error) {
-      updates.error = error;
+      updates.error = typeof error === 'string' ? { message: error, timestamp: new Date() } : error;
       updates.retryCount = admin.firestore.FieldValue.increment(1) as any;
     }
 
@@ -124,7 +119,7 @@ export class SessionCheckpointService {
     }
 
     // Mark as in progress
-    await this.updateCheckpointStatus(checkpointId, 'in_progress');
+    await this.updateCheckpointStatus(checkpointId, 'processing');
 
     const startTime = Date.now();
 
@@ -413,8 +408,8 @@ export class SessionCheckpointService {
               relatedSubstep.status = 'error';
               relatedSubstep.error = checkpoint.error;
               break;
-            case 'in_progress':
-              relatedSubstep.status = 'in_progress';
+            case 'processing':
+              relatedSubstep.status = 'processing';
               break;
           }
         }
@@ -437,7 +432,7 @@ export class SessionCheckpointService {
 
   private determinePriority(stepId: CVStep, featureId?: string): ProcessingCheckpoint['priority'] {
     // Core steps get higher priority
-    const coreSteps: CVStep[] = ['upload', 'processing', 'analysis'];
+    const coreSteps: CVStep[] = [CVStep.INIT, CVStep.PARSE_CV, CVStep.ANALYZE_CONTENT];
     
     if (coreSteps.includes(stepId)) {
       return 'high';
@@ -453,15 +448,14 @@ export class SessionCheckpointService {
 
   private getDependencies(stepId: CVStep, featureId?: string): string[] {
     const dependencies: Record<CVStep, string[]> = {
-      upload: [],
-      processing: ['upload'],
-      analysis: ['processing'],
-      features: ['analysis'],
-      templates: ['analysis'],
-      preview: ['templates'],
-      results: ['preview'],
-      keywords: ['analysis'],
-      completed: ['results']
+      [CVStep.INIT]: [],
+      [CVStep.PARSE_CV]: [CVStep.INIT],
+      [CVStep.ANALYZE_CONTENT]: [CVStep.PARSE_CV],
+      [CVStep.GENERATE_INSIGHTS]: [CVStep.ANALYZE_CONTENT],
+      [CVStep.CREATE_PORTAL]: [CVStep.ANALYZE_CONTENT],
+      [CVStep.GENERATE_MEDIA]: [CVStep.ANALYZE_CONTENT],
+      [CVStep.FINALIZE]: [CVStep.CREATE_PORTAL],
+      [CVStep.COMPLETE]: [CVStep.FINALIZE]
     };
 
     return dependencies[stepId] || [];

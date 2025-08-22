@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Download, FileText, RefreshCw, Clock, RotateCcw } from 'lucide-react';
+import { Play, Download, FileText, RefreshCw, Clock, RotateCcw, Crown } from 'lucide-react';
 import { getPodcastStatus, generateEnhancedPodcast, regeneratePodcast } from '../services/cvService';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import toast from 'react-hot-toast';
 
 interface PodcastPlayerProps {
@@ -22,6 +23,7 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
 
   const startPolling = useCallback(() => {
     if (checkInterval) {
@@ -73,6 +75,11 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   }, [jobId]);
 
   const handleGeneratePodcast = async () => {
+    if (!isPremium) {
+      toast.error('Podcast generation is a Premium feature. Please upgrade to access this feature.');
+      return;
+    }
+    
     setGenerating(true);
     try {
       await generateEnhancedPodcast(jobId, 'professional');
@@ -87,6 +94,11 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
   };
 
   const handleRegeneratePodcast = async () => {
+    if (!isPremium) {
+      toast.error('Podcast regeneration is a Premium feature. Please upgrade to access this feature.');
+      return;
+    }
+    
     setGenerating(true);
     try {
       await regeneratePodcast(jobId, 'professional');
@@ -121,14 +133,27 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
         <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <Play className="w-8 h-8 text-purple-400" />
         </div>
-        <h4 className="text-lg font-medium text-gray-200 mb-2">AI Career Podcast</h4>
+        <h4 className="text-lg font-medium text-gray-200 mb-2 flex items-center justify-center gap-2">
+          AI Career Podcast
+          {!isPremium && <Crown className="w-5 h-5 text-yellow-400" />}
+        </h4>
         <p className="text-sm text-gray-400 mb-4">
           Generate an AI-powered audio summary of your professional journey
         </p>
+        {!isPremium && (
+          <p className="text-sm text-yellow-400 mb-4 bg-yellow-400/10 rounded-lg p-3 max-w-md mx-auto">
+            <Crown className="w-4 h-4 inline mr-1" />
+            Premium Feature - Upgrade to generate podcasts
+          </p>
+        )}
         <button
           onClick={handleGeneratePodcast}
-          disabled={generating}
-          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+          disabled={generating || !isPremium || premiumLoading}
+          className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto ${
+            !isPremium 
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+              : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white'
+          }`}
         >
           {generating ? (
             <>
@@ -137,8 +162,8 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
             </>
           ) : (
             <>
-              <Play className="w-4 h-4" />
-              Generate Podcast
+              {!isPremium ? <Crown className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {!isPremium ? 'Premium Feature' : 'Generate Podcast'}
             </>
           )}
         </button>
@@ -240,15 +265,21 @@ export const PodcastPlayer: React.FC<PodcastPlayerProps> = ({ jobId }) => {
 
             <button
               onClick={handleRegeneratePodcast}
-              disabled={generating}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-3 py-1 rounded text-sm flex items-center gap-1 transition-colors"
+              disabled={generating || !isPremium}
+              className={`px-3 py-1 rounded text-sm flex items-center gap-1 transition-colors ${
+                !isPremium 
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                  : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white'
+              }`}
             >
               {generating ? (
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
               ) : (
-                <RotateCcw className="w-3 h-3" />
+                <>
+                  {!isPremium ? <Crown className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
+                </>
               )}
-              Regenerate
+              {!isPremium ? 'Premium' : 'Regenerate'}
             </button>
           </div>
         </div>

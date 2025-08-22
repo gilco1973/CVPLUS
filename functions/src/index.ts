@@ -44,6 +44,7 @@ export { podcastStatusPublic } from './functions/podcastStatusPublic';
 export { testConfiguration } from './functions/testConfiguration';
 export { testAuth } from './functions/testAuth';
 export { updateJobFeatures } from './functions/updateJobFeatures';
+export { updatePlaceholderValue } from './functions/updatePlaceholderValue';
 
 // Export video generation functions
 export { 
