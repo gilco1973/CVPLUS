@@ -13,13 +13,10 @@ export const monitorStuckJobs = onSchedule({
   memory: '1GiB',
   timeoutSeconds: 300
 }, async (event) => {
-  console.log('🔍 Scheduled job monitoring triggered');
   
   try {
     await JobMonitoringService.monitorStuckJobs();
-    console.log('✅ Scheduled job monitoring completed successfully');
   } catch (error) {
-    console.error('❌ Scheduled job monitoring failed:', error);
   }
 });
 
@@ -36,7 +33,6 @@ export const triggerJobMonitoring = onCall({
     throw new Error('Authentication required');
   }
   
-  console.log('🔍 Manual job monitoring triggered by user:', request.auth.uid);
   
   try {
     // Run monitoring
@@ -53,7 +49,6 @@ export const triggerJobMonitoring = onCall({
     };
     
   } catch (error: any) {
-    console.error('❌ Manual job monitoring failed:', error);
     
     return {
       success: false,
@@ -81,7 +76,6 @@ export const getJobDetails = onCall({
     throw new Error('jobId is required');
   }
   
-  console.log('🔍 Getting job details for:', jobId);
   
   try {
     await JobMonitoringService.logJobDetails(jobId);
@@ -94,7 +88,6 @@ export const getJobDetails = onCall({
     };
     
   } catch (error: any) {
-    console.error('❌ Failed to get job details:', error);
     
     return {
       success: false,
@@ -117,7 +110,6 @@ export const getJobStats = onCall({
     throw new Error('Authentication required');
   }
   
-  console.log('📊 Getting job processing statistics');
   
   try {
     const stats = await JobMonitoringService.getJobProcessingStats();
@@ -129,7 +121,6 @@ export const getJobStats = onCall({
     };
     
   } catch (error: any) {
-    console.error('❌ Failed to get job stats:', error);
     
     return {
       success: false,

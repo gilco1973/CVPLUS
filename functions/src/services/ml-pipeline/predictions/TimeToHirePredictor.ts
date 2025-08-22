@@ -11,7 +11,6 @@ import { PredictionRequest } from '../core/MLPipelineOrchestrator';
 export class TimeToHirePredictor {
   
   async predict(features: FeatureVector, request: PredictionRequest): Promise<TimeToHirePrediction> {
-    console.log('[TIME-TO-HIRE-PREDICTOR] Using basic heuristic time prediction');
     
     // Base time estimate
     let estimatedDays = 21; // Base 3 weeks

@@ -90,7 +90,6 @@ export const generateCertificationBadges = onCall(
         htmlFragment: sanitizedHtmlFragment
       };
     } catch (error: any) {
-      console.error('Error generating certification badges:', error);
       
       // Sanitize error data for safe Firestore write
       const sanitizedErrorContext = sanitizeErrorContext({
@@ -157,7 +156,6 @@ export const verifyCertification = onCall(
         badge: verifiedBadge
       };
     } catch (error: any) {
-      console.error('Error verifying certification:', error);
       throw new Error(`Failed to verify certification: ${error.message}`);
     }
   });
@@ -203,7 +201,6 @@ export const updateBadgeDisplayOptions = onCall(
         displayOptions
       };
     } catch (error: any) {
-      console.error('Error updating display options:', error);
       throw new Error(`Failed to update display options: ${error.message}`);
     }
   });
@@ -285,7 +282,6 @@ export const addCustomCertification = onCall(
         collection
       };
     } catch (error: any) {
-      console.error('Error adding custom certification:', error);
       throw new Error(`Failed to add certification: ${error.message}`);
     }
   });
@@ -364,7 +360,6 @@ export const removeCertificationBadge = onCall(
         removedBadgeId: badgeId
       };
     } catch (error: any) {
-      console.error('Error removing certification badge:', error);
       throw new Error(`Failed to remove badge: ${error.message}`);
     }
   });
@@ -399,7 +394,6 @@ export const generateBadgeShareLink = onCall(
         embedCode: `<iframe src="${shareableUrl}/embed" width="300" height="400" frameborder="0"></iframe>`
       };
     } catch (error: any) {
-      console.error('Error generating badge share link:', error);
       throw new Error(`Failed to generate share link: ${error.message}`);
     }
   });

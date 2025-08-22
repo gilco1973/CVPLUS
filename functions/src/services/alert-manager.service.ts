@@ -209,17 +209,14 @@ export class AlertManagerService {
         .get();
 
       if (rulesSnapshot.empty) {
-        console.log('[AlertManager] Initializing default alert rules...');
         for (const rule of this.defaultRules) {
           await this.firestore
             .collection(this.alertRulesCollection)
             .doc(rule.ruleId)
             .set(rule);
         }
-        console.log('[AlertManager] Default alert rules initialized');
       }
     } catch (error) {
-      console.error('[AlertManager] Error initializing default rules:', error);
     }
   }
 
@@ -266,7 +263,6 @@ export class AlertManagerService {
       return triggeredAlerts;
 
     } catch (error) {
-      console.error('[AlertManager] Error checking alerts:', error);
       throw error;
     }
   }
@@ -291,7 +287,6 @@ export class AlertManagerService {
       }
 
     } catch (error) {
-      console.error('[AlertManager] Error processing escalations:', error);
       throw error;
     }
   }
@@ -310,10 +305,8 @@ export class AlertManagerService {
           acknowledgedAt: new Date()
         });
 
-      console.log(`[AlertManager] Alert ${alertId} acknowledged by ${acknowledgedBy}`);
 
     } catch (error) {
-      console.error('[AlertManager] Error acknowledging alert:', error);
       throw error;
     }
   }
@@ -338,10 +331,8 @@ export class AlertManagerService {
         .doc(alertId)
         .update(updateData);
 
-      console.log(`[AlertManager] Alert ${alertId} resolved by ${resolvedBy}`);
 
     } catch (error) {
-      console.error('[AlertManager] Error resolving alert:', error);
       throw error;
     }
   }
@@ -363,10 +354,8 @@ export class AlertManagerService {
           suppressedUntil
         });
 
-      console.log(`[AlertManager] Alert ${alertId} suppressed until ${suppressedUntil}`);
 
     } catch (error) {
-      console.error('[AlertManager] Error suppressing alert:', error);
       throw error;
     }
   }
@@ -424,7 +413,6 @@ export class AlertManagerService {
       };
 
     } catch (error) {
-      console.error('[AlertManager] Error getting alert dashboard:', error);
       throw error;
     }
   }
@@ -480,7 +468,6 @@ export class AlertManagerService {
           return null;
       }
     } catch (error) {
-      console.error(`[AlertManager] Error extracting metric ${metricName}:`, error);
       return null;
     }
 
@@ -511,7 +498,6 @@ export class AlertManagerService {
 
       return alertSnapshot.empty ? null : alertSnapshot.docs[0].data() as AlertInstance;
     } catch (error) {
-      console.error('[AlertManager] Error getting active alert:', error);
       return null;
     }
   }
@@ -529,7 +515,6 @@ export class AlertManagerService {
 
       return recentAlertSnapshot.empty;
     } catch (error) {
-      console.error('[AlertManager] Error checking cooldown:', error);
       return true;
     }
   }
@@ -583,7 +568,6 @@ export class AlertManagerService {
       }
 
     } catch (error) {
-      console.error('[AlertManager] Error processing alert:', error);
     }
   }
 
@@ -606,7 +590,6 @@ export class AlertManagerService {
       }
 
     } catch (error) {
-      console.error('[AlertManager] Error checking escalation:', error);
     }
   }
 
@@ -632,10 +615,8 @@ export class AlertManagerService {
         await this.executeAutoAction(alert, action);
       }
 
-      console.log(`[AlertManager] Alert ${alert.alertId} escalated to level ${alert.escalationLevel + 1}`);
 
     } catch (error) {
-      console.error('[AlertManager] Error escalating alert:', error);
     }
   }
 
@@ -677,7 +658,6 @@ export class AlertManagerService {
         });
 
     } catch (error) {
-      console.error('[AlertManager] Error sending notification:', error);
     }
   }
 
@@ -715,7 +695,6 @@ export class AlertManagerService {
         });
 
     } catch (error) {
-      console.error('[AlertManager] Error executing auto action:', error);
     }
   }
 
@@ -726,7 +705,6 @@ export class AlertManagerService {
         await this.resolveAlert(activeAlert.alertId, 'system', resolution);
       }
     } catch (error) {
-      console.error('[AlertManager] Error resolving active alert:', error);
     }
   }
 
@@ -739,7 +717,6 @@ export class AlertManagerService {
 
       return ruleDoc.exists ? ruleDoc.data() as AlertRule : null;
     } catch (error) {
-      console.error('[AlertManager] Error getting alert rule:', error);
       return null;
     }
   }
@@ -762,38 +739,31 @@ export class AlertManagerService {
 
   // Notification implementation methods (simplified)
   private async sendEmailNotification(alert: AlertInstance, channel: NotificationChannel): Promise<boolean> {
-    console.log(`[AlertManager] Sending email notification for alert: ${alert.alertId}`);
     return true; // Would implement actual email sending
   }
 
   private async sendSlackNotification(alert: AlertInstance, channel: NotificationChannel): Promise<boolean> {
-    console.log(`[AlertManager] Sending Slack notification for alert: ${alert.alertId}`);
     return true; // Would implement actual Slack API call
   }
 
   private async sendSMSNotification(alert: AlertInstance, channel: NotificationChannel): Promise<boolean> {
-    console.log(`[AlertManager] Sending SMS notification for alert: ${alert.alertId}`);
     return true; // Would implement actual SMS sending
   }
 
   private async sendWebhookNotification(alert: AlertInstance, channel: NotificationChannel): Promise<boolean> {
-    console.log(`[AlertManager] Sending webhook notification for alert: ${alert.alertId}`);
     return true; // Would implement actual webhook call
   }
 
   // Auto action implementation methods (simplified)
   private async switchProvider(parameters: any): Promise<boolean> {
-    console.log('[AlertManager] Executing provider switch action:', parameters);
     return true; // Would implement actual provider switching
   }
 
   private async throttleRequests(parameters: any): Promise<boolean> {
-    console.log('[AlertManager] Executing request throttling action:', parameters);
     return true; // Would implement actual request throttling
   }
 
   private async restartService(parameters: any): Promise<boolean> {
-    console.log('[AlertManager] Executing service restart action:', parameters);
     return true; // Would implement actual service restart
   }
 }

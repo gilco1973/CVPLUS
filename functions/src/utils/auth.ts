@@ -46,7 +46,6 @@ export async function requireGoogleAuth(request: CallableRequest): Promise<Authe
     const userData = userDoc.data();
     hasCalendarPermissions = !!(userData?.googleTokens?.accessToken);
   } catch (error) {
-    console.warn('Failed to check calendar permissions:', error);
     // Don't throw here - calendar permissions are optional for basic functionality
   }
 
@@ -86,7 +85,6 @@ export async function getGoogleAccessToken(uid: string): Promise<string | null> 
     const userData = userDoc.data();
     return userData?.googleTokens?.accessToken || null;
   } catch (error) {
-    console.error('Failed to get Google access token:', error);
     return null;
   }
 }
@@ -98,14 +96,12 @@ export async function updateUserLastLogin(uid: string, email: string, name?: str
   try {
     // Ensure Firebase Admin is properly initialized
     if (!admin.apps.length) {
-      console.warn('Firebase Admin not initialized in auth.ts');
       return;
     }
 
     // Check if FieldValue.serverTimestamp is available
     const serverTimestamp = admin.firestore.FieldValue?.serverTimestamp();
     if (!serverTimestamp) {
-      console.error('Firebase Admin FieldValue.serverTimestamp is undefined');
       // Use regular timestamp as fallback
       const now = new Date();
       await admin.firestore()
@@ -132,7 +128,6 @@ export async function updateUserLastLogin(uid: string, email: string, name?: str
         updatedAt: serverTimestamp
       }, { merge: true });
   } catch (error) {
-    console.error('Failed to update user last login:', error);
     // Don't throw here - user tracking failure shouldn't block functionality
   }
 }

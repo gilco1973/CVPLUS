@@ -329,7 +329,6 @@ Technical skills only (languages, frameworks, tools, platforms):`;
       
       return skills;
     } catch (error) {
-      console.error('Error inferring skills:', error);
       return [];
     }
   }

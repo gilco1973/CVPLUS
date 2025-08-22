@@ -137,9 +137,7 @@ export class VideoGenerationService {
           script = enhancedScript.script;
           generationMethod = 'enhanced';
           
-          console.log(`Enhanced script generated with quality score: ${enhancedScript.qualityMetrics.overallScore}`);
         } catch (enhancedError) {
-          console.warn('Enhanced script generation failed, falling back to basic:', enhancedError);
           script = await this.generateVideoScript(parsedCV, options);
           generationMethod = 'basic';
         }
@@ -180,7 +178,6 @@ export class VideoGenerationService {
         generationMethod
       };
     } catch (error: any) {
-      console.error('Error generating video introduction:', error);
       throw new Error(`Video generation failed: ${error.message}`);
     }
   }
@@ -201,7 +198,6 @@ export class VideoGenerationService {
       
       return await advancedPromptEngine.generateEnhancedScript(parsedCV, promptOptions);
     } catch (error: any) {
-      console.error('Enhanced script-only generation failed:', error);
       throw new Error(`Enhanced script generation failed: ${error.message}`);
     }
   }
@@ -214,7 +210,6 @@ export class VideoGenerationService {
       const { industryTemplatesService } = require('./industry-templates.service');
       return industryTemplatesService.analyzeAndRecommendTemplate(parsedCV);
     } catch (error) {
-      console.error('Industry recommendations failed:', error);
       return [];
     }
   }
@@ -281,7 +276,6 @@ Keep it exactly ${targetWords} words.`;
       // Process script for better avatar delivery
       return this.optimizeScriptForAvatar(script);
     } catch (error) {
-      console.error('Error generating video script:', error);
       // Fallback to template script
       return this.generateTemplateVideoScript(cv, targetWords);
     }
@@ -393,7 +387,6 @@ Keep it exactly ${targetWords} words.`;
       return { videoUrl, duration, size };
       
     } catch (error: any) {
-      console.error('D-ID API error:', error.response?.data || error);
       
       // Fallback to alternative video generation
       return this.createFallbackVideo(script, jobId, options);
@@ -492,7 +485,6 @@ Keep it exactly ${targetWords} words.`;
       
       return { videoUrl, duration, size: 10485760 }; // ~10MB estimate
     } catch (error) {
-      console.error('Synthesia API error:', error);
       throw error;
     }
   }
@@ -632,7 +624,6 @@ Keep it exactly ${targetWords} words.`;
       
       return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
     } catch (error) {
-      console.error('Error storing video:', error);
       // Return original URL as fallback
       return videoData.videoUrl;
     }

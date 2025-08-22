@@ -130,7 +130,6 @@ class RunwayMLPollingManager {
         // Check if we should stop polling
         if (status.status === 'succeeded' || status.status === 'failed' || pollCount >= maxPolls) {
           this.stopPolling(jobId);
-          console.log(`[RunwayML] Polling stopped for job ${jobId}. Status: ${status.status}`);
           return;
         }
         
@@ -142,7 +141,6 @@ class RunwayMLPollingManager {
         this.activePollers.set(jobId, timeout);
         
       } catch (error) {
-        console.error(`[RunwayML] Polling error for job ${jobId}:`, error);
         
         // Retry with longer interval on error
         pollInterval = Math.min(pollInterval * 1.5, 30000);
@@ -205,11 +203,9 @@ class RunwayMLPollingManager {
           });
         }
       } catch (jobUpdateError) {
-        console.warn('Failed to update main job document:', jobUpdateError);
       }
       
     } catch (error) {
-      console.error('Failed to update RunwayML job status:', error);
     }
   }
   
@@ -323,13 +319,11 @@ export class RunwayMLProvider extends BaseVideoProvider {
     try {
       const jobId = options.jobId || this.generateJobId();
       
-      console.log(`[RunwayML] Starting video generation for job ${jobId}`);
       
       // Generate enhanced prompt for RunwayML
       const enhancedPrompt = await this.enhancePromptForVideo(script, options);
       const payload = this.buildGenerationPayload(enhancedPrompt, options);
       
-      console.log(`[RunwayML] Enhanced prompt: ${enhancedPrompt.enhancedPrompt}`);
       
       const response = await this.httpClient!.post<RunwayMLAPIResponse>(
         '/generate',
@@ -364,12 +358,10 @@ export class RunwayMLProvider extends BaseVideoProvider {
       // Start polling for status updates
       this.pollingManager.startPolling(jobId, response.data.id);
       
-      console.log(`[RunwayML] Video generation initiated: ${response.data.id}, polling started`);
       
       return result;
       
     } catch (error: any) {
-      console.error('[RunwayML] Video generation failed:', error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -450,7 +442,6 @@ export class RunwayMLProvider extends BaseVideoProvider {
       };
       
     } catch (error: any) {
-      console.error(`[RunwayML] Status check failed for job ${jobId}:`, error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -788,7 +779,6 @@ export class RunwayMLProvider extends BaseVideoProvider {
         progress: 0
       });
     } catch (error) {
-      console.error('Failed to store RunwayML job mapping:', error);
       // Non-critical error, don't throw
     }
   }
@@ -799,7 +789,6 @@ export class RunwayMLProvider extends BaseVideoProvider {
       const doc = await db.collection('runwayml_jobs').doc(jobId).get();
       return doc.exists ? doc.data()?.runwayId : null;
     } catch (error) {
-      console.error('Failed to get RunwayML ID for job:', error);
       return null;
     }
   }

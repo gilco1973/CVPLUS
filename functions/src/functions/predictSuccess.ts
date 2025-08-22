@@ -85,7 +85,6 @@ export const predictJobSuccess = onCall(
       };
       
     } catch (error) {
-      console.error('Prediction request failed:', error);
       
       // Return appropriate error response
       if (error instanceof HttpsError) {
@@ -152,7 +151,6 @@ export const predictJobSuccessBatch = onCall(
             return { success: true, jobId: jobData.jobId, prediction };
             
           } catch (error) {
-            console.error(`Prediction failed for job ${jobData.jobId}:`, error);
             return { 
               success: false, 
               jobId: jobData.jobId, 
@@ -178,7 +176,6 @@ export const predictJobSuccessBatch = onCall(
       };
       
     } catch (error) {
-      console.error('Batch prediction request failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -253,7 +250,6 @@ export const getUserPredictionHistory = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get prediction history:', error);
       throw new HttpsError('internal', 'Failed to retrieve prediction history');
     }
   }
@@ -323,7 +319,6 @@ export const updatePredictionOutcome = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to update prediction outcome:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -378,7 +373,6 @@ export const getModelMetrics = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get model metrics:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -441,7 +435,6 @@ async function getUserContext(userId: string): Promise<any> {
       applicationHistory
     };
   } catch (error) {
-    console.error('Failed to get user context:', error);
     return {
       preferences: {},
       location: 'Unknown',
@@ -467,7 +460,6 @@ async function logPredictionRequest(userId: string, request: PredictionRequest, 
       }
     });
   } catch (error) {
-    console.error('Failed to log prediction request:', error);
   }
 }
 
@@ -484,7 +476,6 @@ async function logBatchPredictionRequest(userId: string, jobCount: number, predi
       }
     });
   } catch (error) {
-    console.error('Failed to log batch prediction request:', error);
   }
 }
 
@@ -497,7 +488,6 @@ async function updateUserUsageStats(userId: string): Promise<void> {
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
   } catch (error) {
-    console.error('Failed to update user usage stats:', error);
   }
 }
 
@@ -510,7 +500,6 @@ async function getTotalPredictionCount(userId: string): Promise<number> {
     
     return countSnapshot.data().count;
   } catch (error) {
-    console.error('Failed to get prediction count:', error);
     return 0;
   }
 }

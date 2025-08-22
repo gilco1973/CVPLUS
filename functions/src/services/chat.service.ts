@@ -83,7 +83,6 @@ export class ChatService {
       
       return assistantMessage;
     } catch (error) {
-      console.error('Error processing chat message:', error);
       throw error;
     }
   }

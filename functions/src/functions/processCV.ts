@@ -14,13 +14,9 @@ export const processCV = onCall(
     secrets: ['ANTHROPIC_API_KEY']
   },
   async (request) => {
-    console.log('ProcessCV function called');
-    console.log('Request auth:', request.auth ? 'Present' : 'Missing');
-    console.log('Request data keys:', Object.keys(request.data || {}));
     
     // Require Google authentication
     const user = await requireGoogleAuth(request);
-    console.log(`[PROCESS-CV] Authenticated Google user: ${user.uid}`);
     // PII REMOVED: Email logging removed for security compliance
     
     // Update user login tracking
@@ -36,7 +32,6 @@ export const processCV = onCall(
     });
 
     if (!jobId || (!fileUrl && !isUrl)) {
-      console.error('Missing required parameters:', { jobId, fileUrl: !!fileUrl, isUrl });
       throw new Error('Missing required parameters');
     }
 
@@ -85,7 +80,6 @@ export const processCV = onCall(
         
         // Decode the file path
         const filePath = decodeURIComponent(pathMatch[1]);
-        console.log('Downloading file from path:', filePath);
         
         const file = bucket.file(filePath);
         const [buffer] = await file.download();
@@ -127,7 +121,6 @@ export const processCV = onCall(
       
       // If quick create, automatically initiate feature generation with default features
       if (jobData?.quickCreate || jobData?.settings?.applyAllEnhancements) {
-        console.log('🚀 Quick Create: Auto-initiating feature generation with default features');
         
         // Import the generateCVCore function for background processing
         const { generateCVCore } = await import('./generateCV');
@@ -168,13 +161,10 @@ export const processCV = onCall(
         // Trigger background feature generation
         setImmediate(async () => {
           try {
-            console.log('🚀 Background Quick Create generation started for job:', jobId);
             
             await generateCVCore(jobId, 'modern-professional', defaultFeatures, user.uid);
             
-            console.log('✅ Background Quick Create generation completed for job:', jobId);
           } catch (error: any) {
-            console.error('❌ Background Quick Create generation failed for job:', jobId, error);
             
             // Update job with failure status
             await admin.firestore()
@@ -189,12 +179,10 @@ export const processCV = onCall(
           }
         });
         
-        console.log('✅ Quick Create: Feature generation initiated automatically');
       }
       
       // For regular users, initialize basic enhanced features to show in preview
       if (!jobData?.quickCreate && !jobData?.settings?.applyAllEnhancements) {
-        console.log('🔧 Regular user: Initializing basic enhanced features for preview');
         
         // Basic features that are fast and don't require generation
         const basicFeatures = ['skills-visualization', 'ats-optimization'];
@@ -218,7 +206,6 @@ export const processCV = onCall(
             updatedAt: FieldValue.serverTimestamp()
           }, { merge: true });
           
-        console.log('✅ Regular user: Basic enhanced features initialized');
       }
       
       // Note: Regular users will go through normal flow:
@@ -233,7 +220,6 @@ export const processCV = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error processing CV:', error);
       
       // Determine error type and provide appropriate user message
       let userMessage = error.message;

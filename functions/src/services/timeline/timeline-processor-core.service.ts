@@ -16,11 +16,9 @@ export class TimelineProcessorCoreService {
     const events: TimelineEvent[] = [];
     let processingErrors = 0;
     
-    console.log('[Timeline Processor Core] Starting CV data processing...');
     
     // Process work experience
     if (parsedCV.experience) {
-      console.log(`[Timeline Processor Core] Processing ${parsedCV.experience.length} work experiences`);
       for (const exp of parsedCV.experience) {
         try {
           const workEvent = timelineProcessorEventsService.processWorkExperience(exp, events.length);
@@ -28,7 +26,6 @@ export class TimelineProcessorCoreService {
             events.push(workEvent);
           }
         } catch (error) {
-          console.error(`[Timeline Processor Core] Error processing work experience:`, error);
           processingErrors++;
         }
       }
@@ -36,7 +33,6 @@ export class TimelineProcessorCoreService {
     
     // Process education
     if (parsedCV.education) {
-      console.log(`[Timeline Processor Core] Processing ${parsedCV.education.length} education entries`);
       for (const edu of parsedCV.education) {
         try {
           const eduEvent = timelineProcessorEventsService.processEducation(edu, events.length);
@@ -44,7 +40,6 @@ export class TimelineProcessorCoreService {
             events.push(eduEvent);
           }
         } catch (error) {
-          console.error(`[Timeline Processor Core] Error processing education:`, error);
           processingErrors++;
         }
       }
@@ -52,7 +47,6 @@ export class TimelineProcessorCoreService {
     
     // Process certifications
     if (parsedCV.certifications) {
-      console.log(`[Timeline Processor Core] Processing ${parsedCV.certifications.length} certifications`);
       for (const cert of parsedCV.certifications) {
         try {
           const certEvent = timelineProcessorEventsService.processCertification(cert, events.length);
@@ -60,7 +54,6 @@ export class TimelineProcessorCoreService {
             events.push(certEvent);
           }
         } catch (error) {
-          console.error(`[Timeline Processor Core] Error processing certification:`, error);
           processingErrors++;
         }
       }
@@ -68,7 +61,6 @@ export class TimelineProcessorCoreService {
     
     // Process achievements
     if (parsedCV.achievements && Array.isArray(parsedCV.achievements)) {
-      console.log(`[Timeline Processor Core] Processing ${parsedCV.achievements.length} achievements`);
       for (const achievement of parsedCV.achievements) {
         try {
           const achievementEvent = timelineProcessorEventsService.processAchievement(achievement, events.length, parsedCV);
@@ -76,7 +68,6 @@ export class TimelineProcessorCoreService {
             events.push(achievementEvent);
           }
         } catch (error) {
-          console.error(`[Timeline Processor Core] Error processing achievement:`, error);
           processingErrors++;
         }
       }
@@ -85,12 +76,9 @@ export class TimelineProcessorCoreService {
     // Sort events by start date
     try {
       events.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-      console.log('[Timeline Processor Core] Successfully sorted events by start date');
     } catch (error) {
-      console.error('[Timeline Processor Core] Error sorting events by date:', error);
     }
     
-    console.log(`[Timeline Processor Core] Processing completed: ${events.length} events generated with ${processingErrors} errors`);
     return events;
   }
 }

@@ -22,7 +22,6 @@ export class ContentOptimizationService {
     targetRole?: string,
     targetKeywords?: string[]
   ): Promise<any> {
-    console.log('📊 Performing basic CV analysis...');
     
     // Basic analysis without external API calls
     return {
@@ -73,7 +72,6 @@ export class ContentOptimizationService {
     parsedCV: ParsedCV,
     context: OptimizationContext
   ): Promise<ATSOptimizationResult> {
-    console.log('⚠️ Falling back to basic ATS analysis...');
     
     const basicScore = this.calculateBasicScore(parsedCV);
     // Basic analysis performed for fallback scenario

@@ -124,7 +124,6 @@ export const generateSkillsVisualization = onCall<GenerateVisualizationRequest>(
         htmlFragment: null
       };
     } catch (error: any) {
-      console.error('Error generating skills visualization:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -199,7 +198,6 @@ export const updateSkillsData = onCall<UpdateSkillsRequest>(
         visualization
       };
     } catch (error) {
-      console.error('Error updating skills data:', error);
       throw new HttpsError('internal', 'Failed to update skills data');
     }
   }
@@ -247,7 +245,6 @@ export const getSkillsInsights = onCall<GetInsightsRequest>(
         insights
       };
     } catch (error) {
-      console.error('Error getting skills insights:', error);
       throw new HttpsError('internal', 'Failed to get skills insights');
     }
   }
@@ -310,7 +307,6 @@ export const exportSkillsData = onCall<ExportDataRequest>(
         data: exportData
       };
     } catch (error) {
-      console.error('Error exporting skills data:', error);
       throw new HttpsError('internal', 'Failed to export skills data');
     }
   }
@@ -376,7 +372,6 @@ export const endorseSkill = onCall<EndorseSkillRequest>(
         endorsement
       };
     } catch (error) {
-      console.error('Error endorsing skill:', error);
       throw new HttpsError('internal', 'Failed to endorse skill');
     }
   }

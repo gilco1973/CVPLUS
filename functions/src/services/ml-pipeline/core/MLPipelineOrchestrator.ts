@@ -60,12 +60,10 @@ export class MLPipelineOrchestrator {
    */
   async predictSuccess(request: PredictionRequest): Promise<SuccessPrediction> {
     try {
-      console.log(`[ML-ORCHESTRATOR] Generating prediction for user ${request.userId}, job ${request.jobId}`);
       
       // Check cache first
       const cachedPrediction = await this.predictionCache.get(request);
       if (cachedPrediction) {
-        console.log(`[ML-ORCHESTRATOR] Returning cached prediction`);
         return cachedPrediction;
       }
       
@@ -134,11 +132,9 @@ export class MLPipelineOrchestrator {
       // Log prediction for monitoring
       await this.logPrediction(prediction, features);
       
-      console.log(`[ML-ORCHESTRATOR] Generated prediction with ${Math.round(interviewProb * 100)}% interview probability`);
       return prediction;
       
     } catch (error) {
-      console.error('[ML-ORCHESTRATOR] Prediction failed:', error);
       
       // Fallback to heuristic-based prediction
       return this.fallbackManager.generateFallbackPrediction(request);
@@ -150,14 +146,11 @@ export class MLPipelineOrchestrator {
    */
   async recordOutcome(outcome: UserOutcome): Promise<void> {
     try {
-      console.log(`[ML-ORCHESTRATOR] Recording outcome for job ${outcome.jobId}`);
       
       await this.outcomeTracker.recordOutcome(outcome);
       
-      console.log(`[ML-ORCHESTRATOR] Outcome recorded successfully`);
       
     } catch (error) {
-      console.error('[ML-ORCHESTRATOR] Failed to record outcome:', error);
       throw error;
     }
   }
@@ -268,7 +261,6 @@ export class MLPipelineOrchestrator {
   private async logPrediction(prediction: SuccessPrediction, features: FeatureVector): Promise<void> {
     // Log prediction for monitoring and model improvement
     // Implementation would store to monitoring system
-    console.log(`[ML-ORCHESTRATOR] Logged prediction ${prediction.predictionId} for monitoring`);
   }
 
   private async checkServiceHealth(healthCheck?: () => Promise<boolean> | boolean): Promise<boolean> {
@@ -277,7 +269,6 @@ export class MLPipelineOrchestrator {
       const result = await healthCheck();
       return result === true;
     } catch (error) {
-      console.error('[ML-ORCHESTRATOR] Service health check failed:', error);
       return false;
     }
   }

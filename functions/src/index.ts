@@ -16,8 +16,6 @@ if (!admin.apps.length) {
       process.env.FIREBASE_STORAGE_EMULATOR_HOST = '127.0.0.1:9199';
     }
     
-    console.log('Firebase Admin: Initializing for emulator environment');
-    console.log('Storage Emulator Host:', process.env.FIREBASE_STORAGE_EMULATOR_HOST);
     
     // Initialize for emulator environment with correct bucket format for emulator
     admin.initializeApp({

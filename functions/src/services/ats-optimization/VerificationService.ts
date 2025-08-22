@@ -44,7 +44,6 @@ export class VerificationService {
   async verifyResultsWithDualLLM(params: VerificationParams): Promise<VerificationResult> {
     const { advancedScore, recommendations, parsedCV } = params;
     
-    console.log('🔍 Starting dual-LLM verification...');
     
     try {
       // Parallel verification with both LLMs
@@ -61,11 +60,9 @@ export class VerificationService {
         recommendations
       );
 
-      console.log(`✅ Dual-LLM verification completed with ${verificationResult.confidence}% confidence`);
       return verificationResult;
 
     } catch (error) {
-      console.error('Error in dual-LLM verification:', error);
       return this.generateFallbackVerification(advancedScore, recommendations);
     }
   }

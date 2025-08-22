@@ -672,29 +672,23 @@ export class AchievementsShowcaseFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="AchievementCards"]');
           
           if (placeholders.length === 0) {
-            console.log('No AchievementCards placeholders found');
             return false;
           }
           
-          console.log('🏆 Initializing React AchievementCards components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('AchievementCards props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering AchievementCards');
                 window.renderReactComponent('AchievementCards', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback message');
                 showAchievementsFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse AchievementCards props:', error);
               showAchievementsError(placeholder, error.message);
             }
           });
@@ -791,7 +785,6 @@ export class AchievementsShowcaseFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting AchievementCards initialization...');
           initReactComponents();
         }
         

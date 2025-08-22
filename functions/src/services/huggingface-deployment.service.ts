@@ -1283,7 +1283,6 @@ footer {
   private generateStaticJS(portalData: PortalConfig): string {
     return `// Static portal JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('CVPlus Professional Portal loaded');
     
     // Add smooth scrolling for any anchor links
     const links = document.querySelectorAll('a[href^="#"]');

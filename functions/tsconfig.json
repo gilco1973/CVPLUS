@@ -15,7 +15,10 @@
     "noImplicitThis": false,
     "noImplicitUseStrict": false,
     "noEmitOnError": false,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "compileOnSave": true,
   "include": [
@@ -23,6 +26,9 @@
   ],
   "exclude": [
     "node_modules",
-    "src/test/**/*"
+    "src/test/**/*",
+    "src/tests/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

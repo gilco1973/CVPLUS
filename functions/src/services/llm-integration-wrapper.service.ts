@@ -97,7 +97,6 @@ export class LLMIntegrationWrapperService {
       };
 
     } catch (error) {
-      console.error(`LLM Integration error for service ${this.config.serviceName}:`, error);
       throw error;
     }
   }

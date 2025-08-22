@@ -37,7 +37,6 @@ export class MLPipelineService {
   private orchestrator: MLPipelineOrchestrator;
   
   constructor() {
-    console.log('[ML-PIPELINE] Initializing with modular architecture');
     this.orchestrator = new MLPipelineOrchestrator();
   }
 
@@ -45,7 +44,6 @@ export class MLPipelineService {
    * Generate comprehensive success prediction for a job application
    */
   async predictSuccess(request: PredictionRequest): Promise<SuccessPrediction> {
-    console.log(`[ML-PIPELINE] Generating prediction for user ${request.userId}, job ${request.jobId}`);
     
     // Convert to orchestrator format
     const orchestratorRequest: OrchestratorRequest = {
@@ -62,7 +60,6 @@ export class MLPipelineService {
     // Delegate to modular orchestrator
     const prediction = await this.orchestrator.predictSuccess(orchestratorRequest);
     
-    console.log(`[ML-PIPELINE] Generated prediction with ${Math.round(prediction.interviewProbability * 100)}% interview probability`);
     return prediction;
   }
 
@@ -71,7 +68,6 @@ export class MLPipelineService {
    * @deprecated Use orchestrator.extractFeatures() directly for better performance
    */
   async extractFeatures(request: PredictionRequest) {
-    console.warn('[ML-PIPELINE] extractFeatures() is deprecated. Features are extracted automatically during prediction.');
     
     // For backward compatibility, delegate to orchestrator
     return this.orchestrator['featureExtractor'].extractFeatures(request);
@@ -82,7 +78,6 @@ export class MLPipelineService {
    * @deprecated Model training will be handled by dedicated training service
    */
   async trainModel(config: MLTrainingConfig): Promise<{ success: boolean; modelId: string; metrics: any }> {
-    console.warn('[ML-PIPELINE] trainModel() is not yet implemented in refactored architecture');
     
     return {
       success: false,
@@ -95,7 +90,6 @@ export class MLPipelineService {
    * Record user outcome for model improvement
    */
   async recordOutcome(outcome: UserOutcome): Promise<void> {
-    console.log(`[ML-PIPELINE] Recording outcome for user ${outcome.userId}, job ${outcome.jobId}: ${outcome.outcomeType}`);
     return this.orchestrator.recordOutcome(outcome);
   }
 
@@ -103,7 +97,6 @@ export class MLPipelineService {
    * Get prediction statistics
    */
   async getStatistics(userId: string): Promise<any> {
-    console.log(`[ML-PIPELINE] Getting statistics for user ${userId}`);
     // Delegate to orchestrator's health status which includes statistics
     const healthStatus = await this.orchestrator.getHealthStatus();
     // Return basic statistics structure (userStatistics not implemented in health status)

@@ -42,7 +42,6 @@ export class RecommendationService {
     try {
       const { parsedCV, advancedScore, semanticAnalysis, systemSimulations, competitorBenchmark } = params;
       
-      console.log('🎯 Generating prioritized ATS recommendations...');
       
       const recommendations: PrioritizedRecommendation[] = [];
       
@@ -68,10 +67,8 @@ export class RecommendationService {
       // Sort by priority and impact
       const prioritizedRecs = this.prioritizeRecommendations(recommendations, advancedScore);
       
-      console.log(`✅ Generated ${prioritizedRecs.length} prioritized recommendations`);
       return prioritizedRecs;
     } catch (error) {
-      console.error('❌ Error generating recommendations:', error);
       // Return basic fallback recommendations
       return this.getFallbackRecommendations();
     }
@@ -85,7 +82,6 @@ export class RecommendationService {
       const result = generator();
       return Array.isArray(result) ? result : [];
     } catch (error) {
-      console.warn('Warning: Failed to generate specific recommendations:', error);
       return [];
     }
   }

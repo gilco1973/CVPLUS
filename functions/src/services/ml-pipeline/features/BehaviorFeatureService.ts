@@ -16,13 +16,11 @@ export class BehaviorFeatureService {
    * Extract user behavior features
    */
   async extractFeatures(userId: string): Promise<any> {
-    console.log('[BEHAVIOR-FEATURES] Extracting user behavior features');
     
     const cacheKey = `behavior_${userId}`;
     const cached = this.getCachedData(cacheKey);
     
     if (cached) {
-      console.log('[BEHAVIOR-FEATURES] Using cached behavior data');
       return cached;
     }
     
@@ -38,8 +36,6 @@ export class BehaviorFeatureService {
     
     this.setCachedData(cacheKey, features);
     
-    console.log(`[BEHAVIOR-FEATURES] Platform engagement: ${Math.round(features.platformEngagement * 100)}%`);
-    console.log(`[BEHAVIOR-FEATURES] Previous applications: ${features.previousApplications}`);
     
     return features;
   }
@@ -56,7 +52,6 @@ export class BehaviorFeatureService {
              typeof testFeatures.weekdayApplication === 'boolean' &&
              typeof testFeatures.platformEngagement === 'number';
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Health check failed:', error);
       return false;
     }
   }
@@ -97,7 +92,6 @@ export class BehaviorFeatureService {
       
       return validApplications > 0 ? totalTimingScore / validApplications : 1;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting application timing:', error);
       return 1; // Default fallback
     }
   }
@@ -134,7 +128,6 @@ export class BehaviorFeatureService {
       
       return totalApplications > 0 ? (weekdayCount / totalApplications) > 0.5 : true;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error checking weekday application:', error);
       return true; // Default fallback
     }
   }
@@ -167,7 +160,6 @@ export class BehaviorFeatureService {
       
       return applicationCount > 0 ? Math.round(totalHours / applicationCount) : 14;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting preferred time:', error);
       return 14; // Default fallback
     }
   }
@@ -200,7 +192,6 @@ export class BehaviorFeatureService {
       
       return 1; // Default: direct application
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting application method:', error);
       return 1; // Default fallback
     }
   }
@@ -252,7 +243,6 @@ export class BehaviorFeatureService {
       
       return Math.min(1.0, optimizationScore);
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting CV optimization level:', error);
       return 0.5; // Default fallback
     }
   }
@@ -287,7 +277,6 @@ export class BehaviorFeatureService {
       
       return Math.min(1.0, engagementScore);
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting platform engagement:', error);
       return 0.5; // Default fallback
     }
   }
@@ -301,7 +290,6 @@ export class BehaviorFeatureService {
       
       return applicationsSnapshot.size || 0;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting application count:', error);
       return 0; // Default fallback
     }
   }
@@ -316,7 +304,6 @@ export class BehaviorFeatureService {
       
       return loginSnapshot.size;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting login count:', error);
       return 10; // Default reasonable activity level
     }
   }
@@ -351,7 +338,6 @@ export class BehaviorFeatureService {
       
       return sessionCount > 0 ? totalDuration / sessionCount : 15;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting session duration:', error);
       return 15; // Default fallback
     }
   }
@@ -380,7 +366,6 @@ export class BehaviorFeatureService {
       
       return uniqueFeatures.size;
     } catch (error) {
-      console.error('[BEHAVIOR-FEATURES] Error getting feature usage:', error);
       return 3; // Default fallback
     }
   }

@@ -207,7 +207,6 @@ export class VideoIntroFeature implements CVFeature {
 
       return null;
     } catch (error) {
-      console.error('Failed to get existing video:', error);
       return null;
     }
   }
@@ -481,29 +480,23 @@ export class VideoIntroFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="VideoIntroduction"]');
           
           if (placeholders.length === 0) {
-            console.log('No VideoIntroduction placeholders found');
             return false;
           }
           
-          console.log('[VIDEO] Initializing React VideoIntroduction components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('VideoIntroduction props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('[✓] React renderer available, rendering VideoIntroduction');
                 window.renderReactComponent('VideoIntroduction', props, placeholder);
               } else {
-                console.log('[!] React renderer not available, showing fallback message');
                 showReactFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse VideoIntroduction props:', error);
               showReactError(placeholder, error.message);
             }
           });
@@ -557,7 +550,6 @@ export class VideoIntroFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('[INIT] Starting VideoIntroduction initialization...');
           initReactComponents();
         }
         

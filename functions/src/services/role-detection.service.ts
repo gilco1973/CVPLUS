@@ -43,19 +43,16 @@ export class RoleDetectionService {
       ...config
     };
 
-    console.log('[ROLE-DETECTION] Service initialized with config:', this.config);
   }
 
   /**
    * Analyzes CV and detects the most suitable role profiles
    */
   async detectRoles(parsedCV: ParsedCV): Promise<RoleProfileAnalysis> {
-    console.log('[ROLE-DETECTION] Starting role detection analysis');
     
     try {
       // Step 1: Get all available role profiles
       const availableProfiles = await this.roleProfileService.getAllProfiles();
-      console.log(`[ROLE-DETECTION] Analyzing against ${availableProfiles.length} role profiles`);
 
       // Step 2: Extract relevant data from CV
       const cvFeatures = this.extractCVFeatures(parsedCV);
@@ -78,18 +75,15 @@ export class RoleDetectionService {
         .slice(0, this.config.maxResults);
 
       if (validMatches.length === 0) {
-        console.warn('[ROLE-DETECTION] No role matches found above confidence threshold');
         return this.createFallbackAnalysis(parsedCV);
       }
 
       // Step 5: Generate comprehensive analysis
       const analysis = await this.generateRoleProfileAnalysis(validMatches, parsedCV);
       
-      console.log(`[ROLE-DETECTION] Analysis complete. Primary role: ${analysis.primaryRole.roleName} (${analysis.primaryRole.confidence})`);
       return analysis;
 
     } catch (error) {
-      console.error('[ROLE-DETECTION] Error during role detection:', error);
       return this.createFallbackAnalysis(parsedCV);
     }
   }
@@ -504,7 +498,6 @@ export class RoleDetectionService {
    * Creates fallback analysis when no strong matches are found
    */
   private createFallbackAnalysis(parsedCV: ParsedCV): RoleProfileAnalysis {
-    console.log('[ROLE-DETECTION] Creating fallback analysis');
     
     // Create generic role match
     const fallbackRole: RoleMatchResult = {
@@ -562,7 +555,6 @@ export class RoleDetectionService {
    */
   updateConfig(config: Partial<RoleDetectionConfig>): void {
     this.config = { ...this.config, ...config };
-    console.log('[ROLE-DETECTION] Configuration updated:', config);
   }
 
   /**

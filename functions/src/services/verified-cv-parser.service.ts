@@ -243,7 +243,6 @@ export class VerifiedCVParsingService {
       };
 
     } catch (error) {
-      console.error(`[VERIFIED-CV-PARSER] Error parsing CV for job ${jobId}:`, error);
       
       // Fallback error handling
       const errorResult = await this.handleParsingError(error, file, jobId);
@@ -277,7 +276,6 @@ export class VerifiedCVParsingService {
       };
 
     } catch (error) {
-      console.error(`[VERIFIED-CV-PARSER] Error parsing text:`, error);
       throw error;
     }
   }
@@ -430,7 +428,6 @@ Parse accurately and return only valid JSON.`;
       return parsedData as ParsedCV;
 
     } catch (error) {
-      console.error(`[VERIFIED-CV-PARSER] Error parsing Claude response:`, error);
       
       // Return minimal structure on parsing failure
       return {
@@ -522,9 +519,7 @@ Parse accurately and return only valid JSON.`;
         }
       });
 
-      console.log(`[VERIFIED-CV-PARSER] Saved parsed CV to Firestore for job ${jobId}`);
     } catch (error) {
-      console.error(`[VERIFIED-CV-PARSER] Error saving to Firestore:`, error);
       // Don't throw - parsing was successful, saving is secondary
     }
   }
@@ -534,7 +529,6 @@ Parse accurately and return only valid JSON.`;
     file: { buffer: Buffer; originalname: string }, 
     jobId: string
   ): Promise<VerifiedParsingResult> {
-    console.error(`[VERIFIED-CV-PARSER] Handling parsing error for job ${jobId}:`, error);
 
     // Return minimal fallback result
     return {
@@ -570,7 +564,6 @@ Parse accurately and return only valid JSON.`;
   updateConfig(newConfig: Partial<VerifiedCVParsingConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.verifiedClaude.updateConfig(newConfig);
-    console.log(`[VERIFIED-CV-PARSER] Configuration updated:`, newConfig);
   }
 
   getConfig(): VerifiedCVParsingConfig {

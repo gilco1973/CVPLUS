@@ -105,7 +105,6 @@ export class CircuitBreakerService {
     };
 
     this.circuits.set(providerId, circuitState);
-    console.log(`[Circuit Breaker] Registered provider: ${providerId}`);
   }
 
   /**
@@ -177,13 +176,11 @@ export class CircuitBreakerService {
 
       case CircuitState.OPEN:
         // This shouldn't happen, but reset if it does
-        console.warn(`[Circuit Breaker] Unexpected success while circuit is OPEN for ${providerId}`);
         this.transitionToClosed(providerId);
         break;
     }
 
     this.persistCircuitState(circuit);
-    console.log(`[Circuit Breaker] Recorded success for ${providerId}, response time: ${responseTime}ms`);
   }
 
   /**
@@ -226,7 +223,6 @@ export class CircuitBreakerService {
     }
 
     this.persistCircuitState(circuit);
-    console.log(`[Circuit Breaker] Recorded failure for ${providerId}, error: ${error || 'Unknown'}`);
   }
 
   /**
@@ -262,7 +258,6 @@ export class CircuitBreakerService {
     const circuit = this.circuits.get(providerId);
     if (!circuit) return false;
 
-    console.log(`[Circuit Breaker] Manually opening circuit for ${providerId}: ${reason}`);
     this.transitionToOpen(providerId);
     return true;
   }
@@ -274,7 +269,6 @@ export class CircuitBreakerService {
     const circuit = this.circuits.get(providerId);
     if (!circuit) return false;
 
-    console.log(`[Circuit Breaker] Manually closing circuit for ${providerId}: ${reason}`);
     this.transitionToClosed(providerId);
     return true;
   }
@@ -294,7 +288,6 @@ export class CircuitBreakerService {
     circuit.metrics.totalSuccesses = 0;
     
     this.transitionToClosed(providerId);
-    console.log(`[Circuit Breaker] Reset circuit for ${providerId}`);
     return true;
   }
 
@@ -398,7 +391,6 @@ export class CircuitBreakerService {
     const circuit = this.circuits.get(providerId);
     if (!circuit) return;
 
-    console.log(`[Circuit Breaker] Closing circuit for ${providerId}`);
     circuit.state = CircuitState.CLOSED;
     circuit.failureCount = 0;
     circuit.successCount = 0;
@@ -412,7 +404,6 @@ export class CircuitBreakerService {
     const circuit = this.circuits.get(providerId);
     if (!circuit) return;
 
-    console.log(`[Circuit Breaker] Opening circuit for ${providerId}`);
     circuit.state = CircuitState.OPEN;
     circuit.successCount = 0;
     circuit.halfOpenCalls = 0;
@@ -425,7 +416,6 @@ export class CircuitBreakerService {
     const circuit = this.circuits.get(providerId);
     if (!circuit) return;
 
-    console.log(`[Circuit Breaker] Half-opening circuit for ${providerId}`);
     circuit.state = CircuitState.HALF_OPEN;
     circuit.successCount = 0;
     circuit.halfOpenCalls = 0;
@@ -456,7 +446,6 @@ export class CircuitBreakerService {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
-      console.error(`[Circuit Breaker] Failed to persist state for ${circuit.providerId}:`, error);
       // Non-critical error, don't throw
     }
   }
@@ -470,7 +459,6 @@ export class CircuitBreakerService {
         try {
           await this.performHealthCheck(providerId);
         } catch (error) {
-          console.error(`[Circuit Breaker] Health check failed for ${providerId}:`, error);
         }
       }
     }, 30000);
@@ -484,7 +472,6 @@ export class CircuitBreakerService {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
     }
-    console.log('[Circuit Breaker] Cleanup completed');
   }
 }
 

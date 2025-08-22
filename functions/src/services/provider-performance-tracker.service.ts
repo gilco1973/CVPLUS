@@ -132,10 +132,8 @@ class MetricsCollector {
       // Clear buffer
       this.metricsBuffer.set(providerId, []);
       
-      console.log(`[Performance Tracker] Flushed ${buffer.length} metrics for ${providerId}`);
       
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to flush metrics for ${providerId}:`, error);
       // Keep buffer for retry
     }
   }
@@ -160,7 +158,6 @@ class MetricsCollector {
     const providerIds = Array.from(this.metricsBuffer.keys());
     providerIds.forEach(providerId => {
       this.flushBuffer(providerId).catch(error => {
-        console.error(`[Performance Tracker] Failed to flush buffer during cleanup for ${providerId}:`, error);
       });
     });
   }
@@ -217,7 +214,6 @@ class TrendAnalyzer {
       };
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to analyze trends for ${providerId}:`, error);
       throw error;
     }
   }
@@ -383,7 +379,6 @@ class PredictiveAnalytics {
       };
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to generate predictions for ${providerId}:`, error);
       throw error;
     }
   }
@@ -497,10 +492,8 @@ export class ProviderPerformanceTracker {
       };
 
       await this.metricsCollector.recordMetric(snapshot);
-      console.log(`[Performance Tracker] Recorded generation metric for ${providerId}`);
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to track generation for ${providerId}:`, error);
     }
   }
 
@@ -533,7 +526,6 @@ export class ProviderPerformanceTracker {
       await this.metricsCollector.recordMetric(snapshot);
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to track status check for ${providerId}:`, error);
     }
   }
 
@@ -575,7 +567,6 @@ export class ProviderPerformanceTracker {
       };
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to get metrics for ${providerId}:`, error);
       return this.getDefaultMetrics(providerId, period);
     }
   }
@@ -598,7 +589,6 @@ export class ProviderPerformanceTracker {
       return trends;
 
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to get trends for ${providerId}:`, error);
       return [];
     }
   }
@@ -610,7 +600,6 @@ export class ProviderPerformanceTracker {
     try {
       return await this.predictiveAnalytics.generatePredictions(providerId);
     } catch (error) {
-      console.error(`[Performance Tracker] Failed to get predictions for ${providerId}:`, error);
       throw error;
     }
   }
@@ -654,7 +643,6 @@ export class ProviderPerformanceTracker {
       };
 
     } catch (error) {
-      console.error('[Performance Tracker] Failed to get dashboard data:', error);
       throw error;
     }
   }
@@ -790,7 +778,6 @@ export class ProviderPerformanceTracker {
       return Array.from(providerIds);
 
     } catch (error) {
-      console.error('[Performance Tracker] Failed to get provider IDs:', error);
       return [];
     }
   }
@@ -800,7 +787,6 @@ export class ProviderPerformanceTracker {
    */
   cleanup(): void {
     this.metricsCollector.cleanup();
-    console.log('[Performance Tracker] Cleanup completed');
   }
 }
 

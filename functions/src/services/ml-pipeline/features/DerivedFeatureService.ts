@@ -23,7 +23,6 @@ export class DerivedFeatureService {
       // behaviorFeatures: FeatureVector['behaviorFeatures']; // Removed
     }
   ): Promise<FeatureVector['derivedFeatures']> {
-    console.log('[DERIVED-FEATURES] Calculating derived features');
     
     const features = {
       overqualificationScore: this.calculateOverqualification(cv, jobDescription, baseFeatures),
@@ -35,8 +34,6 @@ export class DerivedFeatureService {
       innovationIndicator: this.calculateInnovationIndicator(cv, baseFeatures)
     };
     
-    console.log(`[DERIVED-FEATURES] Career progression: ${Math.round((features?.careerProgressionScore || 0) * 100)}%`);
-    console.log(`[DERIVED-FEATURES] Leadership potential: ${Math.round(features.leadershipPotential * 100)}%`);
     
     return features;
   }
@@ -112,7 +109,6 @@ export class DerivedFeatureService {
              (features?.careerTrajectory || 0) >= 0 &&
              (features?.marketAlignment || 0) >= 0;
     } catch (error) {
-      console.error('[DERIVED-FEATURES] Health check failed:', error);
       return false;
     }
   }

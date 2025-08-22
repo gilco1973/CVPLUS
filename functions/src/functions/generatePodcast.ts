@@ -30,15 +30,12 @@ export const generatePodcast = onCall(
       focus = 'balanced' 
     } = request.data;
 
-    console.log('📋 Podcast generation params:', { jobId, style, duration, focus });
 
     if (!jobId) {
-      console.error('❌ No jobId provided');
       throw new Error('Job ID is required');
     }
 
     try {
-      console.log('📖 Fetching job document...');
       // Get the job data with parsed CV
       const jobDoc = await admin.firestore()
         .collection('jobs')
@@ -46,13 +43,10 @@ export const generatePodcast = onCall(
         .get();
       
       if (!jobDoc.exists) {
-        console.error('❌ Job document not found:', jobId);
         throw new Error('Job not found');
       }
       
       const jobData = jobDoc.data();
-      console.log('📄 Job data keys:', Object.keys(jobData || {}));
-      console.log('🔍 Has parsedData:', !!jobData?.parsedData);
       
       // Verify job ownership
       if (jobData?.userId !== request.auth.uid) {
@@ -65,15 +59,11 @@ export const generatePodcast = onCall(
       }
       
       if (!jobData?.parsedData) {
-        console.error('❌ No parsedData found in job document');
-        console.log('Available job data fields:', Object.keys(jobData || {}));
         throw new Error('CV data not found. Please ensure CV is parsed first.');
       }
       
-      console.log('✅ Parsed CV data found, proceeding with podcast generation...');
 
       // Update status to processing
-      console.log('🔄 Updating podcast status to processing...');
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
@@ -85,7 +75,6 @@ export const generatePodcast = onCall(
           podcastStatus: 'generating',
           updatedAt: FieldValue.serverTimestamp()
         });
-      console.log('✅ Status updated to processing');
 
       // Generate conversational podcast
       const podcastResult = await podcastGenerationService.generatePodcast(
@@ -156,7 +145,6 @@ export const generatePodcast = onCall(
         htmlFragment: sanitizedHtmlFragment
       };
     } catch (error: any) {
-      console.error('Error generating podcast:', error);
       
       // Sanitize error data for safe Firestore write
       const sanitizedErrorContext = sanitizeErrorContext({

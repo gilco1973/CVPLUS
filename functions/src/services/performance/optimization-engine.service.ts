@@ -126,7 +126,6 @@ class OptimizationEngineService {
 
       return prioritizedRecommendations;
     } catch (error) {
-      console.error('Error generating optimization recommendations:', error);
       return [];
     }
   }
@@ -151,7 +150,6 @@ class OptimizationEngineService {
         // Store result
         await this.storeOptimizationResult(result);
       } catch (error) {
-        console.error(`Error applying optimization ${recommendation.recommendationId}:`, error);
         
         const failedResult: OptimizationResult = {
           recommendationId: recommendation.recommendationId,
@@ -537,7 +535,6 @@ class OptimizationEngineService {
       result.completedAt = Date.now();
     } catch (error) {
       result.status = 'failed';
-      console.error(`Failed to execute optimization ${recommendation.recommendationId}:`, error);
     }
 
     return result;
@@ -548,7 +545,6 @@ class OptimizationEngineService {
    */
   private async executeDatabaseOptimization(recommendation: OptimizationRecommendation): Promise<void> {
     // Implementation would create database indexes, optimize queries, etc.
-    console.log(`Executing database optimization: ${recommendation.title}`);
     
     // Simulate execution delay
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -559,7 +555,6 @@ class OptimizationEngineService {
    */
   private async executeCacheOptimization(recommendation: OptimizationRecommendation): Promise<void> {
     // Implementation would configure caching layers
-    console.log(`Executing cache optimization: ${recommendation.title}`);
     
     // Simulate execution delay
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -570,7 +565,6 @@ class OptimizationEngineService {
    */
   private async executeInfrastructureOptimization(recommendation: OptimizationRecommendation): Promise<void> {
     // Implementation would update function configurations, scaling settings, etc.
-    console.log(`Executing infrastructure optimization: ${recommendation.title}`);
     
     // Simulate execution delay
     await new Promise(resolve => setTimeout(resolve, 500));

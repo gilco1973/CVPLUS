@@ -38,11 +38,9 @@ export class FeatureExtractor {
     // Check feature cache first
     const cachedFeatures = await this.predictionCache.getFeatures(request);
     if (cachedFeatures) {
-      console.log('[FEATURE-EXTRACTOR] Returning cached features');
       return cachedFeatures;
     }
     
-    console.log('[FEATURE-EXTRACTOR] Extracting features...');
     const startTime = Date.now();
     
     try {
@@ -80,7 +78,6 @@ export class FeatureExtractor {
       await this.predictionCache.setFeatures(request, features);
       
       const extractionTime = Date.now() - startTime;
-      console.log(`[FEATURE-EXTRACTOR] Feature extraction completed in ${extractionTime}ms`);
       
       // Log feature quality metrics
       this.logFeatureQuality(features);
@@ -88,7 +85,6 @@ export class FeatureExtractor {
       return features;
       
     } catch (error) {
-      console.error('[FEATURE-EXTRACTOR] Feature extraction failed:', error);
       
       // Return fallback features
       return this.generateFallbackFeatures(request);
@@ -213,7 +209,6 @@ export class FeatureExtractor {
       
       return serviceChecks.every(check => check === true);
     } catch (error) {
-      console.error('[FEATURE-EXTRACTOR] Health check failed:', error);
       return false;
     }
   }
@@ -232,7 +227,6 @@ export class FeatureExtractor {
   }
 
   private generateFallbackFeatures(request: PredictionRequest): FeatureVector {
-    console.log('[FEATURE-EXTRACTOR] Generating fallback features');
     
     const fallbackFeatures: FeatureVector = {
       userId: request.userId,
@@ -295,9 +289,5 @@ export class FeatureExtractor {
                          Object.keys(features.marketFeatures || {}).length +
                          Object.keys(features.derivedFeatures || {}).length;
     
-    console.log(`[FEATURE-EXTRACTOR] Extracted ${totalFeatures} features total`);
-    console.log(`[FEATURE-EXTRACTOR] CV features: ${cvFeatureCount}, Matching: ${matchingFeatureCount}`);
-    console.log(`[FEATURE-EXTRACTOR] Skill match: ${Math.round((features.matchingFeatures?.skillMatchPercentage || 0) * 100)}%`);
-    console.log(`[FEATURE-EXTRACTOR] Experience: ${features.rawFeatures?.yearsExperience || 0} years`);
   }
 }

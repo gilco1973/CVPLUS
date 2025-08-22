@@ -37,9 +37,6 @@ export const generateWebPortal = onCall(
     secrets: ['ANTHROPIC_API_KEY', 'HUGGINGFACE_API_TOKEN']
   },
   withPremiumAccess('webPortal', async (request) => {
-    console.log('[GENERATE-WEB-PORTAL] Function called');
-    console.log('[GENERATE-WEB-PORTAL] Request auth:', request.auth ? 'Present' : 'Missing');
-    console.log('[GENERATE-WEB-PORTAL] Request data keys:', Object.keys(request.data || {}));
     
     const startTime = Date.now();
     const stepsCompleted: PortalGenerationStep[] = [];
@@ -48,7 +45,6 @@ export const generateWebPortal = onCall(
     try {
       // Require Google authentication
       const user = await requireGoogleAuth(request);
-      console.log(`[GENERATE-WEB-PORTAL] Authenticated Google user: ${user.uid}`);
       
       // Update user login tracking
       await updateUserLastLogin(user.uid, user.email, user.name, user.picture);
@@ -61,12 +57,10 @@ export const generateWebPortal = onCall(
       });
 
       if (!jobId) {
-        console.error('[GENERATE-WEB-PORTAL] Missing required parameters:', { jobId });
         throw new Error('Missing required parameter: jobId');
       }
 
       // Step 1: Validate input and extract CV data
-      console.log('[GENERATE-WEB-PORTAL] Step 1: Validating input and extracting CV data...');
       stepsCompleted.push(PortalGenerationStep.VALIDATE_INPUT);
       
       const jobDoc = await admin.firestore()
@@ -102,7 +96,6 @@ export const generateWebPortal = onCall(
       const portalId = `portal_${jobId}_${Date.now()}`;
       
       // Step 2: Initialize portal status in Firestore
-      console.log('[GENERATE-WEB-PORTAL] Step 2: Initializing portal status...');
       const initialPortalData: Partial<PortalConfig> = {
         id: portalId,
         jobId: jobId,
@@ -127,12 +120,10 @@ export const generateWebPortal = onCall(
           updatedAt: FieldValue.serverTimestamp()
         }, { merge: true });
 
-      console.log('[GENERATE-WEB-PORTAL] Step 3: Portal generation process starting...');
       
       // Create a realistic processing delay to simulate complex operations
       // In real implementation, these would be actual service calls
       const simulateStep = async (stepName: string, step: PortalGenerationStep, durationMs: number) => {
-        console.log(`[GENERATE-WEB-PORTAL] ${stepName} - Starting...`);
         
         // Update portal status
         await admin.firestore()
@@ -148,7 +139,6 @@ export const generateWebPortal = onCall(
         await new Promise(resolve => setTimeout(resolve, durationMs));
         
         stepsCompleted.push(step);
-        console.log(`[GENERATE-WEB-PORTAL] ${stepName} - Completed`);
       };
       
       // Step 3: Generate template
@@ -158,7 +148,6 @@ export const generateWebPortal = onCall(
       await simulateStep('Design Customization', PortalGenerationStep.CUSTOMIZE_DESIGN, 1500);
       
       // Step 5: Build RAG system
-      console.log('[GENERATE-WEB-PORTAL] Step 5: Building RAG system...');
       await admin.firestore()
         .collection('portals')
         .doc(portalId)
@@ -172,7 +161,6 @@ export const generateWebPortal = onCall(
       await simulateStep('Vector Database Setup', PortalGenerationStep.SETUP_VECTOR_DB, 2000);
       
       // Step 6: Deploy to HuggingFace
-      console.log('[GENERATE-WEB-PORTAL] Step 6: Deploying to HuggingFace...');
       await admin.firestore()
         .collection('portals')
         .doc(portalId)
@@ -218,7 +206,6 @@ export const generateWebPortal = onCall(
       // Step 10: Finalize portal
       await simulateStep('Portal Finalization', PortalGenerationStep.FINALIZE_PORTAL, 500);
       
-      console.log('[GENERATE-WEB-PORTAL] Portal generation completed successfully');
       
       const processingTimeMs = Date.now() - startTime;
       
@@ -278,8 +265,6 @@ export const generateWebPortal = onCall(
           updatedAt: FieldValue.serverTimestamp()
         }, { merge: true });
       
-      console.log(`[GENERATE-WEB-PORTAL] Portal generation completed in ${processingTimeMs}ms`);
-      console.log(`[GENERATE-WEB-PORTAL] Portal URL: ${portalUrls.portal}`);
       
       // Create result metadata (for portal.ts interface)
       const resultMetadata = {
@@ -305,7 +290,6 @@ export const generateWebPortal = onCall(
       return result;
 
     } catch (error: any) {
-      console.error('[GENERATE-WEB-PORTAL] Error generating portal:', error);
       
       const processingTimeMs = Date.now() - startTime;
       

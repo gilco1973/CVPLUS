@@ -102,7 +102,6 @@ export class TestimonialsService {
 
       return carousel;
     } catch (error) {
-      console.error('Error generating testimonials carousel:', error);
       throw new Error('Failed to generate testimonials carousel');
     }
   }
@@ -244,7 +243,6 @@ export class TestimonialsService {
         context: job.title || job.position
       };
     } catch (error) {
-      console.error('Error generating testimonial for job:', error);
       return null;
     }
   }

@@ -68,7 +68,6 @@ export class FirestoreValidationService {
       nullFieldsFound: 0
     };
 
-    console.log(`[Firestore Validation] Starting validation for ${operation} operation at path: ${path}`);
 
     try {
       // Calculate data size
@@ -128,7 +127,6 @@ export class FirestoreValidationService {
       };
 
     } catch (validationError: any) {
-      console.error('[Firestore Validation] Validation process failed:', validationError);
       errors.push(`Validation process failed: ${validationError.message}`);
       
       return {
@@ -340,7 +338,6 @@ export class FirestoreValidationService {
     errors: string[],
     warnings: string[]
   ): void {
-    console.log('[Firestore Validation] Applying timeline-specific validation');
 
     // Validate timeline structure
     if (data && typeof data === 'object') {
@@ -411,7 +408,6 @@ export class FirestoreValidationService {
     const stats = { undefinedRemoved: 0, nullsFound: 0 };
     const sanitizedData: Record<string, any> = {};
     
-    console.log(`[Firestore Validation] Validating update data with dot-notation paths`);
     
     for (const [fieldPath, value] of Object.entries(data)) {
       // For update operations, dot-notation paths are valid Firestore field paths

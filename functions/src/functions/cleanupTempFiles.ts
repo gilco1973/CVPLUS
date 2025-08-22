@@ -28,7 +28,6 @@ export const cleanupTempFiles = onSchedule(
 
       await Promise.all(deletePromises);
 
-      console.log(`Deleted ${deletePromises.length} temporary files`);
 
       // Also clean up old failed jobs
       const db = admin.firestore();
@@ -46,9 +45,7 @@ export const cleanupTempFiles = onSchedule(
 
       await batch.commit();
 
-      console.log(`Deleted ${failedJobs.size} failed jobs`);
     } catch (error) {
-      console.error('Error cleaning up temp files:', error);
       throw error;
     }
   });

@@ -15,7 +15,6 @@ export class RecommendationEngine {
     predictions: { interviewProb: number; offerProb: number },
     request: PredictionRequest
   ): Promise<PredictiveRecommendation[]> {
-    console.log('[RECOMMENDATION-ENGINE] Generating basic recommendations');
     
     const recommendations: PredictiveRecommendation[] = [];
     

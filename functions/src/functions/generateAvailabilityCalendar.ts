@@ -12,7 +12,6 @@ export const generateAvailabilityCalendar = onCall(
   async (request) => {
     // Require Google authentication
     const user = await requireGoogleAuth(request);
-    console.log(`[AVAILABILITY-CALENDAR] Authenticated user: ${user.uid}`);
     // PII REMOVED: Email logging removed for security compliance
 
     const { jobId } = request.data;
@@ -104,7 +103,6 @@ export const generateAvailabilityCalendar = onCall(
       };
 
     } catch (error) {
-      console.error('Error generating availability calendar:', error);
       
       // Update error status
       await admin.firestore()

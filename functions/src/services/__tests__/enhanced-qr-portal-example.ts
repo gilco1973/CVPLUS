@@ -34,22 +34,15 @@ export async function exampleCompletePortalQRGeneration() {
 
   try {
     // Method 1: Generate complete portal QR code set
-    console.log('🎯 Generating complete portal QR code set...');
     const portalQRCodes = await qrService.generatePortalQRCodes(jobId, portalURLs);
-    console.log(`✅ Generated ${portalQRCodes.length} portal QR codes`);
     
     // Display generated QR codes
     portalQRCodes.forEach(qr => {
-      console.log(`📱 ${qr.type}: ${qr.metadata.title}`);
-      console.log(`   URL: ${qr.data}`);
-      console.log(`   Image: ${qr.qrImageUrl}`);
-      console.log(`   Template: ${qr.template.name}`);
     });
 
     return portalQRCodes;
     
   } catch (error) {
-    console.error('❌ Error generating portal QR codes:', error);
     throw error;
   }
 }
@@ -76,20 +69,15 @@ export async function exampleUpdateExistingQRCodes() {
 
   try {
     // Method 2: Update existing QR codes to portal URLs
-    console.log('🔄 Updating existing QR codes to portal URLs...');
     await qrService.updateExistingQRCodesToPortal(jobId, portalURLs);
-    console.log('✅ Successfully updated existing QR codes');
     
     // Verify updates
     const updatedQRCodes = await qrService.getQRCodes(jobId);
-    console.log(`📊 Total QR codes: ${updatedQRCodes.length}`);
     
     updatedQRCodes.forEach(qr => {
-      console.log(`🔄 Updated ${qr.type}: ${qr.data}`);
     });
     
   } catch (error) {
-    console.error('❌ Error updating existing QR codes:', error);
     throw error;
   }
 }
@@ -115,22 +103,15 @@ export async function exampleCreatePortalQRCodeSet() {
 
   try {
     // Method 3: Create QR code configurations (without saving to database)
-    console.log('⚙️ Creating portal QR code configurations...');
     const qrCodeConfigs = await qrService.createPortalQRCodeSet(portalURLs);
     
-    console.log(`📋 Created ${qrCodeConfigs.length} QR code configurations`);
     
     qrCodeConfigs.forEach(config => {
-      console.log(`📱 ${config.type}: ${config.metadata?.title}`);
-      console.log(`   Template: ${config.template?.name}`);
-      console.log(`   Tags: ${config.metadata?.tags?.join(', ')}`);
-      console.log(`   Tracking: ${config.metadata?.trackingEnabled}`);
     });
     
     return qrCodeConfigs;
     
   } catch (error) {
-    console.error('❌ Error creating portal QR code set:', error);
     throw error;
   }
 }
@@ -163,26 +144,19 @@ export async function examplePortalQRWithAnalytics() {
 
   try {
     // Method 4: Generate portal QR codes with enhanced analytics
-    console.log('📊 Generating portal QR codes with enhanced analytics...');
     const analyticsQRCodes = await qrService.generatePortalQRWithAnalytics(
       jobId, 
       portalURLs, 
       trackingOptions
     );
     
-    console.log(`✅ Generated ${analyticsQRCodes.length} QR codes with analytics`);
     
     analyticsQRCodes.forEach(qr => {
-      console.log(`📊 ${qr.type}: ${qr.metadata.title}`);
-      console.log(`   Tags: ${qr.metadata.tags.join(', ')}`);
-      console.log(`   Geofencing: ${qr.advanced.geofencing?.enabled}`);
-      console.log(`   Dynamic Content: ${qr.advanced.dynamicContent}`);
     });
     
     return analyticsQRCodes;
     
   } catch (error) {
-    console.error('❌ Error generating QR codes with analytics:', error);
     throw error;
   }
 }
@@ -216,21 +190,16 @@ export async function exampleBatchUpdateForPortal() {
 
   try {
     // Method 5: Batch update existing QR codes
-    console.log('🔄 Batch updating QR codes for portal migration...');
     await qrService.batchUpdateQRCodesForPortal(jobId, portalURLs, qrCodeIds);
-    console.log('✅ Successfully batch updated QR codes');
     
     // Verify the updates
     const updatedQRCodes = await qrService.getQRCodes(jobId);
     const updatedCodes = updatedQRCodes.filter(qr => qrCodeIds.includes(qr.id));
     
-    console.log(`📋 Updated ${updatedCodes.length} QR codes:`);
     updatedCodes.forEach(qr => {
-      console.log(`   ${qr.id}: ${qr.data} (${qr.type})`);
     });
     
   } catch (error) {
-    console.error('❌ Error in batch update:', error);
     throw error;
   }
 }
@@ -241,25 +210,15 @@ export async function exampleBatchUpdateForPortal() {
 export function exampleGetPortalTemplates() {
   const qrService = new EnhancedQRService();
   
-  console.log('🎨 Available Portal Templates:');
   
   // Get all portal templates
   const portalTemplates = qrService.getPortalTemplates();
   
   portalTemplates.forEach(template => {
-    console.log(`📱 ${template.id}: ${template.name}`);
-    console.log(`   Description: ${template.description}`);
-    console.log(`   Colors: ${template.style.foregroundColor} / ${template.style.backgroundColor}`);
-    console.log(`   Size: ${template.style.width}px`);
-    console.log(`   CTA: ${template.callToAction?.text}`);
-    console.log('');
   });
   
   // Get all templates (including legacy)
   const allTemplates = qrService.getDefaultTemplates();
-  console.log(`📊 Total Templates Available: ${allTemplates.length}`);
-  console.log(`🆕 Portal-Specific Templates: ${portalTemplates.filter(t => t.id.startsWith('portal-')).length}`);
-  console.log(`🔄 Legacy Compatible Templates: ${portalTemplates.filter(t => !t.id.startsWith('portal-')).length}`);
   
   return portalTemplates;
 }
@@ -287,35 +246,24 @@ export async function exampleCompleteWorkflow() {
     }
   };
 
-  console.log('🚀 Starting Complete Portal QR Workflow...');
 
   try {
     // Step 1: Check if user already has QR codes
     const existingQRCodes = await qrService.getQRCodes(jobId);
     
     if (existingQRCodes.length > 0) {
-      console.log(`📋 Found ${existingQRCodes.length} existing QR codes`);
-      console.log('🔄 Updating existing QR codes to portal URLs...');
       
       // Update existing QR codes to point to portal
       await qrService.updateExistingQRCodesToPortal(jobId, portalURLs);
     } else {
-      console.log('🆕 No existing QR codes found');
     }
     
     // Step 2: Generate new portal-specific QR codes
-    console.log('🎯 Generating portal-specific QR codes...');
     const portalQRCodes = await qrService.generatePortalQRCodes(jobId, portalURLs);
     
     // Step 3: Get analytics for all QR codes
-    console.log('📊 Retrieving QR code analytics...');
     const analytics = await qrService.getQRAnalytics(jobId);
     
-    console.log('✅ Complete Workflow Summary:');
-    console.log(`   📱 Portal QR Codes: ${portalQRCodes.length}`);
-    console.log(`   📊 Total QR Codes: ${analytics.totalQRCodes}`);
-    console.log(`   🔄 Active QR Codes: ${analytics.activeQRCodes}`);
-    console.log(`   📈 Total Scans: ${analytics.totalScans}`);
     
     // Step 4: Return organized results
     return {
@@ -326,7 +274,6 @@ export async function exampleCompleteWorkflow() {
     };
     
   } catch (error) {
-    console.error('❌ Complete workflow failed:', error);
     throw error;
   }
 }

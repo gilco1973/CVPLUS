@@ -24,7 +24,6 @@ export const enhancedAnalyzeCV = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`Starting enhanced CV analysis for user ${userId}`);
 
       // Initialize enhanced analysis service
       const analysisService = new EnhancedATSAnalysisService();
@@ -51,9 +50,7 @@ export const enhancedAnalyzeCV = onCall(
               recommendationsCount: analysisResult.suggestions.length
             }
           });
-          console.log(`Stored analysis results for job ${jobId}`);
         } catch (storeError) {
-          console.error('Failed to store analysis results:', storeError);
           // Don't fail the entire request if storage fails
         }
       }
@@ -86,7 +83,6 @@ export const enhancedAnalyzeCV = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error analyzing CV:', error);
       
       // Update job status if jobId provided
       if (jobId) {
@@ -96,7 +92,6 @@ export const enhancedAnalyzeCV = onCall(
             lastAnalysisError: new Date().toISOString()
           });
         } catch (updateError) {
-          console.error('Failed to update job with error:', updateError);
         }
       }
 

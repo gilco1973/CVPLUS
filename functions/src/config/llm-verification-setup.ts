@@ -44,25 +44,19 @@ export class LLMVerificationSetupManager {
    * Perform complete setup validation for the current environment
    */
   async performSetup(): Promise<SetupResult> {
-    console.log('🚀 Starting LLM Verification System Setup...');
     
     const environment = process.env.NODE_ENV || 'development';
-    console.log(`Environment: ${environment}`);
     
     // Validate configuration
     const configValidation = validateLLMConfig(this.config);
-    console.log(`Configuration Valid: ${configValidation.valid}`);
     
     if (!configValidation.valid) {
-      console.log('Configuration Errors:', configValidation.errors);
     }
     
     // Perform health check
     const healthCheck = performConfigHealthCheck();
-    console.log(`System Healthy: ${healthCheck.healthy}`);
     
     if (healthCheck.issues.length > 0) {
-      console.log('Health Issues:', healthCheck.issues);
     }
     
     // Check service availability
@@ -182,71 +176,34 @@ export class LLMVerificationSetupManager {
    * Print comprehensive setup summary
    */
   private printSetupSummary(result: SetupResult): void {
-    console.log('\n' + '='.repeat(80));
-    console.log('📋 LLM VERIFICATION SYSTEM SETUP SUMMARY');
-    console.log('='.repeat(80));
-    console.log(`Environment: ${result.environment}`);
-    console.log(`Setup Status: ${result.success ? '✅ SUCCESS' : '❌ FAILED'}`);
-    console.log(`Configuration: ${result.configurationValid ? '✅ Valid' : '❌ Invalid'}`);
-    console.log(`System Health: ${result.healthStatus.healthy ? '✅ Healthy' : '⚠️ Issues Detected'}`);
-    console.log('');
     
-    console.log('🔧 SERVICE STATUS');
-    console.log('-'.repeat(20));
-    console.log(`Anthropic API: ${result.services.anthropicConfigured ? '✅ Configured' : '❌ Missing'}`);
-    console.log(`OpenAI API: ${result.services.openaiConfigured ? '✅ Configured' : '❌ Missing'}`);
-    console.log(`Verification: ${result.services.verificationEnabled ? '✅ Enabled' : '❌ Disabled'}`);
-    console.log(`Security: ${result.services.securityEnabled ? '✅ Enabled' : '❌ Disabled'}`);
-    console.log('');
     
-    console.log('⚡ PERFORMANCE PROFILE');
-    console.log('-'.repeat(25));
-    console.log(`Expected Latency Increase: ${result.performanceProfile.expectedLatencyIncrease}`);
-    console.log(`Additional Memory: ${result.performanceProfile.memoryRequirements}`);
-    console.log('Recommended Settings:');
     Object.entries(result.performanceProfile.recommendedSettings).forEach(([key, value]) => {
-      console.log(`  ${key}: ${value}`);
     });
-    console.log('');
     
     if (result.healthStatus.issues.length > 0) {
-      console.log('⚠️ ISSUES DETECTED');
-      console.log('-'.repeat(20));
       result.healthStatus.issues.forEach(issue => console.log(`  • ${issue}`));
-      console.log('');
     }
     
     if (result.warnings && result.warnings.length > 0) {
-      console.log('⚠️ WARNINGS');
-      console.log('-'.repeat(15));
       result.warnings.forEach(warning => console.log(`  • ${warning}`));
-      console.log('');
     }
     
     if (result.migrationSteps && result.migrationSteps.length > 0) {
-      console.log('📋 MIGRATION STEPS');
-      console.log('-'.repeat(20));
       result.migrationSteps.forEach((step, index) => {
-        console.log(`  ${index + 1}. ${step}`);
       });
-      console.log('');
     }
     
     if (result.healthStatus.recommendations.length > 0) {
-      console.log('💡 RECOMMENDATIONS');
-      console.log('-'.repeat(20));
       result.healthStatus.recommendations.forEach(rec => console.log(`  • ${rec}`));
-      console.log('');
     }
     
-    console.log('='.repeat(80));
   }
 
   /**
    * Setup Firebase Function configuration for verification
    */
   async setupFirebaseFunctions(): Promise<void> {
-    console.log('🔧 Setting up Firebase Functions configuration...');
     
     // This would update the Firebase Functions configuration
     // In practice, this might update firebase.json or environment configuration
@@ -263,11 +220,8 @@ export class LLMVerificationSetupManager {
       }
     };
     
-    console.log('Firebase Functions Configuration:');
-    console.log(JSON.stringify(functionConfig, null, 2));
     
     // In a real implementation, this would write to firebase.json
-    console.log('✅ Firebase Functions configuration updated');
   }
 
   /**
@@ -299,7 +253,6 @@ export class LLMVerificationSetupManager {
     warnings: string[];
     checklist: string[];
   }> {
-    console.log('🔍 Validating deployment readiness...');
     
     const blockers: string[] = [];
     const warnings: string[] = [];
@@ -346,28 +299,22 @@ if (require.main === module) {
       const result = await setupManager.performSetup();
       
       if (result.success) {
-        console.log('✅ Setup completed successfully!');
         
         // Validate deployment readiness
         const deploymentCheck = await setupManager.validateDeploymentReadiness();
         
         if (deploymentCheck.ready) {
-          console.log('🚀 System is ready for deployment!');
         } else {
-          console.log('⚠️ Deployment blockers detected:');
           deploymentCheck.blockers.forEach(blocker => console.log(`  • ${blocker}`));
         }
         
-        console.log('\n📋 Deployment Checklist:');
         deploymentCheck.checklist.forEach(item => console.log(`  ${item}`));
         
         process.exit(0);
       } else {
-        console.log('❌ Setup failed. Please address the issues above.');
         process.exit(1);
       }
     } catch (error) {
-      console.error('❌ Setup failed with error:', error);
       process.exit(1);
     }
   }

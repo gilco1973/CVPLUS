@@ -36,7 +36,6 @@ export const runwaymlStatusCheck = onRequest(
     const startTime = Date.now();
     
     try {
-      console.log('[RunwayML Status Check] Processing request');
       
       // Validate HTTP method
       if (request.method !== 'POST' && request.method !== 'GET') {
@@ -60,7 +59,6 @@ export const runwaymlStatusCheck = onRequest(
         return;
       }
       
-      console.log(`[RunwayML Status Check] Checking status for job: ${jobId}`);
       
       // Check status using enhanced video generation service
       const status = await enhancedVideoGenerationService.checkVideoStatus(jobId);
@@ -162,7 +160,6 @@ export const runwaymlBatchStatusCheck = onRequest(
     const startTime = Date.now();
     
     try {
-      console.log('[RunwayML Batch Status Check] Processing request');
       
       // Validate HTTP method
       if (request.method !== 'POST') {
@@ -192,7 +189,6 @@ export const runwaymlBatchStatusCheck = onRequest(
         return;
       }
       
-      console.log(`[RunwayML Batch Status Check] Checking ${jobIds.length} jobs`);
       
       // Check status for all jobs
       const results = await Promise.allSettled(
@@ -298,7 +294,6 @@ export const runwaymlPollingTask = onTaskDispatched(
         throw new Error('Missing required parameters: jobId and runwayId');
       }
       
-      console.log(`[RunwayML Polling Task] Polling job ${jobId} (attempt ${pollCount + 1})`);
       
       // Check status
       const status = await enhancedVideoGenerationService.checkVideoStatus(jobId);
@@ -340,7 +335,6 @@ export const runwaymlPollingTask = onTaskDispatched(
           }
         });
         
-        console.log(`[RunwayML Polling Task] Next poll scheduled in ${delay}s for job ${jobId}`);
       }
       
     } catch (error: any) {
@@ -354,7 +348,6 @@ export const runwaymlPollingTask = onTaskDispatched(
       
       // Don't throw to avoid task retry for permanent failures
       if (error instanceof VideoProviderError && !error.retryable) {
-        console.warn(`[RunwayML Polling Task] Non-retryable error, stopping polling for job ${request.data?.jobId}`);
         return;
       }
       
@@ -383,7 +376,6 @@ export const runwaymlCleanupTask = onTaskDispatched(
     try {
       const { retentionDays = 30 } = request.data;
       
-      console.log(`[RunwayML Cleanup Task] Starting cleanup with ${retentionDays} day retention`);
       
       const db = admin.firestore();
       const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
@@ -397,7 +389,6 @@ export const runwaymlCleanupTask = onTaskDispatched(
         .get();
       
       if (oldJobsQuery.empty) {
-        console.log('[RunwayML Cleanup Task] No old jobs to clean up');
         return;
       }
       
@@ -426,7 +417,6 @@ export const runwaymlCleanupTask = onTaskDispatched(
           data: { retentionDays }
         });
         
-        console.log('[RunwayML Cleanup Task] Next cleanup scheduled in 1 minute');
       }
       
     } catch (error: any) {

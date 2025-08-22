@@ -338,29 +338,23 @@ export class SocialLinksFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="SocialMediaLinks"]');
           
           if (placeholders.length === 0) {
-            console.log('No SocialMediaLinks placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React SocialMediaLinks components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('SocialMediaLinks props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering SocialMediaLinks');
                 window.renderReactComponent('SocialMediaLinks', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback message');
                 showReactFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse SocialMediaLinks props:', error);
               showReactError(placeholder, error.message);
             }
           });
@@ -431,7 +425,6 @@ export class SocialLinksFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting SocialMediaLinks initialization...');
           initReactComponents();
         }
         

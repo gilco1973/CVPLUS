@@ -30,7 +30,6 @@ export class WebSearchService {
     this.serperApiKey = config.search?.serperApiKey || process.env.SERPER_API_KEY || '';
     
     if (!this.serperApiKey) {
-      console.warn('Serper API key not configured. Web search functionality will be disabled.');
     }
   }
 
@@ -39,7 +38,6 @@ export class WebSearchService {
    */
   async searchCompanyInfo(companyName: string): Promise<SerperSearchResult[]> {
     if (!this.serperApiKey) {
-      console.warn('Serper API key not available');
       return [];
     }
 
@@ -63,7 +61,6 @@ export class WebSearchService {
 
       return response.data.organic || [];
     } catch (error) {
-      console.error('Error searching company info:', error);
       return [];
     }
   }
@@ -73,7 +70,6 @@ export class WebSearchService {
    */
   async searchTechnologyInfo(technology: string): Promise<SerperSearchResult[]> {
     if (!this.serperApiKey) {
-      console.warn('Serper API key not available');
       return [];
     }
 
@@ -97,7 +93,6 @@ export class WebSearchService {
 
       return response.data.organic || [];
     } catch (error) {
-      console.error('Error searching technology info:', error);
       return [];
     }
   }
@@ -107,7 +102,6 @@ export class WebSearchService {
    */
   async searchIndustryTrends(industry: string): Promise<SerperSearchResult[]> {
     if (!this.serperApiKey) {
-      console.warn('Serper API key not available');
       return [];
     }
 
@@ -131,7 +125,6 @@ export class WebSearchService {
 
       return response.data.organic || [];
     } catch (error) {
-      console.error('Error searching industry trends:', error);
       return [];
     }
   }
@@ -141,7 +134,6 @@ export class WebSearchService {
    */
   async search(query: string, numResults: number = 5): Promise<SerperSearchResult[]> {
     if (!this.serperApiKey) {
-      console.warn('Serper API key not available');
       return [];
     }
 
@@ -164,7 +156,6 @@ export class WebSearchService {
 
       return response.data.organic || [];
     } catch (error) {
-      console.error('Error performing web search:', error);
       return [];
     }
   }

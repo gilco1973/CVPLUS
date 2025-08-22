@@ -173,7 +173,6 @@ export const videoAnalyticsDashboard = onRequest(
         }
 
     } catch (error) {
-      console.error('[VideoAnalyticsDashboard] Error:', error);
       response.status(500).json({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
@@ -225,7 +224,6 @@ async function getDashboardSummary(): Promise<DashboardSummary> {
     return summary;
 
   } catch (error) {
-    console.error('[Dashboard] Error getting summary:', error);
     throw error;
   }
 }
@@ -256,7 +254,6 @@ async function getPerformanceMetrics(query: any): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting performance metrics:', error);
     throw error;
   }
 }
@@ -282,7 +279,6 @@ async function getQualityAnalysis(query: any): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting quality analysis:', error);
     throw error;
   }
 }
@@ -312,7 +308,6 @@ async function getBusinessMetrics(query: any): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting business metrics:', error);
     throw error;
   }
 }
@@ -348,7 +343,6 @@ async function getProviderComparison(): Promise<ProviderComparison[]> {
     return providers.sort((a, b) => b.metrics.successRate - a.metrics.successRate);
 
   } catch (error) {
-    console.error('[Dashboard] Error getting provider comparison:', error);
     throw error;
   }
 }
@@ -390,7 +384,6 @@ async function getTrendsAnalysis(query: any): Promise<TrendData[]> {
     return trendsData;
 
   } catch (error) {
-    console.error('[Dashboard] Error getting trends analysis:', error);
     throw error;
   }
 }
@@ -410,7 +403,6 @@ async function getAlertsData(): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting alerts data:', error);
     throw error;
   }
 }
@@ -432,7 +424,6 @@ async function getUserInsights(query: any): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting user insights:', error);
     throw error;
   }
 }
@@ -467,7 +458,6 @@ async function getExportData(query: any): Promise<any> {
     return exportData;
 
   } catch (error) {
-    console.error('[Dashboard] Error getting export data:', error);
     throw error;
   }
 }
@@ -484,7 +474,6 @@ async function getActiveGenerationsCount(): Promise<number> {
 
     return activeQuery.size;
   } catch (error) {
-    console.error('[Dashboard] Error getting active generations count:', error);
     return 0;
   }
 }
@@ -548,7 +537,6 @@ async function getRawDataForExport(period: string): Promise<any> {
     };
 
   } catch (error) {
-    console.error('[Dashboard] Error getting raw data for export:', error);
     return {};
   }
 }

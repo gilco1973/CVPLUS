@@ -137,7 +137,6 @@ export class EnhancedVideoGenerationService {
   
   private async initializeProviders(): Promise<void> {
     try {
-      console.log('[Enhanced Video Service] Initializing intelligent fallback mechanism...');
       
       // Initialize HeyGen provider (Priority 1)
       if (config.videoGeneration.heygenApiKey) {
@@ -159,9 +158,7 @@ export class EnhancedVideoGenerationService {
           });
         }
         
-        console.log('[Enhanced Video Service] HeyGen provider initialized with circuit breaker');
       } else {
-        console.warn('[Enhanced Video Service] HeyGen API key not configured');
       }
       
       // Initialize RunwayML provider (Priority 2)
@@ -182,16 +179,11 @@ export class EnhancedVideoGenerationService {
           });
         }
         
-        console.log('[Enhanced Video Service] RunwayML provider initialized with circuit breaker');
       } else {
-        console.warn('[Enhanced Video Service] RunwayML API key not configured');
       }
       
-      console.log('[Enhanced Video Service] Intelligent fallback mechanism initialized successfully');
-      console.log(`[Enhanced Video Service] Configuration: Retry attempts: ${this.fallbackConfig.maxRetryAttempts}, Quality threshold: ${this.fallbackConfig.qualityThreshold}`);
       
     } catch (error) {
-      console.error('[Enhanced Video Service] Provider initialization failed:', error);
       // Don't throw - allow service to work with basic fallback
     }
   }
@@ -213,7 +205,6 @@ export class EnhancedVideoGenerationService {
     const actualJobId = jobId || `video_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     try {
-      console.log(`[Enhanced Video Service] Starting intelligent video generation for job ${actualJobId}`);
       
       // Step 1: Generate optimized script using enhanced prompt engine
       let script: string;
@@ -236,9 +227,7 @@ export class EnhancedVideoGenerationService {
           script = enhancedScript.script;
           generationMethod = 'enhanced';
           
-          console.log(`[Enhanced Video Service] Enhanced script generated with quality score: ${enhancedScript.qualityMetrics.overallScore}`);
         } catch (enhancedError) {
-          console.warn('[Enhanced Video Service] Enhanced script generation failed, falling back to basic:', enhancedError);
           script = await this.generateBasicScript(parsedCV, options);
           generationMethod = 'basic';
         }
@@ -251,7 +240,6 @@ export class EnhancedVideoGenerationService {
       while (currentAttempt < this.fallbackConfig.maxRetryAttempts) {
         try {
           currentAttempt++;
-          console.log(`[Enhanced Video Service] Generation attempt ${currentAttempt} for job ${actualJobId}`);
           
           const result = await this.attemptVideoGeneration(
             script,
@@ -265,7 +253,6 @@ export class EnhancedVideoGenerationService {
           
           // Success! Return result
           const totalTime = Date.now() - startTime;
-          console.log(`[Enhanced Video Service] Video generation successful for job ${jobId} in ${totalTime}ms after ${currentAttempt} attempts`);
           
           return result;
           
@@ -276,7 +263,6 @@ export class EnhancedVideoGenerationService {
             'enhanced_service'
           );
           
-          console.warn(`[Enhanced Video Service] Generation attempt ${currentAttempt} failed for job ${jobId}:`, error.message);
           
           // If this is not the last attempt, try recovery
           if (currentAttempt < this.fallbackConfig.maxRetryAttempts) {
@@ -292,7 +278,6 @@ export class EnhancedVideoGenerationService {
               
               if (recoveryResult.success && recoveryResult.result) {
                 const totalTime = Date.now() - startTime;
-                console.log(`[Enhanced Video Service] Video generation recovered for job ${jobId} in ${totalTime}ms after error recovery`);
                 return this.buildEnhancedResult(
                   recoveryResult.result,
                   jobId,
@@ -303,7 +288,6 @@ export class EnhancedVideoGenerationService {
                 );
               }
             } catch (recoveryError) {
-              console.error(`[Enhanced Video Service] Error recovery failed for job ${jobId}:`, recoveryError);
             }
           }
         }
@@ -311,7 +295,6 @@ export class EnhancedVideoGenerationService {
       
       
       // All attempts failed - return comprehensive error result
-      console.error(`[Enhanced Video Service] All ${this.fallbackConfig.maxRetryAttempts} attempts failed for job ${jobId}`);
       
       const totalTime = Date.now() - startTime;
       const errorResult: EnhancedVideoResult = {
@@ -342,7 +325,6 @@ export class EnhancedVideoGenerationService {
       return errorResult;
       
     } catch (error: any) {
-      console.error(`[Enhanced Video Service] Critical error in video generation for job ${jobId}:`, error);
       
       const totalTime = Date.now() - startTime;
       const errorResult: EnhancedVideoResult = {
@@ -411,7 +393,6 @@ export class EnhancedVideoGenerationService {
       
       // Check circuit breaker before status check
       if (this.fallbackConfig.circuitBreakerEnabled && this.circuitBreaker.isOpen(jobInfo.providerId)) {
-        console.warn(`[Enhanced Video Service] Circuit breaker open for ${jobInfo.providerId}, status check may fail`);
       }
       
       // Check status with provider and track performance
@@ -437,7 +418,6 @@ export class EnhancedVideoGenerationService {
       
     } catch (error: any) {
       const responseTime = Date.now() - startTime;
-      console.error(`[Enhanced Video Service] Status check failed for job ${jobId}:`, error);
       
       // Track performance failure if enabled
       if (this.fallbackConfig.performanceTrackingEnabled) {
@@ -535,10 +515,8 @@ export class EnhancedVideoGenerationService {
       
       await db.collection('enhanced_video_jobs').doc(jobId).set(jobData);
       
-      console.log(`[Enhanced Video Service] Job information stored for ${jobId}`);
       
     } catch (error) {
-      console.error(`[Enhanced Video Service] Failed to store job information for ${jobId}:`, error);
       // Non-critical error, don't throw
     }
   }
@@ -549,7 +527,6 @@ export class EnhancedVideoGenerationService {
       const doc = await db.collection('enhanced_video_jobs').doc(jobId).get();
       return doc.exists ? doc.data() : null;
     } catch (error) {
-      console.error(`[Enhanced Video Service] Failed to get job information for ${jobId}:`, error);
       return null;
     }
   }
@@ -617,7 +594,6 @@ export class EnhancedVideoGenerationService {
       }
     );
     
-    console.log(`[Enhanced Video Service] Selected provider: ${providerSelection.selectedProvider.name} (attempt ${attemptNumber})`);
     
     // Check circuit breaker
     if (this.fallbackConfig.circuitBreakerEnabled && 
@@ -688,7 +664,6 @@ export class EnhancedVideoGenerationService {
     parsedCV: ParsedCV,
     attemptNumber: number
   ): Promise<any> {
-    console.log(`[Enhanced Video Service] Attempting error recovery for job ${jobId}`);
     
     // Create recovery context
     const recoveryContext = this.errorRecoveryEngine.createRecoveryContext(
@@ -796,7 +771,6 @@ export class EnhancedVideoGenerationService {
         }
       };
     } catch (error) {
-      console.error('[Enhanced Video Service] Failed to get system dashboard:', error);
       throw error;
     }
   }
@@ -838,7 +812,6 @@ export class EnhancedVideoGenerationService {
     this.performanceTracker.cleanup();
     this.circuitBreaker.cleanup();
     
-    console.log('[Enhanced Video Service] Intelligent fallback mechanism cleanup completed');
   }
 }
 

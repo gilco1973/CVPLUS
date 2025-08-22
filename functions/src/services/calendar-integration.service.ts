@@ -286,7 +286,6 @@ export class CalendarIntegrationService {
           ]
         };
       } catch (error) {
-        console.error('Error creating Google Calendar:', error);
         throw error;
       }
     } else {
@@ -480,7 +479,6 @@ export class CalendarIntegrationService {
           ]
         };
       } catch (error) {
-        console.error('Error creating Outlook calendar:', error);
         throw error;
       }
     } else {

@@ -51,7 +51,6 @@ export class ATSOptimizationOrchestrator {
     jobDescription?: string,
     industry?: string
   ): Promise<ATSOptimizationResult> {
-    console.log('🎯 Starting Advanced Multi-Factor ATS Analysis...');
 
     const context: OptimizationContext = {
       targetRole,
@@ -176,11 +175,9 @@ export class ATSOptimizationOrchestrator {
         }
       };
 
-      console.log('✅ ATS Analysis completed successfully');
       return result;
 
     } catch (error) {
-      console.error('❌ Error in ATS analysis:', error);
       
       // Fallback to basic analysis
       return this.contentService.fallbackToBasicAnalysis(parsedCV, context);

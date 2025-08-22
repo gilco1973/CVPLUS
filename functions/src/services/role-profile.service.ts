@@ -61,7 +61,6 @@ export class RoleProfileService {
       }
     };
 
-    console.log('[ROLE-PROFILE] Service initialized with config:', this.config);
     this.initializeDefaultProfiles();
   }
 
@@ -69,12 +68,10 @@ export class RoleProfileService {
    * Gets all available role profiles
    */
   async getAllProfiles(): Promise<RoleProfile[]> {
-    console.log('[ROLE-PROFILE] Getting all profiles');
     
     try {
       // Check cache first if enabled
       if (this.config.enableCaching && this.isCacheValid()) {
-        console.log('[ROLE-PROFILE] Returning cached profiles');
         return Array.from(this.cache.values());
       }
 
@@ -104,15 +101,12 @@ export class RoleProfileService {
 
       // If no profiles in Firestore, use default data
       if (profiles.length === 0) {
-        console.log('[ROLE-PROFILE] No profiles in Firestore, using default data');
         return this.getDefaultProfiles();
       }
 
-      console.log(`[ROLE-PROFILE] Retrieved ${profiles.length} profiles`);
       return profiles;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error getting all profiles:', error);
       // Fallback to default profiles
       return this.getDefaultProfiles();
     }
@@ -122,12 +116,10 @@ export class RoleProfileService {
    * Gets a specific role profile by ID
    */
   async getProfileById(id: string): Promise<RoleProfile | null> {
-    console.log(`[ROLE-PROFILE] Getting profile by ID: ${id}`);
     
     try {
       // Check cache first
       if (this.config.enableCaching && this.cache.has(id)) {
-        console.log('[ROLE-PROFILE] Profile found in cache');
         return this.cache.get(id) || null;
       }
 
@@ -135,7 +127,6 @@ export class RoleProfileService {
       const doc = await this.db.collection('roleProfiles').doc(id).get();
       
       if (!doc.exists) {
-        console.warn(`[ROLE-PROFILE] Profile not found: ${id}`);
         return null;
       }
 
@@ -155,7 +146,6 @@ export class RoleProfileService {
       return profile;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error getting profile by ID:', error);
       return null;
     }
   }
@@ -164,7 +154,6 @@ export class RoleProfileService {
    * Gets profiles by category
    */
   async getProfilesByCategory(category: RoleCategory): Promise<RoleProfile[]> {
-    console.log(`[ROLE-PROFILE] Getting profiles by category: ${category}`);
     
     try {
       const snapshot = await this.db
@@ -186,11 +175,9 @@ export class RoleProfileService {
         } as RoleProfile);
       });
 
-      console.log(`[ROLE-PROFILE] Found ${profiles.length} profiles for category ${category}`);
       return profiles;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error getting profiles by category:', error);
       return [];
     }
   }
@@ -199,7 +186,6 @@ export class RoleProfileService {
    * Creates a new role profile
    */
   async createProfile(profileData: Omit<RoleProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    console.log('[ROLE-PROFILE] Creating new profile:', profileData.name);
     
     try {
       const now = Timestamp.now();
@@ -214,11 +200,9 @@ export class RoleProfileService {
         this.invalidateCache();
       }
 
-      console.log(`[ROLE-PROFILE] Created profile with ID: ${docRef.id}`);
       return docRef.id;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error creating profile:', error);
       throw new Error(`Failed to create role profile: ${error}`);
     }
   }
@@ -227,7 +211,6 @@ export class RoleProfileService {
    * Updates an existing role profile
    */
   async updateProfile(id: string, updates: Partial<RoleProfile>): Promise<void> {
-    console.log(`[ROLE-PROFILE] Updating profile: ${id}`);
     
     try {
       const updateData = {
@@ -246,10 +229,8 @@ export class RoleProfileService {
         this.cache.delete(id);
       }
 
-      console.log(`[ROLE-PROFILE] Updated profile: ${id}`);
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error updating profile:', error);
       throw new Error(`Failed to update role profile: ${error}`);
     }
   }
@@ -258,7 +239,6 @@ export class RoleProfileService {
    * Deactivates a role profile (soft delete)
    */
   async deactivateProfile(id: string): Promise<void> {
-    console.log(`[ROLE-PROFILE] Deactivating profile: ${id}`);
     
     try {
       await this.db.collection('roleProfiles').doc(id).update({
@@ -271,10 +251,8 @@ export class RoleProfileService {
         this.cache.delete(id);
       }
 
-      console.log(`[ROLE-PROFILE] Deactivated profile: ${id}`);
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error deactivating profile:', error);
       throw new Error(`Failed to deactivate role profile: ${error}`);
     }
   }
@@ -283,7 +261,6 @@ export class RoleProfileService {
    * Searches profiles by keywords
    */
   async searchProfiles(query: string, limit: number = 10): Promise<RoleProfile[]> {
-    console.log(`[ROLE-PROFILE] Searching profiles with query: ${query}`);
     
     try {
       const queryLower = query.toLowerCase();
@@ -300,12 +277,10 @@ export class RoleProfileService {
       );
 
       const results = matchingProfiles.slice(0, limit);
-      console.log(`[ROLE-PROFILE] Found ${results.length} matching profiles`);
       
       return results;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error searching profiles:', error);
       return [];
     }
   }
@@ -314,7 +289,6 @@ export class RoleProfileService {
    * Gets profile statistics and metrics
    */
   async getMetrics(): Promise<RoleDetectionMetrics> {
-    console.log('[ROLE-PROFILE] Getting service metrics');
     
     try {
       // In production, these metrics would be tracked and stored
@@ -338,7 +312,6 @@ export class RoleProfileService {
       return metrics;
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error getting metrics:', error);
       return this.metrics;
     }
   }
@@ -398,14 +371,12 @@ export class RoleProfileService {
    * Initialize default profiles from static data
    */
   private async initializeDefaultProfiles(): Promise<void> {
-    console.log('[ROLE-PROFILE] Initializing default profiles');
     
     try {
       // Check if profiles already exist
       const snapshot = await this.db.collection('roleProfiles').limit(1).get();
       
       if (!snapshot.empty) {
-        console.log('[ROLE-PROFILE] Profiles already exist, skipping initialization');
         return;
       }
 
@@ -423,10 +394,8 @@ export class RoleProfileService {
       });
 
       await batch.commit();
-      console.log(`[ROLE-PROFILE] Initialized ${defaultProfiles.length} default profiles`);
 
     } catch (error) {
-      console.error('[ROLE-PROFILE] Error initializing default profiles:', error);
     }
   }
 
@@ -434,7 +403,6 @@ export class RoleProfileService {
    * Gets default profiles (fallback when Firestore is unavailable)
    */
   private getDefaultProfiles(): RoleProfile[] {
-    console.log('[ROLE-PROFILE] Using default profile data');
     return roleProfilesData.map((profile, index) => ({
       id: `default_${index}`,
       ...profile,
@@ -452,7 +420,6 @@ export class RoleProfileService {
       this.cache.set(profile.id, profile);
     });
     this.lastCacheUpdate = Date.now();
-    console.log(`[ROLE-PROFILE] Cache updated with ${profiles.length} profiles`);
   }
 
   /**
@@ -471,7 +438,6 @@ export class RoleProfileService {
   private invalidateCache(): void {
     this.cache.clear();
     this.lastCacheUpdate = 0;
-    console.log('[ROLE-PROFILE] Cache invalidated');
   }
 
   /**
@@ -488,7 +454,6 @@ export class RoleProfileService {
    */
   updateConfig(newConfig: Partial<RoleProfileServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('[ROLE-PROFILE] Configuration updated:', newConfig);
   }
 
   /**

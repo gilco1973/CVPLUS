@@ -192,7 +192,6 @@ export const createPublicProfile = onCall<CreatePublicProfileRequest>(
         qrCodeUrl
       };
     } catch (error: any) {
-      console.error('Error creating public profile:', error);
       throw new HttpsError('internal', error.message || 'Failed to create public profile');
     }
   }
@@ -244,7 +243,6 @@ export const getPublicProfile = onCall<GetPublicProfileRequest>(
         profile
       };
     } catch (error: any) {
-      console.error('Error getting public profile:', error);
       throw new HttpsError('internal', error.message || 'Failed to get public profile');
     }
   }
@@ -316,7 +314,6 @@ export const updatePublicProfileSettings = onCall<UpdateProfileSettingsRequest>(
         settings: updates
       };
     } catch (error: any) {
-      console.error('Error updating profile settings:', error);
       throw new HttpsError('internal', error.message || 'Failed to update profile settings');
     }
   }
@@ -376,8 +373,6 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
     try {
       // SECURITY: Log security event without PII
-      console.log(`[SECURITY] Contact form submission attempt for profile: ${profileId}`);
-      console.log(`[SECURITY] Message length: ${sanitizedData.message.length} characters`);
 
       // Get profile by profileId (could be slug or jobId) or jobId fallback
       let profileDoc;
@@ -411,7 +406,6 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
             .get();
           
           if (jobDoc.exists) {
-            console.log(`Auto-creating public profile for job: ${lookupId}`);
             
             const job = jobDoc.data() as EnhancedJob;
             
@@ -522,7 +516,6 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
               }
             });
 
-            console.log(`Auto-created public profile with slug: ${publicSlug}`);
             profileDoc = await admin.firestore().collection('publicProfiles').doc(lookupId).get();
           } else {
             throw new HttpsError('not-found', `Job not found for ID: ${lookupId}`);
@@ -618,12 +611,9 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
 
         // Log email result for monitoring
         if (emailResult.success) {
-          console.log(`Email notification sent successfully to ${contactEmail}`);
         } else {
-          console.warn(`Failed to send email notification to ${contactEmail}:`, emailResult.error);
         }
       } else {
-        console.warn('No contact email found for profile owner');
       }
 
       return {
@@ -636,7 +626,6 @@ export const submitContactForm = onCall<SubmitContactFormRequest>(
         }
       };
     } catch (error: any) {
-      console.error('Error submitting contact form:', error);
       throw new HttpsError('internal', error.message || 'Failed to submit contact form');
     }
   }
@@ -682,7 +671,6 @@ export const trackQRScan = onCall<TrackQRScanRequest>(
         message: 'QR scan tracked'
       };
     } catch (error: any) {
-      console.error('Error tracking QR scan:', error);
       // Don't throw - we don't want to break the user experience
       return {
         success: false,
@@ -758,7 +746,6 @@ export const testEmailConfiguration = onCall(
         }
       };
     } catch (error: any) {
-      console.error('Error testing email configuration:', error);
       throw new HttpsError('internal', error.message || 'Failed to test email configuration');
     }
   }

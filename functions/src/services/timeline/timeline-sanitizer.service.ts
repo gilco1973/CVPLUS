@@ -14,7 +14,6 @@ export class TimelineSanitizerService {
    */
   cleanTimelineData(timelineData: TimelineData): any {
     const startTime = Date.now();
-    console.log('[Timeline Sanitizer] Starting comprehensive timeline data cleaning...');
     
     // Initialize quality metrics
     const qualityMetrics: DataQualityMetrics = {
@@ -47,7 +46,6 @@ export class TimelineSanitizerService {
       try {
         cleanSummary = this.sanitizeSummaryData(timelineData.summary, qualityMetrics);
       } catch (error) {
-        console.error('[Timeline Sanitizer] Error cleaning summary data:', error);
         cleanSummary = timelineSanitizerCoreService.getDefaultSummary();
         qualityMetrics.validationErrors++;
       }
@@ -57,7 +55,6 @@ export class TimelineSanitizerService {
       try {
         cleanInsights = this.sanitizeInsightsData(timelineData.insights, qualityMetrics);
       } catch (error) {
-        console.error('[Timeline Sanitizer] Error cleaning insights data:', error);
         cleanInsights = timelineSanitizerCoreService.getDefaultInsights();
         qualityMetrics.validationErrors++;
       }
@@ -75,11 +72,9 @@ export class TimelineSanitizerService {
       qualityMetrics.processingTime = Date.now() - startTime;
       timelineValidatorService.logDataQualityMetrics(qualityMetrics);
       
-      console.log('[Timeline Sanitizer] Timeline data cleaning completed successfully');
       return finalResult;
       
     } catch (error) {
-      console.error('[Timeline Sanitizer] Critical error during timeline data cleaning:', error);
       qualityMetrics.processingTime = Date.now() - startTime;
       qualityMetrics.validationErrors++;
       timelineValidatorService.logDataQualityMetrics(qualityMetrics);
@@ -104,7 +99,6 @@ export class TimelineSanitizerService {
       
       return timelineSanitizerCoreService.removeUndefinedValues(cleanSummary);
     } catch (error) {
-      console.error('[Timeline Sanitizer] Error sanitizing summary data:', error);
       return timelineSanitizerCoreService.getDefaultSummary();
     }
   }
@@ -127,7 +121,6 @@ export class TimelineSanitizerService {
       
       return timelineSanitizerCoreService.removeUndefinedValues(cleanInsights);
     } catch (error) {
-      console.error('[Timeline Sanitizer] Error sanitizing insights data:', error);
       return timelineSanitizerCoreService.getDefaultInsights();
     }
   }

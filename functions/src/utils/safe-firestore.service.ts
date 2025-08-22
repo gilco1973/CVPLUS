@@ -61,7 +61,6 @@ export class SafeFirestoreService {
     const opts = { ...DEFAULT_SAFE_OPTIONS, ...options };
     const startTime = Date.now();
     
-    console.log(`[Safe Firestore] Starting safe update for document: ${docRef.path}`);
     
     try {
       // Pre-write validation
@@ -77,11 +76,9 @@ export class SafeFirestoreService {
         );
         
         if (opts.logValidation) {
-          console.log(FirestoreValidationService.createValidationReport(validationResult));
         }
         
         if (!validationResult.isValid) {
-          console.error('[Safe Firestore] Validation failed:', validationResult.errors);
           
           if (!opts.fallbackOnError) {
             return {
@@ -94,7 +91,6 @@ export class SafeFirestoreService {
           }
           
           // Use sanitized data as fallback
-          console.log('[Safe Firestore] Using sanitized data as fallback');
           finalData = validationResult.sanitizedData;
         } else if (opts.sanitize) {
           finalData = validationResult.sanitizedData;
@@ -112,7 +108,6 @@ export class SafeFirestoreService {
       );
       
       const operationTime = Date.now() - startTime;
-      console.log(`[Safe Firestore] Update completed successfully in ${operationTime}ms`);
       
       return {
         success: true,
@@ -123,7 +118,6 @@ export class SafeFirestoreService {
       };
       
     } catch (error: any) {
-      console.error('[Safe Firestore] Update failed:', error);
       
       return {
         success: false,
@@ -145,7 +139,6 @@ export class SafeFirestoreService {
     const opts = { ...DEFAULT_SAFE_OPTIONS, ...options };
     const startTime = Date.now();
     
-    console.log(`[Safe Firestore] Starting safe set for document: ${docRef.path}`);
     
     try {
       // Pre-write validation
@@ -161,11 +154,9 @@ export class SafeFirestoreService {
         );
         
         if (opts.logValidation) {
-          console.log(FirestoreValidationService.createValidationReport(validationResult));
         }
         
         if (!validationResult.isValid) {
-          console.error('[Safe Firestore] Validation failed:', validationResult.errors);
           
           if (!opts.fallbackOnError) {
             return {
@@ -194,7 +185,6 @@ export class SafeFirestoreService {
       );
       
       const operationTime = Date.now() - startTime;
-      console.log(`[Safe Firestore] Set completed successfully in ${operationTime}ms`);
       
       return {
         success: true,
@@ -205,7 +195,6 @@ export class SafeFirestoreService {
       };
       
     } catch (error: any) {
-      console.error('[Safe Firestore] Set failed:', error);
       
       return {
         success: false,
@@ -234,7 +223,6 @@ export class SafeFirestoreService {
       }
     };
     
-    console.log('[Safe Firestore] Performing timeline-specific safe update');
     
     // Add timeline-specific logging
     console.log('[Timeline Update] Data preview:', {
@@ -263,18 +251,15 @@ export class SafeFirestoreService {
         const result = await operation();
         
         if (attempt > 1) {
-          console.log(`[Safe Firestore] ${operationName} succeeded on attempt ${attempt}`);
         }
         
         return { result, attempts: attempt };
         
       } catch (error: any) {
         lastError = error;
-        console.warn(`[Safe Firestore] ${operationName} attempt ${attempt}/${maxAttempts} failed:`, error.message);
         
         if (attempt < maxAttempts) {
           const waitTime = delay * Math.pow(2, attempt - 1); // Exponential backoff
-          console.log(`[Safe Firestore] Retrying in ${waitTime}ms...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
@@ -298,7 +283,6 @@ export class SafeFirestoreService {
     const opts = { ...DEFAULT_SAFE_OPTIONS, ...batchOptions };
     const startTime = Date.now();
     
-    console.log(`[Safe Firestore] Starting safe batch with ${operations.length} operations`);
     
     try {
       const batch = admin.firestore().batch();
@@ -349,7 +333,6 @@ export class SafeFirestoreService {
       );
       
       const operationTime = Date.now() - startTime;
-      console.log(`[Safe Firestore] Batch completed successfully in ${operationTime}ms`);
       
       return {
         success: true,
@@ -358,7 +341,6 @@ export class SafeFirestoreService {
       };
       
     } catch (error: any) {
-      console.error('[Safe Firestore] Batch failed:', error);
       
       return {
         success: false,
@@ -380,7 +362,6 @@ export class SafeFirestoreService {
   ): Promise<{ success: boolean; result?: T; errors?: string[] }> {
     const opts = { ...DEFAULT_SAFE_OPTIONS, ...options };
     
-    console.log('[Safe Firestore] Starting safe transaction');
     
     try {
       const result = await admin.firestore().runTransaction(async (transaction) => {
@@ -395,7 +376,6 @@ export class SafeFirestoreService {
               );
               
               if (!validation.isValid) {
-                console.warn('[Safe Transaction] Validation warnings:', validation.warnings);
               }
               
               const finalData = opts.sanitize ? validation.sanitizedData : data;
@@ -415,7 +395,6 @@ export class SafeFirestoreService {
               );
               
               if (!validation.isValid) {
-                console.warn('[Safe Transaction] Validation warnings:', validation.warnings);
               }
               
               const finalData = opts.sanitize ? validation.sanitizedData : data;
@@ -429,12 +408,10 @@ export class SafeFirestoreService {
         return await updateFunction(transaction, safeHelpers);
       });
       
-      console.log('[Safe Firestore] Transaction completed successfully');
       
       return { success: true, result };
       
     } catch (error: any) {
-      console.error('[Safe Firestore] Transaction failed:', error);
       
       return {
         success: false,
@@ -450,7 +427,6 @@ export class SafeFirestoreService {
     data: Record<string, any>;
     validation: ValidationResult;
   } {
-    console.log('[Safe Firestore] Creating safe timeline update object');
     
     const validation = FirestoreValidationService.validateForFirestore(
       updates,
@@ -478,24 +454,20 @@ export class SafeFirestoreService {
     operation: () => Promise<T>
   ): Promise<T> {
     const startTime = Date.now();
-    console.log(`[Safe Firestore Monitor] Starting operation: ${operationName}`);
     
     try {
       const result = await operation();
       const duration = Date.now() - startTime;
       
-      console.log(`[Safe Firestore Monitor] ✅ ${operationName} completed in ${duration}ms`);
       
       // Log performance warning for slow operations
       if (duration > 5000) {
-        console.warn(`[Safe Firestore Monitor] ⚠️ Slow operation: ${operationName} took ${duration}ms`);
       }
       
       return result;
       
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      console.error(`[Safe Firestore Monitor] ❌ ${operationName} failed after ${duration}ms:`, error);
       throw error;
     }
   }

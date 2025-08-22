@@ -153,7 +153,6 @@ export class AdvancedPromptEngine {
       };
 
     } catch (error: any) {
-      console.error('Enhanced script generation failed:', error);
       throw new Error(`Enhanced prompt generation failed: ${error.message}`);
     }
   }
@@ -207,7 +206,6 @@ Format as structured analysis for script generation.`;
 
       return response.choices[0].message?.content || '';
     } catch (error) {
-      console.error('Context layer generation failed:', error);
       return this.generateFallbackContext(cv);
     }
   }
@@ -262,7 +260,6 @@ Provide optimized messaging framework including:
 
       return response.choices[0].message?.content || '';
     } catch (error) {
-      console.error('Optimization layer generation failed:', error);
       return this.generateFallbackOptimization(cv, personality, industryTemplate);
     }
   }
@@ -317,7 +314,6 @@ Provide production-ready script framework with:
 
       return response.choices[0].message?.content || '';
     } catch (error) {
-      console.error('Production layer generation failed:', error);
       return this.generateFallbackProduction(duration, style);
     }
   }
@@ -372,7 +368,6 @@ Create the final script that integrates all layers seamlessly.`;
 
       return response.choices[0].message?.content || '';
     } catch (error) {
-      console.error('Script synthesis failed:', error);
       throw error;
     }
   }
@@ -525,7 +520,6 @@ Create the final script that integrates all layers seamlessly.`;
       };
 
     } catch (error) {
-      console.error('Quality assessment failed:', error);
       // Fallback quality metrics
       return {
         overallScore: 7.5,
@@ -584,7 +578,6 @@ Provide only a JSON response with:
       return result.overallEngagement || 7.0;
 
     } catch (error) {
-      console.error('Engagement assessment failed:', error);
       return this.calculateBasicEngagement(script);
     }
   }
@@ -930,7 +923,6 @@ export class EnhancedPromptEngineWithFallbacks extends AdvancedPromptEngine {
     try {
       return await this.generateWithFallbacks(cv, options);
     } catch (error: any) {
-      console.error('All fallback attempts exhausted:', error);
       
       // Ultimate fallback: Generate basic template script
       const fallbackScript = this.generateUltimateFallbackScript(cv, options);
@@ -978,7 +970,6 @@ export class EnhancedPromptEngineWithFallbacks extends AdvancedPromptEngine {
           return await this.generateMinimalEnhanced(cv, options);
         }
       } catch (error: any) {
-        console.warn(`Fallback attempt ${this.fallbackAttempts} failed:`, error);
         
         if (this.fallbackAttempts >= this.maxFallbackAttempts) {
           throw new PromptEngineError(
@@ -1119,7 +1110,6 @@ export class EnhancedPromptEngineWithFallbacks extends AdvancedPromptEngine {
     try {
       return this.selectIndustryTemplate(cv, targetIndustry);
     } catch (error) {
-      console.warn('Industry template selection failed, using fallback:', error);
       return {
         name: 'General Professional',
         vocabularyFocus: ['professional', 'experienced', 'skilled'],
@@ -1177,7 +1167,6 @@ Write a natural, conversational script suitable for video delivery.`;
         industryTemplate
       );
     } catch (error) {
-      console.error('Simplified synthesis failed:', error);
       throw error;
     }
   }

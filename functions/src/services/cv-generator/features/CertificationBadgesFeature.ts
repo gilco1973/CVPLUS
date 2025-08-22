@@ -17,7 +17,6 @@ export class CertificationBadgesFeature implements CVFeature {
       // Always use React component instead of legacy HTML
       return this.generateReactComponentPlaceholder(jobId, badgesCollection, options);
     } catch (error) {
-      console.error('Failed to generate certification badges:', error);
       // Return fallback placeholder on error
       return this.generateFallbackPlaceholder(jobId, options);
     }
@@ -78,11 +77,9 @@ export class CertificationBadgesFeature implements CVFeature {
       },
       onAddCertification: async (certification: any) => {
         // This would typically trigger a re-generation
-        console.log('Add certification requested:', certification);
       },
       onRemoveCertification: async (badgeId: string) => {
         // This would typically trigger a re-generation
-        console.log('Remove certification requested:', badgeId);
       },
       onGenerateShareLink: async (badgeId: string) => {
         // Generate shareable link for specific badge
@@ -356,29 +353,23 @@ export class CertificationBadgesFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="CertificationBadges"]');
           
           if (placeholders.length === 0) {
-            console.log('No CertificationBadges placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React CertificationBadges components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('CertificationBadges props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering CertificationBadges');
                 window.renderReactComponent('CertificationBadges', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback');
                 showReactFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse CertificationBadges props:', error);
               showReactError(placeholder, error.message);
             }
           });
@@ -419,7 +410,6 @@ export class CertificationBadgesFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting CertificationBadges initialization...');
           initReactComponents();
         }
         

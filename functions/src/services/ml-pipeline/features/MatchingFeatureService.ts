@@ -14,7 +14,6 @@ export class MatchingFeatureService {
    * Extract job matching features between CV and job description
    */
   async extractFeatures(cv: ParsedCV, jobDescription: string): Promise<FeatureVector['matchingFeatures']> {
-    console.log('[MATCHING-FEATURES] Extracting job matching features');
     
     const jobKeywords = await this.extractJobKeywords(jobDescription);
     const cvSkills = this.extractCVSkills(cv);
@@ -31,8 +30,6 @@ export class MatchingFeatureService {
       companyFit: this.calculateCompanyFit(cv.experience, jobDescription)
     };
     
-    console.log(`[MATCHING-FEATURES] Skill match: ${Math.round(features.skillMatchPercentage * 100)}%`);
-    console.log(`[MATCHING-FEATURES] Experience relevance: ${Math.round(features.experienceRelevance * 100)}%`);
     
     return features;
   }
@@ -66,7 +63,6 @@ export class MatchingFeatureService {
       
       return features.skillMatchPercentage > 0 && features.experienceRelevance > 0;
     } catch (error) {
-      console.error('[MATCHING-FEATURES] Health check failed:', error);
       return false;
     }
   }

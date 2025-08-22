@@ -57,7 +57,6 @@ Focus on actionable insights for improving ATS performance relative to market co
       return this.parseCompetitorAnalysis(response.content[0].text, industry);
 
     } catch (error) {
-      console.error('Error in competitor analysis:', error);
       return this.generateFallbackCompetitorAnalysis(industry);
     }
   }

@@ -11,13 +11,11 @@ export class TimelineUtilsCoreService {
   parseDate(dateStr: string): Date {
     try {
       if (!dateStr || typeof dateStr !== 'string') {
-        console.warn('[Timeline Utils Core] Invalid date input received:', dateStr);
         return new Date();
       }
       
       const sanitizedInput = dateStr.trim();
       if (sanitizedInput.length === 0) {
-        console.warn('[Timeline Utils Core] Empty date string provided');
         return new Date();
       }
       
@@ -55,11 +53,9 @@ export class TimelineUtilsCoreService {
         }
       }
       
-      console.error(`[Timeline Utils Core] All date parsing strategies failed for: "${sanitizedInput}"`);
       return new Date();
       
     } catch (error) {
-      console.error('[Timeline Utils Core] Error in parseDate:', error);
       return new Date();
     }
   }
@@ -152,7 +148,6 @@ export class TimelineUtilsCoreService {
       );
       
     } catch (error) {
-      console.error('[Timeline Utils Core] Error extracting impact metrics:', error);
       return [];
     }
   }

@@ -38,7 +38,6 @@ export class TimelineProcessorInsightsService {
         nextSteps: this.suggestNextSteps(events, cv)
       };
     } catch (error) {
-      console.error('[Timeline Processor Insights] Error generating insights:', error);
       return {
         careerProgression: 'Career progression analysis not available',
         industryFocus: [],

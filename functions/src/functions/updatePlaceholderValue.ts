@@ -213,7 +213,6 @@ export const updatePlaceholderValue = onCall<PlaceholderUpdateRequest, Promise<P
       };
 
     } catch (error) {
-      console.error('Error updating placeholder:', error);
       
       if (error instanceof HttpsError) {
         throw error;

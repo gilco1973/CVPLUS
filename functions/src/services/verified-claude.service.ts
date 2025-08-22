@@ -105,7 +105,6 @@ export class VerifiedClaudeService {
 
       // Step 2: If verification is disabled, return original response
       if (!this.config.enableVerification) {
-        console.log(`[VERIFIED-CLAUDE] Verification disabled, returning original response`);
         return this.formatResponse(claudeResponse, undefined);
       }
 
@@ -143,7 +142,6 @@ export class VerifiedClaudeService {
         if (is429Error && attempt < maxRetries) {
           // Exponential backoff for quota exceeded errors
           const delayMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-          console.warn(`[VERIFIED-CLAUDE] Claude API quota exceeded (attempt ${attempt}/${maxRetries}). Retrying in ${delayMs}ms...`);
           await this.delay(delayMs);
           continue;
         }
@@ -155,11 +153,9 @@ export class VerifiedClaudeService {
     
     // Handle the final error after all retries exhausted
     if (lastError) {
-      console.error(`[VERIFIED-CLAUDE] Error in createVerifiedMessage after ${maxRetries} attempts:`, lastError);
       
       // Enhanced error handling for 429 quota exceeded
       if (this.is429QuotaError(lastError)) {
-        console.error(`[VERIFIED-CLAUDE] Claude API quota exceeded after ${maxRetries} retries. Falling back to service degradation.`);
         throw new Error('Claude API quota exceeded. Please try again later or contact support if this persists.');
       }
       
@@ -167,7 +163,6 @@ export class VerifiedClaudeService {
       if (this.config.fallbackToOriginal && lastError instanceof Error && 
           (lastError.message.includes('network') || lastError.message.includes('timeout'))) {
         
-        console.log(`[VERIFIED-CLAUDE] Falling back to original Claude due to error`);
         
         try {
           const fallbackResponse = await this.anthropic.messages.create({
@@ -360,7 +355,6 @@ export class VerifiedClaudeService {
    */
   updateConfig(newConfig: Partial<VerifiedClaudeConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log(`[VERIFIED-CLAUDE] Configuration updated:`, newConfig);
   }
 
   /**
@@ -368,7 +362,6 @@ export class VerifiedClaudeService {
    */
   setVerification(enabled: boolean): void {
     this.config.enableVerification = enabled;
-    console.log(`[VERIFIED-CLAUDE] Verification ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**

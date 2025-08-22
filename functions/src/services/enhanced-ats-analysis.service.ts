@@ -41,7 +41,6 @@ export class EnhancedATSAnalysisService {
     targetRole?: string,
     industryKeywords?: string[]
   ): Promise<ATSAnalysisResult> {
-    console.log('Starting comprehensive ATS analysis...');
 
     try {
       // Parallel analysis for efficiency
@@ -83,7 +82,6 @@ export class EnhancedATSAnalysisService {
       };
 
     } catch (error) {
-      console.error('Error in ATS analysis:', error);
       throw new Error(`ATS analysis failed: ${(error as Error).message}`);
     }
   }
@@ -342,11 +340,9 @@ Return a JSON response with:
           };
 
         } catch (parseError) {
-          console.error('Failed to parse keyword analysis:', parseError);
         }
       }
     } catch (error) {
-      console.error('Error in keyword analysis:', error);
     }
 
     return {
@@ -482,11 +478,9 @@ Return recommendations in this JSON format:
             });
           }
         } catch (parseError) {
-          console.error('Failed to parse content recommendations:', parseError);
         }
       }
     } catch (error) {
-      console.error('Error generating content recommendations:', error);
     }
 
     return recommendations;

@@ -21,7 +21,6 @@ export async function enhanceCVWithRoleDetection(parsedCV: ParsedCV): Promise<{
   confidence: number;
   appliedEnhancements: string[];
 }> {
-  console.log('Starting CV enhancement with role detection...');
   
   // Initialize services
   const cvTransformationService = new CVTransformationService();
@@ -29,27 +28,21 @@ export async function enhanceCVWithRoleDetection(parsedCV: ParsedCV): Promise<{
   
   try {
     // Step 1: Detect the primary role
-    console.log('Detecting role from CV content...');
     const roleAnalysis = await roleDetectionService.detectRoles(parsedCV);
     
     const primaryRole = roleAnalysis.primaryRole;
-    console.log(`Detected Role: ${primaryRole.roleName} (Confidence: ${Math.round(primaryRole.confidence * 100)}%)`);
     
     // Step 2: Generate role-enhanced recommendations
-    console.log('Generating role-enhanced recommendations...');
     const recommendations = await cvTransformationService.generateRoleEnhancedRecommendations(
       parsedCV,
       true, // Enable role detection
       primaryRole.roleName
     );
     
-    console.log(`Generated ${recommendations.length} recommendations`);
     recommendations.slice(0, 5).forEach((rec, index) => {
-      console.log(`   ${index + 1}. ${rec.title} (Impact: ${rec.impact})`);
     });
     
     // Step 3: Apply top recommendations
-    console.log('Applying top recommendations...');
     const topRecommendations = recommendations
       .filter(rec => rec.impact === 'high')
       .slice(0, 5);
@@ -60,12 +53,6 @@ export async function enhanceCVWithRoleDetection(parsedCV: ParsedCV): Promise<{
       true
     );
     
-    console.log('CV enhancement completed!');
-    console.log(`Summary:`);
-    console.log(`   - Applied ${transformationResult.appliedRecommendations.length} recommendations`);
-    console.log(`   - Modified ${transformationResult.transformationSummary.sectionsModified.length} sections`);
-    console.log(`   - Added ${transformationResult.transformationSummary.newSections.length} new sections`);
-    console.log(`   - Estimated score increase: ${transformationResult.transformationSummary.estimatedScoreIncrease} points`);
     
     return {
       originalCV: parsedCV,
@@ -76,7 +63,6 @@ export async function enhanceCVWithRoleDetection(parsedCV: ParsedCV): Promise<{
     };
     
   } catch (error) {
-    console.error('Error during CV enhancement:', error);
     throw new Error(`CV enhancement failed: ${error}`);
   }
 }
@@ -93,7 +79,6 @@ export async function generateRoleSpecificTemplates(parsedCV: ParsedCV): Promise
     achievementExamples: string[];
   };
 }> {
-  console.log('Generating role-specific templates...');
   
   const cvTransformationService = new CVTransformationService();
   
@@ -129,7 +114,6 @@ export async function createCustomRoleProfile(roleData: {
     experience: string[];
   };
 }): Promise<string> {
-  console.log(`Creating custom role profile: ${roleData.name}`);
   
   const roleProfileService = new RoleProfileService();
   
@@ -198,7 +182,6 @@ export async function createCustomRoleProfile(roleData: {
   // Create the profile
   const profileId = await roleProfileService.createProfile(customProfile);
   
-  console.log(`Created custom role profile with ID: ${profileId}`);
   
   return profileId;
 }

@@ -18,7 +18,6 @@ const ffmpegPath = process.env.FFMPEG_PATH ||
                    '/usr/bin/ffmpeg' || 
                    '/layers/google.nodejs.ffmpeg/bin/ffmpeg';
 ffmpeg.setFfmpegPath(ffmpegPath);
-console.log('FFmpeg path set to:', ffmpegPath);
 
 export class MediaGenerationService {
   private openai: OpenAI | null = null;
@@ -165,7 +164,6 @@ Keep it exactly ${targetWords} words.`;
       
       return response.choices[0].message?.content?.trim() || this.generateDefaultIntroScript(cv, targetWords);
     } catch (error) {
-      console.error('Error generating intro script:', error);
       return this.generateDefaultIntroScript(cv, targetWords);
     }
   }
@@ -471,7 +469,6 @@ Style: Concise, impactful, third-person narrative.`;
       
       return response.choices[0].message?.content?.trim() || '';
     } catch (error) {
-      console.error('Error generating segment:', error);
       return '';
     }
   }
@@ -657,7 +654,6 @@ Style: Concise, impactful, third-person narrative.`;
       return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
       
     } catch (error) {
-      console.error('Error merging audio segments:', error);
       this.cleanupTempFiles([tempDir]);
       throw new Error(`Failed to merge audio segments: ${error}`);
     }
@@ -697,7 +693,6 @@ Style: Concise, impactful, third-person narrative.`;
           }
         }
       } catch (error) {
-        console.warn(`Failed to cleanup file ${filePath}:`, error);
       }
     });
   }

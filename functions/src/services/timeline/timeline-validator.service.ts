@@ -69,7 +69,6 @@ export class TimelineValidatorService {
       // Check if field is required
       if (this.validationSchema.required.includes(fieldName)) {
         if (value === undefined || value === null) {
-          console.warn(`[Timeline Validator] Required field '${fieldName}' is missing or null`);
           metrics.validationErrors++;
           return false;
         }
@@ -83,26 +82,22 @@ export class TimelineValidatorService {
       // Get expected type
       const expectedType = this.validationSchema.types[fieldName];
       if (!expectedType) {
-        console.warn(`[Timeline Validator] Unknown field '${fieldName}' encountered`);
         return false;
       }
       
       // Validate type
       const validator = this.validationSchema.validators[expectedType];
       if (!validator) {
-        console.warn(`[Timeline Validator] No validator found for type '${expectedType}'`);
         return false;
       }
       
       const isValid = validator(value);
       if (!isValid) {
-        console.warn(`[Timeline Validator] Field '${fieldName}' failed validation. Expected: ${expectedType}, Got: ${typeof value}, Value: ${JSON.stringify(value)}`);
         metrics.validationErrors++;
       }
       
       return isValid;
     } catch (error) {
-      console.error(`[Timeline Validator] Error validating field '${fieldName}':`, error);
       metrics.validationErrors++;
       return false;
     }
@@ -114,7 +109,6 @@ export class TimelineValidatorService {
   sanitizeArray(arr: any[], fieldName: string, metrics: DataQualityMetrics): any[] | undefined {
     try {
       if (!Array.isArray(arr)) {
-        console.warn(`[Timeline Validator] Expected array for field '${fieldName}', got:`, typeof arr);
         (metrics.fieldsRemoved as any)[fieldName]++;
         return undefined;
       }
@@ -154,7 +148,6 @@ export class TimelineValidatorService {
       
       return sanitized;
     } catch (error) {
-      console.error(`[Timeline Validator] Error sanitizing array field '${fieldName}':`, error);
       (metrics.fieldsRemoved as any)[fieldName]++;
       return undefined;
     }
@@ -164,19 +157,11 @@ export class TimelineValidatorService {
    * Log data quality metrics for monitoring and debugging
    */
   logDataQualityMetrics(metrics: DataQualityMetrics): void {
-    console.log('[Timeline Validator] Data Quality Report:');
-    console.log(`  Total Events Processed: ${metrics.totalEvents}`);
-    console.log(`  Successfully Cleaned Events: ${metrics.cleanedEvents}`);
-    console.log(`  Events Removed: ${metrics.totalEvents - metrics.cleanedEvents}`);
-    console.log(`  Validation Errors: ${metrics.validationErrors}`);
-    console.log(`  Processing Time: ${metrics.processingTime}ms`);
     
     const totalFieldsRemoved = Object.values(metrics.fieldsRemoved).reduce((sum, count) => sum + count, 0);
     if (totalFieldsRemoved > 0) {
-      console.log('  Fields Removed:');
       Object.entries(metrics.fieldsRemoved).forEach(([field, count]) => {
         if (count > 0) {
-          console.log(`    ${field}: ${count}`);
         }
       });
     }
@@ -185,11 +170,9 @@ export class TimelineValidatorService {
     const successRate = metrics.totalEvents > 0 
       ? ((metrics.cleanedEvents / metrics.totalEvents) * 100).toFixed(1)
       : '100.0';
-    console.log(`  Success Rate: ${successRate}%`);
     
     // Performance assessment
     if (metrics.processingTime > 1000) {
-      console.warn(`[Timeline Validator] Processing time exceeded 1s (${metrics.processingTime}ms). Consider optimization.`);
     }
   }
 }

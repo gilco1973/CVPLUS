@@ -16,24 +16,20 @@ export class OfferPredictor {
    */
   async predict(features: FeatureVector): Promise<number> {
     try {
-      console.log('[OFFER-PREDICTOR] Generating offer probability prediction');
       
       // Try ML service first
       const mlPrediction = await this.callMLService(features);
       
       if (mlPrediction !== null) {
-        console.log(`[OFFER-PREDICTOR] ML service prediction: ${Math.round(mlPrediction * 100)}%`);
         return mlPrediction;
       }
       
       // Fallback to heuristic prediction
       const heuristicPrediction = this.calculateHeuristicPrediction(features);
-      console.log(`[OFFER-PREDICTOR] Heuristic prediction: ${Math.round(heuristicPrediction * 100)}%`);
       
       return heuristicPrediction;
       
     } catch (error) {
-      console.error('[OFFER-PREDICTOR] Prediction failed:', error);
       return this.calculateHeuristicPrediction(features);
     }
   }
@@ -48,7 +44,6 @@ export class OfferPredictor {
       
       return prediction >= 0 && prediction <= 1;
     } catch (error) {
-      console.error('[OFFER-PREDICTOR] Health check failed:', error);
       return false;
     }
   }
@@ -75,7 +70,6 @@ export class OfferPredictor {
       });
 
       if (!response.ok) {
-        console.warn(`[OFFER-PREDICTOR] ML service responded with ${response.status}`);
         return null;
       }
 
@@ -83,13 +77,11 @@ export class OfferPredictor {
       return result.probability !== undefined ? Math.max(0, Math.min(1, result.probability)) : null;
       
     } catch (error) {
-      console.warn('[OFFER-PREDICTOR] ML service call failed:', error);
       return null;
     }
   }
 
   private calculateHeuristicPrediction(features: FeatureVector): number {
-    console.log('[OFFER-PREDICTOR] Using heuristic prediction model');
     
     // Base conversion rate from interview to offer (industry average ~35-40%)
     let score = 0.08; // Base offer probability (8% of all applications)

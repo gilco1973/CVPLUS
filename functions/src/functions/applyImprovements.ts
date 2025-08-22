@@ -37,9 +37,6 @@ export const applyImprovements = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`[applyImprovements] Starting - ${selectedRecommendationIds.length} improvements for job ${jobId}`);
-      console.log(`[applyImprovements] Request from user: ${userId}`);
-      console.log(`[applyImprovements] Selected IDs: ${selectedRecommendationIds.join(', ')}`);
 
       // Get the job document
       const jobDoc = await db.collection('jobs').doc(jobId).get();
@@ -63,7 +60,6 @@ export const applyImprovements = onCall(
       
       // If no stored recommendations, generate them
       if (storedRecommendations.length === 0) {
-        console.log('No stored recommendations found, generating new ones...');
         const transformationService = new CVTransformationService();
         storedRecommendations = await transformationService.generateDetailedRecommendations(
           originalCV,
@@ -79,19 +75,15 @@ export const applyImprovements = onCall(
       }
 
       // Filter selected recommendations
-      console.log('Generated recommendation IDs:', storedRecommendations.map(r => r.id));
-      console.log('Requested recommendation IDs:', selectedRecommendationIds);
       
       const selectedRecommendations = storedRecommendations.filter(rec => 
         selectedRecommendationIds.includes(rec.id)
       );
 
       if (selectedRecommendations.length === 0) {
-        console.error('ID mismatch - none of the requested IDs match generated recommendations');
         throw new Error('No valid recommendations found for the selected IDs');
       }
 
-      console.log(`Found ${selectedRecommendations.length} recommendations to apply`);
 
       // Apply transformations
       const transformationService = new CVTransformationService();
@@ -114,9 +106,6 @@ export const applyImprovements = onCall(
 
       await db.collection('jobs').doc(jobId).update(updateData);
 
-      console.log(`[applyImprovements] Successfully applied ${transformationResult.appliedRecommendations.length} improvements`);
-      console.log(`[applyImprovements] Job status updated to: completed`);
-      console.log(`[applyImprovements] Function completing successfully`);
 
       return {
         success: true,
@@ -132,7 +121,6 @@ export const applyImprovements = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error applying improvements:', error);
       
       // Update job status to reflect error
       try {
@@ -142,7 +130,6 @@ export const applyImprovements = onCall(
           lastError: new Date().toISOString()
         });
       } catch (dbError) {
-        console.error('Failed to update job status:', dbError);
       }
 
       throw new Error(`Failed to apply improvements: ${error.message}`);
@@ -187,7 +174,6 @@ export const getRecommendations = onCall(
 
       // Check for in-flight request (prevent StrictMode duplicates)
       if (activeRequests.has(requestKey)) {
-        console.log(`[getRecommendations] Returning cached in-flight request for ${requestKey}`);
         return await activeRequests.get(requestKey);
       }
 
@@ -196,7 +182,6 @@ export const getRecommendations = onCall(
       if (cachedResult && !forceRegenerate) {
         const isExpired = (Date.now() - cachedResult.timestamp) > CACHE_DURATION;
         if (!isExpired) {
-          console.log(`[getRecommendations] Returning cached result for ${requestKey} (age: ${Date.now() - cachedResult.timestamp}ms)`);
           return {
             success: true,
             data: {
@@ -304,7 +289,6 @@ async function executeRecommendationGeneration(
     (new Date().getTime() - new Date(lastGeneration).getTime()) < 24 * 60 * 60 * 1000; // 24 hours
 
   if (existingRecommendations.length > 0 && isRecentGeneration && !forceRegenerate) {
-    console.log(`[getRecommendations] Using cached recommendations (${existingRecommendations.length} items)`);
     
     // Update status back to analyzed
     await db.collection('jobs').doc(jobId).update({
@@ -322,7 +306,6 @@ async function executeRecommendationGeneration(
   }
 
   // Generate new recommendations with progress tracking
-  console.log(`[getRecommendations] Generating new recommendations for CV with ${JSON.stringify(originalCV).length} characters`);
   
   // Update progress status
   await db.collection('jobs').doc(jobId).update({
@@ -400,7 +383,6 @@ async function executeRecommendationGeneration(
     processingStartTime: null
   });
 
-  console.log(`[getRecommendations] Generated ${recommendations.length} recommendations in ${processingTime}ms`);
 
     return {
       success: true,
@@ -447,7 +429,6 @@ async function handleRecommendationError(
       failureReason: error.message.includes('timeout') ? 'timeout' : 'processing_error'
     });
   } catch (dbError) {
-    console.error('[executeRecommendationGeneration] Failed to update job status:', dbError);
   }
 }
 
@@ -471,9 +452,7 @@ async function generateRecommendationsWithProgress(
           processingStage: stage,
           totalStages: 3
         });
-        console.log(`[Progress] ${message} (Stage ${stage}/3)`);
       } catch (error) {
-        console.warn('Failed to update progress:', error);
       }
     }
   };
@@ -508,7 +487,6 @@ async function generateRecommendationsWithProgress(
       throw new Error('No recommendations provided by transformation service');
     }
     
-    console.log(`Generated ${validRecommendations.length} valid recommendations`);
     console.log('✅ [DEBUG] Validation successful - recommendations structure:', validRecommendations.map(rec => ({
       id: rec.id ? '✓' : '✗',
       title: rec.title ? '✓' : '✗',
@@ -582,7 +560,6 @@ export const previewImprovement = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error previewing improvement:', error);
       throw new Error(`Failed to preview improvement: ${error.message}`);
     }
   }
@@ -669,7 +646,6 @@ export const customizePlaceholders = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error customizing placeholders:', error);
       throw new Error(`Failed to customize placeholders: ${error.message}`);
     }
   }

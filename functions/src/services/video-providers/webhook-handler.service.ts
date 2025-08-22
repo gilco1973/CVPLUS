@@ -57,7 +57,6 @@ export class VideoWebhookHandler {
     payload: any
   ): Promise<VideoGenerationStatus> {
     try {
-      console.log(`[Webhook] Processing ${provider} webhook`);
       
       // Validate webhook authenticity
       await this.validateWebhook(provider, headers, payload);
@@ -79,7 +78,6 @@ export class VideoWebhookHandler {
       }
       
     } catch (error: any) {
-      console.error(`[Webhook] Processing failed for ${provider}:`, error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -99,7 +97,6 @@ export class VideoWebhookHandler {
    * Process HeyGen webhook payload
    */
   private async processHeyGenWebhook(payload: any): Promise<VideoGenerationStatus> {
-    console.log('[Webhook] Processing HeyGen payload:', payload);
     
     // Validate required fields
     if (!payload.video_id || !payload.callback_id) {
@@ -133,7 +130,6 @@ export class VideoWebhookHandler {
     // Trigger real-time notifications if needed
     await this.notifyStatusUpdate(jobId, status);
     
-    console.log(`[Webhook] HeyGen status updated for job ${jobId}: ${status.status}`);
     
     return status;
   }
@@ -142,7 +138,6 @@ export class VideoWebhookHandler {
    * Process D-ID webhook payload (for fallback compatibility)
    */
   private async processDidWebhook(payload: any): Promise<VideoGenerationStatus> {
-    console.log('[Webhook] Processing D-ID payload:', payload);
     
     // D-ID webhook structure (if they support webhooks)
     const jobId = payload.id || payload.talk_id;
@@ -172,7 +167,6 @@ export class VideoWebhookHandler {
     await this.updateJobStatus(jobId, status);
     await this.notifyStatusUpdate(jobId, status);
     
-    console.log(`[Webhook] D-ID status updated for job ${jobId}: ${status.status}`);
     
     return status;
   }
@@ -181,7 +175,6 @@ export class VideoWebhookHandler {
    * Process RunwayML webhook payload
    */
   private async processRunwayMLWebhook(payload: any): Promise<VideoGenerationStatus> {
-    console.log('[Webhook] Processing RunwayML webhook:', payload);
     
     const jobId = payload.task?.metadata?.jobId || payload.jobId;
     
@@ -212,7 +205,6 @@ export class VideoWebhookHandler {
     await this.updateJobStatus(jobId, status);
     await this.notifyStatusUpdate(jobId, status);
     
-    console.log(`[Webhook] RunwayML status updated for job ${jobId}: ${status.status}`);
     
     return status;
   }
@@ -227,7 +219,6 @@ export class VideoWebhookHandler {
   ): Promise<void> {
     const config = this.validationConfigs.get(provider.toLowerCase());
     if (!config || !config.secret) {
-      console.warn(`[Webhook] No validation config for provider: ${provider}`);
       return; // Skip validation if not configured
     }
     
@@ -436,13 +427,10 @@ export class VideoWebhookHandler {
         
         await jobRef.update(updateData);
         
-        console.log(`[Webhook] Updated main job document for ${jobId}`);
       } else {
-        console.warn(`[Webhook] Main job document not found for ${jobId}`);
       }
       
     } catch (error) {
-      console.error(`[Webhook] Failed to update job status for ${jobId}:`, error);
       throw error;
     }
   }
@@ -461,13 +449,11 @@ export class VideoWebhookHandler {
       // 3. Trigger email notifications for completion
       // 4. Send WebSocket updates to connected clients
       
-      console.log(`[Webhook] Status notification sent for job ${jobId}: ${status.status}`);
       
       // For now, just log the notification
       // Future: Implement real-time notification system
       
     } catch (error) {
-      console.error(`[Webhook] Failed to send notifications for ${jobId}:`, error);
       // Don't throw - notifications are non-critical
     }
   }

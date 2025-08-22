@@ -81,7 +81,6 @@ export const generatePortfolioGallery = onCall(
         htmlFragment: null
       };
     } catch (error: any) {
-      console.error('Error generating portfolio gallery:', error);
       
       // Update status to failed
       await admin.firestore()
@@ -156,7 +155,6 @@ export const updatePortfolioItem = onCall(
         item: portfolio.items[itemIndex]
       };
     } catch (error: any) {
-      console.error('Error updating portfolio item:', error);
       throw new Error(`Failed to update portfolio item: ${error.message}`);
     }
   });
@@ -234,7 +232,6 @@ export const addPortfolioItem = onCall(
         item: newItem
       };
     } catch (error: any) {
-      console.error('Error adding portfolio item:', error);
       throw new Error(`Failed to add portfolio item: ${error.message}`);
     }
   });
@@ -300,7 +297,6 @@ export const deletePortfolioItem = onCall(
         deletedItemId: itemId
       };
     } catch (error: any) {
-      console.error('Error deleting portfolio item:', error);
       throw new Error(`Failed to delete portfolio item: ${error.message}`);
     }
   });
@@ -398,7 +394,6 @@ export const uploadPortfolioMedia = onCall(
         thumbnailUrl
       };
     } catch (error: any) {
-      console.error('Error uploading portfolio media:', error);
       throw new Error(`Failed to upload media: ${error.message}`);
     }
   });
@@ -447,7 +442,6 @@ export const generateShareablePortfolio = onCall(
         embedCode
       };
     } catch (error: any) {
-      console.error('Error generating shareable portfolio:', error);
       throw new Error(`Failed to generate shareable portfolio: ${error.message}`);
     }
   });

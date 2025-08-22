@@ -9,26 +9,20 @@ export const skipFeature = onCall(
     ...corsOptions
   },
   async (request) => {
-    console.log('🚫 skipFeature function called with data:', request.data);
     
     if (!request.auth) {
-      console.error('❌ Authentication failed - no auth token');
       throw new Error('User must be authenticated');
     }
 
-    console.log('✅ User authenticated:', request.auth.uid);
 
     const { jobId, featureId } = request.data;
 
-    console.log('📋 Skip feature params:', { jobId, featureId });
 
     if (!jobId || !featureId) {
-      console.error('❌ Missing required parameters');
       throw new Error('Job ID and Feature ID are required');
     }
 
     try {
-      console.log('📖 Fetching job document...');
       // Get the job data
       const jobDoc = await admin.firestore()
         .collection('jobs')
@@ -36,20 +30,16 @@ export const skipFeature = onCall(
         .get();
       
       if (!jobDoc.exists) {
-        console.error('❌ Job document not found:', jobId);
         throw new Error('Job not found');
       }
       
       const jobData = jobDoc.data();
-      console.log('📄 Job data fetched successfully');
       
       // Verify user owns this job
       if (jobData?.userId !== request.auth.uid) {
-        console.error('❌ User does not own this job');
         throw new Error('Unauthorized access to job');
       }
       
-      console.log('✅ User authorized, proceeding with skip...');
 
       // Update the specific feature status to skipped
       const updateData: any = {
@@ -77,7 +67,6 @@ export const skipFeature = onCall(
         .doc(jobId)
         .update(updateData);
 
-      console.log('✅ Feature skipped successfully:', featureId);
 
       return {
         success: true,
@@ -86,7 +75,6 @@ export const skipFeature = onCall(
         jobId
       };
     } catch (error: any) {
-      console.error('Error skipping feature:', error);
       
       throw new Error(`Failed to skip feature: ${error.message}`);
     }

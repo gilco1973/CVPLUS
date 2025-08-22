@@ -565,29 +565,23 @@ export class InteractiveTimelineFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="InteractiveTimeline"]');
           
           if (placeholders.length === 0) {
-            console.log('No InteractiveTimeline placeholders found');
             return false;
           }
           
-          console.log('📊 Initializing React InteractiveTimeline components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('InteractiveTimeline props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering InteractiveTimeline');
                 window.renderReactComponent('InteractiveTimeline', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback message');
                 showTimelineFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse InteractiveTimeline props:', error);
               showTimelineError(placeholder, error.message);
             }
           });
@@ -693,7 +687,6 @@ export class InteractiveTimelineFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting InteractiveTimeline initialization...');
           initReactComponents();
         }
         

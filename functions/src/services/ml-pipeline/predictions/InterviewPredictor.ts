@@ -17,24 +17,20 @@ export class InterviewPredictor {
    */
   async predict(features: FeatureVector): Promise<number> {
     try {
-      console.log('[INTERVIEW-PREDICTOR] Generating interview probability prediction');
       
       // Try ML service first
       const mlPrediction = await this.callMLService(features);
       
       if (mlPrediction !== null) {
-        console.log(`[INTERVIEW-PREDICTOR] ML service prediction: ${Math.round(mlPrediction * 100)}%`);
         return mlPrediction;
       }
       
       // Fallback to heuristic prediction
       const heuristicPrediction = this.calculateHeuristicPrediction(features);
-      console.log(`[INTERVIEW-PREDICTOR] Heuristic prediction: ${Math.round(heuristicPrediction * 100)}%`);
       
       return heuristicPrediction;
       
     } catch (error) {
-      console.error('[INTERVIEW-PREDICTOR] Prediction failed:', error);
       return this.calculateHeuristicPrediction(features);
     }
   }
@@ -50,7 +46,6 @@ export class InterviewPredictor {
       
       return prediction >= 0 && prediction <= 1;
     } catch (error) {
-      console.error('[INTERVIEW-PREDICTOR] Health check failed:', error);
       return false;
     }
   }
@@ -77,7 +72,6 @@ export class InterviewPredictor {
       });
 
       if (!response.ok) {
-        console.warn(`[INTERVIEW-PREDICTOR] ML service responded with ${response.status}`);
         return null;
       }
 
@@ -89,13 +83,11 @@ export class InterviewPredictor {
       
       return null;
     } catch (error) {
-      console.warn('[INTERVIEW-PREDICTOR] ML service call failed:', error);
       return null;
     }
   }
 
   private calculateHeuristicPrediction(features: FeatureVector): number {
-    console.log('[INTERVIEW-PREDICTOR] Using heuristic prediction model');
     
     let score = 0.15; // Base probability (industry average ~15%)
     

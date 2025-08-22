@@ -139,7 +139,6 @@ export const trackUserOutcome = onCall(
       };
       
     } catch (error) {
-      console.error('Error tracking outcome:', error);
       throw new HttpsError('internal', 'Failed to track outcome');
     }
   }
@@ -248,7 +247,6 @@ export const updateUserOutcome = onCall(
       };
       
     } catch (error) {
-      console.error('Error updating outcome:', error);
       throw new HttpsError('internal', 'Failed to update outcome');
     }
   }
@@ -297,7 +295,6 @@ export const getUserOutcomeStats = onCall(
       return { success: true, data: stats };
       
     } catch (error) {
-      console.error('Error getting outcome stats:', error);
       throw new HttpsError('internal', 'Failed to get outcome statistics');
     }
   }
@@ -310,7 +307,6 @@ export const sendFollowUpReminders = onSchedule(
   { schedule: '0 10 * * *', timeZone: 'America/New_York' }, // Daily at 10 AM ET
   async () => {
     try {
-      console.log('Starting follow-up reminder process');
       
       const now = new Date();
       const reminderThresholds = [7, 14, 30]; // days
@@ -335,10 +331,8 @@ export const sendFollowUpReminders = onSchedule(
         }
       }
       
-      console.log('Follow-up reminder process completed');
       
     } catch (error) {
-      console.error('Error in follow-up reminder process:', error);
     }
   }
 );
@@ -370,7 +364,6 @@ export const processOutcomeForML = onDocumentCreated(
       await checkModelRetrainingThreshold();
       
     } catch (error) {
-      console.error('Error processing outcome for ML:', error);
     }
   }
 );
@@ -398,7 +391,6 @@ async function cancelScheduledFollowUps(outcomeId: string): Promise<void> {
 
 async function sendFollowUpNotification(outcome: UserOutcome, daysSince: number): Promise<void> {
   // Implementation would integrate with notification service
-  console.log(`Sending ${daysSince}-day follow-up for outcome ${outcome.outcomeId}`);
   
   // Add reminder event to timeline
   const reminderEvent: OutcomeEvent = {
@@ -525,6 +517,5 @@ async function checkModelRetrainingThreshold(): Promise<void> {
       createdAt: new Date()
     });
     
-    console.log(`Model retraining triggered with ${readyCount} training samples`);
   }
 }

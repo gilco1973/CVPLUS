@@ -14,7 +14,6 @@ export class HeuristicPredictor {
    * Predict interview probability using heuristic rules
    */
   async predictInterviewProbability(request: PredictionRequest): Promise<number> {
-    console.log('[HEURISTIC-PREDICTOR] Calculating heuristic interview probability');
     
     const { cv, jobDescription } = request;
     
@@ -61,7 +60,6 @@ export class HeuristicPredictor {
    * Predict offer probability using heuristic rules
    */
   async predictOfferProbability(request: PredictionRequest): Promise<number> {
-    console.log('[HEURISTIC-PREDICTOR] Calculating heuristic offer probability');
     
     const interviewProb = await this.predictInterviewProbability(request);
     
@@ -101,7 +99,6 @@ export class HeuristicPredictor {
    * Predict salary using heuristic rules
    */
   async predictSalary(request: PredictionRequest): Promise<SalaryPrediction> {
-    console.log('[HEURISTIC-PREDICTOR] Calculating heuristic salary prediction');
     
     const { cv, industry, location } = request;
     
@@ -169,7 +166,6 @@ export class HeuristicPredictor {
    * Predict time to hire using heuristic rules
    */
   async predictTimeToHire(request: PredictionRequest): Promise<TimeToHirePrediction> {
-    console.log('[HEURISTIC-PREDICTOR] Calculating heuristic time to hire');
     
     const { jobDescription, industry } = request;
     
@@ -334,7 +330,6 @@ export class HeuristicPredictor {
              salaryPred.predictedRange.median > 0 && 
              timePred.estimatedDays.median > 0;
     } catch (error) {
-      console.error('[HEURISTIC-PREDICTOR] Health check failed:', error);
       return false;
     }
   }

@@ -123,13 +123,10 @@ export class EnhancedCVParsingService {
       try {
         this.verifiedParser = new VerifiedCVParsingService();
         this.llmWrapper = new LLMIntegrationWrapperService(this.config);
-        console.log('✅ LLM verification initialized for CV parsing');
       } catch (error) {
-        console.warn('⚠️ Failed to initialize LLM verification:', error);
         // Continue with standard parsing if verification fails to initialize
       }
     } else {
-      console.log('ℹ️ LLM verification disabled or API key unavailable - using standard parsing');
     }
   }
 
@@ -142,19 +139,16 @@ export class EnhancedCVParsingService {
       const jobDoc = await this.db.collection('jobs').doc(jobId).get();
       
       if (!jobDoc.exists) {
-        console.log(`Job not found: ${jobId}`);
         return null;
       }
 
       const jobData = jobDoc.data();
       if (!jobData?.parsedData) {
-        console.log(`No parsed data found for job: ${jobId}`);
         return null;
       }
 
       return jobData.parsedData as ParsedCV;
     } catch (error) {
-      console.error('Error getting parsed CV:', error);
       return null;
     }
   }
@@ -172,13 +166,11 @@ export class EnhancedCVParsingService {
       const jobDoc = await this.db.collection('jobs').doc(jobId).get();
       
       if (!jobDoc.exists) {
-        console.log(`Job not found: ${jobId}`);
         return { parsedCV: null };
       }
 
       const jobData = jobDoc.data();
       if (!jobData?.parsedData) {
-        console.log(`No parsed data found for job: ${jobId}`);
         return { parsedCV: null };
       }
 
@@ -189,7 +181,6 @@ export class EnhancedCVParsingService {
         metrics: jobData.parsingMetrics
       };
     } catch (error) {
-      console.error('Error getting parsed CV with verification:', error);
       return { parsedCV: null };
     }
   }
@@ -205,7 +196,6 @@ export class EnhancedCVParsingService {
         updatedAt: FieldValue.serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating parsed CV:', error);
       throw error;
     }
   }
@@ -249,7 +239,6 @@ export class EnhancedCVParsingService {
         processingTime: metrics?.totalTime
       });
     } catch (error) {
-      console.error('Error updating parsed CV with verification:', error);
       throw error;
     }
   }
@@ -272,7 +261,6 @@ export class EnhancedCVParsingService {
 
       return true;
     } catch (error) {
-      console.error('Error validating parsed CV:', error);
       return false;
     }
   }
@@ -318,7 +306,6 @@ export class EnhancedCVParsingService {
             recommendations.push(...verificationResult.verification.warnings);
           }
           
-          console.log(`🔍 CV validation completed in ${Date.now() - startTime}ms with verification`);
           
           return {
             isValid: verificationResult.verification?.isValid || false,
@@ -327,12 +314,10 @@ export class EnhancedCVParsingService {
             recommendations
           };
         } catch (verificationError) {
-          console.warn('⚠️ Verification failed, falling back to basic validation:', verificationError);
           recommendations.push('Verification service unavailable - used basic validation only');
         }
       }
       
-      console.log(`✅ CV validation completed in ${Date.now() - startTime}ms without verification`);
       
       return {
         isValid: true,
@@ -340,7 +325,6 @@ export class EnhancedCVParsingService {
         recommendations
       };
     } catch (error) {
-      console.error('Error in enhanced CV validation:', error);
       issues.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return { isValid: false, issues, recommendations };
     }
@@ -372,7 +356,6 @@ export class EnhancedCVParsingService {
       if (this.verifiedParser && this.config.enableVerification) {
         verificationStartTime = Date.now();
         
-        console.log('🚀 Starting CV parsing with LLM verification...');
         
         while (retryCount <= maxRetries) {
           try {
@@ -426,17 +409,14 @@ export class EnhancedCVParsingService {
           } catch (error) {
             retryCount++;
             if (retryCount > maxRetries) {
-              console.warn(`❌ Verification failed after ${retryCount} retries, falling back to standard parsing`);
               break;
             }
-            console.log(`⚠️ Verification attempt ${retryCount} failed, retrying...`);
             await new Promise(resolve => setTimeout(resolve, llmVerificationConfig.verification.retryDelay));
           }
         }
       }
       
       // Fallback to standard parsing (this would need to be implemented)
-      console.log('⚠️ Using standard CV parsing (fallback)');
       throw new Error('Standard CV parsing not implemented in this service - use CVParser directly');
       
     } catch (error) {
@@ -451,8 +431,6 @@ export class EnhancedCVParsingService {
         fallbackUsed: true
       };
       
-      console.error('❌ CV parsing failed:', error);
-      console.log('📊 Final metrics:', metrics);
       throw error;
     }
   }

@@ -12,7 +12,6 @@ import { PredictionRequest } from '../core/MLPipelineOrchestrator';
 export class CompetitivenessAnalyzer {
   
   async analyze(features: FeatureVector, request: PredictionRequest): Promise<number> {
-    console.log('[COMPETITIVENESS-ANALYZER] Using basic competitiveness calculation');
     
     // Calculate competitiveness score (0-100)
     let score = 20; // Base score

@@ -97,7 +97,6 @@ class RealTimeMonitorService {
       await this.updateTrends();
     }, updateIntervalMs);
 
-    console.log(`Real-time monitoring started with ${updateIntervalMs}ms intervals`);
   }
 
   /**
@@ -109,7 +108,6 @@ class RealTimeMonitorService {
       this.monitoringInterval = null;
     }
     this.isMonitoring = false;
-    console.log('Real-time monitoring stopped');
   }
 
   /**
@@ -134,7 +132,6 @@ class RealTimeMonitorService {
       // Store aggregated metrics
       await this.storeAggregatedMetrics(allMetrics.filter(m => m !== null) as RealTimeMetrics[]);
     } catch (error) {
-      console.error('Error collecting real-time metrics:', error);
     }
   }
 
@@ -163,7 +160,6 @@ class RealTimeMonitorService {
 
       return metrics;
     } catch (error) {
-      console.error(`Error collecting metrics for ${functionName}:`, error);
       return null;
     }
   }
@@ -369,7 +365,6 @@ class RealTimeMonitorService {
    * Execute auto-remediation
    */
   private async executeAutoRemediation(anomaly: PerformanceAnomaly): Promise<void> {
-    console.log(`Executing auto-remediation for ${anomaly.functionName}: ${anomaly.recommendedAction}`);
     
     // Implementation would depend on the specific remediation action
     // e.g., restart function, scale resources, clear cache, etc.
@@ -401,7 +396,6 @@ class RealTimeMonitorService {
     for (const recommendation of recommendations) {
       // Only auto-scale if confidence is high and cost impact is reasonable
       if (recommendation.confidenceScore > 0.8 && recommendation.estimatedCostImpact < 100) {
-        console.log(`Auto-scaling ${recommendation.functionName} from ${recommendation.currentInstances} to ${recommendation.recommendedInstances} instances`);
         
         // Implementation would call Firebase Functions scaling APIs
         await this.applyScaling(recommendation);
@@ -414,7 +408,6 @@ class RealTimeMonitorService {
    */
   private async applyScaling(recommendation: ScalingRecommendation): Promise<void> {
     // Implementation would call Firebase Functions scaling APIs
-    console.log(`Applied scaling for ${recommendation.functionName}`);
   }
 
   /**

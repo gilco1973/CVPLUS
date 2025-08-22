@@ -41,7 +41,6 @@ export class MLPipelineService {
    */
   async extractFeatures(request: PredictionRequest) {
     // This method is now handled internally by the orchestrator
-    console.warn('[ML-PIPELINE] extractFeatures() is deprecated. Features are extracted automatically during prediction.');
     
     // For backward compatibility, we can still provide this method
     const orchestratorFeatures = await this.orchestrator['featureExtractor'].extractFeatures(request);
@@ -53,7 +52,6 @@ export class MLPipelineService {
    * @deprecated Model training will be handled by dedicated training service
    */
   async trainModel(config: MLTrainingConfig): Promise<{ success: boolean; modelId: string; metrics: any }> {
-    console.warn('[ML-PIPELINE] trainModel() is not yet implemented in refactored architecture');
     
     return {
       success: false,

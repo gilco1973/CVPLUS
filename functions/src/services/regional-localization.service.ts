@@ -49,9 +49,7 @@ export class RegionalLocalizationService {
     try {
       await this.loadRegionalConfigurations();
       this.initialized = true;
-      console.log('Regional localization service initialized');
     } catch (error) {
-      console.error('Failed to initialize regional service:', error);
       throw error;
     }
   }
@@ -147,9 +145,7 @@ export class RegionalLocalizationService {
         this.addDefaultConfigurations();
       }
       
-      console.log(`Loaded ${this.regionalConfigs.size} regional configurations`);
     } catch (error) {
-      console.error('Failed to load regional configurations:', error);
       this.addDefaultConfigurations(); // Fallback to defaults
     }
   }

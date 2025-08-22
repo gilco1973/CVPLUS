@@ -36,7 +36,6 @@ export const createSessionCheckpoint = onCall(async (request) => {
       }
     };
   } catch (error) {
-    console.error('Error creating checkpoint:', error);
     throw new HttpsError('internal', 'Failed to create checkpoint');
   }
 });
@@ -56,7 +55,6 @@ export const executeCheckpoint = onCall(async (request) => {
       message: success ? 'Checkpoint executed successfully' : 'Checkpoint execution failed'
     };
   } catch (error) {
-    console.error('Error executing checkpoint:', error);
     throw new HttpsError('internal', 'Failed to execute checkpoint');
   }
 });
@@ -76,7 +74,6 @@ export const resumeFromCheckpoint = onCall(async (request) => {
       message: success ? 'Session resumed successfully' : 'Failed to resume session'
     };
   } catch (error) {
-    console.error('Error resuming from checkpoint:', error);
     throw new HttpsError('internal', 'Failed to resume from checkpoint');
   }
 });
@@ -106,7 +103,6 @@ export const getSessionCheckpoints = onCall(async (request) => {
       }))
     };
   } catch (error) {
-    console.error('Error fetching session checkpoints:', error);
     throw new HttpsError('internal', 'Failed to fetch checkpoints');
   }
 });
@@ -126,7 +122,6 @@ export const processSessionActionQueue = onCall(async (request) => {
       message: 'Action queue processed successfully'
     };
   } catch (error) {
-    console.error('Error processing action queue:', error);
     throw new HttpsError('internal', 'Failed to process action queue');
   }
 });
@@ -151,7 +146,6 @@ export const processQueuedActions = onRequest(async (request, response) => {
       try {
         await checkpointService.processActionQueue(sessionId);
       } catch (error) {
-        console.error(`Failed to process queue for session ${sessionId}:`, error);
       }
     });
 
@@ -162,7 +156,6 @@ export const processQueuedActions = onRequest(async (request, response) => {
       message: `Processed queues for ${sessionsSnapshot.size} sessions`
     });
   } catch (error) {
-    console.error('Error in background queue processing:', error);
     response.status(500).json({
       success: false,
       error: 'Failed to process background queues'
@@ -189,7 +182,6 @@ export const retryFailedCheckpoints = onRequest(async (request, response) => {
         await checkpointService.updateCheckpointStatus(checkpointId, 'pending');
         await checkpointService.executeCheckpoint(checkpointId);
       } catch (error) {
-        console.error(`Failed to retry checkpoint ${checkpointId}:`, error);
       }
     });
 
@@ -200,7 +192,6 @@ export const retryFailedCheckpoints = onRequest(async (request, response) => {
       message: `Retried ${checkpointsSnapshot.size} failed checkpoints`
     });
   } catch (error) {
-    console.error('Error in checkpoint retry:', error);
     response.status(500).json({
       success: false,
       error: 'Failed to retry checkpoints'
@@ -263,7 +254,6 @@ export const syncSessionState = onCall(async (request) => {
       conflictResolved: conflictStrategy !== 'merge'
     };
   } catch (error) {
-    console.error('Error syncing session state:', error);
     throw new HttpsError('internal', 'Failed to sync session state');
   }
 });
@@ -283,7 +273,6 @@ export const enhanceSessionWithCheckpoints = onCall(async (request) => {
       message: 'Session enhanced with checkpoint data'
     };
   } catch (error) {
-    console.error('Error enhancing session:', error);
     throw new HttpsError('internal', 'Failed to enhance session');
   }
 });
@@ -336,7 +325,6 @@ export const sessionHealthCheck = onCall(async (request) => {
       lastActivity: lastActivity?.toISOString()
     };
   } catch (error) {
-    console.error('Error in health check:', error);
     return {
       healthy: false,
       issues: ['Health check failed']

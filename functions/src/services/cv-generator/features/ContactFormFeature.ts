@@ -37,7 +37,6 @@ export class ContactFormFeature implements CVFeature {
 
       return null;
     } catch (error) {
-      console.error('Failed to get portal URLs:', error);
       return null;
     }
   }
@@ -667,29 +666,23 @@ export class ContactFormFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="ContactForm"]');
           
           if (placeholders.length === 0) {
-            console.log('No ContactForm placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React ContactForm components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('ContactForm props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering ContactForm');
                 window.renderReactComponent('ContactForm', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback message');
                 showReactFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse ContactForm props:', error);
               showReactError(placeholder, error.message);
             }
           });
@@ -730,7 +723,6 @@ export class ContactFormFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting ContactForm initialization...');
           initReactComponents();
         }
         

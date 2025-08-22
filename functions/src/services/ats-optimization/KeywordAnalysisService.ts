@@ -47,7 +47,6 @@ export class KeywordAnalysisService {
       return this.parseSemanticAnalysis(response.content[0].text, cvText, targetKeywords || [], industry);
 
     } catch (error) {
-      console.error('Error in semantic keyword analysis:', error);
       return this.generateFallbackSemanticAnalysis(cvText, targetKeywords || [], industry);
     }
   }
@@ -71,7 +70,6 @@ export class KeywordAnalysisService {
       return this.parseExtractedKeywords(response.content[0].text);
 
     } catch (error) {
-      console.error('Error generating keywords:', error);
       return this.keywordExtractor.getFallbackKeywords(industry, role);
     }
   }

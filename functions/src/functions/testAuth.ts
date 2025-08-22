@@ -63,10 +63,6 @@ export const testAuth = onCall(
       });
 
       // Also log to console for easier debugging
-      console.log('=== TEST AUTH FUNCTION FAILURE ===');
-      console.log('Request auth exists:', !!request.auth);
-      console.log('Request auth:', JSON.stringify(request.auth, null, 2));
-      console.log('Error:', error);
       
       throw error;
     }

@@ -22,7 +22,6 @@ export class FallbackManager {
    * Generate fallback prediction when ML services fail
    */
   async generateFallbackPrediction(request: PredictionRequest): Promise<SuccessPrediction> {
-    console.log('[FALLBACK-MANAGER] Generating fallback prediction');
     
     try {
       // Use heuristic predictor for basic predictions
@@ -67,11 +66,9 @@ export class FallbackManager {
         }
       };
 
-      console.log(`[FALLBACK-MANAGER] Generated fallback prediction: ${Math.round(interviewProb * 100)}% interview prob`);
       return prediction;
 
     } catch (error) {
-      console.error('[FALLBACK-MANAGER] Fallback prediction failed:', error);
       return this.generateMinimalPrediction(request);
     }
   }
@@ -83,7 +80,6 @@ export class FallbackManager {
     try {
       return await this.heuristicPredictor.healthCheck();
     } catch (error) {
-      console.error('[FALLBACK-MANAGER] Health check failed:', error);
       return false;
     }
   }
@@ -93,7 +89,6 @@ export class FallbackManager {
   // ================================
 
   private generateMinimalPrediction(request: PredictionRequest): SuccessPrediction {
-    console.log('[FALLBACK-MANAGER] Generating minimal prediction');
     
     // Ultra-simple prediction based on basic CV analysis
     const experienceYears = this.calculateExperienceYears(request.cv.experience);

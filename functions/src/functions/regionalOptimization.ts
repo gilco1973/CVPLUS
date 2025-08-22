@@ -84,7 +84,6 @@ export const optimizeForRegion = onCall(
       };
       
     } catch (error) {
-      console.error('Regional optimization failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -134,7 +133,6 @@ export const getSupportedRegions = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get supported regions:', error);
       throw new HttpsError('internal', 'Failed to retrieve supported regions');
     }
   }
@@ -178,7 +176,6 @@ export const getRegionalMarketInsights = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get regional market insights:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -227,7 +224,6 @@ export const checkRegionalCompliance = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to check regional compliance:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -303,7 +299,6 @@ export const compareRegions = onCall(
             };
             
           } catch (error) {
-            console.error(`Comparison failed for region ${region}:`, error);
             return {
               region,
               success: false,
@@ -352,7 +347,6 @@ export const compareRegions = onCall(
       };
       
     } catch (error) {
-      console.error('Regional comparison failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -421,7 +415,6 @@ export const getUserRegionalHistory = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get user regional history:', error);
       throw new HttpsError('internal', 'Failed to retrieve regional optimization history');
     }
   }
@@ -483,7 +476,6 @@ async function logRegionalOptimization(
       }
     });
   } catch (error) {
-    console.error('Failed to log regional optimization:', error);
   }
 }
 
@@ -499,7 +491,6 @@ async function updateUserRegionalPreferences(userId: string, region: string, cou
       }
     }, { merge: true });
   } catch (error) {
-    console.error('Failed to update user regional preferences:', error);
   }
 }
 
@@ -509,7 +500,6 @@ async function getRegionalStatistics(): Promise<Record<string, any>> {
     const statsSnapshot = await db.collection('regional_stats').doc('aggregate').get();
     return statsSnapshot.data() || {};
   } catch (error) {
-    console.error('Failed to get regional statistics:', error);
     return {};
   }
 }
@@ -571,7 +561,6 @@ async function getComprehensiveRegionalInsights(region: string, country?: string
 
     return insights;
   } catch (error) {
-    console.error('Failed to get regional insights:', error);
     throw error;
   }
 }
@@ -612,7 +601,6 @@ async function logComplianceCheck(userId: string, region: string, country: strin
       timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Failed to log compliance check:', error);
   }
 }
 
@@ -629,7 +617,6 @@ async function logRegionalComparison(userId: string, regions: string[], results:
       timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Failed to log regional comparison:', error);
   }
 }
 
@@ -671,7 +658,6 @@ async function getUserRegionalPreferences(userId: string): Promise<any> {
     const userDoc = await db.collection('users').doc(userId).get();
     return userDoc.data()?.regionalPreferences || {};
   } catch (error) {
-    console.error('Failed to get user regional preferences:', error);
     return {};
   }
 }

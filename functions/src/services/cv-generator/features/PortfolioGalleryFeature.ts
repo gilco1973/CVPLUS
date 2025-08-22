@@ -17,7 +17,6 @@ export class PortfolioGalleryFeature implements CVFeature {
       // Generate React component placeholder instead of HTML
       return this.generateReactComponentPlaceholder(jobId, portfolioData, options);
     } catch (error) {
-      console.error('Error generating portfolio gallery feature:', error);
       return this.generateErrorFallback(jobId);
     }
   }

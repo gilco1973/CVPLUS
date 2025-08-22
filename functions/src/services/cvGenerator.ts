@@ -60,7 +60,6 @@ export class CVGenerator {
       return html;
       
     } catch (error: any) {
-      console.error('Error generating CV HTML:', error);
       throw new Error(`Failed to generate CV: ${error.message}`);
     }
   }
@@ -99,7 +98,6 @@ export class CVGenerator {
    */
   private validateTemplateType(template: string): TemplateType {
     if (!TemplateRegistry.isSupported(template)) {
-      console.warn(`Unsupported template type: ${template}, falling back to 'modern'`);
       return 'modern';
     }
     return template as TemplateType;
@@ -115,7 +113,6 @@ export class CVGenerator {
       if (FeatureRegistry.isSupported(feature)) {
         validFeatures.push(feature as FeatureType);
       } else {
-        console.warn(`Unsupported feature type: ${feature}`);
       }
     }
     

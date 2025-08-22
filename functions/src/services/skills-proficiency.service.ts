@@ -163,7 +163,6 @@ Return empty array if no technical skills found.
       return JSON.parse(response.choices[0].message.content || '[]');
 
     } catch (error) {
-      console.error('Error extracting skills from text:', error);
       return this.fallbackSkillExtraction(text);
     }
   }

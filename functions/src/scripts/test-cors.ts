@@ -28,7 +28,6 @@ export const testCorsHTTP = onRequest(
     const method = request.method;
     const userAgent = request.headers['user-agent'] || 'unknown';
     
-    console.log(`[CORS Test HTTP] ${method} request from origin: ${origin}`);
     
     const testResults = {
       success: true,
@@ -78,7 +77,6 @@ export const testCorsCallable = onCall(
       }
     };
     
-    console.log('[CORS Test Callable] Request processed successfully');
     
     return testResults;
   }
@@ -140,7 +138,6 @@ export const validateCorsConfiguration = onRequest(
       validation.recommendations.push('Development environment detected - ensure production origins are also configured');
     }
     
-    console.log('[CORS Validation] Request analyzed:', validation);
     
     response.json(validation);
   }

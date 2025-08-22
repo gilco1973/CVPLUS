@@ -135,7 +135,6 @@ export class TestimonialsCarouselFeature implements CVFeature {
       
       return [];
     } catch (error) {
-      console.error('Failed to get stored testimonials:', error);
       return [];
     }
   }
@@ -486,29 +485,23 @@ export class TestimonialsCarouselFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="TestimonialsCarousel"]');
           
           if (placeholders.length === 0) {
-            console.log('No TestimonialsCarousel placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React TestimonialsCarousel components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('TestimonialsCarousel props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering TestimonialsCarousel');
                 window.renderReactComponent('TestimonialsCarousel', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback content');
                 showTestimonialsFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse TestimonialsCarousel props:', error);
               showTestimonialsError(placeholder, error.message);
             }
           });
@@ -577,7 +570,6 @@ export class TestimonialsCarouselFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting TestimonialsCarousel initialization...');
           initReactComponents();
         }
         

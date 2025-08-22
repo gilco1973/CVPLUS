@@ -19,7 +19,6 @@ const ffmpegPath = process.env.FFMPEG_PATH ||
                    '/usr/bin/ffmpeg' || 
                    '/layers/google.nodejs.ffmpeg/bin/ffmpeg';
 ffmpeg.setFfmpegPath(ffmpegPath);
-console.log('FFmpeg path set to:', ffmpegPath);
 
 interface ConversationalScript {
   segments: Array<{
@@ -53,7 +52,6 @@ export class PodcastGenerationService {
     // Enhanced API key retrieval with proper error handling
     const openaiKey = this.getSecretValue('OPENAI_API_KEY') || config.openai?.apiKey || process.env.OPENAI_API_KEY || '';
     if (!openaiKey) {
-      console.error('❌ OPENAI_API_KEY is missing');
       throw new Error('OpenAI API key is required but not found in secrets or environment');
     }
     
@@ -69,7 +67,6 @@ export class PodcastGenerationService {
     ).trim();
     
     if (!this.elevenLabsApiKey) {
-      console.error('❌ ELEVENLABS_API_KEY is missing');
       throw new Error('ElevenLabs API key is required but not found in secrets or environment');
     }
     
@@ -93,7 +90,6 @@ export class PodcastGenerationService {
       }
     };
     
-    console.log('✅ Podcast service initialized with API keys and voice configurations');
   }
   
   /**
@@ -104,13 +100,10 @@ export class PodcastGenerationService {
       // Firebase Functions v2 secrets are available as environment variables
       const secretValue = process.env[secretName];
       if (secretValue && secretValue.trim().length > 0) {
-        console.log(`✅ Secret ${secretName} retrieved successfully`);
         return secretValue.trim();
       }
-      console.warn(`⚠️ Secret ${secretName} is empty or undefined`);
       return undefined;
     } catch (error) {
-      console.error(`❌ Error retrieving secret ${secretName}:`, error);
       return undefined;
     }
   }
@@ -119,7 +112,6 @@ export class PodcastGenerationService {
    * Validate environment and dependencies
    */
   private async validateEnvironment(): Promise<void> {
-    console.log('Validating podcast generation environment...');
     
     // Check ElevenLabs API key
     if (!this.elevenLabsApiKey || this.elevenLabsApiKey.length < 10) {
@@ -129,7 +121,6 @@ export class PodcastGenerationService {
     // Test ElevenLabs API key validity by making a simple API call
     try {
       const cleanApiKey = this.elevenLabsApiKey.replace(/[\s\n\r\t]/g, '');
-      console.log(`Testing ElevenLabs API with key length: ${cleanApiKey.length}`);
       
       const testResponse = await axios.get('https://api.elevenlabs.io/v1/user', {
         headers: {
@@ -138,8 +129,6 @@ export class PodcastGenerationService {
         },
         timeout: 10000
       });
-      console.log('✅ ElevenLabs API key validation successful');
-      console.log('User info:', testResponse.data);
     } catch (error: any) {
       console.error('❌ ElevenLabs API validation failed:', {
         status: error.response?.status,
@@ -151,9 +140,7 @@ export class PodcastGenerationService {
       if (error.response?.status === 401) {
         throw new Error('ElevenLabs API key is invalid or expired. Please update your ELEVENLABS_API_KEY secret in Firebase Console.');
       } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-        console.warn('⚠️ Network connectivity issue with ElevenLabs API, but continuing...');
       } else {
-        console.warn('⚠️ Could not validate ElevenLabs API key, but continuing with generation...');
       }
     }
     
@@ -169,7 +156,6 @@ export class PodcastGenerationService {
           if (err) {
             reject(new Error(`FFmpeg not available: ${err.message}`));
           } else {
-            console.log('FFmpeg validation successful');
             resolve();
           }
         });
@@ -178,7 +164,6 @@ export class PodcastGenerationService {
       throw new Error(`FFmpeg validation failed: ${error.message}`);
     }
     
-    console.log('Environment validation completed successfully');
   }
   
   /**
@@ -199,51 +184,41 @@ export class PodcastGenerationService {
     duration: string;
     chapters: Array<{ title: string; startTime: number; endTime: number; }>;
   }> {
-    console.log(`Starting podcast generation for job ${jobId}`);
     
     try {
       // Step 0: Validate environment and dependencies
       await this.validateEnvironment();
       
       // Step 1: Generate conversational script
-      console.log('Step 1: Generating conversational script...');
       const script = await this.generateConversationalScript(parsedCV, options);
       
       if (!script || !script.segments || script.segments.length === 0) {
         throw new Error('Failed to generate valid script - no segments created');
       }
-      console.log(`Generated script with ${script.segments.length} segments`);
       
       // Step 2: Generate audio for each segment
-      console.log('Step 2: Generating audio segments...');
       const audioSegments = await this.generateAudioSegments(script);
       
       if (!audioSegments || audioSegments.length === 0) {
         throw new Error('Failed to generate any audio segments');
       }
-      console.log(`Generated ${audioSegments.length} audio segments`);
       
       // Step 3: Merge audio segments into final podcast
-      console.log('Step 3: Merging audio segments...');
       const podcastUrl = await this.mergeAudioSegments(audioSegments, jobId, userId);
       
       if (!podcastUrl) {
         throw new Error('Failed to generate podcast URL after merging');
       }
-      console.log('Audio merging completed successfully');
       
       // Step 4: Generate chapters from script
-      console.log('Step 4: Generating chapters...');
       const chapters = this.generateChapters(script);
       
       // Step 5: Create readable transcript
-      console.log('Step 5: Formatting transcript...');
       const transcript = this.formatTranscript(script);
       
       // Step 6: Calculate total duration
       const duration = this.calculateDuration(audioSegments);
       
-      console.log(`Podcast generation completed successfully: ${duration} duration`);
       
       return {
         audioUrl: podcastUrl,
@@ -360,7 +335,6 @@ Focus: ${options.focus || 'balanced'}`;
       const scriptText = response.choices[0].message?.content || '';
       return this.parseScriptToSegments(scriptText);
     } catch (error) {
-      console.error('Error generating script:', error);
       // Fallback to template-based script
       return this.generateTemplateScript(cv, targetWords);
     }
@@ -446,7 +420,6 @@ Focus: ${options.focus || 'balanced'}`;
   private async generateAudioSegments(
     script: ConversationalScript
   ): Promise<Array<{ speaker: string; audioBuffer: Buffer; duration: number; }>> {
-    console.log(`Generating audio for ${script.segments.length} script segments`);
     
     // Validate input
     if (!script || !script.segments || script.segments.length === 0) {
@@ -459,7 +432,6 @@ Focus: ${options.focus || 'balanced'}`;
     
     for (let i = 0; i < script.segments.length; i++) {
       const segment = script.segments[i];
-      console.log(`Processing segment ${i + 1}/${script.segments.length}: ${segment.speaker}`);
       
       const voiceId = segment.speaker === 'host1' 
         ? this.voiceConfig.host1.voiceId 
@@ -468,7 +440,6 @@ Focus: ${options.focus || 'balanced'}`;
       try {
         // Validate voice configuration
         if (!voiceId || voiceId.length === 0) {
-          console.error(`Invalid voice ID for speaker ${segment.speaker}`);
           skippedSegments++;
           continue;
         }
@@ -486,21 +457,18 @@ Focus: ${options.focus || 'balanced'}`;
         
         // Skip if text is empty after cleaning
         if (!cleanText.trim()) {
-          console.log(`Skipping empty segment ${i} after text cleaning`);
           skippedSegments++;
           continue;
         }
         
         // Validate text length (ElevenLabs has limits)
         if (cleanText.length > 5000) {
-          console.warn(`Truncating long text segment ${i} from ${cleanText.length} to 5000 characters`);
           cleanText = cleanText.substring(0, 5000);
         }
         
         // Enhanced voice settings based on emotion
         const voiceSettings = this.getVoiceSettingsForEmotion(segment.emotion, segment.speaker);
         
-        console.log(`Calling ElevenLabs API for segment ${i} (${cleanText.length} chars)`);
         
         // Call ElevenLabs API with timeout and retry logic
         const response = await axios.post(
@@ -524,7 +492,6 @@ Focus: ${options.focus || 'balanced'}`;
           }
         );
         
-        console.log(`ElevenLabs API response for segment ${i}: ${response.status} (${response.data.byteLength} bytes)`);
         
         // Validate response data
         if (!response.data || response.data.byteLength === 0) {
@@ -545,7 +512,6 @@ Focus: ${options.focus || 'balanced'}`;
         });
         
         processedSegments++;
-        console.log(`Successfully generated audio segment ${i}: ${audioBuffer.length} bytes, ~${Math.round(estimatedDuration/1000)}s`);
         
         // Small delay to avoid rate limiting
         if (i < script.segments.length - 1) {
@@ -573,7 +539,6 @@ Focus: ${options.focus || 'balanced'}`;
         
         // Check for authentication error
         if (error.response?.status === 401) {
-          console.error('ElevenLabs authentication failed - invalid API key');
           throw new Error('ElevenLabs authentication failed. Please check your API key configuration.');
         }
         
@@ -581,7 +546,6 @@ Focus: ${options.focus || 'balanced'}`;
         if (error.response?.data?.includes?.('credits remaining') || 
             error.response?.data?.includes?.('quota exceeded') ||
             error.response?.status === 402) {
-          console.error('ElevenLabs quota exceeded - falling back to text-only podcast');
           throw new Error('Audio generation quota exceeded. Please upgrade your ElevenLabs plan or try again later.');
         }
         
@@ -589,7 +553,6 @@ Focus: ${options.focus || 'balanced'}`;
         
         // If this is an API rate limit error, add a longer delay before continuing
         if (error.response?.status === 429) {
-          console.log('Rate limit detected, waiting 2 seconds before continuing...');
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
@@ -597,7 +560,6 @@ Focus: ${options.focus || 'balanced'}`;
       }
     }
     
-    console.log(`Audio generation summary: ${processedSegments} processed, ${skippedSegments} skipped, ${audioSegments.length} total segments`);
     
     // Validate we have some audio segments
     if (audioSegments.length === 0) {
@@ -605,7 +567,6 @@ Focus: ${options.focus || 'balanced'}`;
     }
     
     if (audioSegments.length < script.segments.length * 0.5) {
-      console.warn(`Low success rate: only ${audioSegments.length}/${script.segments.length} segments generated successfully`);
     }
     
     // Final validation of audio segments
@@ -616,14 +577,12 @@ Focus: ${options.focus || 'balanced'}`;
     );
     
     if (validSegments.length !== audioSegments.length) {
-      console.warn(`Removed ${audioSegments.length - validSegments.length} invalid audio segments`);
     }
     
     if (validSegments.length === 0) {
       throw new Error('No valid audio segments after validation - all segments have empty or invalid audio data');
     }
     
-    console.log(`Returning ${validSegments.length} valid audio segments`);
     return validSegments;
   }
   
@@ -639,7 +598,6 @@ Focus: ${options.focus || 'balanced'}`;
     const outputPath = path.join(tempDir, 'final-podcast.mp3');
     
     try {
-      console.log(`Starting audio merge for ${segments.length} segments`);
       
       // Validate input segments
       if (!segments || segments.length === 0) {
@@ -649,7 +607,6 @@ Focus: ${options.focus || 'balanced'}`;
       // Create temp directory with proper permissions
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true, mode: 0o755 });
-        console.log(`Created temp directory: ${tempDir}`);
       }
       
       // Save individual audio segments to temp files and validate
@@ -663,13 +620,11 @@ Focus: ${options.focus || 'balanced'}`;
         
         if (segment.speaker === 'pause') {
           // Skip pause segments for now to avoid FFmpeg lavfi issues
-          console.log(`Skipping pause segment of ${segment.duration}ms`);
           continue;
         }
         
         // Validate segment has audio data
         if (!segment.audioBuffer || segment.audioBuffer.length === 0) {
-          console.warn(`Skipping empty audio segment ${i}`);
           continue;
         }
         
@@ -688,7 +643,6 @@ Focus: ${options.focus || 'balanced'}`;
             throw new Error(`Written segment file is empty: ${segmentFile}`);
           }
           
-          console.log(`Written segment ${validSegmentCount}: ${fileStats.size} bytes`);
           
           tempFiles.push(segmentFile);
           // Properly escape file paths for FFmpeg concat demuxer
@@ -696,7 +650,6 @@ Focus: ${options.focus || 'balanced'}`;
           listFileContent.push(`file '${escapedPath}'`);
           validSegmentCount++;
         } catch (segmentError) {
-          console.error(`Error processing segment ${i}:`, segmentError);
           // Continue with other segments
         }
       }
@@ -710,7 +663,6 @@ Focus: ${options.focus || 'balanced'}`;
         throw new Error('No files to concatenate - all segments were filtered out');
       }
       
-      console.log(`Processing ${validSegmentCount} valid audio segments`);
       
       // Write list file for FFmpeg concat with validation
       const listFileData = listFileContent.join('\n') + '\n'; // Ensure newline at end
@@ -726,8 +678,6 @@ Focus: ${options.focus || 'balanced'}`;
         throw new Error(`Filelist is empty: ${listFilePath}`);
       }
       
-      console.log(`Created filelist with ${listFileContent.length} entries (${listFileStats.size} bytes)`);
-      console.log(`Filelist content:\n${listFileData}`);
       
       // Validate all referenced files exist before calling FFmpeg
       for (const tempFile of tempFiles) {
@@ -738,7 +688,6 @@ Focus: ${options.focus || 'balanced'}`;
       
       // Handle single file case (no concatenation needed)
       if (validSegmentCount === 1) {
-        console.log('Single segment detected, copying directly instead of concatenating');
         const singleFile = tempFiles[0];
         fs.copyFileSync(singleFile, outputPath);
       } else {
@@ -753,20 +702,14 @@ Focus: ${options.focus || 'balanced'}`;
             .audioChannels(2)
             .output(outputPath)
             .on('start', (cmdline: string) => {
-              console.log('FFmpeg command:', cmdline);
-              console.log('FFmpeg input list file:', listFilePath);
-              console.log('FFmpeg output path:', outputPath);
             })
             .on('progress', (progress: any) => {
               if (progress.percent) {
-                console.log('FFmpeg progress:', Math.round(progress.percent) + '% done');
               }
             })
             .on('stderr', (stderrLine: string) => {
-              console.log('FFmpeg stderr:', stderrLine);
             })
             .on('end', () => {
-              console.log('Audio merging completed successfully');
               // Verify output file was created
               if (!fs.existsSync(outputPath)) {
                 reject(new Error('FFmpeg completed but output file was not created'));
@@ -777,7 +720,6 @@ Focus: ${options.focus || 'balanced'}`;
                 reject(new Error('FFmpeg completed but output file is empty'));
                 return;
               }
-              console.log(`Output file created: ${outputStats.size} bytes`);
               resolve();
             })
             .on('error', (err: any) => {
@@ -800,11 +742,9 @@ Focus: ${options.focus || 'balanced'}`;
               reject(new Error(errorMessage));
             });
           
-          console.log('Starting FFmpeg audio merging...');
           try {
             command.run();
           } catch (runError) {
-            console.error('Error starting FFmpeg:', runError);
             reject(new Error(`Failed to start FFmpeg: ${runError.message}`));
           }
         });
@@ -859,7 +799,6 @@ Focus: ${options.focus || 'balanced'}`;
       try {
         this.cleanupTempFiles([tempDir]);
       } catch (cleanupError) {
-        console.warn('Error during cleanup:', cleanupError);
       }
       
       // Provide detailed error information
@@ -885,7 +824,6 @@ Focus: ${options.focus || 'balanced'}`;
     // 3. Using a different audio processing library
     // 4. Pre-generating silence files and concatenating them
     
-    console.log(`Silence generation skipped for ${durationMs}ms duration`);
     throw new Error('Silence generation temporarily disabled - use alternative pause handling');
   }
   
@@ -893,7 +831,6 @@ Focus: ${options.focus || 'balanced'}`;
    * Clean up temporary files with enhanced error handling
    */
   private cleanupTempFiles(filePaths: string[]): void {
-    console.log(`Cleaning up ${filePaths.length} temp files/directories`);
     
     let cleanedCount = 0;
     let errorCount = 0;
@@ -901,7 +838,6 @@ Focus: ${options.focus || 'balanced'}`;
     filePaths.forEach(filePath => {
       try {
         if (!filePath || filePath.trim() === '') {
-          console.warn('Skipping empty file path during cleanup');
           return;
         }
         
@@ -911,19 +847,15 @@ Focus: ${options.focus || 'balanced'}`;
           if (stats.isDirectory()) {
             // Recursively remove directory and all contents
             fs.rmSync(filePath, { recursive: true, force: true });
-            console.log(`Removed directory: ${filePath}`);
           } else if (stats.isFile()) {
             // Remove individual file
             fs.unlinkSync(filePath);
-            console.log(`Removed file: ${filePath}`);
           } else {
-            console.warn(`Skipping non-file/non-directory: ${filePath}`);
             return;
           }
           
           cleanedCount++;
         } else {
-          console.log(`File already removed or doesn't exist: ${filePath}`);
         }
       } catch (error: any) {
         console.error(`Failed to cleanup ${filePath}:`, {
@@ -935,7 +867,6 @@ Focus: ${options.focus || 'balanced'}`;
       }
     });
     
-    console.log(`Cleanup complete: ${cleanedCount} cleaned, ${errorCount} errors`);
   }
   
   /**

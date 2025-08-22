@@ -68,17 +68,14 @@ export class TimelineGenerationService {
    * - Detailed logging and quality metrics
    */
   async generateTimeline(parsedCV: ParsedCV, jobId: string): Promise<TimelineData> {
-    console.log(`[Timeline Service] Delegating to enhanced V2 service for job: ${jobId}`);
     
     try {
       // Delegate to the enhanced V2 service with storage enabled for direct calls
       const result = await timelineGenerationServiceV2.generateTimeline(parsedCV, jobId, true);
       
-      console.log(`[Timeline Service] Successfully completed timeline generation for job: ${jobId}`);
       return result;
       
     } catch (error) {
-      console.error(`[Timeline Service] Timeline generation failed for job ${jobId}:`, error);
       throw error;
     }
   }
@@ -87,16 +84,13 @@ export class TimelineGenerationService {
    * Validate timeline data without storing it (for testing and validation)
    */
   async validateTimeline(parsedCV: ParsedCV): Promise<{ isValid: boolean; errors: string[]; data?: TimelineData }> {
-    console.log('[Timeline Service] Validating timeline data without storage');
     
     try {
       // Validation only, no storage needed
       const result = await timelineGenerationServiceV2.validateTimelineData(parsedCV);
-      console.log(`[Timeline Service] Validation completed. Valid: ${result.isValid}, Errors: ${result.errors.length}`);
       return result;
       
     } catch (error) {
-      console.error('[Timeline Service] Validation failed:', error);
       return {
         isValid: false,
         errors: [error instanceof Error ? error.message : 'Unknown validation error'],

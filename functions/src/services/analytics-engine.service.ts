@@ -206,7 +206,6 @@ export class AnalyticsEngineService {
       return businessMetrics;
 
     } catch (error) {
-      console.error('[AnalyticsEngine] Error generating business metrics:', error);
       throw error;
     }
   }
@@ -256,7 +255,6 @@ export class AnalyticsEngineService {
       };
 
     } catch (error) {
-      console.error('[AnalyticsEngine] Error analyzing trends:', error);
       throw error;
     }
   }
@@ -317,7 +315,6 @@ export class AnalyticsEngineService {
       return insights;
 
     } catch (error) {
-      console.error('[AnalyticsEngine] Error generating user behavior insights:', error);
       throw error;
     }
   }
@@ -378,7 +375,6 @@ export class AnalyticsEngineService {
       return qualityInsights;
 
     } catch (error) {
-      console.error('[AnalyticsEngine] Error generating quality insights:', error);
       throw error;
     }
   }
@@ -409,7 +405,6 @@ export class AnalyticsEngineService {
       };
 
     } catch (error) {
-      console.error('[AnalyticsEngine] Error getting analytics summary:', error);
       throw error;
     }
   }

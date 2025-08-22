@@ -39,7 +39,6 @@ export class AdvancedATSOptimizationService {
     // Initialize the new modular orchestrator
     this.orchestrator = new ATSOptimizationOrchestrator();
     
-    console.log('🔄 ATS Optimization Service: Using new modular architecture');
   }
 
   /**
@@ -54,7 +53,6 @@ export class AdvancedATSOptimizationService {
     jobDescription?: string,
     industry?: string
   ): Promise<ATSOptimizationResult> {
-    console.log('🔄 Delegating to modular ATS orchestrator...');
     
     return this.orchestrator.analyzeCV(
       parsedCV,

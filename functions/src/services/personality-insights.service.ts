@@ -286,7 +286,6 @@ Provide refined scores based on the context. Return only the scores in format: t
       
       return finalTraits;
     } catch (error) {
-      console.error('Error refining traits with AI:', error);
       return initialTraits; // Fallback to initial scores
     }
   }
@@ -543,7 +542,6 @@ Make it positive and professional, focusing on strengths.`;
       
       return response.choices[0].message?.content?.trim() || this.generateDefaultSummary(topTraits, workStyle, bestCulture);
     } catch (error) {
-      console.error('Error generating personality summary:', error);
       return this.generateDefaultSummary(
         Object.entries(traits).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t),
         workStyle,

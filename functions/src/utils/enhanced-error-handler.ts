@@ -323,16 +323,12 @@ export class EnhancedErrorHandler {
 
     switch (logLevel) {
       case 'error':
-        console.error('🚨 CRITICAL ERROR:', logData);
         break;
       case 'warn':
-        console.warn('⚠️ WARNING:', logData);
         break;
       case 'info':
-        console.info('ℹ️ INFO:', logData);
         break;
       default:
-        console.log('📝 DEBUG:', logData);
     }
   }
 
@@ -346,7 +342,6 @@ export class EnhancedErrorHandler {
         .doc(processedError.errorId)
         .set(processedError.sanitizedForStorage);
     } catch (storageError) {
-      console.error('Failed to store error in Firestore:', storageError);
       // Don't throw - we don't want error storage to fail the original operation
     }
   }
@@ -356,7 +351,6 @@ export class EnhancedErrorHandler {
    */
   private static updateErrorMetrics(processedError: ProcessedError): void {
     // This could be expanded to update monitoring dashboards
-    console.log(`📊 Error metrics updated for ${processedError.metadata.category}: ${processedError.metadata.severity}`);
   }
 
   /**
@@ -365,7 +359,6 @@ export class EnhancedErrorHandler {
   private static async notifyOnError(processedError: ProcessedError): Promise<void> {
     // This could be expanded to integrate with alerting systems
     if (processedError.metadata.severity === ErrorSeverity.CRITICAL) {
-      console.log('📢 CRITICAL ERROR NOTIFICATION sent for:', processedError.errorId);
     }
   }
 

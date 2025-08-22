@@ -14,7 +14,6 @@ export class CVFeatureService {
    * Extract comprehensive features from CV structure and content
    */
   async extractFeatures(cv: ParsedCV): Promise<FeatureVector['cvFeatures']> {
-    console.log('[CV-FEATURES] Extracting CV-specific features');
     
     const features = {
       keywordMatch: this.calculateKeywordMatch(cv),
@@ -24,7 +23,6 @@ export class CVFeatureService {
       educationLevel: this.getEducationLevel(cv.education)
     };
     
-    console.log(`[CV-FEATURES] Extracted features: keyword match ${features.keywordMatch}, skills alignment ${features.skillsAlignment}`);
     return features;
   }
 
@@ -65,7 +63,6 @@ export class CVFeatureService {
              (features?.educationLevel || 0) >= 0;
              
     } catch (error) {
-      console.error('[CV-FEATURES] Health check failed:', error);
       return false;
     }
   }

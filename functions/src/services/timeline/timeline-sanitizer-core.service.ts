@@ -13,13 +13,11 @@ export class TimelineSanitizerCoreService {
    */
   sanitizeTimelineEvent(event: TimelineEvent, index: number, metrics: DataQualityMetrics): any | null {
     try {
-      console.log(`[Timeline Sanitizer Core] Sanitizing event ${index + 1}/${metrics.totalEvents}: ${event.title}`);
       
       // Validate required fields first
       const requiredFields = ['id', 'type', 'title', 'organization', 'startDate'];
       for (const field of requiredFields) {
         if (!timelineValidatorService.validateField(field, (event as any)[field], metrics)) {
-          console.error(`[Timeline Sanitizer Core] Event ${index} failed required field validation for '${field}', skipping event`);
           return null;
         }
       }
@@ -48,7 +46,6 @@ export class TimelineSanitizerCoreService {
       return cleanEvent;
       
     } catch (error) {
-      console.error(`[Timeline Sanitizer Core] Error sanitizing event ${index}:`, error, 'Event:', event);
       metrics.validationErrors++;
       return null;
     }
@@ -78,7 +75,6 @@ export class TimelineSanitizerCoreService {
         (metrics.fieldsRemoved as any)[fieldName]++;
       }
     } catch (error) {
-      console.error(`[Timeline Sanitizer Core] Error processing optional field '${fieldName}':`, error);
       (metrics.fieldsRemoved as any)[fieldName]++;
     }
   }
@@ -97,7 +93,6 @@ export class TimelineSanitizerCoreService {
         cleanEvent[fieldName] = sanitizedArray;
       }
     } catch (error) {
-      console.error(`[Timeline Sanitizer Core] Error processing array field '${fieldName}':`, error);
       (metrics.fieldsRemoved as any)[fieldName]++;
     }
   }

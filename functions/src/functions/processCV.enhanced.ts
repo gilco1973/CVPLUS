@@ -99,7 +99,6 @@ export const processCVEnhanced = onCall(
 
       if (serviceStatus.verificationAvailable && serviceStatus.verificationEnabled) {
         // USE ENHANCED PARSING WITH VERIFICATION
-        console.log('✨ Using enhanced parsing with LLM verification...');
         
         try {
           let fileBuffer: Buffer;
@@ -124,7 +123,6 @@ export const processCVEnhanced = onCall(
             
             // Decode the file path
             const filePath = decodeURIComponent(pathMatch[1]);
-            console.log('📥 Downloading file from path:', filePath);
             
             const file = bucket.file(filePath);
             [fileBuffer] = await file.download();
@@ -161,7 +159,6 @@ export const processCVEnhanced = onCall(
           });
 
         } catch (enhancedError) {
-          console.warn('⚠️ Enhanced parsing failed, falling back to standard parsing:', enhancedError);
           fallbackUsed = true;
           warnings.push('Enhanced parsing failed, used standard parsing as fallback');
           
@@ -199,7 +196,6 @@ export const processCVEnhanced = onCall(
         }
       } else {
         // USE STANDARD PARSING (No verification available)
-        console.log('📝 Using standard parsing (verification not available)...');
         
         const apiKey = process.env.ANTHROPIC_API_KEY;
         if (!apiKey) {
@@ -336,7 +332,6 @@ export const processCVEnhanced = onCall(
 
     } catch (error: any) {
       const totalTime = Date.now() - startTime;
-      console.error('❌ Enhanced CV processing failed:', error);
       
       // Enhanced error logging with more context
       const errorData = {

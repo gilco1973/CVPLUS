@@ -16,7 +16,6 @@ export class MarketFeatureService {
    * Extract market intelligence features
    */
   async extractFeatures(industry?: string, location?: string): Promise<FeatureVector['marketFeatures']> {
-    console.log('[MARKET-FEATURES] Extracting market intelligence features');
     
     const features = {
       industryGrowth: await this.getIndustryGrowthRate(industry),
@@ -27,8 +26,6 @@ export class MarketFeatureService {
       economicIndicators: await this.getEconomicIndicators()
     };
     
-    console.log(`[MARKET-FEATURES] Industry growth: ${Math.round(features.industryGrowth * 100)}%`);
-    console.log(`[MARKET-FEATURES] Location competitiveness: ${Math.round(features.locationCompetitiveness * 100)}%`);
     
     return features;
   }
@@ -44,7 +41,6 @@ export class MarketFeatureService {
              testFeatures.locationCompetitiveness >= 0 &&
              testFeatures.demandSupplyRatio >= 0;
     } catch (error) {
-      console.error('[MARKET-FEATURES] Health check failed:', error);
       return false;
     }
   }

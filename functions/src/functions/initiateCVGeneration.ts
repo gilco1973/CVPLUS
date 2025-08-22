@@ -13,20 +13,15 @@ export const initiateCVGeneration = onCall(
     ...corsOptions
   },
   async (request) => {
-    console.log('initiateCVGeneration function called');
     
     // Step 1: Quick validation and authentication
     if (!request.auth) {
-      console.error('Authentication failed: No auth token');
       throw new Error('User must be authenticated');
     }
 
     const { jobId, templateId, features } = request.data;
     const userId = request.auth.uid;
     
-    console.log('User authenticated:', userId);
-    console.log('Initiating CV generation for job:', jobId);
-    console.log('Selected features:', features);
 
     try {
       // Step 2: Validate job existence and ownership
@@ -70,10 +65,8 @@ export const initiateCVGeneration = onCall(
         });
 
       // Step 4: Trigger background generateCV processing with comprehensive error recovery
-      console.log('Triggering background CV generation process with recovery mechanisms...');
       setImmediate(async () => {
         try {
-          console.log('Background generateCV started for job:', jobId);
           
           // Add global timeout protection for the entire generation process
           const result = await Promise.race([
@@ -83,9 +76,7 @@ export const initiateCVGeneration = onCall(
             })
           ]);
           
-          console.log('Background generateCV completed for job:', jobId, result);
         } catch (error) {
-          console.error('Background generateCV failed for job:', jobId, error);
           
           // Comprehensive error recovery
           await handleCVGenerationFailure(jobId, error, features || []);
@@ -93,7 +84,6 @@ export const initiateCVGeneration = onCall(
       });
 
       // Step 5: Return immediately with job status
-      console.log('CV generation initiated successfully for job:', jobId);
       return {
         success: true,
         jobId: jobId,
@@ -104,8 +94,6 @@ export const initiateCVGeneration = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error initiating CV generation:', error.message);
-      console.error('Error stack:', error.stack);
       
       // Update job status to failed if possible
       try {
@@ -118,7 +106,6 @@ export const initiateCVGeneration = onCall(
             updatedAt: FieldValue.serverTimestamp()
           });
       } catch (updateError: any) {
-        console.error('Failed to update job status:', updateError);
       }
       
       throw new Error(`Failed to initiate CV generation: ${error.message}`);
@@ -208,7 +195,6 @@ async function handleCVGenerationFailure(jobId: string, error: any, features: st
   const isNetworkError = errorMessage.includes('network') || errorMessage.includes('ECONNRESET');
   const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('limit');
   
-  console.log(`🚨 Handling CV generation failure for job ${jobId}: ${errorMessage}`);
   
   try {
     // Update job with failure details and recovery information
@@ -244,10 +230,8 @@ async function handleCVGenerationFailure(jobId: string, error: any, features: st
       .doc(jobId)
       .update(updateData);
       
-    console.log(`✅ Successfully updated job ${jobId} with failure information and recovery details`);
     
   } catch (updateError) {
-    console.error(`❌ Failed to update job ${jobId} with failure information:`, updateError);
     
     // Last resort: try to at least mark the job as failed
     try {
@@ -260,7 +244,6 @@ async function handleCVGenerationFailure(jobId: string, error: any, features: st
           updatedAt: FieldValue.serverTimestamp()
         });
     } catch (lastResortError) {
-      console.error(`❌ CRITICAL: Could not update job ${jobId} status even with last resort attempt:`, lastResortError);
     }
   }
 }

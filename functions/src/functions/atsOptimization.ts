@@ -69,7 +69,6 @@ export const analyzeATSCompatibility = onCall(
         recommendations: atsScore.recommendations
       };
     } catch (error: any) {
-      console.error('Error analyzing ATS compatibility:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -134,7 +133,6 @@ export const applyATSOptimizations = onCall(
         appliedOptimizations: optimizations
       };
     } catch (error) {
-      console.error('Error applying ATS optimizations:', error);
       throw new HttpsError('internal', 'Failed to apply ATS optimizations');
     }
   }
@@ -160,7 +158,6 @@ export const getATSTemplates = onCall(
         templates
       };
     } catch (error) {
-      console.error('Error getting ATS templates:', error);
       throw new HttpsError('internal', 'Failed to get ATS templates');
     }
   }
@@ -244,7 +241,6 @@ export const generateATSKeywords = onCall(
         }
       };
     } catch (error) {
-      console.error('Error generating ATS keywords:', error);
       throw new HttpsError('internal', 'Failed to generate ATS keywords');
     }
   }
@@ -318,7 +314,6 @@ export const batchATSAnalysis = onCall(
               recommendations: atsScore.recommendations.slice(0, 3)
             };
           } catch (error) {
-            console.error(`Error analyzing job ${jobId}:`, error);
             return { jobId, success: false, error: 'Analysis failed' };
           }
         })
@@ -338,7 +333,6 @@ export const batchATSAnalysis = onCall(
           : 0
       };
     } catch (error) {
-      console.error('Error in batch ATS analysis:', error);
       throw new HttpsError('internal', 'Failed to perform batch ATS analysis');
     }
   }

@@ -138,7 +138,6 @@ export const generateVideoIntroduction = onCall(
         htmlFragment: null
       };
     } catch (error: any) {
-      console.error('Error generating video introduction:', error);
       
       // Update status to failed
       await admin.firestore()
@@ -294,7 +293,6 @@ export const regenerateVideoIntroduction = onCall(
         };
       }
     } catch (error: any) {
-      console.error('Error regenerating video:', error);
       
       await admin.firestore()
         .collection('jobs')
@@ -376,7 +374,6 @@ export const getEnhancedVideoStatus = onCall(
         enhancedFeatures: jobData?.enhancedFeatures?.videoIntroduction
       };
     } catch (error: any) {
-      console.error('Enhanced video status check failed:', error);
       
       // Fallback to regular status check
       const jobDoc = await admin.firestore()

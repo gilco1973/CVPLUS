@@ -82,7 +82,6 @@ export const predictSalaryAdvanced = onCall(
       };
       
     } catch (error) {
-      console.error('Advanced salary prediction failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -147,7 +146,6 @@ export const predictTimeToHireAdvanced = onCall(
       };
       
     } catch (error) {
-      console.error('Advanced time-to-hire prediction failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -212,7 +210,6 @@ export const generateCompetitiveAnalysis = onCall(
       };
       
     } catch (error) {
-      console.error('Competitive analysis generation failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -277,7 +274,6 @@ export const generateMarketInsights = onCall(
       };
       
     } catch (error) {
-      console.error('Market insights generation failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -342,7 +338,6 @@ export const generateNegotiationInsights = onCall(
       };
       
     } catch (error) {
-      console.error('Negotiation insights generation failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -439,7 +434,6 @@ export const getComprehensivePredictions = onCall(
       };
       
     } catch (error) {
-      console.error('Comprehensive predictions generation failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -533,7 +527,6 @@ export const getUserAdvancedPredictionHistory = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get advanced prediction history:', error);
       throw new HttpsError('internal', 'Failed to retrieve advanced prediction history');
     }
   }
@@ -617,7 +610,6 @@ async function logAdvancedPrediction(
       }
     });
   } catch (error) {
-    console.error('Failed to log advanced prediction:', error);
   }
 }
 
@@ -677,7 +669,6 @@ async function getUserAdvancedPredictionStats(userId: string): Promise<any> {
         .sort(([,a], [,b]) => b - a)[0]?.[0] || null
     };
   } catch (error) {
-    console.error('Failed to get user prediction stats:', error);
     return {
       totalPredictions: 0,
       predictionsByType: {},
@@ -698,7 +689,6 @@ async function getTotalAdvancedPredictionCount(userId: string, predictionType?: 
     const countSnapshot = await query.count().get();
     return countSnapshot.data().count;
   } catch (error) {
-    console.error('Failed to get prediction count:', error);
     return 0;
   }
 }

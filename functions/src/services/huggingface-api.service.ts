@@ -134,7 +134,6 @@ export class HuggingFaceApiService {
    */
   async uploadFiles(spaceId: string, files: SpaceFile[]): Promise<void> {
     try {
-      console.log(`[HUGGINGFACE-API] Uploading ${files.length} files to space: ${spaceId}`);
 
       // Upload files in batches to avoid overwhelming the API
       const batchSize = 10;
@@ -156,13 +155,10 @@ export class HuggingFaceApiService {
           });
         });
 
-        console.log(`[HUGGINGFACE-API] Uploaded batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(files.length / batchSize)}`);
       }
 
-      console.log(`[HUGGINGFACE-API] All files uploaded successfully to ${spaceId}`);
 
     } catch (error) {
-      console.error(`[HUGGINGFACE-API] Failed to upload files:`, error);
       throw this.handleApiError(error, 'FILE_UPLOAD_FAILED');
     }
   }
@@ -208,7 +204,6 @@ export class HuggingFaceApiService {
       };
 
     } catch (error) {
-      console.error(`[HUGGINGFACE-API] Failed to get deployment status:`, error);
       return {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -223,20 +218,16 @@ export class HuggingFaceApiService {
     const startTime = Date.now();
     const pollInterval = 10000; // 10 seconds
 
-    console.log(`[HUGGINGFACE-API] Waiting for deployment: ${spaceId} (timeout: ${timeoutMs}ms)`);
 
     while (Date.now() - startTime < timeoutMs) {
       const status = await this.getDeploymentStatus(spaceId);
       
-      console.log(`[HUGGINGFACE-API] Deployment status: ${status.status}`);
 
       if (status.status === 'running') {
-        console.log(`[HUGGINGFACE-API] Deployment completed successfully: ${status.url}`);
         return status;
       }
 
       if (status.status === 'error') {
-        console.error(`[HUGGINGFACE-API] Deployment failed: ${status.error}`);
         return status;
       }
 
@@ -256,7 +247,6 @@ export class HuggingFaceApiService {
    */
   async updateSpaceConfig(spaceId: string, config: Partial<HuggingFaceSpaceConfig>): Promise<void> {
     try {
-      console.log(`[HUGGINGFACE-API] Updating space configuration: ${spaceId}`);
 
       await this.retryOperation(async () => {
         const updateData: any = {};
@@ -279,10 +269,8 @@ export class HuggingFaceApiService {
         });
       });
 
-      console.log(`[HUGGINGFACE-API] Space configuration updated: ${spaceId}`);
 
     } catch (error) {
-      console.error(`[HUGGINGFACE-API] Failed to update space configuration:`, error);
       throw this.handleApiError(error, 'CONFIG_UPDATE_FAILED');
     }
   }
@@ -292,7 +280,6 @@ export class HuggingFaceApiService {
    */
   async deleteSpace(spaceId: string): Promise<void> {
     try {
-      console.log(`[HUGGINGFACE-API] Deleting space: ${spaceId}`);
 
       await this.retryOperation(async () => {
         await this.hf.deleteRepo({
@@ -301,10 +288,8 @@ export class HuggingFaceApiService {
         });
       });
 
-      console.log(`[HUGGINGFACE-API] Space deleted: ${spaceId}`);
 
     } catch (error) {
-      console.error(`[HUGGINGFACE-API] Failed to delete space:`, error);
       throw this.handleApiError(error, 'SPACE_DELETION_FAILED');
     }
   }
@@ -372,7 +357,6 @@ export class HuggingFaceApiService {
       }, null, 2)
     });
 
-    console.log(`[HUGGINGFACE-API] Generated ${files.length} portal files`);
     return files;
   }
 
@@ -563,7 +547,6 @@ export class HuggingFaceApiService {
   }
 
   private handleApiError(error: any, defaultCode: string): Error {
-    console.error(`[HUGGINGFACE-API] API Error:`, error);
     
     if (error?.response?.status === 401) {
       return new Error('Invalid HuggingFace API token');

@@ -127,7 +127,6 @@ For masking, use:
       // Fallback: return safe default result
       return this.createFallbackResult(cvData);
     } catch (error: any) {
-      console.error('Error detecting PII:', error);
       
       // Handle specific API errors with user-friendly messages
       if (error.status === 400 && error.error?.error?.message?.includes('credit balance is too low')) {
@@ -147,7 +146,6 @@ For masking, use:
       }
       
       // If all else fails, create a fallback result
-      console.error('PII detection failed completely, using basic fallback:', error);
       return this.createFallbackResult(cvData);
     }
   }
@@ -362,7 +360,6 @@ For masking, use:
    * Create a fallback result when parsing fails
    */
   private createFallbackResult(cvData: any): PIIDetectionResult {
-    console.warn('PII detection parsing failed, using fallback detection');
     
     // Use regex-based quick detection as fallback
     const cvText = JSON.stringify(cvData);

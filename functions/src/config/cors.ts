@@ -76,7 +76,6 @@ export function addCorsHeaders(response: any, origin?: string): void {
   });
   
   if (!isAllowed) {
-    console.warn(`[SECURITY] Blocked request from unauthorized origin: ${origin}`);
     throw new Error(`Origin not allowed: ${origin}`);
   }
   
@@ -112,7 +111,6 @@ export function corsMiddleware(req: any, res: any, next?: () => void): void {
         'Access-Control-Max-Age': '86400'
       });
     } else {
-      console.warn(`[CORS] Blocked request from unauthorized origin: ${origin}`);
     }
   }
   

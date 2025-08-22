@@ -43,7 +43,6 @@ export class PredictionCache {
       return null;
     }
     
-    console.log(`[PREDICTION-CACHE] Cache hit for key: ${cacheKey}`);
     return entry.data;
   }
 
@@ -61,7 +60,6 @@ export class PredictionCache {
     };
     
     this.predictionCache.set(cacheKey, entry);
-    console.log(`[PREDICTION-CACHE] Cached prediction with key: ${cacheKey}`);
     
     // Check if cache needs cleanup due to size
     if (this.predictionCache.size > this.MAX_CACHE_SIZE) {
@@ -85,7 +83,6 @@ export class PredictionCache {
       return null;
     }
     
-    console.log(`[PREDICTION-CACHE] Feature cache hit for key: ${cacheKey}`);
     return entry.data;
   }
 
@@ -103,7 +100,6 @@ export class PredictionCache {
     };
     
     this.featureCache.set(cacheKey, entry);
-    console.log(`[PREDICTION-CACHE] Cached features with key: ${cacheKey}`);
     
     // Check if cache needs cleanup due to size
     if (this.featureCache.size > this.MAX_CACHE_SIZE) {
@@ -133,7 +129,6 @@ export class PredictionCache {
       }
     }
     
-    console.log(`[PREDICTION-CACHE] Invalidated ${removedCount} cache entries for user ${userId}`);
   }
 
   /**
@@ -145,7 +140,6 @@ export class PredictionCache {
     this.predictionCache.clear();
     this.featureCache.clear();
     
-    console.log(`[PREDICTION-CACHE] Cleared ${totalEntries} cache entries`);
   }
 
   /**
@@ -191,7 +185,6 @@ export class PredictionCache {
       
       return retrieved !== undefined;
     } catch (error) {
-      console.error('[PREDICTION-CACHE] Health check failed:', error);
       return false;
     }
   }
@@ -242,7 +235,6 @@ export class PredictionCache {
       cache.delete(key);
     }
     
-    console.log(`[PREDICTION-CACHE] Evicted ${entriesToRemove} old entries from cache`);
   }
 
   private startCleanupTimer(): void {
@@ -271,7 +263,6 @@ export class PredictionCache {
     }
     
     if (removedCount > 0) {
-      console.log(`[PREDICTION-CACHE] Cleaned up ${removedCount} expired cache entries`);
     }
   }
 

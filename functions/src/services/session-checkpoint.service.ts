@@ -238,7 +238,6 @@ export class SessionCheckpointService {
       } catch (error) {
         // Increment retry count
         action.attempts++;
-        console.error(`Failed to execute queued action ${action.id}:`, error);
       }
     }
 
@@ -279,7 +278,6 @@ export class SessionCheckpointService {
   ): Promise<unknown> {
     // Call your existing CV generation function
     // This is a placeholder - replace with actual implementation
-    console.log('Executing generateCV with checkpoint support:', parameters);
     return { success: true, cvId: 'generated-cv-id' };
   }
 
@@ -288,7 +286,6 @@ export class SessionCheckpointService {
     sessionId: string
   ): Promise<unknown> {
     // Call your existing podcast generation function
-    console.log('Executing generatePodcast with checkpoint support:', parameters);
     return { success: true, podcastId: 'generated-podcast-id' };
   }
 
@@ -297,7 +294,6 @@ export class SessionCheckpointService {
     sessionId: string
   ): Promise<unknown> {
     // Call your existing video generation function
-    console.log('Executing generateVideo with checkpoint support:', parameters);
     return { success: true, videoId: 'generated-video-id' };
   }
 
@@ -316,7 +312,6 @@ export class SessionCheckpointService {
         break;
       
       default:
-        console.warn('Unknown action type:', action.type);
     }
   }
 
@@ -333,7 +328,6 @@ export class SessionCheckpointService {
   private async handleFormSaveAction(action: QueuedAction): Promise<void> {
     const { sessionId, formId, formData } = action.payload;
     // Save form data to session
-    console.log('Saving form data:', { sessionId, formId, formData });
   }
 
   private async handleFeatureToggleAction(action: QueuedAction): Promise<void> {

@@ -14,7 +14,6 @@ export class TimelineProcessorEventsService {
    */
   processWorkExperience(exp: any, eventIndex: number): TimelineEvent | null {
     if (!exp || !exp.position || !exp.company || !exp.startDate) {
-      console.warn('[Timeline Processor Events] Invalid work experience data:', exp);
       return null;
     }
     
@@ -75,7 +74,6 @@ export class TimelineProcessorEventsService {
    */
   processEducation(edu: any, eventIndex: number): TimelineEvent | null {
     if (!edu || !edu.degree || !edu.field || !edu.institution) {
-      console.warn('[Timeline Processor Events] Invalid education data:', edu);
       return null;
     }
     
@@ -117,7 +115,6 @@ export class TimelineProcessorEventsService {
    */
   processCertification(cert: any, eventIndex: number): TimelineEvent | null {
     if (!cert || !cert.name || !cert.issuer) {
-      console.warn('[Timeline Processor Events] Invalid certification data:', cert);
       return null;
     }
     

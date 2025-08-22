@@ -11,7 +11,6 @@ export class JobMonitoringService {
    * Monitor for stuck jobs and apply recovery mechanisms
    */
   static async monitorStuckJobs(): Promise<void> {
-    console.log('🔍 Starting stuck job monitoring sweep...');
     
     try {
       const cutoffTime = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
@@ -25,31 +24,25 @@ export class JobMonitoringService {
         .get();
       
       if (stuckJobsQuery.empty) {
-        console.log('✅ No stuck jobs found');
         return;
       }
       
-      console.log(`🚨 Found ${stuckJobsQuery.docs.length} potentially stuck jobs`);
       
       // Process each stuck job
       const recoveryPromises = stuckJobsQuery.docs.map(async (doc) => {
         const jobData = doc.data();
         const jobId = doc.id;
         
-        console.log(`🔧 Processing stuck job: ${jobId}`);
         
         try {
           await this.recoverStuckJob(jobId, jobData);
         } catch (error) {
-          console.error(`❌ Failed to recover stuck job ${jobId}:`, error);
         }
       });
       
       await Promise.allSettled(recoveryPromises);
-      console.log('✅ Stuck job monitoring sweep completed');
       
     } catch (error) {
-      console.error('❌ Error during stuck job monitoring:', error);
     }
   }
   
@@ -60,7 +53,6 @@ export class JobMonitoringService {
     const stuckDuration = Date.now() - (jobData.generationStartedAt?.toDate()?.getTime() || 0);
     const stuckMinutes = Math.floor(stuckDuration / (1000 * 60));
     
-    console.log(`🔧 Recovering job ${jobId} stuck for ${stuckMinutes} minutes`);
     
     // Analyze job state
     const hasEnhancedFeatures = !!jobData.enhancedFeatures;
@@ -91,7 +83,6 @@ export class JobMonitoringService {
     selectedFeatures: string[], 
     stuckMinutes: number
   ): Promise<void> {
-    console.log(`🔴 Failing job ${jobId} - feature processing never started`);
     
     const enhancedFeatures: Record<string, any> = {};
     for (const feature of selectedFeatures) {
@@ -123,7 +114,6 @@ export class JobMonitoringService {
     jobData: any, 
     stuckMinutes: number
   ): Promise<void> {
-    console.log(`🟠 Failing job ${jobId} - partial processing detected`);
     
     // Count feature processing status
     const enhancedFeatures = jobData.enhancedFeatures || {};
@@ -163,7 +153,6 @@ export class JobMonitoringService {
     jobData: any, 
     stuckMinutes: number
   ): Promise<void> {
-    console.log(`🟢 Completing job ${jobId} - appears finished but status not updated`);
     
     const updateData = sanitizeForFirestore({
       status: 'completed',
@@ -183,7 +172,6 @@ export class JobMonitoringService {
     jobId: string, 
     stuckMinutes: number
   ): Promise<void> {
-    console.log(`🔴 Failing job ${jobId} - unknown state`);
     
     const updateData = sanitizeForFirestore({
       status: 'failed',
@@ -234,11 +222,9 @@ export class JobMonitoringService {
         timestamp: new Date().toISOString()
       };
       
-      console.log('📊 Job Processing Stats:', JSON.stringify(stats, null, 2));
       return stats;
       
     } catch (error) {
-      console.error('❌ Error getting job processing stats:', error);
       return null;
     }
   }
@@ -251,7 +237,6 @@ export class JobMonitoringService {
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
       
       if (!jobDoc.exists) {
-        console.log(`❌ Job ${jobId} not found`);
         return;
       }
       
@@ -276,7 +261,6 @@ ${jobData?.enhancedFeatures ? Object.entries(jobData.enhancedFeatures)
       `);
       
     } catch (error) {
-      console.error(`❌ Error logging job details for ${jobId}:`, error);
     }
   }
 }

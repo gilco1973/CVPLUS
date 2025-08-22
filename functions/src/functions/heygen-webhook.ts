@@ -32,11 +32,9 @@ export const heygenWebhook = onRequest(
     const startTime = Date.now();
     
     try {
-      console.log('[HeyGen Webhook] Received webhook request');
       
       // Validate HTTP method
       if (request.method !== 'POST') {
-        console.warn(`[HeyGen Webhook] Invalid method: ${request.method}`);
         response.status(405).json({
           error: 'Method not allowed',
           allowed: ['POST']
@@ -47,7 +45,6 @@ export const heygenWebhook = onRequest(
       // Validate content type
       const contentType = request.headers['content-type'];
       if (!contentType || !contentType.includes('application/json')) {
-        console.warn(`[HeyGen Webhook] Invalid content type: ${contentType}`);
         response.status(400).json({
           error: 'Invalid content type',
           expected: 'application/json'
@@ -57,7 +54,6 @@ export const heygenWebhook = onRequest(
       
       // Validate payload exists
       if (!request.body || Object.keys(request.body).length === 0) {
-        console.warn('[HeyGen Webhook] Empty payload received');
         response.status(400).json({
           error: 'Empty payload',
           message: 'Webhook payload is required'
@@ -195,7 +191,6 @@ export const videoWebhook = onRequest(
         return;
       }
       
-      console.log(`[Video Webhook] Received ${provider} webhook`);
       
       // Validate method and content type
       if (request.method !== 'POST') {
@@ -292,7 +287,6 @@ export const webhookHealth = onRequest(
       return;
       
     } catch (error: any) {
-      console.error('[Webhook Health] Health check failed:', error);
       
       response.status(500).json({
         status: 'unhealthy',

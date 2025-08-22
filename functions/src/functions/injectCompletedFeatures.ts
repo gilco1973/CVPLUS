@@ -15,18 +15,14 @@ export const injectCompletedFeatures = onCall(
     ...corsOptions
   },
   async (request) => {
-    console.log('injectCompletedFeatures function called');
     
     if (!request.auth) {
-      console.error('Authentication failed: No auth token');
       throw new Error('User must be authenticated');
     }
 
     const { jobId } = request.data;
     const userId = request.auth.uid;
     
-    console.log('User authenticated:', userId);
-    console.log('Injecting completed features for job:', jobId);
 
     try {
       // Step 1: Get job data and validate ownership
@@ -55,7 +51,6 @@ export const injectCompletedFeatures = onCall(
       const completedFeatures = await getCompletedFeaturesWithFragments(jobData);
       
       if (completedFeatures.length === 0) {
-        console.log('No completed features with HTML fragments found');
         return {
           success: true,
           message: 'No features to inject',
@@ -90,7 +85,6 @@ export const injectCompletedFeatures = onCall(
           updatedAt: FieldValue.serverTimestamp()
         });
 
-      console.log(`Successfully injected ${completedFeatures.length} features into CV`);
 
       return {
         success: true,
@@ -100,8 +94,6 @@ export const injectCompletedFeatures = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error injecting completed features:', error.message);
-      console.error('Error stack:', error.stack);
       
       // Update job with error status
       await admin.firestore()
@@ -132,7 +124,6 @@ async function getCompletedFeaturesWithFragments(jobData: any): Promise<Array<{
   }> = [];
 
   if (!jobData.enhancedFeatures) {
-    console.log('No enhanced features found in job data');
     return completedFeatures;
   }
 
@@ -141,18 +132,15 @@ async function getCompletedFeaturesWithFragments(jobData: any): Promise<Array<{
     
     // With React SPA migration, we no longer check for HTML fragments
     if (feature.status === 'completed') {
-      console.log(`Found completed feature: ${featureName}`);
       completedFeatures.push({
         featureName,
         // HTML fragment removed with React SPA migration
         featureType: featureName
       });
     } else {
-      console.log(`Skipping feature ${featureName}: status=${feature.status}`);
     }
   }
 
-  console.log(`Found ${completedFeatures.length} completed features with HTML fragments`);
   return completedFeatures;
 }
 
@@ -165,10 +153,8 @@ async function injectFeatureFragments(
 ): Promise<string> {
   let updatedHTML = originalHTML;
   
-  console.log('Starting feature injection into CV HTML');
   
   for (const feature of features) {
-    console.log(`Injecting feature: ${feature.featureName}`);
     
     try {
       // Inject the feature HTML fragment at the end of the interactive features section
@@ -181,7 +167,6 @@ async function injectFeatureFragments(
           interactiveFeaturesPattern,
           `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n        <div class="download-section"`
         );
-        console.log(`Successfully injected ${feature.featureName} before download section`);
       } else {
         // Fallback: inject before the closing container div
         const containerEndPattern = /<\/div>\s*<\/body>/;
@@ -190,17 +175,13 @@ async function injectFeatureFragments(
             containerEndPattern,
             `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n    </div>\n</body>`
           );
-          console.log(`Successfully injected ${feature.featureName} before container end`);
         } else {
-          console.warn(`Could not find injection point for ${feature.featureName}`);
         }
       }
     } catch (error) {
-      console.error(`Error injecting feature ${feature.featureName}:`, error);
       // Continue with other features even if one fails
     }
   }
   
-  console.log('Completed feature injection into CV HTML');
   return updatedHTML;
 }

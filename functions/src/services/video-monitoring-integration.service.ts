@@ -80,10 +80,8 @@ export class VideoMonitoringIntegrationService {
         options
       );
 
-      console.log(`[VideoMonitoring] Started monitoring generation: ${generationId}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error starting monitoring:', error);
       // Don't throw error to avoid breaking video generation
     }
   }
@@ -101,7 +99,6 @@ export class VideoMonitoringIntegrationService {
     try {
       const context = this.activeGenerations.get(generationId);
       if (!context) {
-        console.warn(`[VideoMonitoring] No context found for generation: ${generationId}`);
         return;
       }
 
@@ -115,10 +112,8 @@ export class VideoMonitoringIntegrationService {
       // Remove from active generations
       this.activeGenerations.delete(generationId);
 
-      console.log(`[VideoMonitoring] Completed monitoring generation: ${generationId}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error completing monitoring:', error);
     }
   }
 
@@ -157,10 +152,8 @@ export class VideoMonitoringIntegrationService {
         featureUsed: 'video_generation'
       });
 
-      console.log(`[VideoMonitoring] Recorded provider switch: ${fromProvider} → ${toProvider}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error recording provider switch:', error);
     }
   }
 
@@ -200,10 +193,8 @@ export class VideoMonitoringIntegrationService {
         featureUsed: 'video_generation'
       });
 
-      console.log(`[VideoMonitoring] Recorded error for generation: ${generationId}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error recording error event:', error);
     }
   }
 
@@ -241,10 +232,8 @@ export class VideoMonitoringIntegrationService {
         featureUsed: 'video_generation'
       });
 
-      console.log(`[VideoMonitoring] Recorded quality score: ${qualityScore} for generation: ${generationId}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error recording quality score:', error);
     }
   }
 
@@ -279,10 +268,8 @@ export class VideoMonitoringIntegrationService {
         featureUsed: 'video_generation'
       });
 
-      console.log(`[VideoMonitoring] Recorded user feedback: ${rating}/5 for generation: ${generationId}`);
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error recording user feedback:', error);
     }
   }
 
@@ -313,7 +300,6 @@ export class VideoMonitoringIntegrationService {
       };
 
     } catch (error) {
-      console.error('[VideoMonitoring] Error getting monitoring status:', error);
       return {
         activeGenerations: this.activeGenerations.size,
         systemHealth: {},
@@ -347,7 +333,6 @@ export class VideoMonitoringIntegrationService {
         await this.alertManager.processEscalations();
 
       } catch (error) {
-        console.error('[VideoMonitoring] Error in background monitoring:', error);
       }
     }, 5 * 60 * 1000); // 5 minutes
 
@@ -366,7 +351,6 @@ export class VideoMonitoringIntegrationService {
         await this.analyticsEngine.generateQualityInsights('1h');
 
       } catch (error) {
-        console.error('[VideoMonitoring] Error in analytics generation:', error);
       }
     }, 60 * 60 * 1000); // 1 hour
 
@@ -377,17 +361,14 @@ export class VideoMonitoringIntegrationService {
         
         for (const [generationId, context] of this.activeGenerations.entries()) {
           if (context.startTime.getTime() < staleTime) {
-            console.warn(`[VideoMonitoring] Cleaning up stale generation: ${generationId}`);
             this.activeGenerations.delete(generationId);
           }
         }
 
       } catch (error) {
-        console.error('[VideoMonitoring] Error cleaning up stale generations:', error);
       }
     }, 30 * 60 * 1000); // 30 minutes
 
-    console.log('[VideoMonitoring] Background monitoring tasks initialized');
   }
 
   /**
@@ -395,7 +376,6 @@ export class VideoMonitoringIntegrationService {
    */
   setMonitoringEnabled(enabled: boolean): void {
     this.monitoringEnabled = enabled;
-    console.log(`[VideoMonitoring] Monitoring ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**
@@ -421,7 +401,6 @@ export class VideoMonitoringIntegrationService {
         averageTime: metrics.averageGenerationTime
       });
     } catch (error) {
-      console.error('[VideoMonitoring] Error in manual metrics calculation:', error);
     }
   }
 
@@ -434,9 +413,7 @@ export class VideoMonitoringIntegrationService {
       const alerts = await this.alertManager.checkAlerts({
         performance: performanceMetrics
       });
-      console.log(`[VideoMonitoring] Manual alert check completed: ${alerts.length} alerts triggered`);
     } catch (error) {
-      console.error('[VideoMonitoring] Error in manual alert check:', error);
     }
   }
 }

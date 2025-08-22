@@ -19,7 +19,6 @@ export class TimelineStorageService {
     errors: string[];
     warnings: string[];
   }> {
-    console.log(`[Timeline Storage] Validating timeline data for context: ${context}`);
     
     const validation = FirestoreValidationService.validateForFirestore(
       data,
@@ -47,7 +46,6 @@ export class TimelineStorageService {
    */
   async storeTimelineData(jobId: string, timelineData: any): Promise<void> {
     try {
-      console.log(`[Timeline Storage] Starting enhanced storage for job: ${jobId}`);
       
       // Pre-validation check
       if (!timelineData) {
@@ -70,15 +68,12 @@ export class TimelineStorageService {
       );
       
       // Log comprehensive validation report
-      console.log(FirestoreValidationService.createValidationReport(validationResult));
       
       // Prepare final data for storage
       let finalData = timelineData;
       if (validationResult.isValid) {
         finalData = validationResult.sanitizedData;
-        console.log('[Timeline Storage] Using validated and sanitized data');
       } else {
-        console.warn('[Timeline Storage] Validation issues found, attempting recovery...');
         
         // Check if we have critical errors that prevent storage
         const criticalErrors = validationResult.errors.filter(error => 
@@ -88,13 +83,11 @@ export class TimelineStorageService {
         );
         
         if (criticalErrors.length > 0) {
-          console.error('[Timeline Storage] Critical validation errors:', criticalErrors);
           throw new Error(`Critical validation errors prevent storage: ${criticalErrors.join(', ')}`);
         }
         
         // Use sanitized data even with warnings
         finalData = validationResult.sanitizedData;
-        console.log('[Timeline Storage] Using sanitized data despite validation warnings');
       }
       
       // Prepare complete timeline structure
@@ -129,20 +122,14 @@ export class TimelineStorageService {
       });
       
       if (!result.success) {
-        console.error('[Timeline Storage] SafeFirestore operation failed:', result.errors);
         
         // Attempt fallback storage
         await this.attemptFallbackStorage(jobId, finalData);
         return;
       }
       
-      console.log(`[Timeline Storage] ✅ Successfully stored timeline data for job: ${jobId}`);
-      console.log(`[Timeline Storage] Events stored: ${finalData?.events?.length || 0}`);
-      console.log(`[Timeline Storage] Operation time: ${result.operationTime}ms`);
-      console.log(`[Timeline Storage] Validation passed: ${result.validation?.isValid}`);
       
     } catch (error: any) {
-      console.error(`[Timeline Storage] Failed to store timeline data for job ${jobId}:`, error);
       
       // Final fallback attempt
       await this.attemptFallbackStorage(jobId, timelineData);
@@ -153,7 +140,6 @@ export class TimelineStorageService {
    * Attempt fallback storage when primary storage fails
    */
   private async attemptFallbackStorage(jobId: string, originalData: any): Promise<void> {
-    console.log('[Timeline Storage] Attempting fallback storage...');
     
     try {
       // Create minimal safe fallback data
@@ -171,7 +157,6 @@ export class TimelineStorageService {
       );
       
       if (!fallbackValidation.isValid) {
-        console.error('[Timeline Storage] Even fallback data failed validation:', fallbackValidation.errors);
         throw new Error('Fallback data is also invalid');
       }
       
@@ -197,10 +182,8 @@ export class TimelineStorageService {
         .doc(jobId)
         .update(fallbackUpdate);
       
-      console.log(`[Timeline Storage] ✅ Fallback storage successful for job: ${jobId}`);
       
     } catch (fallbackError: any) {
-      console.error(`[Timeline Storage] ❌ Fallback storage also failed for job ${jobId}:`, fallbackError);
       
       // Last resort: store minimal structure
       try {
@@ -223,9 +206,7 @@ export class TimelineStorageService {
               }
             }
           });
-        console.log(`[Timeline Storage] Stored minimal fallback for job: ${jobId}`);
       } catch (minimalError) {
-        console.error(`[Timeline Storage] CRITICAL: All storage attempts failed for job ${jobId}:`, minimalError);
         throw new Error(`Complete storage failure for job ${jobId}: ${minimalError}`);
       }
     }
@@ -271,7 +252,6 @@ export class TimelineStorageService {
         }
       };
     } catch (error) {
-      console.warn('[Timeline Storage] Failed to create safe fallback from original data, using minimal:', error);
       return this.getMinimalFallbackData();
     }
   }

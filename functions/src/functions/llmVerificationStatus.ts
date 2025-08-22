@@ -67,7 +67,6 @@ export const llmVerificationStatus = onRequest(
         }
 
       } catch (error) {
-        console.error('LLM Verification Status error:', error);
         return res.status(500).json({
           error: 'Internal server error',
           message: error instanceof Error ? error.message : String(error),
@@ -118,7 +117,6 @@ async function handleHealthCheck(res: any) {
     return res.status(statusCode).json(healthResponse);
 
   } catch (error) {
-    console.error('Health check failed:', error);
     return res.status(503).json({
       status: 'unhealthy',
       error: 'Health check failed',
@@ -159,7 +157,6 @@ async function handleMetrics(res: any, timeRange: '1h' | '24h' | '7d') {
     return res.status(200).json(metricsResponse);
 
   } catch (error) {
-    console.error('Metrics collection failed:', error);
     return res.status(500).json({
       error: 'Failed to collect metrics',
       message: error instanceof Error ? error.message : String(error),
@@ -190,7 +187,6 @@ async function handleDashboard(res: any, timeRange: '1h' | '24h' | '7d') {
     return res.status(200).json(enhancedDashboard);
 
   } catch (error) {
-    console.error('Dashboard generation failed:', error);
     return res.status(500).json({
       error: 'Failed to generate dashboard',
       message: error instanceof Error ? error.message : String(error),
@@ -235,7 +231,6 @@ async function handleConfig(res: any) {
     });
 
   } catch (error) {
-    console.error('Configuration retrieval failed:', error);
     return res.status(500).json({
       error: 'Failed to retrieve configuration',
       message: error instanceof Error ? error.message : String(error),
@@ -267,7 +262,6 @@ async function handleAlerts(res: any, limit: number) {
     return res.status(200).json(alertsResponse);
 
   } catch (error) {
-    console.error('Alerts retrieval failed:', error);
     return res.status(500).json({
       error: 'Failed to retrieve alerts',
       message: error instanceof Error ? error.message : String(error),
@@ -295,7 +289,6 @@ async function handleExport(res: any, format: 'json' | 'prometheus') {
     });
 
   } catch (error) {
-    console.error('Export failed:', error);
     return res.status(500).json({
       error: 'Failed to export metrics',
       message: error instanceof Error ? error.message : String(error),

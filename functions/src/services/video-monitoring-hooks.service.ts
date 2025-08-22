@@ -37,7 +37,6 @@ export class VideoMonitoringHooks {
         options
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onGenerationStart:', error);
     }
   }
 
@@ -57,7 +56,6 @@ export class VideoMonitoringHooks {
         resourceUsage
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onGenerationComplete:', error);
     }
   }
 
@@ -79,7 +77,6 @@ export class VideoMonitoringHooks {
         reason
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onProviderSwitch:', error);
     }
   }
 
@@ -101,7 +98,6 @@ export class VideoMonitoringHooks {
         recoveryAction
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onError:', error);
     }
   }
 
@@ -121,7 +117,6 @@ export class VideoMonitoringHooks {
         qualityFactors
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onQualityAssessment:', error);
     }
   }
 
@@ -143,7 +138,6 @@ export class VideoMonitoringHooks {
         feedback
       );
     } catch (error) {
-      console.error('[MonitoringHooks] Error in onUserFeedback:', error);
     }
   }
 
@@ -155,7 +149,6 @@ export class VideoMonitoringHooks {
     try {
       return await videoMonitoringIntegration.getMonitoringStatus();
     } catch (error) {
-      console.error('[MonitoringHooks] Error in getStatus:', error);
       return {
         activeGenerations: 0,
         systemHealth: {},

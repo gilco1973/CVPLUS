@@ -51,7 +51,6 @@ export class FeatureRegistry {
             combinedScripts += '\n' + scripts;
           }
         } catch (error) {
-          console.error(`Error generating feature ${featureType}:`, error);
           // Continue with other features even if one fails
         }
       }
@@ -120,11 +119,9 @@ export class FeatureRegistry {
       // Placeholder for other features - to be implemented
       case 'skills-visualization':
       case 'language-proficiency':
-        console.warn(`Feature ${type} not yet implemented`);
         return null;
         
       default:
-        console.warn(`Unknown feature type: ${type}`);
         return null;
     }
   }
@@ -181,7 +178,6 @@ export class FeatureRegistry {
         result.personalityInsights = content;
         break;
       default:
-        console.warn(`No mapping defined for feature type: ${featureType}`);
     }
   }
 

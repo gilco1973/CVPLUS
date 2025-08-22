@@ -41,7 +41,6 @@ export class AchievementsAnalysisService {
             const jobAchievements = await this.extractFromExperience(job);
             achievements.push(...jobAchievements);
           } catch (error) {
-            console.error(`Failed to extract achievements from job at ${job.company}:`, error);
             // Continue with next job rather than failing completely
           }
         }
@@ -53,7 +52,6 @@ export class AchievementsAnalysisService {
           const summaryAchievements = await this.extractFromSummary(cv.personalInfo.summary);
           achievements.push(...summaryAchievements);
         } catch (error) {
-          console.error('Failed to extract achievements from summary:', error);
           // Continue with existing achievements
         }
       }
@@ -64,11 +62,9 @@ export class AchievementsAnalysisService {
         .sort((a, b) => b.significance - a.significance)
         .slice(0, 5); // Return top 5 achievements
 
-      console.log(`Successfully extracted ${sortedAchievements.length} achievements from CV`);
       return sortedAchievements;
 
     } catch (error) {
-      console.error('Error in extractKeyAchievements:', error);
       // Return empty array rather than throwing to allow graceful degradation
       return [];
     }
@@ -131,7 +127,6 @@ Only include real, substantive achievements. Skip generic responsibilities.
       const result = this.parseAIResponse(responseContent, 'experience extraction');
       
       if (!result || !Array.isArray(result.achievements)) {
-        console.warn('Invalid AI response structure for experience extraction, using fallback');
         return this.fallbackExperienceExtraction(experience);
       }
       
@@ -148,7 +143,6 @@ Only include real, substantive achievements. Skip generic responsibilities.
       return validAchievements;
 
     } catch (error) {
-      console.error('Error extracting achievements from experience:', error);
       return this.fallbackExperienceExtraction(experience);
     }
   }
@@ -205,7 +199,6 @@ Focus on concrete achievements, not generic statements.
       const result = this.parseAIResponse(responseContent, 'summary extraction');
       
       if (!result || !Array.isArray(result.achievements)) {
-        console.warn('Invalid AI response structure for summary extraction, skipping');
         return [];
       }
       
@@ -222,7 +215,6 @@ Focus on concrete achievements, not generic statements.
       return validAchievements;
 
     } catch (error) {
-      console.error('Error extracting achievements from summary:', error);
       return [];
     }
   }
@@ -232,18 +224,15 @@ Focus on concrete achievements, not generic statements.
    */
   private validateAndCleanAchievement(ach: any): Achievement | null {
     if (!ach || typeof ach !== 'object') {
-      console.warn('Invalid achievement object:', ach);
       return null;
     }
 
     // Required fields validation
     if (!ach.title || typeof ach.title !== 'string') {
-      console.warn('Achievement missing title:', ach);
       return null;
     }
 
     if (!ach.description || typeof ach.description !== 'string') {
-      console.warn('Achievement missing description:', ach);
       return null;
     }
 
@@ -273,7 +262,6 @@ Focus on concrete achievements, not generic statements.
    */
   private parseAIResponse(responseContent: string, context: string): any {
     if (!responseContent || typeof responseContent !== 'string') {
-      console.warn(`Empty or invalid response content for ${context}`);
       return null;
     }
 
@@ -294,9 +282,7 @@ Focus on concrete achievements, not generic statements.
       const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanContent = jsonMatch[0];
-        console.log(`Extracted JSON from text response for ${context}`);
       } else {
-        console.warn(`No JSON found in AI text response for ${context}. Response starts with: "${responseContent.substring(0, 100)}..."`);
         return null;
       }
     }
@@ -324,7 +310,6 @@ Focus on concrete achievements, not generic statements.
       }
       
       if (!found) {
-        console.warn(`No JSON found in AI response for ${context}. Response starts with: "${responseContent.substring(0, 50)}..."`);
         return null;
       }
     }
@@ -341,7 +326,6 @@ Focus on concrete achievements, not generic statements.
       
       // Validate the structure
       if (typeof parsed !== 'object' || parsed === null) {
-        console.warn(`Invalid JSON structure for ${context}: not an object`);
         return null;
       }
 
@@ -352,7 +336,6 @@ Focus on concrete achievements, not generic statements.
 
       // Validate achievements array structure
       if (!Array.isArray(parsed.achievements)) {
-        console.warn(`Achievements is not an array for ${context}, converting to array`);
         parsed.achievements = [];
       }
 
@@ -378,11 +361,9 @@ Focus on concrete achievements, not generic statements.
             lastAttemptParsed.achievements = [];
           }
           
-          console.log(`Successfully parsed JSON on final attempt for ${context}`);
           return lastAttemptParsed;
         }
       } catch (finalError) {
-        console.error(`Final JSON parsing attempt failed for ${context}:`, finalError);
       }
       
       return null;

@@ -242,7 +242,6 @@ Return empty array if no specific projects found.`;
         });
       }
     } catch (error) {
-      console.error('Error extracting projects:', error);
     }
     
     return projects;

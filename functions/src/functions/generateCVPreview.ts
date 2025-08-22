@@ -14,17 +14,14 @@ export const generateCVPreview = onCall(
     ...corsOptions
   },
   async (request) => {
-    console.log('generateCVPreview function called');
     
     if (!request.auth) {
-      console.error('Authentication failed: No auth token');
       throw new Error('User must be authenticated');
     }
 
     const { jobId, templateId, features } = request.data;
     const userId = request.auth.uid;
     
-    console.log('Preview request:', { jobId, templateId, features, userId });
 
     try {
       // Validate required parameters
@@ -38,7 +35,6 @@ export const generateCVPreview = onCall(
       // Generate preview JSON data for React SPA
       const previewData = await generatePreviewData(cvData, templateId, features, jobId);
 
-      console.log(`✅ Preview generated successfully for job ${jobId}`);
       
       return {
         success: true,
@@ -49,8 +45,6 @@ export const generateCVPreview = onCall(
       };
 
     } catch (error: any) {
-      console.error('Error generating CV preview:', error.message);
-      console.error('Error stack:', error.stack);
       
       throw new Error(`Failed to generate CV preview: ${error.message}`);
     }
@@ -101,7 +95,6 @@ async function generatePreviewData(
   features: string[] | undefined,
   jobId: string
 ): Promise<any> {
-  console.log('🎨 [PREVIEW] Generating JSON preview data with template:', templateId || 'modern');
   
   try {
     // Return structured CV data for React components
@@ -120,12 +113,10 @@ async function generatePreviewData(
       }
     };
     
-    console.log(`✅ [PREVIEW] JSON preview data generated successfully`);
     
     return previewData;
     
   } catch (error: any) {
-    console.error('❌ [PREVIEW] Error generating JSON preview data:', error);
     throw error;
   }
 }

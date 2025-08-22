@@ -66,7 +66,6 @@ Please provide:
 
       throw new Error('Failed to get analysis from Claude');
     } catch (error: any) {
-      console.error('Error analyzing CV:', error);
       throw new Error(`Failed to analyze CV: ${error.message}`);
     }
   });

@@ -208,7 +208,6 @@ export class HeyGenProvider extends BaseVideoProvider {
       const jobId = options.jobId || this.generateJobId();
       const payload = this.buildGenerationPayload(script, options, jobId);
       
-      console.log(`[HeyGen] Starting video generation for job ${jobId}`);
       
       const response = await this.httpClient!.post<HeyGenAPIResponse>(
         '/video/generate',
@@ -239,12 +238,10 @@ export class HeyGenProvider extends BaseVideoProvider {
       // Store job mapping for webhook handling
       await this.storeJobMapping(jobId, response.data.data.video_id);
       
-      console.log(`[HeyGen] Video generation initiated: ${response.data.data.video_id}`);
       
       return result;
       
     } catch (error: any) {
-      console.error('[HeyGen] Video generation failed:', error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -332,7 +329,6 @@ export class HeyGenProvider extends BaseVideoProvider {
       };
       
     } catch (error: any) {
-      console.error(`[HeyGen] Status check failed for job ${jobId}:`, error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -469,7 +465,6 @@ export class HeyGenProvider extends BaseVideoProvider {
   
   async handleWebhook(payload: HeyGenWebhookPayload): Promise<VideoGenerationStatus> {
     try {
-      console.log('[HeyGen] Processing webhook:', payload);
       
       // Validate webhook payload
       if (!payload.video_id || !payload.callback_id) {
@@ -502,12 +497,10 @@ export class HeyGenProvider extends BaseVideoProvider {
       // Update job status in Firestore
       await this.updateJobStatus(jobId, status);
       
-      console.log(`[HeyGen] Webhook processed for job ${jobId}, status: ${payload.status}`);
       
       return status;
       
     } catch (error: any) {
-      console.error('[HeyGen] Webhook processing failed:', error);
       throw new VideoProviderError(
         VideoProviderErrorType.WEBHOOK_ERROR,
         `Webhook processing failed: ${error.message}`,
@@ -593,7 +586,6 @@ export class HeyGenProvider extends BaseVideoProvider {
         status: 'queued'
       });
     } catch (error) {
-      console.error('Failed to store job mapping:', error);
       // Non-critical error, don't throw
     }
   }
@@ -604,7 +596,6 @@ export class HeyGenProvider extends BaseVideoProvider {
       const doc = await db.collection('heygen_jobs').doc(jobId).get();
       return doc.exists ? doc.data()?.videoId : null;
     } catch (error) {
-      console.error('Failed to get video ID for job:', error);
       return null;
     }
   }
@@ -635,11 +626,9 @@ export class HeyGenProvider extends BaseVideoProvider {
           });
         }
       } catch (jobUpdateError) {
-        console.warn('Failed to update main job document:', jobUpdateError);
       }
       
     } catch (error) {
-      console.error('Failed to update job status:', error);
       throw error;
     }
   }

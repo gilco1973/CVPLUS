@@ -31,8 +31,6 @@ export const bookMeeting = onCall(
 
     try {
       // Log security event without PII
-      console.log(`[SECURITY] Meeting booking attempt by authenticated user: ${user.uid}`);
-      console.log(`[SECURITY] Meeting request for job: ${jobId}, duration: ${duration} minutes`);
       // Verify user owns the job - CRITICAL SECURITY CHECK
       const jobDoc = await admin.firestore()
         .collection('jobs')
@@ -50,7 +48,6 @@ export const bookMeeting = onCall(
       
       // SECURITY: Ensure user owns this job
       if (jobData.userId !== user.uid) {
-        console.warn(`[SECURITY VIOLATION] User ${user.uid} attempted to book meeting for job ${jobId} owned by ${jobData.userId}`);
         throw new Error('Unauthorized: You can only book meetings for your own CV');
       }
 
@@ -97,7 +94,6 @@ export const bookMeeting = onCall(
       };
 
     } catch (error) {
-      console.error('Error booking meeting:', error);
       throw new Error(`Failed to book meeting: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

@@ -392,17 +392,14 @@ Ensure your response is accurate, complete, relevant, properly formatted, and sa
    */
   private logInfo(message: string, data?: any): void {
     if (!this.config.enableLogging) return;
-    console.log(`[LLM-VERIFICATION-INFO] ${message}`, data ? JSON.stringify(data, null, 2) : '');
   }
 
   private logWarning(message: string, data?: any): void {
     if (!this.config.enableLogging) return;
-    console.warn(`[LLM-VERIFICATION-WARN] ${message}`, data ? JSON.stringify(data, null, 2) : '');
   }
 
   private logError(message: string, data?: any): void {
     if (!this.config.enableLogging) return;
-    console.error(`[LLM-VERIFICATION-ERROR] ${message}`, data ? JSON.stringify(data, null, 2) : '');
   }
 
   /**

@@ -11,7 +11,6 @@ import { PredictionRequest } from '../core/MLPipelineOrchestrator';
 export class SalaryPredictor {
   
   async predict(features: FeatureVector, request: PredictionRequest): Promise<SalaryPrediction> {
-    console.log('[SALARY-PREDICTOR] Using basic heuristic salary prediction');
     
     // Basic salary calculation based on experience and education
     const baseAmount = 60000;

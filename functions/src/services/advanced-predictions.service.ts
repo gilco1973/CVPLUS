@@ -204,7 +204,6 @@ export class AdvancedPredictionsService {
         negotiationPotential: candidateMultipliers.negotiation
       };
     } catch (error) {
-      console.error('Advanced salary prediction failed:', error);
       throw error;
     }
   }
@@ -257,7 +256,6 @@ export class AdvancedPredictionsService {
         confidence: Math.min(0.9, candidateAdjustment * 0.8 + 0.2)
       };
     } catch (error) {
-      console.error('Advanced time prediction failed:', error);
       throw error;
     }
   }
@@ -297,7 +295,6 @@ export class AdvancedPredictionsService {
         recommendedActions
       };
     } catch (error) {
-      console.error('Competitive analysis failed:', error);
       throw error;
     }
   }
@@ -331,7 +328,6 @@ export class AdvancedPredictionsService {
         industryOutlook
       };
     } catch (error) {
-      console.error('Market insights generation failed:', error);
       throw error;
     }
   }
@@ -368,7 +364,6 @@ export class AdvancedPredictionsService {
         alternativeCompensation: alternatives
       };
     } catch (error) {
-      console.error('Negotiation insights generation failed:', error);
       throw error;
     }
   }

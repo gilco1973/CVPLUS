@@ -97,7 +97,6 @@ export class PersonalBrandingFeature implements CVFeature {
 
       return {};
     } catch (error) {
-      console.error('Failed to get branding data:', error);
       return {};
     }
   }
@@ -506,29 +505,23 @@ export class PersonalBrandingFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="PersonalityInsights"]');
           
           if (placeholders.length === 0) {
-            console.log('No PersonalityInsights placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React PersonalityInsights components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('PersonalityInsights props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering PersonalityInsights');
                 window.renderReactComponent('PersonalityInsights', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback message');
                 showReactFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse PersonalityInsights props:', error);
               showReactError(placeholder, error.message);
             }
           });
@@ -578,7 +571,6 @@ export class PersonalBrandingFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting PersonalityInsights initialization...');
           initReactComponents();
         }
         

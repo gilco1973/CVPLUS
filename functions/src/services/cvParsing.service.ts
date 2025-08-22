@@ -70,19 +70,16 @@ export class CVParsingService {
       const jobDoc = await this.db.collection('jobs').doc(jobId).get();
       
       if (!jobDoc.exists) {
-        console.log(`Job not found: ${jobId}`);
         return null;
       }
 
       const jobData = jobDoc.data();
       if (!jobData?.parsedData) {
-        console.log(`No parsed data found for job: ${jobId}`);
         return null;
       }
 
       return jobData.parsedData as ParsedCV;
     } catch (error) {
-      console.error('Error getting parsed CV:', error);
       return null;
     }
   }
@@ -94,7 +91,6 @@ export class CVParsingService {
         updatedAt: FieldValue.serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating parsed CV:', error);
       throw error;
     }
   }
@@ -113,7 +109,6 @@ export class CVParsingService {
 
       return true;
     } catch (error) {
-      console.error('Error validating parsed CV:', error);
       return false;
     }
   }

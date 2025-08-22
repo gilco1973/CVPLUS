@@ -284,7 +284,6 @@ export class CertificationBadgesService {
         badges.push(badge);
       }
     } catch (error) {
-      console.error('Error extracting certifications with AI:', error);
     }
     
     return badges;

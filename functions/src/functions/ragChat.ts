@@ -51,11 +51,9 @@ export const initializeRAG = onCall(
       const vectorNamespace = `user-${request.auth.uid}-job-${jobId}`;
 
       // Create CV chunks with embeddings
-      console.log('Creating CV chunks with embeddings...');
       const chunks = await embeddingService.createCVChunks(job.parsedData, jobId);
 
       // Store in vector database
-      console.log('Storing embeddings in vector database...');
       await embeddingService.storeEmbeddings(
         chunks,
         vectorNamespace,
@@ -110,7 +108,6 @@ export const initializeRAG = onCall(
         message: 'RAG chat initialized successfully'
       };
     } catch (error: any) {
-      console.error('Error initializing RAG:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -185,7 +182,6 @@ export const startChatSession = onCall(
       }
     };
     } catch (error: any) {
-      console.error('Error starting chat session:', error);
       if (error instanceof HttpsError) {
         throw error;
       }
@@ -275,7 +271,6 @@ export const sendChatMessage = onCall(
         }
       };
     } catch (error: any) {
-      console.error('Error processing chat message:', error);
       if (error instanceof HttpsError) {
         throw error;
       }
@@ -311,7 +306,6 @@ export const endChatSession = onCall(
         message: 'Thank you for your feedback!'
       };
     } catch (error: any) {
-      console.error('Error ending chat session:', error);
       throw new HttpsError('internal', error.message);
     }
   });
@@ -384,7 +378,6 @@ export const updateRAGEmbeddings = onCall(
         message: 'RAG embeddings updated successfully'
       };
     } catch (error: any) {
-      console.error('Error updating RAG embeddings:', error);
       throw new HttpsError('internal', error.message);
     }
   });
@@ -467,7 +460,6 @@ export const getChatAnalytics = onCall(
       }
     };
     } catch (error: any) {
-      console.error('Error getting chat analytics:', error);
       throw new HttpsError('internal', error.message);
     }
   });

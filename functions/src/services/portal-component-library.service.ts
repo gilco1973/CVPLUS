@@ -1076,7 +1076,6 @@ export const ContactForm = () => {
       await submitContactForm(formData);
       setSubmitted(true);
     } catch (error) {
-      console.error('Contact form error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -1198,7 +1197,6 @@ export const ChatWidget = ({ portalId }) => {
       const aiMessage = { role: 'assistant', content: data.response };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
     } finally {
       setIsLoading(false);
     }

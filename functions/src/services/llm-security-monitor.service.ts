@@ -203,7 +203,6 @@ export class LLMSecurityMonitorService {
           await this.handleThreatDetection(rule, event, recentEvents);
         }
       } catch (error) {
-        console.error(`Error processing threat rule ${rule.id}:`, error);
       }
     }
   }
@@ -285,13 +284,10 @@ export class LLMSecurityMonitorService {
     const logMessage = `Security rule triggered: ${rule.name} for event ${triggerEvent.id}`;
     switch (rule.actions.logLevel) {
       case 'error':
-        console.error(logMessage, { rule: rule.id, event: triggerEvent.id });
         break;
       case 'warn':
-        console.warn(logMessage, { rule: rule.id, event: triggerEvent.id });
         break;
       default:
-        console.log(logMessage, { rule: rule.id, event: triggerEvent.id });
     }
 
     this.incidents.push(response);
@@ -312,7 +308,6 @@ export class LLMSecurityMonitorService {
     };
 
     // In production, implement actual notification sending
-    console.warn('SECURITY ALERT:', alertMessage);
     
     // TODO: Implement email, Slack, webhook notifications
     // if (rule.actions.notification?.email) {
@@ -486,16 +481,12 @@ export class LLMSecurityMonitorService {
 
     switch (event.severity) {
       case 'critical':
-        console.error('CRITICAL SECURITY EVENT:', logData);
         break;
       case 'high':
-        console.error('HIGH SECURITY EVENT:', logData);
         break;
       case 'medium':
-        console.warn('MEDIUM SECURITY EVENT:', logData);
         break;
       default:
-        console.log('SECURITY EVENT:', logData);
     }
   }
 

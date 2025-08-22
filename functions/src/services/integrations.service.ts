@@ -30,7 +30,6 @@ export class IntegrationsService {
             pass: config.email?.sendgridApiKey || process.env.SENDGRID_API_KEY
           }
         });
-        console.log('Email service initialized with SendGrid');
         return;
       }
 
@@ -46,7 +45,6 @@ export class IntegrationsService {
             pass: config.email?.resendApiKey || process.env.RESEND_API_KEY
           }
         });
-        console.log('Email service initialized with Resend');
         return;
       }
 
@@ -60,14 +58,11 @@ export class IntegrationsService {
             pass: config.email.password
           }
         });
-        console.log('Email service initialized with Gmail');
         return;
       }
 
-      console.warn('No email service configured. Email features will be disabled.');
       this.emailTransporter = null;
     } catch (error) {
-      console.error('Failed to initialize email transporter:', error);
       this.emailTransporter = null;
     }
   }
@@ -120,7 +115,6 @@ export class IntegrationsService {
   }): Promise<{ success: boolean; error?: string }> {
     try {
       if (!this.emailTransporter) {
-        console.warn('Email service not configured, skipping email send');
         return {
           success: false,
           error: 'Email service not configured'
@@ -333,7 +327,6 @@ export class IntegrationsService {
       // Use the video service to generate thumbnail
       return await videoService.generateThumbnail(videoUrl, 'integration-thumbnail');
     } catch (error) {
-      console.warn('Video thumbnail generation failed, using fallback:', error);
       
       // Fallback: generate a better placeholder with video metadata
       const videoName = videoUrl.split('/').pop()?.split('.')[0] || 'video';
@@ -363,7 +356,6 @@ export class IntegrationsService {
       const audioSegments = await (podcastService as any).generateAudioSegments(simpleScript);
       return audioSegments[0]?.audioBuffer || Buffer.alloc(0);
     } catch (error) {
-      console.error('Podcast audio generation failed:', error);
       throw new Error(`Failed to generate podcast audio: ${error instanceof Error ? error.message : String(error)}`);
     }
   }

@@ -236,7 +236,6 @@ export class LanguageProficiencyService {
         }
       }
     } catch (error) {
-      console.error('Error extracting languages with AI:', error);
     }
     
     // Always include native language if identifiable

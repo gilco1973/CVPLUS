@@ -78,7 +78,6 @@ export class CVTransformationService {
     targetRole?: string,
     industryKeywords?: string[]
   ): Promise<CVRecommendation[]> {
-    console.log('[CV-TRANSFORMATION] Starting role-enhanced recommendation generation');
     
     try {
       let roleAnalysis: RoleProfileAnalysis | null = null;
@@ -86,11 +85,9 @@ export class CVTransformationService {
       
       // Step 1: Perform role detection if enabled
       if (enableRoleDetection) {
-        console.log('[CV-TRANSFORMATION] Performing role detection analysis');
         roleAnalysis = await this.roleDetectionService.detectRoles(parsedCV);
         
         if (roleAnalysis.primaryRole.confidence > 0.6) {
-          console.log(`[CV-TRANSFORMATION] Detected primary role: ${roleAnalysis.primaryRole.roleName} (confidence: ${roleAnalysis.primaryRole.confidence})`);
           
           // Convert role-based recommendations to CV recommendations
           roleEnhancedRecommendations = await this.convertRoleRecommendationsToCVRecommendations(
@@ -119,29 +116,23 @@ export class CVTransformationService {
         roleAnalysis?.primaryRole
       );
       
-      console.log(`[CV-TRANSFORMATION] Generated ${mergedRecommendations.length} total recommendations (${roleEnhancedRecommendations.length} role-enhanced, ${standardRecommendations.length} standard)`);
       
       return mergedRecommendations;
       
     } catch (error) {
-      console.error('[CV-TRANSFORMATION] Error in role-enhanced recommendations:', error);
       
       // Try fallback to standard recommendations first
       try {
-        console.log('[CV-TRANSFORMATION] Attempting fallback to standard recommendations...');
         return await this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
       } catch (fallbackError) {
-        console.error('[CV-TRANSFORMATION] Standard recommendations also failed:', fallbackError);
         
         // Final fallback to quota-aware recommendations
         if (this.isQuotaExceededError(error) || this.isQuotaExceededError(fallbackError)) {
-          console.warn('[CV-TRANSFORMATION] Using quota fallback recommendations due to API limits');
           const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
           return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
         }
         
         // Ultimate fallback
-        console.warn('[CV-TRANSFORMATION] Using basic fallback recommendations');
         const basicFallbackRecs = this.generateFallbackRecommendations(parsedCV);
         const validatedRecs = this.ensureRecommendationsValid(basicFallbackRecs);
         return this.processRecommendationsWithPlaceholders(validatedRecs);
@@ -157,14 +148,10 @@ export class CVTransformationService {
     targetRole?: string,
     industryKeywords?: string[]
   ): Promise<CVRecommendation[]> {
-    console.log('[CV-TRANSFORMATION] Starting detailed recommendations generation');
-    console.log('[CV-TRANSFORMATION] Target role:', targetRole || 'none specified');
-    console.log('[CV-TRANSFORMATION] Industry keywords:', industryKeywords?.length || 0);
     
     const analysisPrompt = this.buildAnalysisPrompt(parsedCV, targetRole, industryKeywords);
     
     try {
-      console.log('[CV-TRANSFORMATION] Sending request to Claude API...');
       
       const response = await this.claudeService.createVerifiedMessage({
         model: 'claude-sonnet-4-20250514',
@@ -228,21 +215,15 @@ Return a JSON array of recommendations following this exact structure:
           const parsed = JSON.parse(cleanText);
           const recommendations = parsed.recommendations || [];
           
-          console.log(`[CV-TRANSFORMATION] Successfully parsed ${recommendations.length} recommendations from Claude API`);
           
           // Validate and ensure all recommendations have required fields
           const validatedRecommendations = this.ensureRecommendationsValid(recommendations);
-          console.log(`[CV-TRANSFORMATION] Validated ${validatedRecommendations.length} recommendations`);
           
           // Process each recommendation to detect placeholders
           return this.processRecommendationsWithPlaceholders(validatedRecommendations);
         } catch (parseError) {
-          console.error('[CV-TRANSFORMATION] Failed to parse recommendations JSON:', parseError);
-          console.error('[CV-TRANSFORMATION] Raw response text length:', content.text?.length || 0);
-          console.error('[CV-TRANSFORMATION] Raw response text preview:', content.text?.substring(0, 200) + '...');
           
           // Fallback: extract recommendations from text response
-          console.log('[CV-TRANSFORMATION] Attempting to extract recommendations from text response...');
           const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
           const validatedRecs = this.ensureRecommendationsValid(fallbackRecs);
           return this.processRecommendationsWithPlaceholders(validatedRecs);
@@ -251,21 +232,16 @@ Return a JSON array of recommendations following this exact structure:
 
       throw new Error('Invalid response format from Claude');
     } catch (error) {
-      console.error('[CV-TRANSFORMATION] Error generating recommendations:', error);
       
       // Log specific error details for debugging
       if (error?.response) {
-        console.error('[CV-TRANSFORMATION] Error response status:', error.response.status);
-        console.error('[CV-TRANSFORMATION] Error response data:', error.response.data);
       }
       
       if (error?.message) {
-        console.error('[CV-TRANSFORMATION] Error message:', error.message);
       }
       
       // Enhanced error handling for specific error types
       if (this.isQuotaExceededError(error)) {
-        console.warn('Claude API quota exceeded - generating enhanced fallback recommendations');
         const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
         return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
       }
@@ -284,9 +260,6 @@ Return a JSON array of recommendations following this exact structure:
     originalCV: ParsedCV,
     selectedRecommendations: CVRecommendation[]
   ): Promise<CVTransformationResult> {
-    console.log(`Applying ${selectedRecommendations.length} recommendations to CV`);
-    console.log('Selected recommendation IDs:', selectedRecommendations.map(r => r.id));
-    console.log('Selected recommendation sections:', selectedRecommendations.map(r => `${r.id}: "${r.section}"`));
     
     // Deep clone the original CV to avoid mutations
     const improvedCV = JSON.parse(JSON.stringify(originalCV)) as ParsedCV;
@@ -307,20 +280,14 @@ Return a JSON array of recommendations following this exact structure:
 
     // Group recommendations by type for efficient processing
     const groupedRecommendations = this.groupRecommendationsByType(selectedRecommendations);
-    console.log('Grouped recommendations by type:');
     Object.entries(groupedRecommendations).forEach(([type, recs]) => {
-      console.log(`  ${type}: ${recs.length} recommendations`);
     });
 
     // Apply content improvements first
     if (groupedRecommendations.content) {
-      console.log(`Applying ${groupedRecommendations.content.length} content recommendations`);
       for (const rec of groupedRecommendations.content) {
-        console.log(`Processing content recommendation: ${rec.id} for section "${rec.section}"`);
-        console.log('🚀 About to call applyContentRecommendation...');
         try {
           const result = await this.applyContentRecommendation(improvedCV, rec);
-          console.log('🚀 applyContentRecommendation returned:', result);
           if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
@@ -331,32 +298,24 @@ Return a JSON array of recommendations following this exact structure:
           }
 
             // Comparison will be generated after all transformations
-            console.log(`Successfully applied content recommendation: ${rec.id}`);
           } else {
-            console.error(`Failed to apply content recommendation ${rec.id}: ${result.error}`);
           }
         } catch (error) {
-          console.error('🚨 Exception in applyContentRecommendation:', error);
         }
       }
     }
 
     // Apply structural changes
     if (groupedRecommendations.structure) {
-      console.log(`Applying ${groupedRecommendations.structure.length} structural recommendations`);
       for (const rec of groupedRecommendations.structure) {
-        console.log(`Processing structural recommendation: ${rec.id} for section "${rec.section}"`);
         
         // Route skills-related structural changes to the enhanced skills handler
         const isSkillsRec = this.isSkillsSection(rec.section);
-        console.log(`DEBUG: Section "${rec.section}" isSkillsSection: ${isSkillsRec}`);
         
         let result;
         if (isSkillsRec) {
-          console.log(`Routing skills structural recommendation to enhanced skills handler`);
           result = { success: this.applySkillsRecommendation(improvedCV, rec) };
         } else {
-          console.log(`Routing to generic structural handler`);
           result = await this.applyStructuralRecommendation(improvedCV, rec);
         }
         
@@ -369,54 +328,42 @@ Return a JSON array of recommendations following this exact structure:
             transformationSummary.sectionsModified.push(rec.section);
           }
           
-          console.log(`Successfully applied structural recommendation: ${rec.id}`);
         } else {
-          console.error(`Failed to apply structural recommendation ${rec.id}: ${result.error || 'Unknown error'}`);
         }
       }
     }
 
     // Add new sections
     if (groupedRecommendations.section_addition) {
-      console.log(`Adding ${groupedRecommendations.section_addition.length} new sections`);
       for (const rec of groupedRecommendations.section_addition) {
-        console.log(`Processing section addition: ${rec.id} for section "${rec.section}"`);
         const result = await this.addNewSection(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.newSections.push(rec.section);
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
-          console.log(`Successfully added new section: ${rec.id}`);
         } else {
-          console.error(`Failed to add new section ${rec.id}: ${result.error}`);
         }
       }
     }
 
     // Apply keyword optimizations
     if (groupedRecommendations.keyword_optimization) {
-      console.log(`Applying ${groupedRecommendations.keyword_optimization.length} keyword optimizations`);
       for (const rec of groupedRecommendations.keyword_optimization) {
-        console.log(`Processing keyword optimization: ${rec.id}`);
         const result = await this.applyKeywordOptimization(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
           transformationSummary.totalChanges++;
           transformationSummary.keywordsAdded.push(...(rec.keywords || []));
           transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
-          console.log(`Successfully applied keyword optimization: ${rec.id}`);
         } else {
-          console.error(`Failed to apply keyword optimization ${rec.id}: ${result.error}`);
         }
       }
     }
 
     // Apply formatting improvements
     if (groupedRecommendations.formatting) {
-      console.log(`Applying ${groupedRecommendations.formatting.length} formatting recommendations`);
       for (const rec of groupedRecommendations.formatting) {
-        console.log(`Processing formatting recommendation: ${rec.id}`);
         const result = await this.applyFormattingRecommendation(improvedCV, rec);
         if (result.success) {
           appliedRecommendations.push(rec);
@@ -427,24 +374,12 @@ Return a JSON array of recommendations following this exact structure:
             transformationSummary.sectionsModified.push(rec.section);
           }
           
-          console.log(`Successfully applied formatting recommendation: ${rec.id}`);
         } else {
-          console.error(`Failed to apply formatting recommendation ${rec.id}: ${result.error}`);
         }
       }
     }
 
     const successRate = appliedRecommendations.length / selectedRecommendations.length * 100;
-    console.log(`\n=== TRANSFORMATION SUMMARY ===`);
-    console.log(`Total recommendations to apply: ${selectedRecommendations.length}`);
-    console.log(`Successfully applied: ${appliedRecommendations.length}`);
-    console.log(`Failed to apply: ${selectedRecommendations.length - appliedRecommendations.length}`);
-    console.log(`Success rate: ${successRate.toFixed(1)}%`);
-    console.log(`Total changes made: ${transformationSummary.totalChanges}`);
-    console.log(`Sections modified: ${transformationSummary.sectionsModified.join(', ')}`);
-    console.log(`New sections added: ${transformationSummary.newSections.join(', ')}`);
-    console.log(`Estimated score increase: ${transformationSummary.estimatedScoreIncrease}`);
-    console.log(`==============================\n`);
     
     // Log any failed recommendations for debugging
     const failedRecommendations = selectedRecommendations.filter(rec => 
@@ -452,9 +387,7 @@ Return a JSON array of recommendations following this exact structure:
     );
     
     if (failedRecommendations.length > 0) {
-      console.warn('Failed recommendations:');
       failedRecommendations.forEach(rec => {
-        console.warn(`  - ${rec.id}: "${rec.section}" (${rec.type})`);
       });
     }
     
@@ -539,15 +472,12 @@ Generate specific recommendations with placeholder templates that users can cust
     recommendation: CVRecommendation
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('📋 CONTENT HANDLER CALLED - applyContentRecommendation - UNIQUE-MARKER-12345');
       const section = recommendation.section.toLowerCase().trim();
-      console.log(`UNIQUE-MARKER-67890 Applying content recommendation for section: "${section}"`);
       
       // Handle professional summary sections
       if (this.isSummarySection(section)) {
         if (!cv.summary) cv.summary = '';
         cv.summary = recommendation.suggestedContent || cv.summary;
-        console.log(`Applied summary recommendation`);
         return { success: true };
       }
       
@@ -555,7 +485,6 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isExperienceSection(section)) {
         const applied = this.applyExperienceRecommendation(cv, recommendation, section);
         if (applied) {
-          console.log(`Applied experience recommendation for section: "${section}"`);
           return { success: true };
         }
       }
@@ -564,7 +493,6 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isSkillsSection(section)) {
         const applied = this.applySkillsRecommendation(cv, recommendation);
         if (applied) {
-          console.log(`Applied skills recommendation`);
           return { success: true };
         }
       }
@@ -573,7 +501,6 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isEducationSection(section)) {
         const applied = this.applyEducationRecommendation(cv, recommendation);
         if (applied) {
-          console.log(`Applied education recommendation`);
           return { success: true };
         }
       }
@@ -582,7 +509,6 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isAchievementsSection(section)) {
         const applied = this.applyAchievementsRecommendation(cv, recommendation);
         if (applied) {
-          console.log(`Applied achievements recommendation`);
           return { success: true };
         }
       }
@@ -591,7 +517,6 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isPersonalInfoSection(section)) {
         const applied = this.applyPersonalInfoRecommendation(cv, recommendation);
         if (applied) {
-          console.log(`Applied personal info recommendation for section: "${section}"`);
           return { success: true };
         }
       }
@@ -600,19 +525,16 @@ Generate specific recommendations with placeholder templates that users can cust
       if (this.isCustomSection(section)) {
         const applied = this.applyCustomSectionRecommendation(cv, recommendation, section);
         if (applied) {
-          console.log(`Applied custom section recommendation for: "${section}"`);
           return { success: true };
         }
       }
       
-      console.warn(`Unable to apply recommendation for section: "${section}" - treating as custom section`);
       // As a fallback, treat as custom section
       if (!cv.customSections) cv.customSections = {};
       cv.customSections[recommendation.section] = recommendation.suggestedContent || '';
       
       return { success: true };
     } catch (error) {
-      console.error('Error applying content recommendation:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -624,7 +546,6 @@ Generate specific recommendations with placeholder templates that users can cust
     try {
       // Structural improvements like reordering sections, formatting changes
       // This could involve reorganizing experience entries, skills grouping, etc.
-      console.log(`Applying structural recommendation: ${recommendation.title}`);
       
       // Example: Reorder experience by relevance or date
       if (recommendation.description.includes('chronological order') && cv.experience) {
@@ -637,7 +558,6 @@ Generate specific recommendations with placeholder templates that users can cust
       
       return { success: true };
     } catch (error) {
-      console.error('Error applying structural recommendation:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -647,7 +567,6 @@ Generate specific recommendations with placeholder templates that users can cust
     recommendation: CVRecommendation
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log(`Applying formatting recommendation: ${recommendation.title}`);
       const section = recommendation.section.toLowerCase().trim();
       
       // Handle formatting improvements based on section
@@ -655,7 +574,6 @@ Generate specific recommendations with placeholder templates that users can cust
         // Apply formatting to experience section
         if (cv.experience && recommendation.suggestedContent) {
           // Improve bullet point formatting, structure, etc.
-          console.log('Applied experience formatting improvements');
         }
         return { success: true };
       }
@@ -664,7 +582,6 @@ Generate specific recommendations with placeholder templates that users can cust
         // Apply formatting to skills section
         if (cv.skills && recommendation.suggestedContent) {
           // Improve skills organization, grouping, etc.
-          console.log('Applied skills formatting improvements');
         }
         return { success: true };
       }
@@ -673,7 +590,6 @@ Generate specific recommendations with placeholder templates that users can cust
         // Apply formatting to summary section
         if (cv.summary && recommendation.suggestedContent) {
           // Improve summary formatting, structure, etc.
-          console.log('Applied summary formatting improvements');
         }
         return { success: true };
       }
@@ -682,17 +598,14 @@ Generate specific recommendations with placeholder templates that users can cust
         // Apply formatting to education section
         if (cv.education && recommendation.suggestedContent) {
           // Improve education formatting, structure, etc.
-          console.log('Applied education formatting improvements');
         }
         return { success: true };
       }
       
       // Generic formatting improvements
-      console.log(`Applied generic formatting improvements for section: ${section}`);
       return { success: true };
       
     } catch (error) {
-      console.error('Error applying formatting recommendation:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -703,13 +616,11 @@ Generate specific recommendations with placeholder templates that users can cust
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const section = recommendation.section.toLowerCase().trim();
-      console.log(`Adding new section: "${section}"`);
       
       // Handle professional summary sections
       if (this.isSummarySection(section)) {
         if (!cv.summary) {
           cv.summary = recommendation.suggestedContent || '';
-          console.log('Added new summary section');
           return { success: true };
         }
       }
@@ -734,7 +645,6 @@ Generate specific recommendations with placeholder templates that users can cust
           );
           
           cv.achievements.push(...uniqueAchievements);
-          console.log(`Added ${uniqueAchievements.length} new achievements`);
         }
         return { success: true };
       }
@@ -755,7 +665,6 @@ Generate specific recommendations with placeholder templates that users can cust
               url: ''
             }));
           cv.certifications.push(...certsList);
-          console.log(`Added ${certsList.length} new certifications`);
         }
         return { success: true };
       }
@@ -780,11 +689,9 @@ Generate specific recommendations with placeholder templates that users can cust
         cv.customSections = {};
       }
       cv.customSections[recommendation.section] = recommendation.suggestedContent || '';
-      console.log(`Added custom section: "${recommendation.section}"`);
       
       return { success: true };
     } catch (error) {
-      console.error('Error adding new section:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -795,7 +702,6 @@ Generate specific recommendations with placeholder templates that users can cust
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const keywords = recommendation.keywords || [];
-      console.log(`Applying keyword optimization with keywords: ${keywords.join(', ')}`);
       
       // Add keywords to skills section
       if (!cv.skills) cv.skills = [];
@@ -808,7 +714,6 @@ Generate specific recommendations with placeholder templates that users can cust
           )
         );
         skillsArray.push(...relevantKeywords);
-        console.log(`Added ${relevantKeywords.length} new keywords to skills array`);
       } else {
         // Handle object-based skills
         const skillsObj = cv.skills as { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; };
@@ -819,24 +724,19 @@ Generate specific recommendations with placeholder templates that users can cust
           )
         );
         skillsObj.technical.push(...relevantKeywords);
-        console.log(`Added ${relevantKeywords.length} new keywords to technical skills`);
       }
       
       // Enhance summary with keywords naturally integrated
       if (cv.summary && keywords.length > 0) {
-        console.log('Integrating keywords naturally into summary');
         const enhancedSummary = await this.integrateKeywordsNaturally(cv.summary, keywords);
         if (enhancedSummary) {
           cv.summary = enhancedSummary;
-          console.log('Successfully enhanced summary with keywords');
         } else {
-          console.warn('Failed to enhance summary, keeping original');
         }
       }
       
       return { success: true };
     } catch (error) {
-      console.error('Error applying keyword optimization:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -853,7 +753,6 @@ Generate specific recommendations with placeholder templates that users can cust
         const placeholders = PlaceholderManager.detectPlaceholders(rec.suggestedContent);
         
         if (placeholders.length > 0) {
-          console.log(`Found ${placeholders.length} placeholders in recommendation ${rec.id}:`, placeholders.map(p => p.key));
           rec.placeholders = placeholders;
           rec.isCustomized = false;
         }
@@ -904,7 +803,6 @@ Enhanced Summary:`;
       
       return null;
     } catch (error) {
-      console.error('Error integrating keywords naturally:', error);
       return null;
     }
   }
@@ -1035,7 +933,6 @@ Enhanced Summary:`;
       'education', 'academic', 'qualification', 'training'
     ];
     const isEducation = educationPatterns.some(pattern => section.toLowerCase().includes(pattern));
-    console.log(`🔍 isEducationSection("${section}") = ${isEducation}`);
     return isEducation;
   }
   
@@ -1054,7 +951,6 @@ Enhanced Summary:`;
       'professional_title', 'professional title', 'title', 'job_title', 'job title'
     ];
     const isPersonalInfo = personalInfoPatterns.some(pattern => section.toLowerCase().includes(pattern));
-    console.log(`🔍 isPersonalInfoSection("${section}") = ${isPersonalInfo}`);
     return isPersonalInfo;
   }
   
@@ -1115,8 +1011,6 @@ Enhanced Summary:`;
   private applySkillsRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     if (!recommendation.suggestedContent) return false;
     
-    console.log(`Applying skills recommendation: ${recommendation.type} - ${recommendation.title}`);
-    console.log(`Action required: ${recommendation.actionRequired}`);
     
     // Handle different types of skills recommendations
     if (recommendation.type === 'structure' && recommendation.actionRequired === 'modify') {
@@ -1134,17 +1028,14 @@ Enhanced Summary:`;
   private applySkillsRestructuring(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     try {
       const suggestedContent = recommendation.suggestedContent!;
-      console.log('Restructuring skills with suggested content:', suggestedContent.substring(0, 200) + '...');
       
       // Parse markdown-style categorized skills from suggested content
       const categories = this.parseSkillsCategories(suggestedContent);
       
       if (Object.keys(categories).length === 0) {
-        console.warn('No categories found in suggested content, keeping original skills');
         return false;
       }
       
-      console.log('Parsed categories:', Object.keys(categories));
       
       // Transform skills to categorized structure
       const originalSkills = Array.isArray(cv.skills) ? cv.skills as string[] : [];
@@ -1178,11 +1069,9 @@ Enhanced Summary:`;
       );
       
       cv.skills = filteredStructure;
-      console.log('Successfully restructured skills into categories:', Object.keys(filteredStructure));
       return true;
       
     } catch (error) {
-      console.error('Error restructuring skills:', error);
       return false;
     }
   }
@@ -1190,13 +1079,11 @@ Enhanced Summary:`;
   private applySkillsSectionAddition(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     try {
       const suggestedContent = recommendation.suggestedContent!;
-      console.log('Adding new skills section:', recommendation.section);
       
       // Parse soft skills or competencies from suggested content
       const competencies = this.parseSoftSkillsList(suggestedContent);
       
       if (competencies.length === 0) {
-        console.warn('No competencies found in suggested content');
         return false;
       }
       
@@ -1221,11 +1108,9 @@ Enhanced Summary:`;
         skillsObj.soft = competencies;
       }
       
-      console.log(`Added ${competencies.length} competencies to skills`);
       return true;
       
     } catch (error) {
-      console.error('Error adding skills section:', error);
       return false;
     }
   }
@@ -1266,7 +1151,6 @@ Enhanced Summary:`;
       skillsObj.technical.push(...newSkills);
     }
     
-    console.log(`Added ${skillsToAdd.length} simple skills`);
     return true;
   }
   
@@ -1325,30 +1209,21 @@ Enhanced Summary:`;
   }
   
   private applyEducationRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
-    console.log('🎓 EDUCATION HANDLER CALLED - applyEducationRecommendation');
     if (!recommendation.suggestedContent) return false;
     
-    console.log(`Applying education recommendation: ${recommendation.type} - ${recommendation.title}`);
-    console.log(`Action required: ${recommendation.actionRequired}`);
-    console.log(`CV has education: ${cv.education ? cv.education.length + ' entries' : 'none'}`);
-    console.log(`Current content: ${recommendation.currentContent ? 'present' : 'none'}`);
     
     // Handle different types of education recommendations
     if (recommendation.actionRequired === 'add' || !cv.education || cv.education.length === 0) {
       // This is adding a new education entry
-      console.log('→ ROUTING: Adding new education entry');
       return this.addEducationEntry(cv, recommendation);
     } else if (recommendation.actionRequired === 'replace') {
       // This is enhancing existing education entries
-      console.log('→ ROUTING: Enhancing existing education entries (replace)');
       return this.enhanceEducationEntries(cv, recommendation);
     } else if (recommendation.actionRequired === 'modify' && recommendation.currentContent && cv.education?.[0]?.description?.includes(recommendation.currentContent)) {
       // Only use legacy modify behavior if the current content actually exists in the education description
-      console.log('→ ROUTING: Modifying specific education content (legacy)');
       return this.modifyEducationContent(cv, recommendation);
     } else {
       // Default to enhancing existing entries (handles 'modify' with placeholder content)
-      console.log('→ ROUTING: Enhancing existing education entries (default)');
       return this.enhanceEducationEntries(cv, recommendation);
     }
   }
@@ -1356,7 +1231,6 @@ Enhanced Summary:`;
   private addEducationEntry(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     try {
       const suggestedContent = recommendation.suggestedContent!;
-      console.log('Adding new education entry');
       
       // Parse education entry from suggested content
       const newEducation = this.parseEducationFromContent(suggestedContent);
@@ -1366,13 +1240,11 @@ Enhanced Summary:`;
           cv.education = [];
         }
         cv.education.push(newEducation);
-        console.log(`Added new education entry: ${newEducation.degree} at ${newEducation.institution}`);
         return true;
       }
       
       return false;
     } catch (error) {
-      console.error('Error adding education entry:', error);
       return false;
     }
   }
@@ -1380,16 +1252,13 @@ Enhanced Summary:`;
   private enhanceEducationEntries(cv: ParsedCV, recommendation: CVRecommendation): boolean {
     try {
       const suggestedContent = recommendation.suggestedContent!;
-      console.log('Enhancing existing education entries');
       
       if (!cv.education || cv.education.length === 0) {
-        console.log('No education entries found to enhance');
         return false;
       }
       
       // Parse enhanced education data from suggested content
       const enhancedData = this.parseEducationEnhancements(suggestedContent);
-      console.log('Parsed education enhancements:', JSON.stringify(enhancedData, null, 2));
       
       // Apply enhancements to the first/most relevant education entry
       let applied = false;
@@ -1405,39 +1274,32 @@ Enhanced Summary:`;
         
         // Enhance with additional details
         if (enhancedData.description && !edu.description) {
-          console.log('Adding description:', enhancedData.description);
           edu.description = enhancedData.description;
           applied = true;
         }
         
         if (enhancedData.gpa && !edu.gpa) {
-          console.log('Adding GPA:', enhancedData.gpa);
           edu.gpa = enhancedData.gpa;
           applied = true;
         }
         
         if (enhancedData.honors && !edu.honors) {
-          console.log('Adding honors:', enhancedData.honors);
           edu.honors = enhancedData.honors;
           applied = true;
         }
         
         // Enhance institution name if it's generic
         if (enhancedData.institution && (edu.institution === 'University' || edu.institution.length < 10)) {
-          console.log('Replacing institution:', edu.institution, '->', enhancedData.institution);
           edu.institution = enhancedData.institution;
           applied = true;
         } else if (enhancedData.institution) {
-          console.log('Skipping institution replacement:', edu.institution, '(length:', edu.institution.length + ')');
         }
         
         // Enhance degree name if it's generic
         if (enhancedData.degree && (edu.degree === 'Computer Science' || edu.degree.length < 15)) {
-          console.log('Replacing degree:', edu.degree, '->', enhancedData.degree);
           edu.degree = enhancedData.degree;
           applied = true;
         } else if (enhancedData.degree) {
-          console.log('Skipping degree replacement:', edu.degree, '(length:', edu.degree.length + ')');
         }
         
         console.log('After processing entry:', {
@@ -1449,10 +1311,8 @@ Enhanced Summary:`;
         });
       }
       
-      console.log(`Enhanced education entries: ${applied ? 'success' : 'no changes'}`);
       return applied;
     } catch (error) {
-      console.error('Error enhancing education entries:', error);
       return false;
     }
   }
@@ -1475,7 +1335,6 @@ Enhanced Summary:`;
       return edu;
     });
     
-    console.log(`Modified education content: ${applied ? 'success' : 'no matches'}`);
     return applied;
   }
   
@@ -1539,7 +1398,6 @@ Enhanced Summary:`;
       
       return null;
     } catch (error) {
-      console.error('Error parsing education content:', error);
       return null;
     }
   }
@@ -1665,11 +1523,7 @@ Enhanced Summary:`;
   }
   
   private applyPersonalInfoRecommendation(cv: ParsedCV, recommendation: CVRecommendation): boolean {
-    console.log('👤 PERSONAL INFO HANDLER CALLED - applyPersonalInfoRecommendation');
     
-    console.log(`Action required: ${recommendation.actionRequired}`);
-    console.log(`CV has personalInfo: ${cv.personalInfo ? 'yes' : 'no'}`);
-    console.log(`Has suggested content: ${!!recommendation.suggestedContent}`);
     
     // Ensure personalInfo exists
     if (!cv.personalInfo) {
@@ -1686,11 +1540,9 @@ Enhanced Summary:`;
     
     // Handle other personal info updates (requires suggested content)
     if (!recommendation.suggestedContent) {
-      console.warn('No suggested content for non-title personal info update');
       return false;
     }
     
-    console.log(`Applied general personal info update for section: "${section}"`);
     return true;
   }
   
@@ -1710,12 +1562,10 @@ Enhanced Summary:`;
     const titleLower = title.toLowerCase().trim();
     const isPlaceholder = placeholderPatterns.some(pattern => titleLower === pattern || titleLower.includes(pattern));
     
-    console.log(`🏷️ Checking title "${title}" -> isPlaceholder: ${isPlaceholder}`);
     return isPlaceholder;
   }
   
   private generateProfessionalTitle(cv: ParsedCV, recommendation: CVRecommendation): boolean {
-    console.log('🎯 Generating professional title based on expertise...');
     
     try {
       // Extract key information for title generation
@@ -1729,24 +1579,19 @@ Enhanced Summary:`;
       if (recommendation.suggestedContent && recommendation.suggestedContent.trim()) {
         // Use LLM-provided title if available and not empty
         generatedTitle = recommendation.suggestedContent.trim();
-        console.log(`Using LLM-generated title: "${generatedTitle}"`);
       } else {
         // Generate title based on CV content
         generatedTitle = this.createTitleFromCVData(skills, experience, education);
-        console.log(`Generated title from CV data: "${generatedTitle}"`);
       }
       
       if (generatedTitle && generatedTitle.length > 0) {
         cv.personalInfo!.title = generatedTitle;
-        console.log(`✅ Successfully updated professional title to: "${generatedTitle}"`);
         return true;
       } else {
-        console.warn('Failed to generate a valid professional title');
         return false;
       }
       
     } catch (error) {
-      console.error('Error generating professional title:', error);
       return false;
     }
   }
@@ -1768,7 +1613,6 @@ Enhanced Summary:`;
   }
   
   private createTitleFromCVData(skills: string[], experience?: any, education?: any): string {
-    console.log(`Creating title from CV data - Skills: ${skills.slice(0, 3).join(', ')}...`);
     
     // Prioritize title generation based on experience
     if (experience?.position) {
@@ -2329,7 +2173,6 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
     selectedRecommendations: CVRecommendation[],
     includeRoleAnalysis: boolean = true
   ): Promise<CVTransformationResult> {
-    console.log(`[CV-TRANSFORMATION] Applying ${selectedRecommendations.length} role-enhanced recommendations`);
     
     // Apply standard recommendations
     const baseResult = await this.applyRecommendations(originalCV, selectedRecommendations);
@@ -2350,11 +2193,9 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
           roleEnhancedRecommendations: roleEnhancedRecs
         };
         
-        console.log(`[CV-TRANSFORMATION] Enhanced result with role analysis: ${detectedRole.roleName} (${detectedRole.confidence})`);
         return enhancedResult;
         
       } catch (error) {
-        console.error('[CV-TRANSFORMATION] Error adding role analysis:', error);
         return baseResult;
       }
     }
@@ -2404,7 +2245,6 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
       };
       
     } catch (error) {
-      console.error('[CV-TRANSFORMATION] Error getting role enhancement templates:', error);
       return {
         detectedRole: null,
         templates: {}

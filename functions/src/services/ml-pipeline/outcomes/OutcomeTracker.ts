@@ -12,7 +12,6 @@ import { UserOutcome } from '../../../types/phase2-models';
 export class OutcomeTracker {
   
   async recordOutcome(outcome: UserOutcome): Promise<void> {
-    console.log('[OUTCOME-TRACKER] Recording user outcome');
     
     try {
       // Store outcome in Firestore
@@ -26,9 +25,7 @@ export class OutcomeTracker {
           source: 'modular-architecture'
         });
       
-      console.log('[OUTCOME-TRACKER] Outcome recorded successfully');
     } catch (error) {
-      console.error('[OUTCOME-TRACKER] Failed to record outcome:', error);
       throw error;
     }
   }
@@ -42,7 +39,6 @@ export class OutcomeTracker {
       
       return snapshot.data().count;
     } catch (error) {
-      console.error('[OUTCOME-TRACKER] Failed to get training data size:', error);
       return 0;
     }
   }
@@ -57,7 +53,6 @@ export class OutcomeTracker {
       
       return true;
     } catch (error) {
-      console.error('[OUTCOME-TRACKER] Health check failed:', error);
       return false;
     }
   }

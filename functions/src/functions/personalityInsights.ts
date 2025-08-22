@@ -94,7 +94,6 @@ export const generatePersonalityInsights = onCall<PersonalityInsightsRequest>(
         insights
       };
     } catch (error: any) {
-      console.error('Error generating personality insights:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -160,7 +159,6 @@ export const comparePersonalities = onCall<ComparePersonalitiesRequest>(
         comparison
       };
     } catch (error) {
-      console.error('Error comparing personalities:', error);
       throw new HttpsError('internal', 'Failed to compare personalities');
     }
   }
@@ -210,7 +208,6 @@ export const getPersonalityInsightsSummary = onCall<GetInsightsSummaryRequest>(
         summary
       };
     } catch (error) {
-      console.error('Error getting personality insights summary:', error);
       throw new HttpsError('internal', 'Failed to get personality insights summary');
     }
   }
@@ -258,7 +255,6 @@ export const updatePersonalitySettings = onCall<UpdateSettingsRequest>(
         settings
       };
     } catch (error) {
-      console.error('Error updating personality settings:', error);
       throw new HttpsError('internal', 'Failed to update personality settings');
     }
   }

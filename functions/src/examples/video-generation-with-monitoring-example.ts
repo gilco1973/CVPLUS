@@ -68,7 +68,6 @@ export const generateVideoIntroductionWithMonitoring = onCall(
       // 🚀 START MONITORING - Simple one-line addition
       await monitor.start(enhancedOptions);
 
-      console.log(`[VideoGeneration] Starting enhanced video generation for job: ${jobId}`);
 
       // Update job status to processing
       await admin.firestore()
@@ -136,7 +135,6 @@ export const generateVideoIntroductionWithMonitoring = onCall(
           }
         });
 
-        console.log(`[VideoGeneration] Enhanced video generation completed for job: ${jobId}`);
 
         return {
           success: true,
@@ -150,7 +148,6 @@ export const generateVideoIntroductionWithMonitoring = onCall(
         };
 
       } catch (generationError) {
-        console.error('[VideoGeneration] Error in video generation:', generationError);
 
         // 🚨 MONITOR: Record error details
         await monitor.recordError(generationError, 'generation_failed');
@@ -188,7 +185,6 @@ export const generateVideoIntroductionWithMonitoring = onCall(
       }
 
     } catch (error) {
-      console.error('[VideoGeneration] Function error:', error);
 
       // 🚨 MONITOR: Record function-level error
       await VideoMonitoringHooks.onError(
@@ -252,7 +248,6 @@ export async function generateVideoWithFallbackMonitoring(
       return result;
       
     } catch (heygenError) {
-      console.log('[VideoGeneration] HeyGen failed, switching to RunwayML');
       
       // 🔄 MONITOR: Record provider switch
       await monitor.switchProvider('runwayml', 'heygen_failure');
@@ -271,7 +266,6 @@ export async function generateVideoWithFallbackMonitoring(
         return result;
         
       } catch (runwaymlError) {
-        console.log('[VideoGeneration] RunwayML failed, switching to D-ID');
         
         // 🔄 MONITOR: Record second provider switch
         await monitor.switchProvider('did', 'runwayml_failure');
@@ -349,12 +343,10 @@ export const recordVideoFeedback = onCall(
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
 
-      console.log(`[VideoFeedback] Recorded feedback for generation: ${generationId}`);
 
       return { success: true, message: 'Feedback recorded successfully' };
 
     } catch (error) {
-      console.error('[VideoFeedback] Error recording feedback:', error);
       throw new Error(`Failed to record feedback: ${error.message}`);
     }
   }
@@ -403,7 +395,6 @@ export const getVideoSystemHealth = onCall(
       };
 
     } catch (error) {
-      console.error('[SystemHealth] Error getting system health:', error);
       throw new Error(`Health check failed: ${error.message}`);
     }
   }

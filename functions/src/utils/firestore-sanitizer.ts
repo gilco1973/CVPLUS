@@ -75,7 +75,6 @@ export class FirestoreSanitizer {
   ): any {
     // Protect against infinite recursion
     if (currentDepth >= (options.maxDepth || 10)) {
-      console.warn(`[FirestoreSanitizer] Max depth ${options.maxDepth} reached, truncating value`);
       return null;
     }
     
@@ -160,7 +159,6 @@ export class FirestoreSanitizer {
     
     // Handle functions and other unsupported types
     if (typeof value === 'function' || typeof value === 'symbol') {
-      console.warn('[FirestoreSanitizer] Removing unsupported type:', typeof value);
       return undefined;
     }
     

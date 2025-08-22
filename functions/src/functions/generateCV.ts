@@ -14,9 +14,6 @@ import { AchievementsAnalysisService } from '../services/achievements-analysis.s
  * Core CV generation logic that can be called from other functions
  */
 export async function generateCVCore(jobId: string, templateId: string | undefined, features: string[] | undefined, userId: string) {
-  console.log('generateCVCore called for job:', jobId);
-  console.log('User authenticated:', userId);
-  console.log('Processing CV generation for job:', jobId);
 
   try {
     // Step 1: Initialize job and validate data
@@ -36,8 +33,6 @@ export async function generateCVCore(jobId: string, templateId: string | undefin
       generatedCV
     };
   } catch (error: any) {
-    console.error('Error generating CV:', error.message);
-    console.error('Error stack:', error.stack);
     
     // Handle error with dedicated function
     await handleGenerationError(jobId, error);
@@ -53,10 +48,8 @@ export const generateCV = onCall(
     ...corsOptions
   },
   async (request) => {
-    console.log('generateCV function called');
     
     if (!request.auth) {
-      console.error('Authentication failed: No auth token');
       throw new Error('User must be authenticated');
     }
 
@@ -127,27 +120,21 @@ async function generateAndSaveCV(
   templateId: string | undefined,
   features: string[] | undefined
 ) {
-  console.log(`🎯 [CV-GEN] Starting CV generation for job ${jobId}`);
   
   try {
     // Update job status to show CV generation in progress
     await updateJobGenerationStep(jobId, 'html-generation', 'Generating CV HTML content');
     
     // Generate CV HTML
-    console.log('🎨 [CV-GEN] Generating CV HTML with template:', templateId || 'modern');
     const generator = new CVGenerator();
     const htmlContent = await generator.generateHTML(cvData, templateId || 'modern', features, jobId);
-    console.log(`✅ [CV-GEN] HTML content generated successfully (${htmlContent.length} characters)`);
     
     // Update job status to show file saving in progress
     await updateJobGenerationStep(jobId, 'file-generation', 'Saving CV files to storage');
     
     // Save generated files with comprehensive error handling
-    console.log('💾 [CV-GEN] Saving generated files to Firebase Storage...');
     const fileResults = await saveFilesWithFallback(generator, jobId, userId, htmlContent);
     
-    console.log(`🎉 [CV-GEN] CV generation completed successfully for job ${jobId}`);
-    console.log(`📄 Files generated: HTML=${!!fileResults.htmlUrl}, PDF=${!!fileResults.pdfUrl}, DOCX=${!!fileResults.docxUrl}`);
     
     return {
       html: htmlContent,
@@ -160,7 +147,6 @@ async function generateAndSaveCV(
     };
     
   } catch (error: any) {
-    console.error(`❌ [CV-GEN] Error in generateAndSaveCV for job ${jobId}:`, error);
     await updateJobGenerationStep(jobId, 'error', `CV generation failed: ${error.message}`);
     throw error;
   }
@@ -175,7 +161,6 @@ async function processEnhancementFeatures(
   features: string[], 
   cvData: any
 ) {
-  console.log('Processing REAL enhancement features...');
   await processRealFeatures(jobId, userId, features, cvData);
 }
 
@@ -217,7 +202,6 @@ async function handleGenerationError(jobId: string, error: any) {
   const errorMessage = error instanceof Error ? error.message : 'Unknown error';
   const errorStack = error instanceof Error ? error.stack : '';
   
-  console.error(`🚨 [ERROR-HANDLER] CV generation failed for job ${jobId}:`, errorMessage);
   
   // Analyze error type for better recovery recommendations
   const errorAnalysis = analyzeGenerationError(error);
@@ -243,10 +227,8 @@ async function handleGenerationError(jobId: string, error: any) {
       .doc(jobId)
       .update(errorData);
     
-    console.log(`📋 [ERROR-HANDLER] Error details saved for job ${jobId}: ${errorAnalysis.type} - ${errorAnalysis.recommendedAction}`);
     
   } catch (updateError: any) {
-    console.error(`❌ [ERROR-HANDLER] Failed to update job status for ${jobId}:`, updateError);
   }
 }
 
@@ -255,11 +237,8 @@ async function handleGenerationError(jobId: string, error: any) {
  * WITH COMPREHENSIVE TIMEOUT AND ERROR RECOVERY
  */
 async function processRealFeatures(jobId: string, userId: string, features: string[], cvData: any): Promise<void> {
-  console.log('🚀 [REAL ENHANCEMENT] Processing features for job:', jobId);
-  console.log('🚀 [REAL ENHANCEMENT] Features to process:', JSON.stringify(features));
   
   if (features.length === 0) {
-    console.log('🔍 No enhancement features to process');
     // Initialize empty enhancedFeatures field to prevent missing field errors
     await admin.firestore().collection('jobs').doc(jobId).update({
       enhancedFeatures: {},
@@ -293,11 +272,9 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
 
   try {
     // Process all features with comprehensive timeout protection
-    console.log(`🚀 Starting parallel processing of ${features.length} features with 8-minute global timeout`);
     
     const featurePromises = features.map(async (feature) => {
       try {
-        console.log(`🎯 Processing feature: ${feature}`);
         // Add per-feature timeout of 3 minutes
         const result = await Promise.race([
           processIndividualFeature(feature, jobId, userId, cvData),
@@ -305,18 +282,15 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
             setTimeout(() => reject(new Error(`Feature ${feature} timed out after 3 minutes`)), 180000);
           })
         ]);
-        console.log(`✅ Feature ${feature} completed successfully`);
         return { feature, status: 'success' };
       } catch (error: any) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`❌ Error processing feature ${feature}:`, errorMessage);
         
         // Mark individual feature as failed but continue with others
         await markFeatureAsFailed(jobId, feature, errorMessage);
         
         // For critical failures, log more details but don't stop processing
         if (error instanceof Error && error.stack) {
-          console.error(`📋 Stack trace for ${feature}:`, error.stack);
         }
         
         return { 
@@ -328,7 +302,6 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
     });
 
     // Wait for all features to complete with global timeout protection
-    console.log(`⏳ Waiting for all ${features.length} features to complete with 8-minute timeout...`);
     const results = await Promise.race([
       Promise.allSettled(featurePromises),
       new Promise<never>((_, reject) => {
@@ -353,7 +326,6 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
       }
     } else {
       // Handle unexpected Promise.allSettled rejection (should not happen with our error handling)
-      console.error('❌ Unexpected promise rejection:', result.reason);
       processingResults.failed++;
       processingResults.failedFeatures.push('unknown-feature');
       processingResults.errors.push({ 
@@ -363,7 +335,6 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
     }
   }
   
-  console.log(`🏁 Parallel processing completed: ${processingResults.successful} successful, ${processingResults.failed} failed`);
 
   // Update job with comprehensive processing summary
   await updateJobWithProcessingSummary(jobId, processingResults);
@@ -372,7 +343,6 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
     logProcessingSummary(jobId, processingResults);
     
   } catch (globalError: any) {
-    console.error('🚨 CRITICAL: Global feature processing failed:', globalError.message);
     
     // If global processing fails, mark all remaining features as failed
     for (const feature of features) {
@@ -392,7 +362,6 @@ async function processRealFeatures(jobId: string, userId: string, features: stri
     logProcessingSummary(jobId, processingResults);
     
     // Don't throw - allow CV generation to complete even if features fail
-    console.warn('⚠️ Feature processing completed with global errors but CV generation will continue');
   }
 }
 
@@ -408,7 +377,6 @@ async function markFeatureAsFailed(jobId: string, feature: string, errorMessage:
       [`enhancedFeatures.${feature}.retryable`]: isRetryableError(errorMessage)
     });
   } catch (updateError) {
-    console.error(`Failed to mark feature ${feature} as failed:`, updateError);
   }
 }
 
@@ -443,7 +411,6 @@ async function updateJobWithProcessingSummary(jobId: string, results: any): Prom
     
     // If processing is complete (all features processed), inject completed features into CV
     if (results.total > 0 && (results.successful + results.failed) === results.total) {
-      console.log(`🔧 All features processed (${results.successful} successful, ${results.failed} failed), injecting completed features into CV`);
       
       // Get user ID from job document for feature injection
       const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
@@ -453,12 +420,10 @@ async function updateJobWithProcessingSummary(jobId: string, results: any): Prom
       if (userId) {
         await injectCompletedFeaturesIntoCV(jobId, userId);
       } else {
-        console.error('Cannot inject features: userId not found in job document');
       }
     }
     
   } catch (updateError) {
-    console.error('Failed to update processing summary:', updateError);
   }
 }
 
@@ -482,7 +447,6 @@ ${results.errors.length > 0 ? `🚨 Errors:\n${results.errors.map(e => `  - ${e.
   `);
 
   if (results.failed > 0) {
-    console.warn(`⚠️ ${results.failed} feature(s) failed but CV generation continued gracefully`);
   }
 }
 
@@ -509,7 +473,6 @@ function isRetryableError(errorMessage: string): boolean {
  */
 async function callFeatureFunction(functionName: string, data: any): Promise<any> {
   try {
-    console.log(`🔥 Calling feature function: ${functionName} with data:`, JSON.stringify(data));
     
     // Import the actual services and call them directly to generate real HTML fragments
     const { jobId, userId } = data;
@@ -831,12 +794,10 @@ Best regards\`;
         return { success: true }; // HTML fragment removed with React SPA migration
         
       default:
-        console.warn(`Feature ${functionName} not yet implemented for internal calling`);
         // Skip features that aren't implemented yet - they'll be triggered manually
         return { success: true, skipped: true, reason: 'Manual triggering required' };
     }
   } catch (error) {
-    console.error(`❌ Error calling feature function ${functionName}:`, error);
     throw error;
   }
 }
@@ -845,7 +806,6 @@ Best regards\`;
  * Process individual feature with REAL implementation using callable functions
  */
 async function processIndividualFeature(feature: string, jobId: string, userId: string, cvData: any): Promise<void> {
-  console.log(`✨ Processing REAL feature: ${feature}`);
   
   // Update feature status to processing with immediate UI feedback
   await updateFeatureStatus(jobId, feature, 'processing', {
@@ -854,7 +814,6 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
     currentStep: 'Starting feature processing...',
     startedAt: FieldValue.serverTimestamp()
   });
-  console.log(`⭐ [FEATURE-START] Processing feature: ${feature}`);
 
   let result: any;
   let stepCount = 0;
@@ -1021,7 +980,6 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
         break;
 
       default:
-        console.warn(`Unknown feature: ${feature}`);
         result = { status: 'unknown_feature', feature };
     }
 
@@ -1033,9 +991,7 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
       completedAt: FieldValue.serverTimestamp()
     });
 
-    console.log(`✅ REAL feature ${feature} completed successfully with results:`, JSON.stringify(result, null, 2));
   } catch (error) {
-    console.error(`❌ Error processing real feature ${feature}:`, error);
     
     // Mark feature as failed with proper error information
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1046,7 +1002,6 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
       currentStep: `Failed: ${errorMessage}`
     });
     
-    console.error(`❌ [FEATURE-FAILED] Feature ${feature} failed: ${errorMessage}`);
     throw error;
   }
 }
@@ -1088,7 +1043,6 @@ function sanitizeForFirestore(obj: any): any {
  */
 async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Promise<void> {
   try {
-    console.log(`🔧 Injecting completed features into CV for job: ${jobId}`);
     
     // Get job data
     const jobDoc = await admin.firestore()
@@ -1097,7 +1051,6 @@ async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Pro
       .get();
     
     if (!jobDoc.exists) {
-      console.warn('Job not found for feature injection');
       return;
     }
 
@@ -1105,7 +1058,6 @@ async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Pro
     
     // Check if there's a generated CV and completed features
     if (!jobData?.generatedCV?.html) {
-      console.log('No generated CV found to inject features into');
       return;
     }
 
@@ -1113,7 +1065,6 @@ async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Pro
     const completedFeatures = getCompletedFeaturesWithFragments(jobData);
     
     if (completedFeatures.length === 0) {
-      console.log('No completed features with HTML fragments found');
       return;
     }
 
@@ -1144,10 +1095,8 @@ async function injectCompletedFeaturesIntoCV(jobId: string, userId: string): Pro
         updatedAt: FieldValue.serverTimestamp()
       });
 
-    console.log(`✅ Successfully injected ${completedFeatures.length} features into CV`);
     
   } catch (error) {
-    console.error(`❌ Error injecting completed features for job ${jobId}:`, error);
     // Don't throw - let the main process continue even if feature injection fails
   }
 }
@@ -1167,7 +1116,6 @@ function getCompletedFeaturesWithFragments(jobData: any): Array<{
   }> = [];
 
   if (!jobData.enhancedFeatures) {
-    console.log('No enhanced features found in job data');
     return completedFeatures;
   }
 
@@ -1176,18 +1124,15 @@ function getCompletedFeaturesWithFragments(jobData: any): Array<{
     
     // With React SPA migration, we no longer check for HTML fragments
     if (feature.status === 'completed') {
-      console.log(`Found completed feature: ${featureName}`);
       completedFeatures.push({
         featureName,
         // HTML fragment removed with React SPA migration
         featureType: featureName
       });
     } else {
-      console.log(`Skipping feature ${featureName}: status=${feature.status}`);
     }
   }
 
-  console.log(`Found ${completedFeatures.length} completed features with HTML fragments`);
   return completedFeatures;
 }
 
@@ -1200,10 +1145,8 @@ function injectFeatureFragments(
 ): string {
   let updatedHTML = originalHTML;
   
-  console.log('Starting feature injection into CV HTML');
   
   for (const feature of features) {
-    console.log(`Injecting feature: ${feature.featureName}`);
     
     try {
       // Inject the feature HTML fragment at the end of the interactive features section
@@ -1216,7 +1159,6 @@ function injectFeatureFragments(
           interactiveFeaturesPattern,
           `</section>\n        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n        <div class="download-section"`
         );
-        console.log(`Successfully injected ${feature.featureName} before download section`);
       } else {
         // Fallback: inject before the closing container div
         const containerEndPattern = /<\/div>\s*<\/body>/;
@@ -1225,18 +1167,14 @@ function injectFeatureFragments(
             containerEndPattern,
             `        <!-- ${feature.featureName} Feature -->\n        <section class="section">\n            <!-- Feature rendered by React SPA -->\n        </section>\n    </div>\n</body>`
           );
-          console.log(`Successfully injected ${feature.featureName} before container end`);
         } else {
-          console.warn(`Could not find injection point for ${feature.featureName}`);
         }
       }
     } catch (error) {
-      console.error(`Error injecting feature ${feature.featureName}:`, error);
       // Continue with other features even if one fails
     }
   }
   
-  console.log('Completed feature injection into CV HTML');
   return updatedHTML;
 }
 
@@ -1261,9 +1199,7 @@ async function updateJobGenerationStep(
     }
     
     await admin.firestore().collection('jobs').doc(jobId).update(updateData);
-    console.log(`📈 [PROGRESS] Job ${jobId}: ${step} - ${message}`);
   } catch (error) {
-    console.error(`Failed to update generation step for job ${jobId}:`, error);
     // Don't throw - progress updates shouldn't break the main flow
   }
 }
@@ -1293,7 +1229,6 @@ async function saveFilesWithFallback(
   let docxUrl = '';
   
   try {
-    console.log('💾 [FILE-SAVE] Starting file generation process...');
     
     // Always try to save files, but don't fail the entire process if one fails
     const fileResults: EnhancedFileGenerationResult = await generator.saveGeneratedFiles(jobId, userId, htmlContent);
@@ -1302,24 +1237,19 @@ async function saveFilesWithFallback(
     if (fileResults.htmlUrl) {
       htmlUrl = fileResults.htmlUrl;
       generationDetails.htmlGeneration.success = true;
-      console.log('✅ [FILE-SAVE] HTML file saved successfully');
     }
     
     if (fileResults.pdfUrl) {
       pdfUrl = fileResults.pdfUrl;
       generationDetails.pdfGeneration.success = true;
-      console.log('✅ [FILE-SAVE] PDF file generated successfully');
     } else {
-      console.warn('⚠️ [FILE-SAVE] PDF generation returned empty URL - likely failed silently');
       generationDetails.pdfGeneration.error = 'PDF generation failed or returned empty URL';
     }
     
     if (fileResults.docxUrl) {
       docxUrl = fileResults.docxUrl;
       generationDetails.docxGeneration.success = true;
-      console.log('✅ [FILE-SAVE] DOCX file generated successfully');
     } else {
-      console.log('📄 [FILE-SAVE] DOCX generation skipped (not implemented)');
       generationDetails.docxGeneration.error = 'DOCX generation not implemented';
     }
     
@@ -1329,7 +1259,6 @@ async function saveFilesWithFallback(
     }
     
   } catch (error: any) {
-    console.error('❌ [FILE-SAVE] Error in file generation:', error);
     
     // Even if file generation fails, we should still try to provide HTML at minimum
     if (!htmlUrl) {
@@ -1339,10 +1268,8 @@ async function saveFilesWithFallback(
         if (fallbackResult) {
           htmlUrl = fallbackResult;
           generationDetails.htmlGeneration.success = true;
-          console.log('✅ [FILE-SAVE] Fallback HTML save successful');
         }
       } catch (fallbackError) {
-        console.error('❌ [FILE-SAVE] Even fallback HTML save failed:', fallbackError);
         generationDetails.htmlGeneration.error = `File generation failed: ${error.message}`;
       }
     }
@@ -1354,7 +1281,6 @@ async function saveFilesWithFallback(
   
   // Ensure we have at least HTML content available
   if (!htmlUrl && htmlContent) {
-    console.warn('🚨 [FILE-SAVE] No HTML URL available, but HTML content exists - this is a critical issue');
     throw new Error('Critical: Could not save any CV files, including HTML');
   }
   
@@ -1375,7 +1301,6 @@ async function saveFallbackHtml(
   htmlContent: string
 ): Promise<string | null> {
   try {
-    console.log('🆘 [FALLBACK] Attempting fallback HTML save...');
     
     const bucket = admin.storage().bucket();
     const htmlFileName = `users/${userId}/generated/${jobId}/cv-fallback.html`;
@@ -1394,11 +1319,9 @@ async function saveFallbackHtml(
       expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
     });
     
-    console.log('✅ [FALLBACK] Fallback HTML save successful');
     return signedUrl;
     
   } catch (error) {
-    console.error('❌ [FALLBACK] Fallback HTML save failed:', error);
     return null;
   }
 }
@@ -1513,7 +1436,6 @@ async function getLastGenerationStep(jobId: string): Promise<string | null> {
     const jobData = jobDoc.data();
     return jobData?.generationProgress?.currentStep || null;
   } catch (error) {
-    console.error(`Failed to get last generation step for job ${jobId}:`, error);
     return null;
   }
 }
@@ -1541,9 +1463,7 @@ async function updateFeatureStatus(
     }
     
     await admin.firestore().collection('jobs').doc(jobId).update(updateData);
-    console.log(`📊 [STATUS-UPDATE] Feature ${feature}: ${status} ${JSON.stringify(additionalData)}`);
   } catch (error) {
-    console.error(`Failed to update feature status for ${feature}:`, error);
   }
 }
 
@@ -1578,13 +1498,11 @@ async function ensureProperStateTransition(
     const isValidTransition = allowedNext.includes(newStatus);
     
     if (!isValidTransition) {
-      console.warn(`🚨 [STATE-TRANSITION] Invalid transition for ${feature}: ${currentStatus} -> ${newStatus}`);
       return false;
     }
     
     return true;
   } catch (error) {
-    console.error(`Error checking state transition for ${feature}:`, error);
     return true; // Allow transition if we can't check
   }
 }

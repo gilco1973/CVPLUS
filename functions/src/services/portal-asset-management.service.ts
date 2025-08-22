@@ -131,14 +131,12 @@ export class PortalAssetManagementService {
   private bucket = this.storage.bucket();
 
   constructor() {
-    console.log('[ASSET-MANAGEMENT] Service initialized');
   }
 
   /**
    * Extract and process all assets from CV data
    */
   async extractAssetsFromCV(cvData: ParsedCV, jobId: string): Promise<AssetBundle> {
-    console.log(`[ASSET-MANAGEMENT] Extracting assets from CV for job: ${jobId}`);
     
     const extractedAssets: ProcessedAsset[] = [];
     const startTime = Date.now();
@@ -236,7 +234,6 @@ export class PortalAssetManagementService {
       return bundle;
 
     } catch (error) {
-      console.error(`[ASSET-MANAGEMENT] Asset extraction failed:`, error);
       throw new Error(`Asset extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -288,7 +285,6 @@ export class PortalAssetManagementService {
       };
 
     } catch (error) {
-      console.error(`[ASSET-MANAGEMENT] Asset processing failed for ${url}:`, error);
       throw error;
     }
   }
@@ -363,7 +359,6 @@ export class PortalAssetManagementService {
    * Generate template assets for portal
    */
   async generateTemplateAssets(portalConfig: PortalConfig): Promise<AssetBundle> {
-    console.log(`[ASSET-MANAGEMENT] Generating template assets for portal: ${portalConfig.id}`);
 
     const templateAssets: ProcessedAsset[] = [];
     const { template, customization } = portalConfig;
@@ -408,7 +403,6 @@ export class PortalAssetManagementService {
       return await this.createAssetBundle(templateAssets, portalConfig.jobId);
 
     } catch (error) {
-      console.error(`[ASSET-MANAGEMENT] Template asset generation failed:`, error);
       throw error;
     }
   }
@@ -417,7 +411,6 @@ export class PortalAssetManagementService {
    * Optimize assets for HuggingFace deployment
    */
   async optimizeForHuggingFace(assetBundle: AssetBundle, jobId: string): Promise<AssetBundle> {
-    console.log(`[ASSET-MANAGEMENT] Optimizing assets for HuggingFace deployment: ${jobId}`);
 
     const optimizedAssets: ProcessedAsset[] = [];
 

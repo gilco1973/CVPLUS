@@ -63,7 +63,6 @@ export const generateVideoIntro = onCall(
         videoData
       };
     } catch (error: any) {
-      console.error('Error generating video intro:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -118,7 +117,6 @@ export const generateAudioFromText = onCall(
         audioUrl
       };
     } catch (error) {
-      console.error('Error generating audio:', error);
       throw new HttpsError('internal', 'Failed to generate audio');
     }
   }
@@ -186,7 +184,6 @@ export const regenerateMedia = onCall(
         data: result
       };
     } catch (error) {
-      console.error('Error regenerating media:', error);
       throw new HttpsError('internal', 'Failed to regenerate media');
     }
   }
@@ -244,7 +241,6 @@ export const getMediaStatus = onCall(
         }
       };
     } catch (error) {
-      console.error('Error getting media status:', error);
       throw new HttpsError('internal', 'Failed to get media status');
     }
   }
@@ -300,7 +296,6 @@ export const downloadMediaContent = onCall(
         }
       };
     } catch (error) {
-      console.error('Error downloading media content:', error);
       throw new HttpsError('internal', 'Failed to download media content');
     }
   }

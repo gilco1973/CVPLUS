@@ -202,7 +202,6 @@ export class PerformanceMonitorService {
       });
 
     } catch (error) {
-      console.error('[PerformanceMonitor] Error recording generation metrics:', error);
       throw error;
     }
   }
@@ -279,7 +278,6 @@ export class PerformanceMonitorService {
       await this.checkPerformanceAlerts(generationId, updates, duration);
 
     } catch (error) {
-      console.error('[PerformanceMonitor] Error updating generation metrics:', error);
       throw error;
     }
   }
@@ -374,7 +372,6 @@ export class PerformanceMonitorService {
       return systemMetrics;
 
     } catch (error) {
-      console.error('[PerformanceMonitor] Error calculating system metrics:', error);
       throw error;
     }
   }
@@ -401,7 +398,6 @@ export class PerformanceMonitorService {
       return trendsQuery.docs.map(doc => doc.data() as SystemPerformanceMetrics);
 
     } catch (error) {
-      console.error('[PerformanceMonitor] Error getting performance trends:', error);
       throw error;
     }
   }
@@ -467,7 +463,6 @@ export class PerformanceMonitorService {
         .doc(event.eventId)
         .set(event);
     } catch (error) {
-      console.error('[PerformanceMonitor] Error recording analytics event:', error);
     }
   }
 

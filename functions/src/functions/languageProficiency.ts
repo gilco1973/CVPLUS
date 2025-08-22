@@ -81,7 +81,6 @@ export const generateLanguageVisualization = onCall(
         data: visualization
       };
     } catch (error: any) {
-      console.error('Error generating language visualization:', error);
       
       // Update status to failed
       await admin.firestore()
@@ -136,7 +135,6 @@ export const updateLanguageProficiency = onCall(
         proficiency: updatedProficiency
       };
     } catch (error: any) {
-      console.error('Error updating language proficiency:', error);
       throw new Error(`Failed to update language proficiency: ${error.message}`);
     }
   });
@@ -206,7 +204,6 @@ export const addLanguageProficiency = onCall(
         visualization
       };
     } catch (error: any) {
-      console.error('Error adding language proficiency:', error);
       throw new Error(`Failed to add language proficiency: ${error.message}`);
     }
   });
@@ -268,7 +265,6 @@ export const removeLanguageProficiency = onCall(
         visualization
       };
     } catch (error: any) {
-      console.error('Error removing language proficiency:', error);
       throw new Error(`Failed to remove language proficiency: ${error.message}`);
     }
   });
@@ -326,7 +322,6 @@ export const generateLanguageCertificate = onCall(
         certificate
       };
     } catch (error: any) {
-      console.error('Error generating language certificate:', error);
       throw new Error(`Failed to generate certificate: ${error.message}`);
     }
   });

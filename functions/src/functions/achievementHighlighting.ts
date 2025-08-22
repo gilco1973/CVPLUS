@@ -84,7 +84,6 @@ export const analyzeAchievements = onCall(
         recommendations: generateRecommendations(achievements, stats)
       };
     } catch (error: any) {
-      console.error('Error analyzing achievements:', error);
       
       // Update job with error status
       await admin.firestore().collection('jobs').doc(jobId).update({
@@ -149,7 +148,6 @@ export const generateAchievementShowcase = onCall(
         selectedAchievements: topAchievements
       };
     } catch (error) {
-      console.error('Error generating achievement showcase:', error);
       throw new HttpsError('internal', 'Failed to generate achievement showcase');
     }
   }

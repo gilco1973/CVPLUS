@@ -301,7 +301,6 @@ export class ErrorRecoveryEngine {
     context: RecoveryContext
   ): Promise<RecoveryResult> {
     const startTime = Date.now();
-    console.log(`[Error Recovery Engine] Handling error for job ${context.jobId}: ${error.message}`);
 
     try {
       // Record error
@@ -322,7 +321,6 @@ export class ErrorRecoveryEngine {
 
       // Check circuit breaker
       if (strategy.circuitBreakerEnabled && this.circuitBreaker.isOpen(context.providerId)) {
-        console.log(`[Error Recovery Engine] Circuit breaker open for ${context.providerId}, switching provider`);
         return await this.executeProviderSwitch(context);
       }
 
@@ -335,7 +333,6 @@ export class ErrorRecoveryEngine {
       return result;
 
     } catch (recoveryError: any) {
-      console.error(`[Error Recovery Engine] Recovery failed for job ${context.jobId}:`, recoveryError);
       
       return {
         success: false,
@@ -430,7 +427,6 @@ export class ErrorRecoveryEngine {
     const startTime = Date.now();
     
     if (context.attempt >= strategy.maxRetries) {
-      console.log(`[Error Recovery Engine] Max retries exceeded for ${context.providerId}`);
       return await this.executeProviderSwitch(context);
     }
 
@@ -442,7 +438,6 @@ export class ErrorRecoveryEngine {
       strategy.maxDelayMs
     );
 
-    console.log(`[Error Recovery Engine] Retrying ${context.providerId} after ${delay}ms delay (attempt ${context.attempt + 1})`);
     
     // Wait for backoff
     await new Promise(resolve => setTimeout(resolve, delay));
@@ -498,7 +493,6 @@ export class ErrorRecoveryEngine {
     const startTime = Date.now();
     
     try {
-      console.log(`[Error Recovery Engine] Switching provider from ${context.providerId}`);
       
       // Update selection criteria to exclude failed providers
       const updatedCriteria = {
@@ -514,7 +508,6 @@ export class ErrorRecoveryEngine {
       const selection = await this.providerSelectionEngine.selectOptimalProvider(updatedCriteria);
       const newProvider = selection.selectedProvider;
 
-      console.log(`[Error Recovery Engine] Selected new provider: ${newProvider.name}`);
 
       // Adjust options for new provider if needed
       const adjustedOptions = this.adjustOptionsForProvider(context.options, newProvider);
@@ -533,7 +526,6 @@ export class ErrorRecoveryEngine {
       };
 
     } catch (switchError: any) {
-      console.error('[Error Recovery Engine] Provider switch failed:', switchError);
       
       // Try graceful degradation as last resort
       return await this.executeGracefulDegradation(
@@ -550,7 +542,6 @@ export class ErrorRecoveryEngine {
     const startTime = Date.now();
     
     try {
-      console.log(`[Error Recovery Engine] Executing graceful degradation for job ${context.jobId}`);
       
       // Try to find any available provider with lower quality requirements
       const providers = this.providerSelectionEngine.getAllProviders();
@@ -558,7 +549,6 @@ export class ErrorRecoveryEngine {
       
       for (const provider of providers) {
         try {
-          console.log(`[Error Recovery Engine] Trying degraded generation with ${provider.name}`);
           const result = await provider.generateVideo(context.script, degradedOptions);
           
           return {
@@ -572,7 +562,6 @@ export class ErrorRecoveryEngine {
           };
           
         } catch (degradedError) {
-          console.log(`[Error Recovery Engine] Degraded attempt failed with ${provider.name}:`, degradedError);
           continue;
         }
       }
@@ -750,7 +739,6 @@ export class ErrorRecoveryEngine {
       await this.db.collection('error_recovery_logs').add(logData);
       
     } catch (error) {
-      console.error('[Error Recovery Engine] Failed to log recovery result:', error);
       // Non-critical error, don't throw
     }
   }
@@ -821,7 +809,6 @@ export class ErrorRecoveryEngine {
       };
 
     } catch (error) {
-      console.error('[Error Recovery Engine] Failed to get recovery statistics:', error);
       throw error;
     }
   }

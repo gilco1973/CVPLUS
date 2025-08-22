@@ -81,9 +81,7 @@ export class IndustrySpecializationService {
     try {
       await this.loadIndustryModels();
       this.initialized = true;
-      console.log('Industry specialization service initialized');
     } catch (error) {
-      console.error('Failed to initialize industry service:', error);
       throw error;
     }
   }

@@ -75,7 +75,6 @@ export class SystemSimulationService {
    * Simulate multiple ATS systems parsing the CV
    */
   async simulateATSSystems(parsedCV: ParsedCV): Promise<ATSSystemSimulation[]> {
-    console.log('🤖 Starting ATS System Simulations...');
     
     const simulations: ATSSystemSimulation[] = [];
     
@@ -85,12 +84,10 @@ export class SystemSimulationService {
         const simulation = this.simulateSpecificATS(parsedCV, systemName, config);
         simulations.push(simulation);
       } catch (error) {
-        console.error(`Error simulating ${systemName}:`, error);
         // Continue with other systems even if one fails
       }
     }
     
-    console.log(`✅ Completed ${simulations.length} ATS system simulations`);
     return simulations;
   }
 

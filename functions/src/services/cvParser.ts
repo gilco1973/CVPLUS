@@ -278,7 +278,6 @@ ${text}`;
 
       throw new Error('Failed to parse CV data from Claude response');
     } catch (error: any) {
-      console.error('Error parsing with Claude:', error);
       
       // Handle specific API errors with user-friendly messages
       if (error.status === 400 && error.error?.error?.message?.includes('credit balance is too low')) {

@@ -324,7 +324,6 @@ export class ProviderSelectionEngine {
 
   registerProvider(provider: VideoGenerationProvider): void {
     this.providers.set(provider.name, provider);
-    console.log(`[Provider Selection Engine] Registered provider: ${provider.name} (priority: ${provider.priority})`);
   }
 
   async selectOptimalProvider(
@@ -392,7 +391,6 @@ export class ProviderSelectionEngine {
       };
 
     } catch (error: any) {
-      console.error('[Provider Selection Engine] Selection failed:', error);
       
       if (error instanceof VideoProviderError) {
         throw error;
@@ -417,13 +415,11 @@ export class ProviderSelectionEngine {
     return availableProviders.filter(provider => {
       // Skip providers that failed recently
       if ((context.previousFailures || []).includes(provider.name)) {
-        console.log(`[Provider Selection Engine] Skipping ${provider.name} due to recent failure`);
         return false;
       }
       
       // Check if provider can handle requirements
       if (!provider.canHandle(requirements)) {
-        console.log(`[Provider Selection Engine] ${provider.name} cannot handle requirements`);
         return false;
       }
       
@@ -438,19 +434,16 @@ export class ProviderSelectionEngine {
     return scoredProviders.filter(scored => {
       // Cost threshold filter
       if (businessRules.maxCostThreshold && scored.cost > businessRules.maxCostThreshold) {
-        console.log(`[Provider Selection Engine] ${scored.provider.name} exceeds cost threshold: $${scored.cost}`);
         return false;
       }
       
       // Quality threshold filter
       if (businessRules.minQualityThreshold && scored.qualityScore < businessRules.minQualityThreshold) {
-        console.log(`[Provider Selection Engine] ${scored.provider.name} below quality threshold: ${scored.qualityScore}`);
         return false;
       }
       
       // Speed requirement filter
       if (businessRules.speedRequirement === 'critical' && !scored.provider.capabilities.realTimeGeneration) {
-        console.log(`[Provider Selection Engine] ${scored.provider.name} doesn't support real-time generation for critical speed`);
         return false;
       }
       
@@ -525,7 +518,6 @@ export class ProviderSelectionEngine {
 
       await this.db.collection('provider_selection_logs').add(logData);
     } catch (error) {
-      console.error('[Provider Selection Engine] Failed to log selection decision:', error);
       // Non-critical error, don't throw
     }
   }
@@ -580,7 +572,6 @@ export class ProviderSelectionEngine {
         generatedAt: new Date()
       };
     } catch (error) {
-      console.error('[Provider Selection Engine] Failed to get analytics:', error);
       throw error;
     }
   }

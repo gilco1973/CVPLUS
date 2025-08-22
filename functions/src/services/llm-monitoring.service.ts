@@ -119,11 +119,9 @@ export class LLMMonitoringService {
         await this.collectMetrics();
         await this.evaluateAlerts();
       } catch (error) {
-        console.error('Monitoring service error:', error);
       }
     }, intervalMinutes * 60 * 1000);
 
-    console.log(`LLM Monitoring started with ${intervalMinutes}-minute intervals`);
   }
 
   /**

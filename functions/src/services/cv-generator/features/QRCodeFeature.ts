@@ -280,29 +280,23 @@ export class QRCodeFeature implements CVFeature {
           const placeholders = document.querySelectorAll('.react-component-placeholder[data-component="DynamicQRCode"]');
           
           if (placeholders.length === 0) {
-            console.log('No DynamicQRCode placeholders found');
             return false;
           }
           
-          console.log('🔄 Initializing React DynamicQRCode components...', placeholders.length, 'found');
           
           placeholders.forEach((placeholder, index) => {
             try {
               const propsString = placeholder.dataset.props || '{}';
               const props = JSON.parse(propsString.replace(/&apos;/g, "'"));
               
-              console.log('DynamicQRCode props for component', index + 1, ':', props);
               
               // Check if React component renderer is available
               if (typeof window.renderReactComponent === 'function') {
-                console.log('✅ React renderer available, rendering DynamicQRCode');
                 window.renderReactComponent('DynamicQRCode', props, placeholder);
               } else {
-                console.log('⚠️ React renderer not available, showing fallback QR code');
                 showQRFallback(placeholder, props);
               }
             } catch (error) {
-              console.error('Failed to parse DynamicQRCode props:', error);
               showQRError(placeholder, error.message);
             }
           });
@@ -365,7 +359,6 @@ export class QRCodeFeature implements CVFeature {
         
         // Initialize when DOM is ready
         function startInitialization() {
-          console.log('🚀 Starting DynamicQRCode initialization...');
           initReactComponents();
         }
         

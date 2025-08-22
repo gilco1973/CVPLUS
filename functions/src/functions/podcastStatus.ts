@@ -67,7 +67,6 @@ export const podcastStatus = onCall(
         };
       }
     } catch (error: any) {
-      console.error('Error checking podcast status:', error);
       throw new Error(error.message || 'Failed to check podcast status');
     }
   }

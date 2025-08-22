@@ -63,7 +63,6 @@ export const podcastStatusPublic = onRequest(
         });
       }
     } catch (error: any) {
-      console.error('Error checking podcast status:', error);
       res.status(500).json({
         status: 'error',
         error: error.message

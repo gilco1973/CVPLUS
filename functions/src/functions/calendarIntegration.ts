@@ -94,7 +94,6 @@ export const generateCalendarEvents = onCall(
         data: calendarData
       };
     } catch (error: any) {
-      console.error('Error generating calendar events:', error);
       
       // Update status to failed
       await admin.firestore()
@@ -165,7 +164,6 @@ export const syncToGoogleCalendar = onCall(
         integration
       };
     } catch (error: any) {
-      console.error('Error syncing to Google Calendar:', error);
       throw new Error(`Failed to sync to Google Calendar: ${error.message}`);
     }
   });
@@ -224,7 +222,6 @@ export const syncToOutlook = onCall(
         integration
       };
     } catch (error: any) {
-      console.error('Error syncing to Outlook:', error);
       throw new Error(`Failed to sync to Outlook: ${error.message}`);
     }
   });
@@ -281,7 +278,6 @@ export const downloadICalFile = onCall(
         integration
       };
     } catch (error: any) {
-      console.error('Error creating iCal file:', error);
       throw new Error(`Failed to create iCal file: ${error.message}`);
     }
   });
@@ -395,7 +391,6 @@ export const handleCalendarCallback = onCall(
         return await calendarService.createOutlookIntegration(events, jobId, accessToken);
       }
     } catch (error: any) {
-      console.error('Error handling calendar callback:', error);
       throw new Error(`Failed to complete calendar authorization: ${error.message}`);
     }
   });

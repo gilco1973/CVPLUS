@@ -166,7 +166,6 @@ export class ValidationService {
       };
 
     } catch (error) {
-      console.error('[VALIDATION] CV validation failed:', error);
       errors.push({
         field: 'general',
         code: 'VALIDATION_ERROR',

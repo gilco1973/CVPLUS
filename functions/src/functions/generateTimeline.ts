@@ -55,7 +55,6 @@ export const generateTimeline = onCall(
       });
       
       if (!processingResult.success) {
-        console.error('[Timeline Generation] Failed to update processing status:', processingResult.errors);
         throw new Error('Failed to initialize timeline processing status');
       }
 
@@ -73,7 +72,6 @@ export const generateTimeline = onCall(
       });
       
       if (!progressResult.success) {
-        console.warn('[Timeline Generation] Failed to update progress:', progressResult.errors);
         // Continue processing even if progress update fails
       }
 
@@ -100,7 +98,6 @@ export const generateTimeline = onCall(
       });
       
       if (!finalResult.success) {
-        console.error('[Timeline Generation] CRITICAL: Failed to store final timeline data:', finalResult.errors);
         throw new Error(`Failed to store timeline data: ${finalResult.errors?.join(', ')}`);
       }
       
@@ -117,7 +114,6 @@ export const generateTimeline = onCall(
         htmlFragment: null
       };
     } catch (error: any) {
-      console.error('Error generating timeline:', error);
       
       // Use enhanced error handling
       try {
@@ -147,11 +143,9 @@ export const generateTimeline = onCall(
         });
         
         if (!errorResult.success) {
-          console.error('[Timeline Generation] Failed to update error status:', errorResult.errors);
           // Don't throw here to avoid masking the original error
         }
       } catch (updateError) {
-        console.error('Failed to update job status after error:', updateError);
       }
       
       // Handle error with enhanced error handling
@@ -236,7 +230,6 @@ export const updateTimelineEvent = onCall(
         event: timeline.events[eventIndex]
       };
     } catch (error: any) {
-      console.error('Error updating timeline event:', error);
       throw new Error(`Failed to update timeline event: ${error.message}`);
     }
   });
@@ -328,7 +321,6 @@ export const exportTimeline = onCall(
         size: Buffer.byteLength(exportData)
       };
     } catch (error: any) {
-      console.error('Error exporting timeline:', error);
       throw new Error(`Failed to export timeline: ${error.message}`);
     }
   });

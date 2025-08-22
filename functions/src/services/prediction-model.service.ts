@@ -90,7 +90,6 @@ export class PredictionModelService {
       if (this.ENABLE_CACHING && this.predictionCache.has(cacheKey)) {
         const cached = this.predictionCache.get(cacheKey)!;
         if (Date.now() - cached.timestamp.getTime() < this.CACHE_TTL) {
-          console.log(`Returning cached prediction for ${cacheKey}`);
           return cached.prediction;
         }
       }
@@ -163,7 +162,6 @@ export class PredictionModelService {
       return successPrediction;
       
     } catch (error) {
-      console.error('Prediction generation failed:', error);
       
       // Return fallback prediction
       return this.getFallbackPrediction(request);
@@ -280,7 +278,6 @@ export class PredictionModelService {
       };
       
     } catch (error) {
-      console.error('Model prediction failed:', error);
       
       // Fallback to conservative estimates
       return {
@@ -743,7 +740,6 @@ export class PredictionModelService {
         modelVersion: prediction.modelMetadata.modelVersion
       });
     } catch (error) {
-      console.error('Failed to store prediction:', error);
     }
   }
 

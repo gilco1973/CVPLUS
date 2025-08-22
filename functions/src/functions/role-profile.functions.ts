@@ -43,7 +43,6 @@ export const detectRoleProfile = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`[detectRoleProfile] Starting role detection - jobId: ${jobId}, userId: ${userId}`);
 
       let parsedCV: ParsedCV;
       
@@ -70,7 +69,6 @@ export const detectRoleProfile = onCall(
         if (cachedResult && !forceRegenerate) {
           const isExpired = (Date.now() - cachedResult.timestamp) > ROLE_CACHE_DURATION;
           if (!isExpired) {
-            console.log(`[detectRoleProfile] Returning cached result for ${cacheKey}`);
             return {
               success: true,
               data: {
@@ -91,7 +89,6 @@ export const detectRoleProfile = onCall(
       const roleDetectionService = new RoleDetectionService();
       const analysis = await roleDetectionService.detectRoles(parsedCV);
 
-      console.log(`[detectRoleProfile] Detection complete. Primary role: ${analysis.primaryRole.roleName} (confidence: ${analysis.primaryRole.confidence})`);
 
       // Store role detection results in job document if jobId provided
       if (jobId) {
@@ -125,7 +122,6 @@ export const detectRoleProfile = onCall(
       };
 
     } catch (error: any) {
-      console.error('[detectRoleProfile] Error:', error);
       
       // Update job status if jobId provided
       if (jobId) {
@@ -135,7 +131,6 @@ export const detectRoleProfile = onCall(
             lastRoleDetectionError: new Date().toISOString()
           });
         } catch (dbError) {
-          console.error('[detectRoleProfile] Failed to update job status:', dbError);
         }
       }
 
@@ -162,7 +157,6 @@ export const getRoleProfiles = onCall(
     const { category, searchQuery, limit } = request.data;
 
     try {
-      console.log('[getRoleProfiles] Fetching role profiles', { category, searchQuery, limit });
 
       const roleProfileService = new RoleProfileService();
 
@@ -184,7 +178,6 @@ export const getRoleProfiles = onCall(
         profiles = profiles.slice(0, limit);
       }
 
-      console.log(`[getRoleProfiles] Retrieved ${profiles.length} profiles`);
 
       // Get service metrics for additional context
       const metrics = await roleProfileService.getMetrics();
@@ -204,7 +197,6 @@ export const getRoleProfiles = onCall(
       };
 
     } catch (error: any) {
-      console.error('[getRoleProfiles] Error:', error);
       throw new Error(`Failed to retrieve role profiles: ${error.message}`);
     }
   }
@@ -236,7 +228,6 @@ export const applyRoleProfile = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`[applyRoleProfile] Applying role profile ${roleProfileId} to job ${jobId}`);
 
       // Get the job document
       const jobDoc = await db.collection('jobs').doc(jobId).get();
@@ -346,7 +337,6 @@ export const applyRoleProfile = onCall(
 
       await db.collection('jobs').doc(jobId).update(updateData);
 
-      console.log(`[applyRoleProfile] Successfully applied role profile ${roleProfile.name} to job ${jobId}`);
 
       return {
         success: true,
@@ -366,7 +356,6 @@ export const applyRoleProfile = onCall(
       };
 
     } catch (error: any) {
-      console.error('[applyRoleProfile] Error:', error);
       
       // Update job status on error
       try {
@@ -379,7 +368,6 @@ export const applyRoleProfile = onCall(
           totalStages: null
         });
       } catch (dbError) {
-        console.error('[applyRoleProfile] Failed to update job status:', dbError);
       }
 
       throw new Error(`Role profile application failed: ${error.message}`);
@@ -413,7 +401,6 @@ export const getRoleBasedRecommendations = onCall(
     const userId = request.auth.uid;
 
     try {
-      console.log(`[getRoleBasedRecommendations] Generating role-based recommendations for job ${jobId}`);
 
       // Get the job document
       const jobDoc = await db.collection('jobs').doc(jobId).get();
@@ -438,7 +425,6 @@ export const getRoleBasedRecommendations = onCall(
         (new Date().getTime() - new Date(lastRoleRecommendationGeneration).getTime()) < 12 * 60 * 60 * 1000; // 12 hours
 
       if (existingRoleRecommendations && existingRoleRecommendations.length > 0 && isRecentGeneration && !forceRegenerate) {
-        console.log('[getRoleBasedRecommendations] Using cached role-based recommendations');
         return {
           success: true,
           data: {
@@ -516,7 +502,6 @@ export const getRoleBasedRecommendations = onCall(
         totalStages: null
       });
 
-      console.log(`[getRoleBasedRecommendations] Generated ${recommendations.length} role-based recommendations`);
 
       return {
         success: true,
@@ -534,7 +519,6 @@ export const getRoleBasedRecommendations = onCall(
       };
 
     } catch (error: any) {
-      console.error('[getRoleBasedRecommendations] Error:', error);
       
       // Update job status on error
       try {
@@ -547,7 +531,6 @@ export const getRoleBasedRecommendations = onCall(
           totalStages: null
         });
       } catch (dbError) {
-        console.error('[getRoleBasedRecommendations] Failed to update job status:', dbError);
       }
 
       throw new Error(`Role-based recommendations generation failed: ${error.message}`);
@@ -564,7 +547,6 @@ async function generateRoleBasedRecommendations(
   roleMatch: any,
   customizationOptions?: any
 ): Promise<any[]> {
-  console.log(`[generateRoleBasedRecommendations] Generating recommendations for role: ${roleProfile.name}`);
 
   const recommendations: any[] = [];
 
@@ -663,7 +645,6 @@ async function generateRoleBasedRecommendations(
     });
   }
 
-  console.log(`[generateRoleBasedRecommendations] Generated ${recommendations.length} recommendations`);
   return recommendations;
 }
 
@@ -743,7 +724,6 @@ async function getRoleProfileInfo(roleProfileId: string): Promise<any> {
       industryFocus: roleProfile.industryFocus
     };
   } catch (error) {
-    console.error('[getRoleProfileInfo] Error:', error);
     return null;
   }
 }

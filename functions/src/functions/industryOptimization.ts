@@ -85,7 +85,6 @@ export const optimizeForIndustry = onCall(
       };
       
     } catch (error) {
-      console.error('Industry optimization failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -128,7 +127,6 @@ export const getSupportedIndustries = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get supported industries:', error);
       throw new HttpsError('internal', 'Failed to retrieve supported industries');
     }
   }
@@ -171,7 +169,6 @@ export const getIndustryInsights = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get industry insights:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -247,7 +244,6 @@ export const compareIndustries = onCall(
             };
             
           } catch (error) {
-            console.error(`Comparison failed for industry ${industry}:`, error);
             return {
               industry,
               success: false,
@@ -293,7 +289,6 @@ export const compareIndustries = onCall(
       };
       
     } catch (error) {
-      console.error('Industry comparison failed:', error);
       
       if (error instanceof HttpsError) {
         throw error;
@@ -362,7 +357,6 @@ export const getUserIndustryHistory = onCall(
       };
       
     } catch (error) {
-      console.error('Failed to get user industry history:', error);
       throw new HttpsError('internal', 'Failed to retrieve industry optimization history');
     }
   }
@@ -423,7 +417,6 @@ async function logIndustryOptimization(
       }
     });
   } catch (error) {
-    console.error('Failed to log industry optimization:', error);
   }
 }
 
@@ -438,7 +431,6 @@ async function updateUserIndustryPreferences(userId: string, industry: string): 
       }
     }, { merge: true });
   } catch (error) {
-    console.error('Failed to update user industry preferences:', error);
   }
 }
 
@@ -448,7 +440,6 @@ async function getIndustryStatistics(): Promise<Record<string, any>> {
     const statsSnapshot = await db.collection('industry_stats').doc('aggregate').get();
     return statsSnapshot.data() || {};
   } catch (error) {
-    console.error('Failed to get industry statistics:', error);
     return {};
   }
 }
@@ -491,7 +482,6 @@ async function getComprehensiveIndustryInsights(industry: string, region: string
 
     return insights;
   } catch (error) {
-    console.error('Failed to get industry insights:', error);
     throw error;
   }
 }
@@ -509,7 +499,6 @@ async function logIndustryComparison(userId: string, industries: string[], resul
       timestamp: FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Failed to log industry comparison:', error);
   }
 }
 
@@ -545,7 +534,6 @@ async function getUserIndustryPreferences(userId: string): Promise<any> {
     const userDoc = await db.collection('users').doc(userId).get();
     return userDoc.data()?.industryPreferences || {};
   } catch (error) {
-    console.error('Failed to get user industry preferences:', error);
     return {};
   }
 }
