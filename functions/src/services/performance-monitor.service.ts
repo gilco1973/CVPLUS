@@ -157,7 +157,13 @@ export class PerformanceMonitorService {
           networkLatency: 0
         },
         metadata: {
-          videoLength: options.duration || 30,
+          videoLength: (() => {
+            const duration = options.duration;
+            if (duration === 'short') return 30;
+            if (duration === 'medium') return 60;
+            if (duration === 'long') return 90;
+            return 30;
+          })(),
           resolution: options.resolution || '1920x1080',
           format: options.format || 'mp4',
           features: options.features || [],

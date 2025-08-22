@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeftRight, 
   ChevronLeft, 
@@ -157,14 +156,10 @@ export const MobileComparisonView: React.FC<MobileComparisonViewProps> = ({
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
+        <div>
+          <div 
+            className="animate-fade-in p-4"
             key={`${currentSection.sectionName}-${viewMode}`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="p-4"
           >
             {viewMode === 'before' && (
               <BeforeView content={currentSection.before} />
@@ -183,8 +178,8 @@ export const MobileComparisonView: React.FC<MobileComparisonViewProps> = ({
                 sectionName={getSectionDisplayName(currentSection.sectionName)}
               />
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { videoGenerationService } from '../services/video-generation.service';
 import { enhancedVideoGenerationService, EnhancedVideoGenerationOptions } from '../services/enhanced-video-generation.service';
-import { premiumGuard } from '../middleware/premiumGuard';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 // htmlFragmentGenerator import removed - using React SPA architecture
 
 export const generateVideoIntroduction = onCall(
@@ -13,14 +13,9 @@ export const generateVideoIntroduction = onCall(
     memory: '2GiB',
     ...corsOptions
   },
-  async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+  withPremiumAccess('videoIntroduction', async (request) => {
 
-    // Check premium access for video introduction feature
-    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
-
+    const userId = request.auth.uid;
     const { 
       jobId, 
       duration = 'medium',
@@ -79,8 +74,9 @@ export const generateVideoIntroduction = onCall(
       
       const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
         jobData.parsedData,
+        enhancedOptions,
         jobId,
-        enhancedOptions
+        userId
       );
 
       // Update progress
@@ -159,7 +155,8 @@ export const generateVideoIntroduction = onCall(
       
       throw new Error(`Failed to generate video introduction: ${error.message}`);
     }
-  });
+  })
+);
 
 export const regenerateVideoIntroduction = onCall(
   {
@@ -167,14 +164,9 @@ export const regenerateVideoIntroduction = onCall(
     memory: '2GiB',
     ...corsOptions
   },
-  async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
+  withPremiumAccess('videoIntroduction', async (request) => {
 
-    // Check premium access for video introduction feature
-    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
-
+    const userId = request.auth.uid;
     const { 
       jobId,
       customScript,
@@ -268,8 +260,9 @@ export const regenerateVideoIntroduction = onCall(
         
         const videoResult = await enhancedVideoGenerationService.generateVideoIntroduction(
           jobData!.parsedData,
+          regenerateOptions,
           jobId,
-          regenerateOptions
+          userId
         );
 
         await admin.firestore()
@@ -314,20 +307,15 @@ export const regenerateVideoIntroduction = onCall(
       
       throw new Error(`Failed to regenerate video: ${error.message}`);
     }
-  });
+  })
+);
 
 // Export additional function to check video generation status
 export const getVideoStatus = onCall(
   {
     ...corsOptions
   },
-  async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
-
-    // Check premium access for video introduction feature
-    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
+  withPremiumAccess('videoIntroduction', async (request) => {
 
     const { jobId } = request.data;
 
@@ -351,20 +339,15 @@ export const getVideoStatus = onCall(
     } catch (error: any) {
       throw new Error(`Failed to get video status: ${error.message}`);
     }
-  });
+  })
+);
 
 // Enhanced video status check with real-time provider status
 export const getEnhancedVideoStatus = onCall(
   {
     ...corsOptions
   },
-  async (request) => {
-    if (!request.auth) {
-      throw new Error('User must be authenticated');
-    }
-
-    // Check premium access for video introduction feature
-    await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
+  withPremiumAccess('videoIntroduction', async (request) => {
 
     const { jobId } = request.data;
 
@@ -414,4 +397,5 @@ export const getEnhancedVideoStatus = onCall(
         fallback: true
       };
     }
-  });
+  })
+);

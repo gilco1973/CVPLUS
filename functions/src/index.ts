@@ -43,6 +43,8 @@ export { podcastStatus } from './functions/podcastStatus';
 export { podcastStatusPublic } from './functions/podcastStatusPublic';
 export { testConfiguration } from './functions/testConfiguration';
 export { testAuth } from './functions/testAuth';
+export { updateJobFeatures } from './functions/updateJobFeatures';
+export { updatePlaceholderValue } from './functions/updatePlaceholderValue';
 
 // Export video generation functions
 export { 
@@ -191,8 +193,16 @@ export {
 
 // Export CORS testing functions
 export {
-  testCors
+  testCors,
+  testCorsCall
 } from './functions/corsTestFunction';
+
+// Export comprehensive CORS testing scripts
+export {
+  testCorsHTTP,
+  testCorsCallable,
+  validateCorsConfiguration
+} from './scripts/test-cors';
 
 // Export CV improvement functions
 export { 
@@ -293,3 +303,11 @@ export {
 export {
   videoAnalyticsDashboard
 } from './functions/video-analytics-dashboard';
+
+// Export role profile functions
+export {
+  detectRoleProfile,
+  getRoleProfiles,
+  applyRoleProfile,
+  getRoleBasedRecommendations
+} from './functions/role-profile.functions';

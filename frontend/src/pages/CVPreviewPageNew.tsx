@@ -23,6 +23,8 @@ import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { useAuth } from '../contexts/AuthContext';
 // Placeholder handling - only for user-provided replacements
 import { PlaceholderReplacements } from '../utils/placeholderReplacer';
+import { PlaceholderEditingProvider } from '../contexts/PlaceholderEditingContext';
+import { EditablePlaceholderWrapper } from '../utils/editablePlaceholderUtils';
 
 // Layout and common components
 import { Header } from '../components/Header';
@@ -41,6 +43,18 @@ import { CVPreviewLayout } from '../components/common/CVPreviewLayout';
 
 // Types
 import type { Job } from '../services/cvService';
+
+// Handler for updating CV content when placeholders are edited
+const handleContentUpdate = async (newContent: string, fieldPath: string, section: string) => {
+  try {
+    console.log('Content updated:', { newContent, fieldPath, section });
+    // TODO: Implement real-time CV update via Firebase function
+    // This will call the backend to update the CV data in the database
+  } catch (error) {
+    console.error('Failed to update CV content:', error);
+    toast.error('Failed to save changes');
+  }
+};
 
 interface CVPreviewPageNewProps {
   className?: string;
@@ -136,7 +150,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
       summary: processTextWithPlaceholders(enhancedSourceData.summary || ''),
     } : originalData;
     
-    // Debug logging to help track the data source
+    // Enhanced debug logging to help track the data source and comparison
     if (process.env.NODE_ENV === 'development') {
       console.log('[CVPreview] Data sources:', {
         hasJobImprovedCV: !!job?.improvedCV,
@@ -144,7 +158,10 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
         enhancedDataSource: enhancedSourceData ? 'enhanced' : 'original',
         originalSummaryLength: originalData.summary.length,
         enhancedSummaryLength: enhancedData.summary.length,
-        summaryHasPlaceholders: enhancedData.summary.includes('[')
+        summaryHasPlaceholders: enhancedData.summary.includes('['),
+        originalSummaryPreview: originalData.summary.substring(0, 100) + '...',
+        enhancedSummaryPreview: enhancedData.summary.substring(0, 100) + '...',
+        summariesAreDifferent: originalData.summary !== enhancedData.summary
       });
     }
     
@@ -517,7 +534,8 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
             toast.error('Error loading CV preview');
           }}
         >
-          <Suspense fallback={<CVPreviewSkeleton />}>
+          <PlaceholderEditingProvider jobId={jobId || ''}>
+            <Suspense fallback={<CVPreviewSkeleton />}>
             {viewMode === 'single' ? (
               /* Single View - Enhanced CV Only */
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -531,13 +549,22 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                   {cvData.enhanced.summary && (
                     <section className="border-b border-gray-200 pb-6">
                       <h2 className="text-xl font-bold text-gray-900 mb-4">Professional Summary</h2>
-                      <p className="text-gray-700 leading-relaxed">{cvData.enhanced.summary}</p>
+                      <div className="text-gray-700 leading-relaxed">
+                        <EditablePlaceholderWrapper
+                          content={cvData.enhanced.summary}
+                          onContentUpdate={(newContent) => handleContentUpdate(newContent, 'summary', 'professional_summary')}
+                          fieldPath="summary"
+                          section="professional_summary"
+                          fallbackToStatic={true}
+                        />
+                      </div>
                     </section>
                   )}
 
                   <CVExperience 
                     data={cvData.enhanced.experience}
                     jobId={jobId}
+                    onContentUpdate={handleContentUpdate}
                   />
 
                   <CVSkills 
@@ -554,6 +581,47 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
             ) : (
               /* Comparison View - Side by Side */
               <div className="space-y-6">
+                {/* Development Debug Panel for Comparison */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-bold text-black mb-2">🔍 Debug: Comparison Data</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <strong className="text-black">Original Summary (first 200 chars):</strong>
+                        <div className="bg-white p-2 rounded mt-1 max-h-20 overflow-auto text-black border">
+                          {cvData.original.summary.substring(0, 200)}...
+                        </div>
+                      </div>
+                      <div>
+                        <strong className="text-black">Enhanced Summary (first 200 chars):</strong>
+                        <div className="bg-white p-2 rounded mt-1 max-h-20 overflow-auto text-black border">
+                          {cvData.enhanced.summary.substring(0, 200)}...
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm space-y-2">
+                      <div>
+                        <strong className="text-black">Are they different?</strong> 
+                        <span className="text-black font-bold">
+                          {cvData.original.summary !== cvData.enhanced.summary ? '✅ YES' : '❌ NO - IDENTICAL'}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-black">Character count:</strong> 
+                        <span className="text-black">
+                          Original: {cvData.original.summary.length} | Enhanced: {cvData.enhanced.summary.length}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-black">Has placeholders:</strong> 
+                        <span className="text-black">
+                          {cvData.enhanced.summary.includes('[') ? '✅ YES ([INSERT] placeholders found)' : '❌ NO'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Comparison Headers */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -611,7 +679,15 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       </div>
                       <div className="p-6">
                         {cvData.enhanced.summary ? (
-                          <p className="text-gray-700 leading-relaxed">{cvData.enhanced.summary}</p>
+                          <div className="text-gray-700 leading-relaxed">
+                            <EditablePlaceholderWrapper
+                              content={cvData.enhanced.summary}
+                              onContentUpdate={(newContent) => handleContentUpdate(newContent, 'summary', 'professional_summary')}
+                              fieldPath="summary"
+                              section="professional_summary"
+                              fallbackToStatic={true}
+                            />
+                          </div>
                         ) : (
                           <p className="text-gray-400 italic">No summary provided</p>
                         )}
@@ -636,6 +712,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       <CVExperience 
                         data={cvData.enhanced.experience}
                         jobId={jobId}
+                        onContentUpdate={handleContentUpdate}
                       />
                     </div>
                   </div>
@@ -684,7 +761,8 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                 </div>
               </div>
             )}
-          </Suspense>
+            </Suspense>
+          </PlaceholderEditingProvider>
         </ErrorBoundary>
 
         {/* Bottom Actions */}

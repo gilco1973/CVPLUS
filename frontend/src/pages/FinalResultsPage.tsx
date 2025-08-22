@@ -139,7 +139,7 @@ export const FinalResultsPage = () => {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header currentPage="final-results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-none mx-auto px-6 py-8">
           <div className="bg-neutral-800 rounded-lg shadow-lg p-8 text-center border border-neutral-700 error-shake">
             <FileText className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-100 mb-2">Error Loading CV</h1>
@@ -191,7 +191,7 @@ export const FinalResultsPage = () => {
           variant="dark" 
         />
         
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="max-w-none mx-auto px-6 py-8">
           <AsyncGenerationErrorBoundary>
             {/* Backend-processed Features Section - Already Included */}
             {job && job.selectedFeatures && (() => {
@@ -276,6 +276,7 @@ export const FinalResultsPage = () => {
               <CVMetadata job={job} />
               <DownloadActions job={job} />
             </div>
+
 
             {/* Podcast Player */}
             {generationConfig?.features?.generatePodcast && (
@@ -384,7 +385,7 @@ export const FinalResultsPage = () => {
                     </div>
                   )}
                   
-                  <div className="bg-white rounded-lg p-6 overflow-auto max-h-[600px]">
+                  <div className="bg-white rounded-lg p-6 overflow-auto max-h-[80vh]">
                     {/* Use CVComparisonView if we have both original and improved data */}
                     {job.parsedData && job.improvedCV && !showComparison ? (
                       <CVComparisonView

@@ -8,6 +8,21 @@
 import React, { memo, useState } from 'react';
 import { GraduationCap, Calendar, MapPin, Award, BookOpen, ExternalLink, Star, ChevronDown, ChevronUp } from 'lucide-react';
 
+// Utility function to highlight placeholders in text
+const highlightPlaceholders = (text: string): React.ReactNode[] => {
+  if (!text) return [text];
+  
+  return text.split(/(\[INSERT[^\]]*\]|\[ADD[^\]]*\]|\[NUMBER[^\]]*\])/).map((part, index) => 
+    /\[(INSERT|ADD|NUMBER)[^\]]*\]/.test(part) ? (
+      <span key={index} className="bg-yellow-200 px-1 py-0.5 rounded text-black font-medium border">
+        {part}
+      </span>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+};
+
 interface EducationItem {
   id?: string;
   institution: string;
@@ -258,7 +273,7 @@ export const CVEducation: React.FC<CVEducationProps> = memo(({
                       {education.description && (
                         <div className="mb-4">
                           <p className="text-gray-700 leading-relaxed text-sm">
-                            {education.description}
+                            {highlightPlaceholders(education.description)}
                           </p>
                         </div>
                       )}
@@ -295,7 +310,7 @@ export const CVEducation: React.FC<CVEducationProps> = memo(({
                           </h4>
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 ml-6">
                             {education.achievements.map((achievement, achIndex) => (
-                              <li key={achIndex}>{achievement}</li>
+                              <li key={achIndex}>{highlightPlaceholders(achievement)}</li>
                             ))}
                           </ul>
                         </div>

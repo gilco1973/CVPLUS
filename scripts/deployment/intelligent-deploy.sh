@@ -259,6 +259,21 @@ main() {
     
     show_banner
     
+    # Check for production mode
+    if [[ "${DEPLOYMENT_MODE:-}" == "production" ]]; then
+        log INFO "🚀 PRODUCTION DEPLOYMENT MODE ACTIVATED"
+        log INFO "Target Environment: ${TARGET_ENVIRONMENT:-production}"
+        
+        if [[ "${BLUE_GREEN_MODE:-}" == "true" ]]; then
+            log INFO "Strategy: Blue-Green Deployment (Zero Downtime)"
+        fi
+        
+        # Production deployment uses stricter validation and different timeouts
+        export VALIDATION_MODE="production"
+        export PRODUCTION_DEPLOYMENT="true"
+        echo ""
+    fi
+    
     log INFO "Starting intelligent Firebase deployment..."
     log INFO "Project: $PROJECT_ROOT"
     log INFO "Log file: $LOG_FILE"

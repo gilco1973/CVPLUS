@@ -451,8 +451,17 @@ export class ErrorRecoveryService {
   private async storeErrorInFirestore(context: ErrorContext): Promise<void> {
     try {
       const errorCollection = collection(db, 'error_recovery');
+      
+      // Filter out undefined fields to prevent Firestore validation errors
+      const sanitizedContext = Object.entries(context).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
       await addDoc(errorCollection, {
-        ...context,
+        ...sanitizedContext,
         timestamp: serverTimestamp()
       });
     } catch (error) {

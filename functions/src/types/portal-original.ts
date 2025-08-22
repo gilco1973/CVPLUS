@@ -13,6 +13,7 @@ import type { FieldValue } from 'firebase-admin/firestore';
 
 // Import modular types (avoiding conflicts with local definitions)
 import { THEME_PRESETS, PortalTheme } from './portal-theme';
+import type { PortalErrorCode } from './portal';
 import { HuggingFaceSpaceConfig } from './portal-huggingface';
 import { PortalUrls } from './portal-analytics';
 
@@ -870,39 +871,7 @@ export interface PortalError {
   category: ErrorCategory;
 }
 
-/**
- * Portal error codes
- */
-export enum PortalErrorCode {
-  // Input validation errors
-  INVALID_CV_DATA = 'INVALID_CV_DATA',
-  MISSING_REQUIRED_FIELDS = 'MISSING_REQUIRED_FIELDS',
-  INVALID_TEMPLATE_CONFIG = 'INVALID_TEMPLATE_CONFIG',
-  
-  // Generation errors
-  TEMPLATE_GENERATION_FAILED = 'TEMPLATE_GENERATION_FAILED',
-  CUSTOMIZATION_FAILED = 'CUSTOMIZATION_FAILED',
-  ASSET_PROCESSING_FAILED = 'ASSET_PROCESSING_FAILED',
-  
-  // RAG system errors
-  EMBEDDING_GENERATION_FAILED = 'EMBEDDING_GENERATION_FAILED',
-  VECTOR_DB_SETUP_FAILED = 'VECTOR_DB_SETUP_FAILED',
-  RAG_SYSTEM_FAILED = 'RAG_SYSTEM_FAILED',
-  
-  // Deployment errors
-  HUGGINGFACE_API_ERROR = 'HUGGINGFACE_API_ERROR',
-  DEPLOYMENT_FAILED = 'DEPLOYMENT_FAILED',
-  URL_GENERATION_FAILED = 'URL_GENERATION_FAILED',
-  
-  // Integration errors
-  CV_UPDATE_FAILED = 'CV_UPDATE_FAILED',
-  QR_CODE_UPDATE_FAILED = 'QR_CODE_UPDATE_FAILED',
-  
-  // System errors
-  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
-  RESOURCE_LIMIT_EXCEEDED = 'RESOURCE_LIMIT_EXCEEDED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
-}
+// PortalErrorCode enum moved to portal.ts to avoid circular export conflicts
 
 /**
  * Error categories
@@ -1298,6 +1267,38 @@ export interface AssetOptimizationConfig {
 // ============================================================================
 // DEPLOYMENT TYPES
 // ============================================================================
+
+/**
+ * Build configuration for deployment
+ */
+export interface BuildConfig {
+  /** Build command to execute */
+  command?: string;
+  /** Output directory for build artifacts */
+  outputDir?: string;
+  /** Environment variables for build */
+  env?: Record<string, string>;
+  /** Build dependencies */
+  dependencies?: string[];
+  /** Build steps */
+  steps?: string[];
+}
+
+/**
+ * Deployment metadata
+ */
+export interface DeploymentMetadata {
+  /** Unique deployment identifier */
+  deploymentId?: string;
+  /** Deployment timestamp */
+  deployedAt?: Date;
+  /** Deployment status */
+  status?: string;
+  /** Build logs */
+  buildLogs?: string[];
+  /** Deployed resources */
+  resources?: Record<string, any>;
+}
 
 /**
  * Result of deployment operations

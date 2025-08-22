@@ -828,4 +828,4 @@ export class ErrorRecoveryEngine {
 }
 
 // Export for use in enhanced video service
-export { ErrorRecoveryEngine };
+// ErrorRecoveryEngine is already exported as a class above

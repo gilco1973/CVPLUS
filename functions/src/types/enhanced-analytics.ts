@@ -25,7 +25,11 @@ export interface PublicCVProfile {
   allowContactForm?: boolean;
   showAnalytics?: boolean;
   contactEmail?: string;
-  analytics: FeatureAnalytics;
+  parsedCV?: any; // Parsed CV data with PII masking
+  features?: Record<string, any>; // Public profile features
+  template?: string; // Template name
+  qrCodeUrl?: string; // QR code URL for the profile
+  analytics: PublicProfileAnalytics;
   socialSharing: {
     enabled: boolean;
     platforms: string[];
@@ -57,9 +61,9 @@ export interface PublicCVProfile {
 }
 
 /**
- * Feature analytics tracking
+ * Public CV Profile analytics (summary level)
  */
-export interface FeatureAnalytics {
+export interface PublicProfileAnalytics {
   totalViews: number;
   uniqueVisitors: number;
   averageTimeOnPage: number;
@@ -70,18 +74,51 @@ export interface FeatureAnalytics {
   views?: number; // Alias for totalViews for backward compatibility
   qrScans?: number; // QR code scan count
   contactSubmissions?: number; // Contact form submissions
+  lastViewedAt?: Date | null; // Last time the profile was viewed
+}
+
+/**
+ * Feature analytics tracking (detailed interactions)
+ */
+export interface FeatureAnalytics {
+  jobId: string;
+  featureId: string;
+  userId?: string; // Visitor ID if available
+  interactions: FeatureInteraction[];
+  aggregates: {
+    totalInteractions: number;
+    uniqueUsers: number;
+    averageEngagementTime: number;
+    lastInteraction: Date;
+  };
+  // Legacy properties for backward compatibility
+  totalViews?: number;
+  uniqueVisitors?: number;
+  averageTimeOnPage?: number;
+  bounceRate?: number;
+  featureUsage?: Record<string, number>;
+  conversionRate?: number;
+  lastAnalyticsUpdate?: Date;
+  views?: number;
+  qrScans?: number;
+  contactSubmissions?: number;
 }
 
 /**
  * Feature interaction tracking
  */
 export interface FeatureInteraction {
-  featureId: string;
-  userId: string;
-  jobId: string;
-  interactionType: 'view' | 'click' | 'download' | 'share' | 'contact';
+  type: string; // 'view', 'click', 'submit', etc.
   timestamp: Date;
+  duration?: number; // For time-based interactions
   metadata?: Record<string, any>;
+  userAgent?: string;
+  ipHash?: string; // Hashed IP for privacy
+  // Legacy properties for backward compatibility
+  featureId?: string;
+  userId?: string;
+  jobId?: string;
+  interactionType?: 'view' | 'click' | 'download' | 'share' | 'contact';
 }
 
 /**
@@ -105,6 +142,8 @@ export interface ContactFormSubmission {
   ipAddress?: string;
   userAgent?: string;
   source: 'cv' | 'qr' | 'direct';
+  timestamp?: Date; // For backward compatibility
+  status?: string; // For status tracking
 }
 
 /**
@@ -132,4 +171,6 @@ export interface QRCodeScan {
   };
   converted: boolean;
   conversionType?: 'view' | 'contact' | 'chat' | 'download';
+  scanId?: string; // For backward compatibility
+  timestamp?: Date; // For backward compatibility
 }

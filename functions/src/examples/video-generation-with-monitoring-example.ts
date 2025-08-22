@@ -12,7 +12,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
 import { enhancedVideoGenerationService, EnhancedVideoGenerationOptions } from '../services/enhanced-video-generation.service';
-import { premiumGuard } from '../middleware/premiumGuard';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 import { VideoGenerationMonitor, VideoMonitoringHooks } from '../services/video-monitoring-hooks.service';
 
 /**
@@ -27,21 +27,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
     memory: '2GiB',
     ...corsOptions
   },
-  async (request) => {
+  withPremiumAccess('videoIntroduction', async (request) => {
     // Initialize monitoring early in the function
-    const userId = request.auth?.uid;
+    const userId = request.auth.uid;
     const { jobId, duration = 'medium', style = 'professional' } = request.data;
     
     // Create monitoring instance for this generation
-    const monitor = new VideoGenerationMonitor(userId!, jobId, 'enhanced');
+    const monitor = new VideoGenerationMonitor(userId, jobId, 'enhanced');
     
     try {
-      // Standard authentication and premium checks
-      if (!request.auth) {
-        throw new Error('User must be authenticated');
-      }
-
-      await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
       // Get job data
       const jobDoc = await admin.firestore()
@@ -127,9 +121,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
         // 🎯 COMPLETE MONITORING - Record successful completion
         await monitor.complete({
+          jobId,
+          providerId: videoResult.metadata.provider || 'enhanced',
           success: true,
           videoUrl: videoResult.videoUrl,
+          status: videoResult.status,
           metadata: {
+            resolution: videoResult.metadata.resolution || '1920x1080',
+            format: videoResult.metadata.format || 'mp4',
+            generatedAt: new Date(),
             providerId: videoResult.metadata.provider,
             duration: videoResult.duration,
             size: videoResult.metadata.size
@@ -167,10 +167,20 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
         // 📊 COMPLETE MONITORING - Record failed completion
         await monitor.complete({
+          jobId,
+          providerId: 'enhanced',
           success: false,
+          status: 'failed',
+          metadata: {
+            resolution: '1920x1080',
+            format: 'mp4',
+            generatedAt: new Date()
+          },
           error: {
+            code: 'GENERATION_FAILED',
             type: 'generation_error',
-            message: generationError.message || 'Video generation failed'
+            message: generationError.message || 'Video generation failed',
+            retryable: true
           }
         });
 
@@ -190,16 +200,26 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
       // Ensure monitoring completion even on error
       await monitor.complete({
+        jobId,
+        providerId: 'enhanced',
         success: false,
+        status: 'failed',
+        metadata: {
+          resolution: '1920x1080',
+          format: 'mp4',
+          generatedAt: new Date()
+        },
         error: {
+          code: 'FUNCTION_ERROR',
           type: 'function_error',
-          message: error.message || 'Unknown error'
+          message: error.message || 'Unknown error',
+          retryable: false
         }
       });
 
       throw new Error(`Video generation failed: ${error.message}`);
     }
-  }
+  })
 );
 
 /**
@@ -273,8 +293,21 @@ export async function generateVideoWithFallbackMonitoring(
   } catch (finalError) {
     await monitor.recordError(finalError, 'all_providers_failed');
     await monitor.complete({
+      jobId,
+      providerId: 'did',
       success: false,
-      error: { type: 'all_providers_failed', message: finalError.message }
+      status: 'failed',
+      metadata: {
+        resolution: '1920x1080',
+        format: 'mp4',
+        generatedAt: new Date()
+      },
+      error: { 
+        code: 'ALL_PROVIDERS_FAILED',
+        type: 'all_providers_failed', 
+        message: finalError.message,
+        retryable: false 
+      }
     });
     throw finalError;
   }

@@ -8,6 +8,7 @@
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
+import { PlaceholderUpdateRequest, PlaceholderUpdateResponse } from '../types/inline-editing';
 
 export interface CVUpdateData {
   profilePicture?: {
@@ -247,6 +248,191 @@ export class CVUpdateService {
   }
 
   /**
+   * Update a specific placeholder value
+   */
+  static async updatePlaceholder(request: PlaceholderUpdateRequest): Promise<PlaceholderUpdateResponse> {
+    try {
+      const updatePlaceholderFunction = httpsCallable(functions, 'updatePlaceholderValue');
+      
+      const result = await updatePlaceholderFunction({
+        jobId: request.jobId,
+        placeholderKey: request.placeholderKey,
+        value: request.value,
+        section: request.section,
+        fieldPath: request.fieldPath,
+        type: request.type,
+        metadata: request.metadata
+      });
+      
+      const response = result.data as PlaceholderUpdateResponse;
+      
+      if (response.success) {
+        return response;
+      } else {
+        throw new Error(response.error || 'Failed to update placeholder');
+      }
+      
+    } catch (error) {
+      console.error('Placeholder update failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        errorDetails: {
+          code: 'UPDATE_FAILED',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
+    }
+  }
+
+  /**
+   * Update multiple placeholders in batch
+   */
+  static async updatePlaceholdersBatch(
+    requests: PlaceholderUpdateRequest[]
+  ): Promise<{ success: boolean; results: PlaceholderUpdateResponse[]; errors: string[] }> {
+    const results: PlaceholderUpdateResponse[] = [];
+    const errors: string[] = [];
+
+    try {
+      // Process updates in parallel for better performance
+      const promises = requests.map(request => 
+        this.updatePlaceholder(request).catch(error => {
+          errors.push(`Failed to update ${request.placeholderKey}: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            errorDetails: {
+              code: 'BATCH_UPDATE_FAILED',
+              message: error.message
+            }
+          } as PlaceholderUpdateResponse;
+        })
+      );
+
+      const updateResults = await Promise.all(promises);
+      results.push(...updateResults);
+
+      return {
+        success: errors.length === 0,
+        results,
+        errors
+      };
+
+    } catch (error) {
+      console.error('Batch placeholder update failed:', error);
+      return {
+        success: false,
+        results,
+        errors: [error instanceof Error ? error.message : 'Unknown error']
+      };
+    }
+  }
+
+  /**
+   * Update placeholder with optimistic UI updates
+   */
+  static async updatePlaceholderOptimistic(
+    request: PlaceholderUpdateRequest,
+    onOptimisticUpdate?: (placeholderKey: string, value: string) => void,
+    onRevert?: (placeholderKey: string) => void
+  ): Promise<PlaceholderUpdateResponse> {
+    // Optimistic update - update UI immediately
+    if (onOptimisticUpdate) {
+      onOptimisticUpdate(request.placeholderKey, request.value);
+    }
+
+    try {
+      const result = await this.updatePlaceholder(request);
+      
+      if (!result.success && onRevert) {
+        // Revert optimistic update on failure
+        onRevert(request.placeholderKey);
+      }
+      
+      return result;
+      
+    } catch (error) {
+      // Revert optimistic update on error
+      if (onRevert) {
+        onRevert(request.placeholderKey);
+      }
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        errorDetails: {
+          code: 'OPTIMISTIC_UPDATE_FAILED',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
+    }
+  }
+
+  /**
+   * Validate placeholder update request
+   */
+  static validatePlaceholderUpdate(request: PlaceholderUpdateRequest): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!request.jobId || request.jobId.trim() === '') {
+      errors.push('Job ID is required');
+    }
+
+    if (!request.placeholderKey || request.placeholderKey.trim() === '') {
+      errors.push('Placeholder key is required');
+    }
+
+    if (!request.value || request.value.trim() === '') {
+      errors.push('Placeholder value is required');
+    }
+
+    if (!request.section || request.section.trim() === '') {
+      errors.push('Section is required');
+    }
+
+    if (!request.fieldPath || request.fieldPath.trim() === '') {
+      errors.push('Field path is required');
+    }
+
+    if (!request.type) {
+      errors.push('Placeholder type is required');
+    }
+
+    // Validate placeholder key format
+    if (request.placeholderKey && !/^\[.+\]$/.test(request.placeholderKey)) {
+      errors.push('Invalid placeholder key format (should be [PLACEHOLDER_NAME])');
+    }
+
+    // Validate type-specific values
+    if (request.type && request.value) {
+      switch (request.type) {
+        case 'number':
+          if (!/^[\d,]+$/.test(request.value.replace(/,/g, ''))) {
+            errors.push('Invalid number format');
+          }
+          break;
+        case 'percentage':
+          const percentValue = parseInt(request.value, 10);
+          if (isNaN(percentValue) || percentValue < 0 || percentValue > 100) {
+            errors.push('Percentage must be between 0 and 100');
+          }
+          break;
+        case 'currency':
+          if (!/^[\d$,kmb\.]+$/i.test(request.value)) {
+            errors.push('Invalid currency format');
+          }
+          break;
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
    * Simple URL validation
    */
   private static isValidUrl(url: string): boolean {
@@ -258,5 +444,8 @@ export class CVUpdateService {
     }
   }
 }
+
+// Create instance for use in context
+export const cvUpdateService = CVUpdateService;
 
 export default CVUpdateService;

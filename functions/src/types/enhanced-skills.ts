@@ -9,6 +9,25 @@
  */
 
 /**
+ * Flexible skills format that supports various skill organization structures
+ * Used throughout the system to handle different ways skills can be structured
+ */
+export type FlexibleSkillsFormat = string[] | {
+  [key: string]: string[];
+  technical?: string[];
+  soft?: string[];
+  languages?: string[];
+  tools?: string[];
+  frontend?: string[];
+  backend?: string[];
+  databases?: string[];
+  cloud?: string[];
+  competencies?: string[];
+  frameworks?: string[];
+  expertise?: string[];
+} | undefined;
+
+/**
  * Skills visualization configuration
  * Controls how skills are displayed in interactive visualizations
  */
@@ -74,13 +93,16 @@ export interface LanguageSkill {
   language: string;
   
   /** Proficiency level according to common standards */
-  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native';
+  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'native' | 'basic' | 'conversational' | 'professional' | 'fluent';
   
   /** Whether the user has official certification */
   certified?: boolean;
   
   /** Name of the certification if applicable */
   certificationName?: string;
+  
+  /** Alternative property name for certifications (backward compatibility) */
+  certifications?: string[];
 }
 
 /**
@@ -100,8 +122,14 @@ export interface Certification {
   /** Date when certification was issued */
   issueDate: Date;
   
+  /** Legacy date property for backward compatibility */
+  date: Date;
+  
   /** Optional expiration date for time-limited certifications */
   expirationDate?: Date;
+  
+  /** Legacy expiry date property for backward compatibility */
+  expiryDate?: Date;
   
   /** Credential ID or certificate number */
   credentialId?: string;
@@ -111,6 +139,9 @@ export interface Certification {
   
   /** Optional digital badge URL */
   badgeUrl?: string;
+  
+  /** Legacy badge property for backward compatibility */
+  badge?: string;
   
   /** Whether this certification has been verified */
   isVerified: boolean;

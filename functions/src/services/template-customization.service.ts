@@ -184,6 +184,13 @@ export interface GeneratedTheme extends PortalTheme {
     generatedAt: Date;
   };
   
+  /** Layout configuration */
+  layout?: {
+    headerStyle: 'minimal' | 'hero' | 'detailed';
+    navigationStyle: 'horizontal' | 'vertical' | 'hidden';
+    contentLayout: 'single' | 'two-column' | 'grid';
+  };
+  
   /** Responsive breakpoints */
   breakpoints: ResponsiveBreakpoints;
   
@@ -718,7 +725,26 @@ export class TemplateCustomizationService {
         name: `${this.capitalizeFirst(industry)} Professional Theme`,
         colors: colorScheme,
         typography,
-        layout: {},
+        spacing: {
+          baseUnit: 1,
+          sectionPadding: 2,
+          elementMargin: 1
+        },
+        borderRadius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '0.75rem'
+        },
+        shadows: {
+          sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          lg: '0 10px 15px rgba(0, 0, 0, 0.1)'
+        },
+        layout: {
+          headerStyle: 'detailed',
+          navigationStyle: 'horizontal',
+          contentLayout: 'two-column'
+        },
         animations,
         breakpoints,
         componentVariants,
@@ -1316,15 +1342,21 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
       colors: {
         primary: colorScheme.primary[0],
         secondary: colorScheme.secondary[0],
-        background: '#ffffff',
+        background: {
+          primary: '#ffffff',
+          secondary: '#f8fafc',
+          accent: '#f1f5f9'
+        },
         text: {
           primary: '#1f2937',
           secondary: '#6b7280',
-          muted: '#9ca3af'
+          muted: '#9ca3af',
+          accent: '#0f172a'
         },
         border: {
           primary: '#e5e7eb',
-          secondary: '#f3f4f6'
+          light: '#f3f4f6',
+          accent: '#cbd5e1'
         },
         status: {
           success: '#10b981',
@@ -1334,7 +1366,11 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
         }
       },
       typography: {
-        fontFamilies: typography,
+        fontFamilies: {
+          heading: typography.heading,
+          body: typography.body,
+          mono: typography.code || 'ui-monospace, SFMono-Regular, monospace'
+        },
         fontSizes: {
           xs: '0.75rem',
           sm: '0.875rem',
@@ -1351,15 +1387,28 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
           relaxed: 1.75
         },
         fontWeights: {
+          light: 300,
           normal: 400,
           medium: 500,
           semibold: 600,
           bold: 700
         }
       },
-      layout: {},
-      animations: {},
-      breakpoints: {}
+      spacing: {
+        baseUnit: 1,
+        sectionPadding: 2,
+        elementMargin: 1
+      },
+      borderRadius: {
+        sm: '0.25rem',
+        md: '0.5rem',
+        lg: '0.75rem'
+      },
+      shadows: {
+        sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        md: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        lg: '0 10px 15px rgba(0, 0, 0, 0.1)'
+      }
     };
   }
 
@@ -1414,15 +1463,21 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     return {
       primary: primaryColor,
       secondary: palette.secondary[0],
-      background: '#ffffff',
+      background: {
+        primary: '#ffffff',
+        secondary: '#f8fafc',
+        accent: '#f1f5f9'
+      },
       text: {
         primary: '#1f2937',
         secondary: '#6b7280',
-        muted: '#9ca3af'
+        muted: '#9ca3af',
+        accent: '#0f172a'
       },
       border: {
         primary: '#e5e7eb',
-        secondary: '#f3f4f6'
+        light: '#f3f4f6',
+        accent: '#cbd5e1'
       },
       status: {
         success: '#10b981',
@@ -1446,7 +1501,11 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
       || this.industryTypography.consulting;
 
     return {
-      fontFamilies: typography,
+      fontFamilies: {
+        heading: typography.heading,
+        body: typography.body,
+        mono: typography.code || 'ui-monospace, SFMono-Regular, monospace'
+      },
       fontSizes: {
         xs: '0.75rem',
         sm: '0.875rem',
@@ -1463,6 +1522,7 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
         relaxed: 1.75
       },
       fontWeights: {
+        light: 300,
         normal: 400,
         medium: 500,
         semibold: 600,

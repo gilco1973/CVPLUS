@@ -7,6 +7,17 @@
 
 import React, { memo, useState } from 'react';
 import { Building2, Calendar, MapPin, ExternalLink, ChevronDown, ChevronUp, Award, TrendingUp } from 'lucide-react';
+import { EditablePlaceholderWrapper } from '../../utils/editablePlaceholderUtils';
+
+// Handler for updating experience content
+const handleExperienceUpdate = async (newContent: string, experienceIndex: number, fieldPath: string) => {
+  try {
+    console.log('Experience content updated:', { newContent, experienceIndex, fieldPath });
+    // TODO: Implement real-time experience update via Firebase function
+  } catch (error) {
+    console.error('Failed to update experience content:', error);
+  }
+};
 
 interface ExperienceItem {
   id?: string;
@@ -36,6 +47,7 @@ interface CVExperienceProps {
   className?: string;
   showTimeline?: boolean;
   maxItems?: number;
+  onContentUpdate?: (newContent: string, fieldPath: string, section: string) => void;
 }
 
 export const CVExperience: React.FC<CVExperienceProps> = memo(({
@@ -43,7 +55,8 @@ export const CVExperience: React.FC<CVExperienceProps> = memo(({
   jobId,
   className = '',
   showTimeline = true,
-  maxItems = 10
+  maxItems = 10,
+  onContentUpdate
 }) => {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const [showAll, setShowAll] = useState(false);
@@ -256,13 +269,23 @@ export const CVExperience: React.FC<CVExperienceProps> = memo(({
                       {/* Description */}
                       {experience.description && (
                         <div className="mb-4">
-                          <p className={`text-gray-700 leading-relaxed ${
+                          <div className={`text-gray-700 leading-relaxed ${
                             !isExpanded && experience.description.length > 200 
                               ? 'line-clamp-3' 
                               : ''
                           }`}>
-                            {experience.description}
-                          </p>
+                            <EditablePlaceholderWrapper
+                              content={experience.description}
+                              onContentUpdate={(newContent) => 
+                                onContentUpdate ? 
+                                onContentUpdate(newContent, `experience.${index}.description`, 'experience') :
+                                handleExperienceUpdate(newContent, index, 'description')
+                              }
+                              fieldPath={`experience.${index}.description`}
+                              section="experience"
+                              fallbackToStatic={true}
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -275,7 +298,19 @@ export const CVExperience: React.FC<CVExperienceProps> = memo(({
                           </h4>
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 ml-6">
                             {experience.achievements.map((achievement, achIndex) => (
-                              <li key={achIndex}>{achievement}</li>
+                              <li key={achIndex}>
+                                <EditablePlaceholderWrapper
+                                  content={achievement}
+                                  onContentUpdate={(newContent) => 
+                                    onContentUpdate ? 
+                                    onContentUpdate(newContent, `experience.${index}.achievements.${achIndex}`, 'experience') :
+                                    handleExperienceUpdate(newContent, index, `achievements.${achIndex}`)
+                                  }
+                                  fieldPath={`experience.${index}.achievements.${achIndex}`}
+                                  section="experience"
+                                  fallbackToStatic={true}
+                                />
+                              </li>
                             ))}
                           </ul>
                         </div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -235,11 +234,8 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
         {displayStyle === 'grid' && !groupByCategory && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCertifications.map((cert, index) => (
-              <motion.div
-                key={cert.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+              <div className="animate-fade-in"
+                key={cert.id}>
                 className={getBadgeDesign(cert)}
                 onClick={() => setSelectedCert(cert)}
               >
@@ -319,7 +315,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -328,11 +324,8 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
         {displayStyle === 'list' && (
           <div className="space-y-3">
             {filteredCertifications.map((cert, index) => (
-              <motion.div
-                key={cert.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+              <div className="animate-fade-in"
+                key={cert.id}>
                 className="bg-white p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedCert(cert)}
               >
@@ -414,7 +407,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -474,19 +467,17 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
         )}
 
         {/* Certification Detail Modal */}
-        <AnimatePresence>
+        <div>
           {selectedCert && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               onClick={() => setSelectedCert(null)}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+              <div className="animate-fade-in">
+                }
+                }
                 className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -607,10 +598,10 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
                     </div>
                   )}
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </FeatureWrapper>
   );

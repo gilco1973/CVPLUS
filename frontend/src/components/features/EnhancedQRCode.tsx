@@ -5,7 +5,6 @@ import {
   User, Briefcase, Mail, Loader2,
   TrendingUp, Users, MapPin, Palette
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface QRCodeTemplate {
@@ -287,10 +286,10 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {qrCodes.map((qrCode) => (
-          <motion.div
+          <div className="animate-fade-in"
             key={qrCode.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            }
+            }
             className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
           >
             {/* QR Code Image */}
@@ -356,7 +355,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -437,10 +436,10 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {templates.map((template) => (
-          <motion.div
+          <div className="animate-fade-in"
             key={template.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            }
+            }
             className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden cursor-pointer hover:border-cyan-500 transition-colors"
             onClick={() => setSelectedTemplate(template)}
           >
@@ -472,7 +471,7 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
                 </span>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -532,19 +531,17 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
       </div>
 
       {/* Create QR Code Modal */}
-      <AnimatePresence>
+      <div>
         {showCreateModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div className="animate-fade-in">
+            }
+            }
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowCreateModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -673,10 +670,10 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

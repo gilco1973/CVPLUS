@@ -73,6 +73,15 @@ export interface ChatSession {
   ipAddress?: string;
   userAgent?: string;
   referrer?: string;
+  // Additional properties for service compatibility
+  sessionId?: string; // For backward compatibility
+  userId?: string; // CV owner
+  createdAt?: Date; // For backward compatibility
+  lastActivity?: Date; // For backward compatibility
+  metadata?: {
+    source?: 'public' | 'private' | 'shared';
+    referrer?: string;
+  };
 }
 
 /**

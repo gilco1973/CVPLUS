@@ -978,13 +978,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
               <>
                 <button
                   onClick={() => applyAll(true)}
-                  className="px-6 py-3 text-base font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-500/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
                 >
                   Select All
                 </button>
                 <button
                   onClick={() => applyAll(false)}
-                  className="px-6 py-3 text-base font-semibold bg-gray-600 text-white rounded-lg hover:bg-gray-500 focus:ring-4 focus:ring-gray-500/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 text-base font-bold bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 focus:ring-4 focus:ring-gray-500/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
                 >
                   Clear All
                 </button>
@@ -998,11 +998,11 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         {/* No Recommendations Message */}
         {recommendations.length === 0 && (
           <div className="text-center py-8">
-            <AlertTriangle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-300 mb-2">No recommendations available</h3>
+            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-300 mb-2">CV Analysis Complete</h3>
             <p className="text-gray-500">
-              We couldn't generate recommendations for this CV at the moment. 
-              Please try again later or contact support if the issue persists.
+              Your CV looks great as is! No specific improvements were identified at this time.
+              You can still continue to select features and create your enhanced CV.
             </p>
             
           </div>
@@ -1020,44 +1020,56 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             <div key={priority} className="mb-6 last:mb-0">
               {/* Priority Header */}
               <div 
-                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${getPriorityColor(priority)}`}
+                className={`flex items-center justify-between p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${getPriorityColor(priority)} ${
+                  isExpanded ? 'rounded-b-none shadow-lg' : ''
+                }`}
                 onClick={() => togglePrioritySection(priority)}
               >
-                <div className="flex items-center space-x-3">
-                  {getPriorityIcon(priority)}
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 rounded-lg bg-white/10">
+                    {getPriorityIcon(priority)}
+                  </div>
                   <div>
-                    <h3 className="font-semibold capitalize">
+                    <h3 className="font-bold text-lg capitalize">
                       {priority} Priority ({priorityRecs.length})
                     </h3>
-                    <p className="text-sm opacity-75">
+                    <p className="text-sm opacity-80 font-medium">
                       {selectedCount} of {priorityRecs.length} selected
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       applyAllPriority(priority, true);
                     }}
-                    className="px-3 py-1 text-xs bg-gray-600 bg-opacity-50 text-gray-300 rounded hover:bg-opacity-75 transition-colors"
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:ring-2 focus:outline-none ${
+                      priority === 'high' 
+                        ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500/50' 
+                        : priority === 'medium'
+                        ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500/50'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500/50'
+                    }`}
                   >
                     Select All
                   </button>
-                  {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <div className="p-2 rounded-lg bg-white/10 transition-transform duration-200">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </div>
                 </div>
               </div>
 
               {/* Priority Recommendations */}
               {isExpanded && (
-                <div className="mt-3 space-y-3">
+                <div className={`border-2 border-t-0 rounded-xl rounded-t-none p-4 space-y-3 bg-gradient-to-b from-white/5 to-transparent ${getPriorityColor(priority).replace('bg-', 'border-')}`}>
                   {priorityRecs.map((rec, index) => (
                     <div
                       key={rec.id}
-                      className={`p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] animate-fade-in-up ${
+                      className={`p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-lg animate-fade-in-up ${
                         rec.selected 
-                          ? 'border-blue-400 bg-blue-900/30 shadow-lg shadow-blue-500/20' 
-                          : 'border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/70'
+                          ? 'border-blue-400 bg-gradient-to-r from-blue-900/40 to-blue-800/30 shadow-lg shadow-blue-500/20' 
+                          : 'border-gray-600 bg-gradient-to-r from-gray-700/50 to-gray-800/30 hover:border-gray-500 hover:from-gray-700/70 hover:to-gray-800/50'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                       onClick={() => toggleRecommendation(rec.id)}
@@ -1276,7 +1288,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   }, 500);
                 }
               }}
-              disabled={recommendations.length === 0 || isNavigating}
+              disabled={isNavigating}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>

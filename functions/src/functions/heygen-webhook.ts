@@ -11,11 +11,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { videoWebhookHandler } from '../services/video-providers/webhook-handler.service';
 import { VideoProviderError, VideoProviderErrorType } from '../services/video-providers/base-provider.interface';
-
-// CORS configuration for webhook endpoints
-const corsOptions = {
-  cors: true // Allow all origins for webhooks
-};
+import { requestCorsOptions, corsMiddleware } from '../config/cors';
 
 /**
  * HeyGen Webhook Handler
@@ -28,9 +24,11 @@ export const heygenWebhook = onRequest(
     timeoutSeconds: 60,
     memory: '1GiB',
     maxInstances: 100,
-    ...corsOptions
+    ...requestCorsOptions
   },
   async (request, response) => {
+    // Apply CORS middleware
+    corsMiddleware(request, response);
     const startTime = Date.now();
     
     try {
@@ -177,9 +175,11 @@ export const videoWebhook = onRequest(
     timeoutSeconds: 60,
     memory: '1GiB',
     maxInstances: 100,
-    cors: true // Allow all origins for webhooks
+    ...requestCorsOptions
   },
   async (request, response) => {
+    // Apply CORS middleware
+    corsMiddleware(request, response);
     const startTime = Date.now();
     
     try {
@@ -273,9 +273,11 @@ export const webhookHealth = onRequest(
   {
     timeoutSeconds: 10,
     memory: '256MiB',
-    cors: true
+    ...requestCorsOptions
   },
   async (request, response) => {
+    // Apply CORS middleware
+    corsMiddleware(request, response);
     try {
       const health = {
         status: 'healthy',

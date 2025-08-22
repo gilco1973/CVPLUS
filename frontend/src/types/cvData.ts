@@ -76,6 +76,7 @@ export interface CVPersonalInfo {
   lastName?: string;
   email?: string;
   phone?: string;
+  title?: string;
   address?: string;
   location?: string;
   city?: string;

@@ -1,3 +1,4 @@
+
 // Firebase-specific types for CVPlus
 // Provides type safety for Firebase operations
 

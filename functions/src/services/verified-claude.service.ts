@@ -82,17 +82,21 @@ export class VerifiedClaudeService {
    */
   async createVerifiedMessage(options: VerifiedMessageOptions): Promise<VerifiedResponse> {
     const startTime = Date.now();
+    const maxRetries = 3;
+    let lastError: any = null;
 
-    try {
-      // Step 1: Get initial response from Claude
-      const claudeResponse = await this.anthropic.messages.create({
-        model: options.model || 'claude-sonnet-4-20250514',
-        max_tokens: options.max_tokens || 4000,
-        temperature: options.temperature || 0.3,
-        messages: options.messages,
-        // timeout removed - not supported in this API version
-        ...(options.system && { system: options.system })
-      });
+    // Retry logic with exponential backoff for quota exceeded errors
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Step 1: Get initial response from Claude
+        const claudeResponse = await this.anthropic.messages.create({
+          model: options.model || 'claude-sonnet-4-20250514',
+          max_tokens: options.max_tokens || 4000,
+          temperature: options.temperature || 0.3,
+          messages: options.messages,
+          // timeout removed - not supported in this API version
+          ...(options.system && { system: options.system })
+        });
 
       const initialResponse = claudeResponse.content[0];
       if (initialResponse.type !== 'text') {
@@ -130,12 +134,38 @@ export class VerifiedClaudeService {
       // Step 4: Return formatted response with verification results
       return this.formatResponse(claudeResponse, verificationResult);
 
-    } catch (error) {
-      console.error(`[VERIFIED-CLAUDE] Error in createVerifiedMessage:`, error);
+      } catch (error) {
+        lastError = error;
+        
+        // Check if this is a 429 quota exceeded error
+        const is429Error = this.is429QuotaError(error);
+        
+        if (is429Error && attempt < maxRetries) {
+          // Exponential backoff for quota exceeded errors
+          const delayMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          console.warn(`[VERIFIED-CLAUDE] Claude API quota exceeded (attempt ${attempt}/${maxRetries}). Retrying in ${delayMs}ms...`);
+          await this.delay(delayMs);
+          continue;
+        }
+        
+        // For non-429 errors or final retry attempt, break out of retry loop
+        break;
+      }
+    }
+    
+    // Handle the final error after all retries exhausted
+    if (lastError) {
+      console.error(`[VERIFIED-CLAUDE] Error in createVerifiedMessage after ${maxRetries} attempts:`, lastError);
+      
+      // Enhanced error handling for 429 quota exceeded
+      if (this.is429QuotaError(lastError)) {
+        console.error(`[VERIFIED-CLAUDE] Claude API quota exceeded after ${maxRetries} retries. Falling back to service degradation.`);
+        throw new Error('Claude API quota exceeded. Please try again later or contact support if this persists.');
+      }
       
       // If fallback is enabled and we have API connectivity issues, try original Claude
-      if (this.config.fallbackToOriginal && error instanceof Error && 
-          (error.message.includes('network') || error.message.includes('timeout'))) {
+      if (this.config.fallbackToOriginal && lastError instanceof Error && 
+          (lastError.message.includes('network') || lastError.message.includes('timeout'))) {
         
         console.log(`[VERIFIED-CLAUDE] Falling back to original Claude due to error`);
         
@@ -160,12 +190,15 @@ export class VerifiedClaudeService {
             finalResponse: fallbackResponse.content[0].type === 'text' ? fallbackResponse.content[0].text : ''
           });
         } catch (fallbackError) {
-          throw new Error(`Both verification and fallback failed: ${error.message}`);
+          throw new Error(`Both verification and fallback failed: ${lastError.message}`);
         }
       }
 
-      throw error;
+      throw lastError;
     }
+    
+    // This should never be reached, but TypeScript requires it
+    throw new Error('Unexpected error in createVerifiedMessage');
   }
 
   /**
@@ -336,6 +369,27 @@ export class VerifiedClaudeService {
   setVerification(enabled: boolean): void {
     this.config.enableVerification = enabled;
     console.log(`[VERIFIED-CLAUDE] Verification ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Check if error is a 429 quota exceeded error
+   */
+  private is429QuotaError(error: any): boolean {
+    return (
+      error?.status === 429 ||
+      error?.response?.status === 429 ||
+      error?.code === 'rate_limit_exceeded' ||
+      error?.message?.toLowerCase().includes('quota exceeded') ||
+      error?.message?.toLowerCase().includes('rate limit') ||
+      error?.message?.toLowerCase().includes('429')
+    );
+  }
+
+  /**
+   * Delay helper for exponential backoff
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

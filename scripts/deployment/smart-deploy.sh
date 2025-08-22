@@ -19,22 +19,33 @@ show_usage() {
     echo ""
     echo "Usage: $0 [options]"
     echo ""
-    echo "Options:"
+    echo "Standard Deployment Modes:"
     echo "  -h, --help          Show this help message"
     echo "  -f, --full          Run full intelligent deployment (default)"
     echo "  -q, --quick         Quick deployment (skip some validations)"
     echo "  -t, --test          Test mode (validate only, no deployment)"
     echo "  -b, --batch-only    Deploy functions in batches only"
     echo "  -r, --report        Generate report only (requires previous deployment log)"
+    echo ""
+    echo "Production Deployment Modes:"
+    echo "  -p, --production    Production deployment with enhanced validation"
+    echo "  --blue-green        Blue-green production deployment (zero downtime)"
+    echo "  --rollback [version] Rollback to specified version"
+    echo "  --health-check-only  Production health check only"
+    echo ""
+    echo "Deployment Options:"
     echo "  --skip-validation   Skip pre-deployment validation"
     echo "  --skip-health       Skip health checks"
     echo "  --force             Force deployment even with warnings"
+    echo "  --environment [env] Target environment (development|staging|production)"
     echo ""
     echo "Examples:"
     echo "  $0                  # Full intelligent deployment"
     echo "  $0 --quick          # Quick deployment with minimal validation"
     echo "  $0 --test           # Test and validate without deploying"
-    echo "  $0 --batch-only     # Deploy functions in batches only"
+    echo "  $0 --production     # Production deployment with full validation"
+    echo "  $0 --blue-green     # Zero-downtime blue-green deployment"
+    echo "  $0 --rollback v1.2.3 # Rollback to version 1.2.3"
 }
 
 # Parse command line arguments
@@ -42,6 +53,11 @@ DEPLOYMENT_MODE="full"
 SKIP_VALIDATION=false
 SKIP_HEALTH=false
 FORCE_DEPLOY=false
+PRODUCTION_MODE=false
+BLUE_GREEN_MODE=false
+ROLLBACK_VERSION=""
+TARGET_ENVIRONMENT="development"
+HEALTH_CHECK_ONLY=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -81,6 +97,43 @@ while [[ $# -gt 0 ]]; do
             FORCE_DEPLOY=true
             shift
             ;;
+        -p|--production)
+            PRODUCTION_MODE=true
+            TARGET_ENVIRONMENT="production"
+            shift
+            ;;
+        --blue-green)
+            BLUE_GREEN_MODE=true
+            PRODUCTION_MODE=true
+            TARGET_ENVIRONMENT="production"
+            shift
+            ;;
+        --rollback)
+            if [[ -n "$2" && "$2" != --* ]]; then
+                ROLLBACK_VERSION="$2"
+                DEPLOYMENT_MODE="rollback"
+                PRODUCTION_MODE=true
+                TARGET_ENVIRONMENT="production"
+                shift 2
+            else
+                echo "Error: --rollback requires a version number"
+                exit 1
+            fi
+            ;;
+        --health-check-only)
+            HEALTH_CHECK_ONLY=true
+            DEPLOYMENT_MODE="health-check-only"
+            shift
+            ;;
+        --environment)
+            if [[ -n "$2" && "$2" != --* ]]; then
+                TARGET_ENVIRONMENT="$2"
+                shift 2
+            else
+                echo "Error: --environment requires a value (development|staging|production)"
+                exit 1
+            fi
+            ;;
         *)
             echo "Unknown option: $1"
             show_usage
@@ -96,11 +149,29 @@ main() {
     echo -e "Project: $PROJECT_ROOT"
     echo ""
     
+    # Show production mode warning
+    if [[ "$PRODUCTION_MODE" == true ]]; then
+        echo -e "${YELLOW}⚠️  PRODUCTION DEPLOYMENT MODE ACTIVE${NC}"
+        echo -e "Environment: ${YELLOW}$TARGET_ENVIRONMENT${NC}"
+        if [[ "$BLUE_GREEN_MODE" == true ]]; then
+            echo -e "Strategy: ${YELLOW}Blue-Green Deployment${NC}"
+        fi
+        echo ""
+    fi
+    
     case $DEPLOYMENT_MODE in
         "full")
-            run_full_deployment
+            if [[ "$PRODUCTION_MODE" == true ]]; then
+                run_production_deployment
+            else
+                run_full_deployment
+            fi
             ;;
         "quick")
+            if [[ "$PRODUCTION_MODE" == true ]]; then
+                echo "❌ Quick mode not allowed for production deployments"
+                exit 1
+            fi
             run_quick_deployment
             ;;
         "test")
@@ -111,6 +182,12 @@ main() {
             ;;
         "report-only")
             run_report_only
+            ;;
+        "rollback")
+            run_production_rollback
+            ;;
+        "health-check-only")
+            run_health_check_only
             ;;
         *)
             echo "Invalid deployment mode: $DEPLOYMENT_MODE"
@@ -251,6 +328,129 @@ fallback_to_existing_deployment() {
     cd "$PROJECT_ROOT" && firebase deploy
     
     echo -e "${GREEN}✅ Basic deployment completed${NC}"
+}
+
+run_production_deployment() {
+    echo -e "${GREEN}🚀 Running production deployment with enhanced validation...${NC}"
+    
+    # Export production environment variables for modules
+    export DEPLOYMENT_MODE="production"
+    export TARGET_ENVIRONMENT="$TARGET_ENVIRONMENT"
+    export PRODUCTION_MODE="$PRODUCTION_MODE"
+    export BLUE_GREEN_MODE="$BLUE_GREEN_MODE"
+    export SKIP_VALIDATION="$SKIP_VALIDATION"
+    export SKIP_HEALTH="$SKIP_HEALTH"
+    export FORCE_DEPLOY="$FORCE_DEPLOY"
+    
+    # Check if production manager module exists
+    if [[ -f "$SCRIPT_DIR/modules/production-manager.js" ]]; then
+        echo "🎯 Using production manager module..."
+        node "$SCRIPT_DIR/modules/production-manager.js" "$PROJECT_ROOT" "$SCRIPT_DIR/config"
+    elif [[ -f "$SCRIPT_DIR/intelligent-deploy.sh" ]]; then
+        echo "📊 Using intelligent deploy with production settings..."
+        DEPLOYMENT_MODE="production" exec "$SCRIPT_DIR/intelligent-deploy.sh"
+    else
+        echo "⚠️  Production deployment scripts not found, using enhanced validation..."
+        run_enhanced_production_fallback
+    fi
+}
+
+run_production_rollback() {
+    echo -e "${GREEN}⏪ Running production rollback to version: ${YELLOW}$ROLLBACK_VERSION${NC}"
+    
+    # Export rollback environment variables
+    export DEPLOYMENT_MODE="rollback"
+    export TARGET_ENVIRONMENT="production"
+    export ROLLBACK_VERSION="$ROLLBACK_VERSION"
+    export PRODUCTION_MODE="true"
+    
+    # Check if production manager exists
+    if [[ -f "$SCRIPT_DIR/modules/production-manager.js" ]]; then
+        echo "🎯 Using production manager for rollback..."
+        node "$SCRIPT_DIR/modules/production-manager.js" "$PROJECT_ROOT" "$SCRIPT_DIR/config"
+    else
+        echo "❌ Production manager not found. Rollback functionality requires production-manager.js module"
+        echo "Please run: npm install && npm run setup-production-tools"
+        exit 1
+    fi
+}
+
+run_health_check_only() {
+    echo -e "${GREEN}🏥 Running production health checks only...${NC}"
+    
+    # Check if health checker module exists
+    if [[ -f "$SCRIPT_DIR/modules/health-checker.js" ]]; then
+        echo "📊 Running comprehensive health checks..."
+        export HEALTH_CHECK_MODE="production"
+        export TARGET_ENVIRONMENT="$TARGET_ENVIRONMENT"
+        
+        node "$SCRIPT_DIR/modules/health-checker.js" "$PROJECT_ROOT" "$SCRIPT_DIR/config"
+    else
+        echo "❌ Health checker module not found: $SCRIPT_DIR/modules/health-checker.js"
+        exit 1
+    fi
+}
+
+run_enhanced_production_fallback() {
+    echo -e "${YELLOW}📦 Running enhanced production fallback deployment...${NC}"
+    
+    # Enhanced production validation
+    echo "🔍 Running production validation..."
+    
+    # Check if pre-deployment validator exists
+    if [[ -f "$SCRIPT_DIR/modules/pre-deployment-validator.js" ]]; then
+        export VALIDATION_MODE="production"
+        export TARGET_ENVIRONMENT="production"
+        
+        echo "✅ Running production pre-deployment validation..."
+        if ! node "$SCRIPT_DIR/modules/pre-deployment-validator.js" "$PROJECT_ROOT" "$SCRIPT_DIR/config"; then
+            echo "❌ Production validation failed"
+            if [[ "$FORCE_DEPLOY" != true ]]; then
+                exit 1
+            else
+                echo "⚠️  Forcing deployment despite validation failures"
+            fi
+        fi
+    fi
+    
+    # Build with production settings
+    echo "🔨 Building frontend for production..."
+    cd "$PROJECT_ROOT/frontend" && NODE_ENV=production npm run build
+    
+    echo "⚡ Building functions for production..."
+    cd "$PROJECT_ROOT/functions" && NODE_ENV=production npm run build
+    
+    # Deploy with production settings
+    echo "🚀 Deploying to production Firebase..."
+    cd "$PROJECT_ROOT"
+    
+    # Use production Firebase project if configured
+    if firebase use --project production &> /dev/null; then
+        echo "✅ Using production Firebase project"
+    elif firebase use --project cvplus-production &> /dev/null; then
+        echo "✅ Using cvplus-production Firebase project"
+    else
+        echo "⚠️  No production project configured, using current project"
+    fi
+    
+    firebase deploy --force
+    
+    # Run post-deployment health checks
+    if [[ -f "$SCRIPT_DIR/modules/health-checker.js" ]] && [[ "$SKIP_HEALTH" != true ]]; then
+        echo "🏥 Running post-deployment health checks..."
+        export HEALTH_CHECK_MODE="post-deployment"
+        export TARGET_ENVIRONMENT="production"
+        
+        if ! node "$SCRIPT_DIR/modules/health-checker.js" "$PROJECT_ROOT" "$SCRIPT_DIR/config"; then
+            echo "❌ Post-deployment health checks failed"
+            echo "🔄 Consider running: $0 --rollback [previous-version]"
+            if [[ "$FORCE_DEPLOY" != true ]]; then
+                exit 1
+            fi
+        fi
+    fi
+    
+    echo -e "${GREEN}✅ Enhanced production deployment completed${NC}"
 }
 
 # Check prerequisites

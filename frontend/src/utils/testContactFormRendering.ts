@@ -103,10 +103,13 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
   (window as any).testContactFormRendering = testContactFormRendering;
   (window as any).testContactFormImport = testContactFormImport;
   
-  // Auto-run tests after a short delay
+  // Auto-run tests disabled to reduce console noise
+  // Uncomment the lines below to enable auto-testing
+  /*
   setTimeout(() => {
     console.log('🧪 [AUTO-TEST] Running contact form tests...');
     testContactFormImport();
     testContactFormRendering();
   }, 2000);
+  */
 }

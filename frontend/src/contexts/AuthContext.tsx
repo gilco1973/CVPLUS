@@ -5,7 +5,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
@@ -48,9 +49,10 @@ const getFriendlyAuthErrorMessage = (errorCode: string): string => {
     case 'auth/network-request-failed':
       return 'Network error. Please check your internet connection.';
     case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
       return 'Sign-in was cancelled.';
     case 'auth/popup-blocked':
-      return 'Pop-up was blocked. Please allow pop-ups and try again.';
+      return 'Authentication was blocked. Please try again.';
     case 'auth/unknown-error':
       return 'An unknown authentication error occurred. Please try again.';
     default:
@@ -159,9 +161,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cache duration: 5 minutes
   const PREMIUM_CACHE_DURATION = 5 * 60 * 1000;
 
+  // Handle Google redirect result on app load
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        console.log('🔍 Checking for redirect result...');
+        
+        // Add a timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('getRedirectResult timeout')), 5000)
+        );
+        
+        const result = await Promise.race([
+          getRedirectResult(auth),
+          timeoutPromise
+        ]);
+        
+        if (result && typeof result === 'object' && 'user' in result) {
+          console.log('✅ Google redirect sign-in successful:', {
+            email: result.user.email,
+            uid: result.user.uid,
+            displayName: result.user.displayName
+          });
+          
+          // User just signed in via redirect
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          if (credential?.accessToken) {
+            console.log('🔑 Processing Google access token...');
+            await storeGoogleTokens(result.user.uid, credential.accessToken);
+            setHasCalendarPermissions(true);
+            console.log('✅ Google calendar permissions granted');
+          }
+          
+          // Clear any previous errors
+          setError(null);
+          
+          // Force a user state update (redundant but ensures consistency)
+          setUser(result.user);
+          console.log('👤 User state manually updated');
+          
+        } else {
+          console.log('ℹ️ No redirect result found - user likely navigated directly');
+        }
+      } catch (error) {
+        console.error('[handleRedirectResult] Error:', error);
+        if (error instanceof Error && error.message === 'getRedirectResult timeout') {
+          console.warn('⏰ getRedirectResult timed out - this is normal if no redirect occurred');
+        } else if (isFirebaseError(error)) {
+          setError(getFriendlyAuthErrorMessage(error.code));
+        } else {
+          setError('An error occurred during authentication. Please try again.');
+        }
+      }
+    };
+
+    // Small delay to ensure Firebase is fully initialized
+    const timer = setTimeout(handleRedirectResult, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔄 Auth state changed:', user ? {
+        email: user.email,
+        uid: user.uid,
+        displayName: user.displayName
+      } : 'User signed out');
+      
       setUser(user);
+      setLoading(false); // Ensure loading is cleared when auth state resolves
       
       if (user) {
         // Check calendar permissions for authenticated users
@@ -363,7 +431,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         'access_type': 'offline' // Enable refresh tokens
       });
       
-      const result = await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
+      return; // Redirect will handle the rest
       
       // Check if calendar permissions were granted
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -442,7 +511,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         'access_type': 'offline'
       });
       
-      const result = await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
+      return; // Redirect will handle the rest
       const credential = GoogleAuthProvider.credentialFromResult(result);
       
       if (credential?.accessToken) {

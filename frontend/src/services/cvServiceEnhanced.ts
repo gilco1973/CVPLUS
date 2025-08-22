@@ -316,7 +316,7 @@ export class CVServiceEnhanced {
           const baseUrl = import.meta.env.DEV 
             ? 'http://localhost:5001/getmycv-ai/us-central1'
             : 'https://us-central1-getmycv-ai.cloudfunctions.net';
-          const response = await fetch(`${baseUrl}/getRecommendationsV2`, {
+          const response = await fetch(`${baseUrl}/getRecommendations`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

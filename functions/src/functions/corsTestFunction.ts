@@ -1,19 +1,34 @@
-import { onRequest } from 'firebase-functions/v2/https';
-import { corsOptions } from '../config/cors';
+import { onRequest, onCall } from 'firebase-functions/v2/https';
+import { requestCorsOptions, corsOptions, corsMiddleware } from '../config/cors';
 
 export const testCors = onRequest(
   {
-    ...corsOptions,
+    ...requestCorsOptions,
   },
   async (req, res) => {
-    // CORS is handled by the function configuration above
-    // Remove manual CORS headers to avoid conflicts
+    // Apply CORS middleware
+    corsMiddleware(req, res);
     
     res.json({ 
       success: true, 
-      message: 'CORS test successful',
+      message: 'CORS test successful (onRequest)',
       origin: req.headers.origin,
-      method: req.method 
+      method: req.method,
+      timestamp: new Date().toISOString()
     });
+  }
+);
+
+export const testCorsCall = onCall(
+  {
+    ...corsOptions,
+  },
+  async (request) => {
+    return {
+      success: true,
+      message: 'CORS test successful (onCall)',
+      timestamp: new Date().toISOString(),
+      auth: !!request.auth
+    };
   }
 );

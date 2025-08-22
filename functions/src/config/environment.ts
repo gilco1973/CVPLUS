@@ -200,6 +200,7 @@ class EnvironmentValidator {
 
 // Secure configuration interface
 interface SecureConfig {
+  baseUrl?: string; // Base URL for webhooks and callbacks
   firebase: {
     apiKey?: string;
     authDomain?: string;
@@ -341,6 +342,7 @@ class SecureEnvironmentLoader {
 
     // Build secure configuration
     const config: SecureConfig = {
+      baseUrl: EnvironmentValidator.sanitizeString(process.env.BASE_URL),
       firebase: {
         apiKey: EnvironmentValidator.validateApiKey(process.env.WEB_API_KEY, 'WEB_API_KEY'),
         authDomain: EnvironmentValidator.sanitizeString(process.env.AUTH_DOMAIN),

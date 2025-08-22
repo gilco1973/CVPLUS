@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -334,12 +333,12 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
               const isSelected = selectedDate === date.toISOString().split('T')[0];
               
               return (
-                <motion.button
+                <button className="animate-scale-in hover-scale"
                   key={index}
                   onClick={() => status !== 'disabled' && handleDateSelect(date)}
                   disabled={status === 'disabled'}
-                  whileHover={status !== 'disabled' ? { scale: 1.05 } : {}}
-                  whileTap={status !== 'disabled' ? { scale: 0.95 } : {}}
+                   : {}}
+                   : {}}
                   className={`relative p-3 h-16 border-r border-b text-sm transition-colors ${
                     isSelected 
                       ? 'bg-blue-500 text-white' 
@@ -357,7 +356,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                       <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1" />
                     )}
                   </div>
-                </motion.button>
+                </button className="animate-scale-in hover-scale">
               );
             })}
           </div>
@@ -385,9 +384,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
         {/* Time Slots */}
         {selectedDayAvailability && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div className="animate-fade-in">
+            }
             className="bg-white border rounded-lg p-6"
           >
             <h4 className="text-lg font-medium text-gray-900 mb-4">
@@ -434,7 +432,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                 <p className="text-sm mt-1">Please select another date.</p>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* Integration Info */}
@@ -479,18 +477,16 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         )}
 
         {/* Booking Modal */}
-        <AnimatePresence>
+        <div>
           {showBookingModal && selectedTimeSlot && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div className="animate-fade-in">
+              }
+              }
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+              <div className="animate-fade-in">
+                }
+                }
                 className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-between mb-4">
@@ -624,10 +620,10 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                     </button>
                   </div>
                 </form>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </FeatureWrapper>
   );

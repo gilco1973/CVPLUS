@@ -20,7 +20,6 @@ import {
   ZoomIn,
   Play
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
 import { ErrorBoundary } from '../Common/ErrorBoundary';
@@ -381,7 +380,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
               }
             `}
           >
-            <AnimatePresence>
+            <div>
               {paginatedProjects.map((project, index) => (
                 <ProjectCard
                   key={project.id}
@@ -396,7 +395,7 @@ export const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
                   onUpdate={onUpdate}
                 />
               ))}
-            </AnimatePresence>
+            </div>
           </div>
 
           {/* Empty State */}
@@ -514,11 +513,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   }, []);
 
   return (
-    <motion.div
+    <div className="animate-fade-in"
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      }
+       : { opacity: 0, y: 20 }}
+      }
       className={`
         relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group
         ${viewMode === 'masonry' ? 'break-inside-avoid mb-6' : ''}
@@ -716,7 +715,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -742,11 +741,10 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
   const hasMultipleImages = project.images.length > 1;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <div>
+      <div className="animate-fade-in">
+        }
+        }
         className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
@@ -784,10 +782,9 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
         )}
 
         {/* Image Container */}
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
+        <div className="animate-fade-in">
+          }
+          }
           className="max-w-7xl max-h-full mx-auto"
           onClick={(e) => e.stopPropagation()}
         >
@@ -815,7 +812,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Image Thumbnails */}
         {hasMultipleImages && (
@@ -842,7 +839,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
             ))}
           </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </div>
   );
 };

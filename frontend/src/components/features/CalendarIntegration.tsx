@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Download, Check, Loader2, Clock, ChevronRight, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { CVFeatureProps } from '../../types/cv-features';
 import { FeatureWrapper } from './Common/FeatureWrapper';
@@ -360,11 +359,7 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
         <div className="space-y-6">
       {/* Summary */}
       {summary && (
-        <motion.div 
-          className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 rounded-xl p-6 border border-cyan-700/30"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-fade-in">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Calendar Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center">
@@ -388,7 +383,7 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
               <div className="text-sm text-gray-400">Reminders</div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Sync Options */}
@@ -396,13 +391,11 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
         <h3 className="text-lg font-semibold text-gray-100 mb-4">Sync Your Calendar</h3>
         <div className="grid md:grid-cols-3 gap-4">
           {providers.map((provider) => (
-            <motion.button
+            <button
               key={provider.id}
               onClick={() => handleSync(provider.id as 'google' | 'outlook' | 'ical')}
               disabled={loading[provider.id]}
-              className={`relative p-6 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 group`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className={`animate-scale-in hover-scale relative p-6 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 group`}
             >
               <div className={`absolute inset-0 bg-gradient-to-r ${provider.color} opacity-0 group-hover:opacity-10 rounded-xl transition-opacity`} />
               <div className="relative">
@@ -419,18 +412,14 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
                   </div>
                 )}
               </div>
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>
 
       {/* Sync Instructions */}
       {syncInstructions.length > 0 && selectedProvider && (
-        <motion.div 
-          className="bg-gray-800 rounded-xl p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-fade-in">
           <h4 className="font-semibold text-gray-100 mb-3 flex items-center gap-2">
             <Check className="w-5 h-5 text-green-400" />
             {selectedProvider === 'ical' ? 'Download Ready' : 'Sync Instructions'}
@@ -443,7 +432,7 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
               </li>
             ))}
           </ul>
-        </motion.div>
+        </div>
       )}
 
       {/* Events Preview */}
@@ -455,12 +444,10 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
             const isExpanded = expandedEvent === event.id;
             
             return (
-              <motion.div
+              <div 
+                className="animate-fade-in bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
                 key={event.id}
-                className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
                 onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1">
@@ -478,19 +465,15 @@ export const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
                         </p>
                       )}
                       {isExpanded && event.description && (
-                        <motion.p 
-                          className="text-sm text-gray-400 mt-3"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                        >
+                        <p className="animate-fade-in">
                           {event.description}
-                        </motion.p>
+                        </p>
                       )}
                     </div>
                   </div>
                   <ChevronRight className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

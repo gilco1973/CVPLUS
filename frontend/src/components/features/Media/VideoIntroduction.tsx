@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CVFeatureProps } from '../../../types/cv-features';
 import { useFeatureData } from '../../../hooks/useFeatureData';
 import { FeatureWrapper } from '../Common/FeatureWrapper';
@@ -259,11 +258,7 @@ export const VideoIntroduction: React.FC<VideoIntroductionProps> = ({
 
               {/* Video Overlay Controls */}
               {showControls && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isPlaying ? 0 : 1 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                <div className="animate-fade-in">>
                   className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 flex items-center justify-center"
                 >
                   {/* Play/Pause Button */}
@@ -291,7 +286,7 @@ export const VideoIntroduction: React.FC<VideoIntroductionProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
                     </svg>
                   </button>
-                </motion.div>
+                </div>
               )}
 
               {/* Progress Bar */}
@@ -402,20 +397,19 @@ export const VideoIntroduction: React.FC<VideoIntroductionProps> = ({
                   <span className="font-medium">Video Transcript</span>
                 </button>
                 
-                <AnimatePresence>
+                <div>
                   {showTranscription && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                    <div className="animate-fade-in">
+                      }
+                      }
                       className="prose prose-sm max-w-none"
                     >
                       <p className="text-gray-700 leading-relaxed">
                         {video.transcription}
                       </p>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
+                </div>
               </div>
             )}
           </>

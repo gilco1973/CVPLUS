@@ -42,6 +42,7 @@ interface AggregatedMetrics {
   totalOperations: number;
   successfulOperations: number;
   failedOperations: number;
+  successRate: number;
   averageResponseTime: number;
   p95ResponseTime: number;
   p99ResponseTime: number;
@@ -723,6 +724,7 @@ export class ProviderPerformanceTracker {
       totalOperations: total,
       successfulOperations: successful,
       failedOperations: total - successful,
+      successRate: total > 0 ? successful / total : 0,
       averageResponseTime,
       p95ResponseTime: this.calculatePercentile(responseTimes, 95),
       p99ResponseTime: this.calculatePercentile(responseTimes, 99),

@@ -7,7 +7,43 @@
 
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { compress } from 'image-conversion';
+// Replaced image-conversion with native Canvas API for better performance
+
+/**
+ * Compress image using native Canvas API
+ */
+async function compressImageWithCanvas(
+  file: File, 
+  options: { quality: number; width: number; height: number }
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = options.width;
+      canvas.height = options.height;
+      
+      ctx?.drawImage(img, 0, 0, options.width, options.height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Canvas toBlob failed'));
+          }
+        },
+        file.type,
+        options.quality
+      );
+    };
+    
+    img.onerror = () => reject(new Error('Image load failed'));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 export interface ImageUploadOptions {
   maxSizeBytes?: number;
@@ -167,12 +203,11 @@ export class ImageUploadService {
       const newWidth = Math.round(originalDimensions.width * ratio);
       const newHeight = Math.round(originalDimensions.height * ratio);
       
-      // Compress image
-      const compressedFile = await compress(file, {
-        quality,
+      // Compress image using native Canvas API
+      const compressedFile = await compressImageWithCanvas(file, {
+        quality: quality / 100, // Canvas uses 0-1 range
         width: newWidth,
         height: newHeight,
-        type: file.type,
       });
       
       // Convert blob back to file

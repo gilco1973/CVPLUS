@@ -3,13 +3,16 @@ import { config } from '../config/environment';
 import { WebSearchService } from '../services/web-search.service';
 import { PodcastGenerationService } from '../services/podcast-generation.service';
 import { VideoGenerationService } from '../services/video-generation.service';
-import { corsOptions } from '../config/cors';
+import { requestCorsOptions, corsMiddleware } from '../config/cors';
 
 export const testConfiguration = onRequest(
   {
-    ...corsOptions
+    ...requestCorsOptions
   },
   async (req, res) => {
+    // Apply CORS middleware
+    corsMiddleware(req, res);
+    
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method not allowed' });
       return;

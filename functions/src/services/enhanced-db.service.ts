@@ -49,6 +49,7 @@ export class EnhancedDatabaseService {
     const slug = await this.generateUniqueSlug(jobId);
     
     const profile: PublicCVProfile = {
+      id: jobId,
       jobId,
       userId,
       slug,
@@ -60,9 +61,21 @@ export class EnhancedDatabaseService {
       showAnalytics: true,
       qrCodeUrl: '',
       publicUrl: `https://cvplus.ai/public/${slug}`,
+      socialSharing: {
+        enabled: true,
+        platforms: ['linkedin', 'twitter', 'facebook'],
+        customMessage: 'Check out my professional CV'
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
       analytics: {
+        totalViews: 0,
+        uniqueVisitors: 0,
+        averageTimeOnPage: 0,
+        bounceRate: 0,
+        featureUsage: {},
+        conversionRate: 0,
+        lastAnalyticsUpdate: new Date(),
         views: 0,
         qrScans: 0,
         contactSubmissions: 0,

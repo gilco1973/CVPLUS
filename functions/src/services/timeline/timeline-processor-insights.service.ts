@@ -164,10 +164,21 @@ export class TimelineProcessorInsightsService {
   /**
    * Helper function to safely extract technical skills from various skill formats
    */
-  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getTechnicalSkills(skills: string[] | { [key: string]: string[]; technical?: string[]; soft?: string[]; languages?: string[]; tools?: string[]; frontend?: string[]; backend?: string[]; databases?: string[]; cloud?: string[]; competencies?: string[]; frameworks?: string[]; expertise?: string[]; } | undefined): string[] {
     if (!skills) return [];
     if (Array.isArray(skills)) return skills; // Assume all are technical if it's an array
-    return skills.technical || [];
+    
+    // Combine all technical skill categories
+    const technicalCategories = ['technical', 'frontend', 'backend', 'databases', 'cloud', 'frameworks', 'tools', 'expertise'];
+    const allTechnicalSkills: string[] = [];
+    
+    for (const category of technicalCategories) {
+      if (skills[category] && Array.isArray(skills[category])) {
+        allTechnicalSkills.push(...skills[category]);
+      }
+    }
+    
+    return allTechnicalSkills;
   }
 }
 

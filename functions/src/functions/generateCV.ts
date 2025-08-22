@@ -847,12 +847,14 @@ Best regards\`;
 async function processIndividualFeature(feature: string, jobId: string, userId: string, cvData: any): Promise<void> {
   console.log(`✨ Processing REAL feature: ${feature}`);
   
-  // Update feature status to processing
-  await admin.firestore().collection('jobs').doc(jobId).update({
-    [`enhancedFeatures.${feature}.status`]: 'processing',
-    [`enhancedFeatures.${feature}.progress`]: 0,
-    [`enhancedFeatures.${feature}.triggeredAt`]: FieldValue.serverTimestamp()
+  // Update feature status to processing with immediate UI feedback
+  await updateFeatureStatus(jobId, feature, 'processing', {
+    progress: 5, // Start with small progress to show activity
+    triggeredAt: FieldValue.serverTimestamp(),
+    currentStep: 'Starting feature processing...',
+    startedAt: FieldValue.serverTimestamp()
   });
+  console.log(`⭐ [FEATURE-START] Processing feature: ${feature}`);
 
   let result: any;
   let stepCount = 0;
@@ -860,9 +862,10 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
 
   const updateProgress = async (step: number, message: string) => {
     const progress = Math.round((step / totalSteps) * 100);
-    await admin.firestore().collection('jobs').doc(jobId).update({
-      [`enhancedFeatures.${feature}.progress`]: progress,
-      [`enhancedFeatures.${feature}.currentStep`]: message
+    await updateFeatureStatus(jobId, feature, 'processing', {
+      progress: progress,
+      currentStep: message,
+      lastProgressUpdate: FieldValue.serverTimestamp()
     });
   };
 
@@ -901,9 +904,12 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
       // Call actual feature functions to generate HTML fragments
       case 'skills-visualization':
         await updateProgress(++stepCount, 'Initializing skills visualization');
-        await callFeatureFunction('generateSkillsVisualization', { jobId, userId });
+        // Add delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 500));
         await updateProgress(++stepCount, 'Processing skills content');
+        await callFeatureFunction('generateSkillsVisualization', { jobId, userId });
         await updateProgress(++stepCount, 'Generating skills visualization');
+        await new Promise(resolve => setTimeout(resolve, 300));
         await updateProgress(++stepCount, 'Finalizing skills visualization');
         result = { feature, status: 'completed', timestamp: new Date().toISOString() };
         break;
@@ -919,9 +925,11 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
 
       case 'generate-podcast':
         await updateProgress(++stepCount, 'Initializing podcast generation');
-        await callFeatureFunction('generatePodcast', { jobId, userId });
+        await new Promise(resolve => setTimeout(resolve, 500));
         await updateProgress(++stepCount, 'Processing podcast content');
+        await callFeatureFunction('generatePodcast', { jobId, userId });
         await updateProgress(++stepCount, 'Generating podcast audio');
+        await new Promise(resolve => setTimeout(resolve, 300));
         await updateProgress(++stepCount, 'Finalizing podcast');
         result = { feature, status: 'completed', timestamp: new Date().toISOString() };
         break;
@@ -955,9 +963,11 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
 
       case 'language-proficiency':
         await updateProgress(++stepCount, 'Initializing language proficiency');
-        await callFeatureFunction('generateLanguageVisualization', { jobId, userId });
+        await new Promise(resolve => setTimeout(resolve, 400));
         await updateProgress(++stepCount, 'Processing language content');
+        await callFeatureFunction('generateLanguageVisualization', { jobId, userId });
         await updateProgress(++stepCount, 'Generating language visualization');
+        await new Promise(resolve => setTimeout(resolve, 300));
         await updateProgress(++stepCount, 'Finalizing language proficiency');
         result = { feature, status: 'completed', timestamp: new Date().toISOString() };
         break;
@@ -973,9 +983,11 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
 
       case 'availability-calendar':
         await updateProgress(++stepCount, 'Initializing calendar integration');
-        await callFeatureFunction('generateAvailabilityCalendar', { jobId, userId });
+        await new Promise(resolve => setTimeout(resolve, 400));
         await updateProgress(++stepCount, 'Processing calendar content');
+        await callFeatureFunction('generateAvailabilityCalendar', { jobId, userId });
         await updateProgress(++stepCount, 'Generating availability calendar');
+        await new Promise(resolve => setTimeout(resolve, 300));
         await updateProgress(++stepCount, 'Finalizing calendar');
         result = { feature, status: 'completed', timestamp: new Date().toISOString() };
         break;
@@ -1014,23 +1026,27 @@ async function processIndividualFeature(feature: string, jobId: string, userId: 
     }
 
     // Mark feature as completed with real results
-    await admin.firestore().collection('jobs').doc(jobId).update({
-      [`enhancedFeatures.${feature}.status`]: 'completed',
-      [`enhancedFeatures.${feature}.progress`]: 100,
-      [`enhancedFeatures.${feature}.currentStep`]: `${feature} enhancement complete`,
-      [`enhancedFeatures.${feature}.result`]: result,
-      [`enhancedFeatures.${feature}.completedAt`]: FieldValue.serverTimestamp()
+    await updateFeatureStatus(jobId, feature, 'completed', {
+      progress: 100,
+      currentStep: `${feature} enhancement complete`,
+      result: result,
+      completedAt: FieldValue.serverTimestamp()
     });
 
     console.log(`✅ REAL feature ${feature} completed successfully with results:`, JSON.stringify(result, null, 2));
   } catch (error) {
     console.error(`❌ Error processing real feature ${feature}:`, error);
-    // Mark feature as failed
-    await admin.firestore().collection('jobs').doc(jobId).update({
-      [`enhancedFeatures.${feature}.status`]: 'failed',
-      [`enhancedFeatures.${feature}.error`]: error instanceof Error ? error.message : 'Unknown error',
-      [`enhancedFeatures.${feature}.completedAt`]: FieldValue.serverTimestamp()
+    
+    // Mark feature as failed with proper error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    await updateFeatureStatus(jobId, feature, 'failed', {
+      error: errorMessage,
+      isRetryable: isRetryableError(errorMessage),
+      failedAt: FieldValue.serverTimestamp(),
+      currentStep: `Failed: ${errorMessage}`
     });
+    
+    console.error(`❌ [FEATURE-FAILED] Feature ${feature} failed: ${errorMessage}`);
     throw error;
   }
 }
@@ -1499,5 +1515,76 @@ async function getLastGenerationStep(jobId: string): Promise<string | null> {
   } catch (error) {
     console.error(`Failed to get last generation step for job ${jobId}:`, error);
     return null;
+  }
+}
+
+/**
+ * Helper function to update feature status with guaranteed UI updates
+ */
+async function updateFeatureStatus(
+  jobId: string, 
+  feature: string, 
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'retrying',
+  additionalData: any = {}
+): Promise<void> {
+  try {
+    const updateData: any = {
+      [`enhancedFeatures.${feature}.status`]: status,
+      [`enhancedFeatures.${feature}.lastStatusUpdate`]: FieldValue.serverTimestamp(),
+      // Always trigger UI update
+      updatedAt: FieldValue.serverTimestamp()
+    };
+    
+    // Add additional data
+    for (const [key, value] of Object.entries(additionalData)) {
+      updateData[`enhancedFeatures.${feature}.${key}`] = value;
+    }
+    
+    await admin.firestore().collection('jobs').doc(jobId).update(updateData);
+    console.log(`📊 [STATUS-UPDATE] Feature ${feature}: ${status} ${JSON.stringify(additionalData)}`);
+  } catch (error) {
+    console.error(`Failed to update feature status for ${feature}:`, error);
+  }
+}
+
+/**
+ * Helper function to ensure proper state transitions and prevent status jumping
+ */
+async function ensureProperStateTransition(
+  jobId: string,
+  feature: string,
+  newStatus: 'pending' | 'processing' | 'completed' | 'failed' | 'retrying'
+): Promise<boolean> {
+  try {
+    const jobDoc = await admin.firestore().collection('jobs').doc(jobId).get();
+    const jobData = jobDoc.data();
+    const currentStatus = jobData?.enhancedFeatures?.[feature]?.status;
+    
+    // Define valid state transitions
+    const validTransitions: Record<string, string[]> = {
+      'pending': ['processing', 'failed'],
+      'processing': ['completed', 'failed', 'retrying'],
+      'retrying': ['completed', 'failed', 'processing'],
+      'failed': ['retrying', 'processing'],
+      'completed': [] // Terminal state
+    };
+    
+    if (!currentStatus) {
+      // First status update - allow any status
+      return true;
+    }
+    
+    const allowedNext = validTransitions[currentStatus] || [];
+    const isValidTransition = allowedNext.includes(newStatus);
+    
+    if (!isValidTransition) {
+      console.warn(`🚨 [STATE-TRANSITION] Invalid transition for ${feature}: ${currentStatus} -> ${newStatus}`);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Error checking state transition for ${feature}:`, error);
+    return true; // Allow transition if we can't check
   }
 }

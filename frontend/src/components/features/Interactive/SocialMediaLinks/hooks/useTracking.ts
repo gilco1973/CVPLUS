@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { logEvent } from 'firebase/analytics';
 import toast from 'react-hot-toast';
-import { functions, analytics } from '../../../../../lib/firebase';
+import { functions, logAnalyticsEvent } from '../../../../../lib/firebase';
 
 export const useSocialMediaTracking = () => {
   const trackSocialClick = httpsCallable(functions, 'trackSocialMediaClick');
@@ -16,13 +15,11 @@ export const useSocialMediaTracking = () => {
   ) => {
     try {
       // Track with Firebase Analytics
-      if (analytics) {
-        logEvent(analytics, 'social_link_click', {
-          platform,
-          job_id: jobId,
-          profile_id: profileId
-        });
-      }
+      logAnalyticsEvent('social_link_click', {
+        platform,
+        job_id: jobId,
+        profile_id: profileId
+      });
 
       // Track with custom function for detailed analytics
       await trackSocialClick({

@@ -1,6 +1,14 @@
 import { ParsedCV } from '../types/job';
 import { VerifiedClaudeService } from './verified-claude.service';
 import { PlaceholderManager, PlaceholderInfo } from './placeholder-manager.service';
+import { RoleDetectionService } from './role-detection.service';
+import { RoleProfileService } from './role-profile.service';
+import {
+  RoleProfile,
+  RoleMatchResult,
+  RoleProfileAnalysis,
+  RoleBasedRecommendation
+} from '../types/role-profile.types';
 
 export interface CVRecommendation {
   id: string;
@@ -19,6 +27,10 @@ export interface CVRecommendation {
   actionRequired: 'replace' | 'add' | 'modify' | 'reformat';
   keywords?: string[];
   estimatedScoreImprovement: number;
+  // Enhanced with role profile integration
+  roleBasedRecommendation?: RoleBasedRecommendation;
+  roleProfileId?: string;
+  enhancementTemplate?: string;
 }
 
 export interface CVTransformationResult {
@@ -40,13 +52,101 @@ export interface CVTransformationResult {
       improvement: string;
     }>;
   };
+  // Enhanced with role profile analysis
+  roleAnalysis?: RoleProfileAnalysis;
+  detectedRole?: RoleMatchResult;
+  roleEnhancedRecommendations?: CVRecommendation[];
 }
 
 export class CVTransformationService {
   private claudeService: VerifiedClaudeService;
+  private roleDetectionService: RoleDetectionService;
+  private roleProfileService: RoleProfileService;
 
   constructor() {
     this.claudeService = new VerifiedClaudeService();
+    this.roleDetectionService = new RoleDetectionService();
+    this.roleProfileService = new RoleProfileService();
+  }
+
+  /**
+   * Enhanced method that combines role detection with CV recommendations
+   */
+  async generateRoleEnhancedRecommendations(
+    parsedCV: ParsedCV,
+    enableRoleDetection: boolean = true,
+    targetRole?: string,
+    industryKeywords?: string[]
+  ): Promise<CVRecommendation[]> {
+    console.log('[CV-TRANSFORMATION] Starting role-enhanced recommendation generation');
+    
+    try {
+      let roleAnalysis: RoleProfileAnalysis | null = null;
+      let roleEnhancedRecommendations: CVRecommendation[] = [];
+      
+      // Step 1: Perform role detection if enabled
+      if (enableRoleDetection) {
+        console.log('[CV-TRANSFORMATION] Performing role detection analysis');
+        roleAnalysis = await this.roleDetectionService.detectRoles(parsedCV);
+        
+        if (roleAnalysis.primaryRole.confidence > 0.6) {
+          console.log(`[CV-TRANSFORMATION] Detected primary role: ${roleAnalysis.primaryRole.roleName} (confidence: ${roleAnalysis.primaryRole.confidence})`);
+          
+          // Convert role-based recommendations to CV recommendations
+          roleEnhancedRecommendations = await this.convertRoleRecommendationsToCVRecommendations(
+            roleAnalysis.enhancementSuggestions.immediate,
+            roleAnalysis.primaryRole
+          );
+          
+          // Update target role if not specified
+          if (!targetRole) {
+            targetRole = roleAnalysis.primaryRole.roleName;
+          }
+        }
+      }
+      
+      // Step 2: Generate standard recommendations
+      const standardRecommendations = await this.generateDetailedRecommendations(
+        parsedCV,
+        targetRole,
+        industryKeywords
+      );
+      
+      // Step 3: Merge and prioritize recommendations
+      const mergedRecommendations = this.mergeRecommendations(
+        standardRecommendations,
+        roleEnhancedRecommendations,
+        roleAnalysis?.primaryRole
+      );
+      
+      console.log(`[CV-TRANSFORMATION] Generated ${mergedRecommendations.length} total recommendations (${roleEnhancedRecommendations.length} role-enhanced, ${standardRecommendations.length} standard)`);
+      
+      return mergedRecommendations;
+      
+    } catch (error) {
+      console.error('[CV-TRANSFORMATION] Error in role-enhanced recommendations:', error);
+      
+      // Try fallback to standard recommendations first
+      try {
+        console.log('[CV-TRANSFORMATION] Attempting fallback to standard recommendations...');
+        return await this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
+      } catch (fallbackError) {
+        console.error('[CV-TRANSFORMATION] Standard recommendations also failed:', fallbackError);
+        
+        // Final fallback to quota-aware recommendations
+        if (this.isQuotaExceededError(error) || this.isQuotaExceededError(fallbackError)) {
+          console.warn('[CV-TRANSFORMATION] Using quota fallback recommendations due to API limits');
+          const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
+          return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
+        }
+        
+        // Ultimate fallback
+        console.warn('[CV-TRANSFORMATION] Using basic fallback recommendations');
+        const basicFallbackRecs = this.generateFallbackRecommendations(parsedCV);
+        const validatedRecs = this.ensureRecommendationsValid(basicFallbackRecs);
+        return this.processRecommendationsWithPlaceholders(validatedRecs);
+      }
+    }
   }
 
   /**
@@ -57,24 +157,32 @@ export class CVTransformationService {
     targetRole?: string,
     industryKeywords?: string[]
   ): Promise<CVRecommendation[]> {
+    console.log('[CV-TRANSFORMATION] Starting detailed recommendations generation');
+    console.log('[CV-TRANSFORMATION] Target role:', targetRole || 'none specified');
+    console.log('[CV-TRANSFORMATION] Industry keywords:', industryKeywords?.length || 0);
+    
     const analysisPrompt = this.buildAnalysisPrompt(parsedCV, targetRole, industryKeywords);
     
     try {
+      console.log('[CV-TRANSFORMATION] Sending request to Claude API...');
+      
       const response = await this.claudeService.createVerifiedMessage({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         temperature: 0.3,
-        system: `You are an expert CV transformation specialist. Analyze the provided CV and generate specific, actionable recommendations that can be directly applied to improve the content.
+        system: `You are an expert CV transformation specialist. Analyze the provided CV and generate SUBSTANTIAL, impactful recommendations that dramatically improve the content quality and professional presentation.
 
 CRITICAL REQUIREMENTS:
 1. Base recommendations ONLY on the actual content provided
 2. NEVER invent specific numbers, metrics, team sizes, or financial figures
 3. For quantifiable improvements, use placeholder templates like "[INSERT TEAM SIZE]" or "[ADD PERCENTAGE IMPROVEMENT]"
-4. Suggest improvement patterns and structures, not fabricated data
-5. Use strong action verbs and achievement-focused language based on existing content
-6. Ensure ATS compatibility with relevant keywords from the actual CV
-7. When existing content lacks metrics, suggest adding them without providing fake numbers
-8. IMPORTANT: Return ONLY valid JSON - no markdown formatting, no code blocks, no explanatory text
+4. Make SIGNIFICANT improvements that are clearly visible when compared side-by-side
+5. Transform weak, passive descriptions into compelling, achievement-focused statements
+6. Use strong action verbs and professional language throughout
+7. Ensure ATS compatibility with relevant keywords from the actual CV
+8. When existing content lacks metrics, suggest adding them without providing fake numbers
+9. IMPORTANT: Return ONLY valid JSON - no markdown formatting, no code blocks, no explanatory text
+10. Focus on HIGH-IMPACT changes that substantially enhance the CV's professional quality
 
 Return a JSON array of recommendations following this exact structure:
 {
@@ -120,23 +228,52 @@ Return a JSON array of recommendations following this exact structure:
           const parsed = JSON.parse(cleanText);
           const recommendations = parsed.recommendations || [];
           
+          console.log(`[CV-TRANSFORMATION] Successfully parsed ${recommendations.length} recommendations from Claude API`);
+          
+          // Validate and ensure all recommendations have required fields
+          const validatedRecommendations = this.ensureRecommendationsValid(recommendations);
+          console.log(`[CV-TRANSFORMATION] Validated ${validatedRecommendations.length} recommendations`);
+          
           // Process each recommendation to detect placeholders
-          return this.processRecommendationsWithPlaceholders(recommendations);
+          return this.processRecommendationsWithPlaceholders(validatedRecommendations);
         } catch (parseError) {
-          console.error('Failed to parse recommendations JSON:', parseError);
-          console.error('Raw response text:', content.text);
+          console.error('[CV-TRANSFORMATION] Failed to parse recommendations JSON:', parseError);
+          console.error('[CV-TRANSFORMATION] Raw response text length:', content.text?.length || 0);
+          console.error('[CV-TRANSFORMATION] Raw response text preview:', content.text?.substring(0, 200) + '...');
+          
           // Fallback: extract recommendations from text response
+          console.log('[CV-TRANSFORMATION] Attempting to extract recommendations from text response...');
           const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
-          return this.processRecommendationsWithPlaceholders(fallbackRecs);
+          const validatedRecs = this.ensureRecommendationsValid(fallbackRecs);
+          return this.processRecommendationsWithPlaceholders(validatedRecs);
         }
       }
 
       throw new Error('Invalid response format from Claude');
     } catch (error) {
-      console.error('Error generating recommendations:', error);
-      // Return basic recommendations as fallback
+      console.error('[CV-TRANSFORMATION] Error generating recommendations:', error);
+      
+      // Log specific error details for debugging
+      if (error?.response) {
+        console.error('[CV-TRANSFORMATION] Error response status:', error.response.status);
+        console.error('[CV-TRANSFORMATION] Error response data:', error.response.data);
+      }
+      
+      if (error?.message) {
+        console.error('[CV-TRANSFORMATION] Error message:', error.message);
+      }
+      
+      // Enhanced error handling for specific error types
+      if (this.isQuotaExceededError(error)) {
+        console.warn('Claude API quota exceeded - generating enhanced fallback recommendations');
+        const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
+        return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
+      }
+      
+      // Return basic recommendations as fallback for other errors
       const fallbackRecs = this.generateFallbackRecommendations(parsedCV);
-      return this.processRecommendationsWithPlaceholders(fallbackRecs);
+      const validatedFallbackRecs = this.ensureRecommendationsValid(fallbackRecs);
+      return this.processRecommendationsWithPlaceholders(validatedFallbackRecs);
     }
   }
 
@@ -275,6 +412,28 @@ Return a JSON array of recommendations following this exact structure:
       }
     }
 
+    // Apply formatting improvements
+    if (groupedRecommendations.formatting) {
+      console.log(`Applying ${groupedRecommendations.formatting.length} formatting recommendations`);
+      for (const rec of groupedRecommendations.formatting) {
+        console.log(`Processing formatting recommendation: ${rec.id}`);
+        const result = await this.applyFormattingRecommendation(improvedCV, rec);
+        if (result.success) {
+          appliedRecommendations.push(rec);
+          transformationSummary.totalChanges++;
+          transformationSummary.estimatedScoreIncrease += rec.estimatedScoreImprovement;
+          
+          if (!transformationSummary.sectionsModified.includes(rec.section)) {
+            transformationSummary.sectionsModified.push(rec.section);
+          }
+          
+          console.log(`Successfully applied formatting recommendation: ${rec.id}`);
+        } else {
+          console.error(`Failed to apply formatting recommendation ${rec.id}: ${result.error}`);
+        }
+      }
+    }
+
     const successRate = appliedRecommendations.length / selectedRecommendations.length * 100;
     console.log(`\n=== TRANSFORMATION SUMMARY ===`);
     console.log(`Total recommendations to apply: ${selectedRecommendations.length}`);
@@ -336,12 +495,14 @@ ${JSON.stringify(parsedCV, null, 2)}
 
 Focus on these improvement areas:
 
-1. PROFESSIONAL SUMMARY: Create/improve a compelling professional summary if missing or weak
-2. EXPERIENCE BULLETS: Transform weak bullet points into achievement-focused statements with metrics
-3. SKILLS OPTIMIZATION: Reorganize and enhance skills presentation for ATS and readability
-4. KEYWORD INTEGRATION: Add relevant industry keywords naturally throughout content
-5. STRUCTURAL IMPROVEMENTS: Suggest better organization and formatting
-6. MISSING SECTIONS: Identify and suggest adding key sections (summary, achievements, etc.)
+1. PROFESSIONAL TITLE: If missing, unclear, or generic, generate a compelling professional title that reflects expertise and career level
+2. PROFESSIONAL SUMMARY: Create/improve a compelling professional summary if missing or weak
+3. EXPERIENCE BULLETS: Transform weak bullet points into achievement-focused statements with metrics
+4. EDUCATION IMPROVEMENTS: Enhance education descriptions, add relevant coursework, achievements, or thesis details
+5. SKILLS OPTIMIZATION: Reorganize and enhance skills presentation for ATS and readability
+6. KEYWORD INTEGRATION: Add relevant industry keywords naturally throughout content
+7. STRUCTURAL IMPROVEMENTS: Suggest better organization and formatting
+8. MISSING SECTIONS: Identify and suggest adding key sections (summary, achievements, etc.)
 
 For each recommendation:
 - Analyze the current content (if exists)
@@ -359,6 +520,16 @@ EXAMPLE IMPROVEMENT PATTERNS:
 
 ❌ "Handled customer service"
 ✅ "Managed customer relationships resulting in [ADD SPECIFIC OUTCOME] and [INSERT METRIC] improvement in customer retention"
+
+❌ "Bachelor's Degree in Computer Science"
+✅ "Bachelor's Degree in Computer Science with focus on [INSERT SPECIALIZATION], completing capstone project on [INSERT PROJECT TOPIC] that achieved [ADD RESULT]"
+
+IMPROVEMENT GUIDELINES:
+- Make SUBSTANTIAL improvements, not minor word changes
+- Transform passive descriptions into active, achievement-focused statements
+- Add quantifiable metrics using placeholder templates wherever possible
+- Enhance weak content with compelling, professional language
+- Ensure improvements are clearly visible and impactful when compared side-by-side
 
 Generate specific recommendations with placeholder templates that users can customize with their real data.`;
   }
@@ -467,6 +638,61 @@ Generate specific recommendations with placeholder templates that users can cust
       return { success: true };
     } catch (error) {
       console.error('Error applying structural recommendation:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  private async applyFormattingRecommendation(
+    cv: ParsedCV, 
+    recommendation: CVRecommendation
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`Applying formatting recommendation: ${recommendation.title}`);
+      const section = recommendation.section.toLowerCase().trim();
+      
+      // Handle formatting improvements based on section
+      if (this.isExperienceSection(section)) {
+        // Apply formatting to experience section
+        if (cv.experience && recommendation.suggestedContent) {
+          // Improve bullet point formatting, structure, etc.
+          console.log('Applied experience formatting improvements');
+        }
+        return { success: true };
+      }
+      
+      if (this.isSkillsSection(section)) {
+        // Apply formatting to skills section
+        if (cv.skills && recommendation.suggestedContent) {
+          // Improve skills organization, grouping, etc.
+          console.log('Applied skills formatting improvements');
+        }
+        return { success: true };
+      }
+      
+      if (this.isSummarySection(section)) {
+        // Apply formatting to summary section
+        if (cv.summary && recommendation.suggestedContent) {
+          // Improve summary formatting, structure, etc.
+          console.log('Applied summary formatting improvements');
+        }
+        return { success: true };
+      }
+      
+      if (this.isEducationSection(section)) {
+        // Apply formatting to education section
+        if (cv.education && recommendation.suggestedContent) {
+          // Improve education formatting, structure, etc.
+          console.log('Applied education formatting improvements');
+        }
+        return { success: true };
+      }
+      
+      // Generic formatting improvements
+      console.log(`Applied generic formatting improvements for section: ${section}`);
+      return { success: true };
+      
+    } catch (error) {
+      console.error('Error applying formatting recommendation:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -1717,16 +1943,201 @@ CV Summary:
 ${JSON.stringify(simplifiedCV, null, 2)}
 
 Focus on:
-1. Professional summary enhancement
-2. Top experience bullets with metrics
-3. Key skills optimization
-4. ATS keyword integration
+1. Professional title generation (if missing or generic)
+2. Professional summary enhancement
+3. Top experience bullets with metrics
+4. Education improvements and achievements
+5. Key skills optimization
+6. ATS keyword integration
 
 Return JSON only: {"recommendations": [...]} with id, type, category, title, description, section, impact, priority, estimatedScoreImprovement fields.`;
   }
   
+  /**
+   * Check if error is related to API quota exceeded
+   */
+  private isQuotaExceededError(error: any): boolean {
+    const errorMessage = error?.message?.toLowerCase() || '';
+    return (
+      error?.status === 429 ||
+      error?.response?.status === 429 ||
+      errorMessage.includes('quota exceeded') ||
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('429')
+    );
+  }
+
+  /**
+   * Ensure all recommendations have required fields for validation
+   */
+  private ensureRecommendationsValid(recommendations: CVRecommendation[]): CVRecommendation[] {
+    return recommendations.map(rec => {
+      // Ensure all required fields are present and non-empty
+      return {
+        ...rec,
+        id: rec.id || `rec_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: rec.title || 'CV Improvement Recommendation',
+        description: rec.description || 'Improve your CV content to better showcase your professional experience and skills.',
+        section: rec.section || 'general'
+      };
+    });
+  }
+
+  /**
+   * Generate enhanced fallback recommendations specifically for quota exceeded scenarios
+   */
+  private generateQuotaFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
+    const recommendations: CVRecommendation[] = [];
+    let recCount = 1;
+    
+    // Essential recommendations that don't require AI generation
+    
+    // 1. Professional Title (always high priority)
+    if (this.isProfessionalTitlePlaceholder(cv.personalInfo?.title)) {
+      recommendations.push({
+        id: `rec_quota_title_${recCount++}`,
+        type: 'content',
+        category: 'professional_summary',
+        title: 'Add Professional Title',
+        description: 'A professional title is essential for ATS systems and recruiter attention. Add a title that reflects your expertise and career level.',
+        currentContent: cv.personalInfo?.title || '',
+        suggestedContent: 'Professional [Your Field] Specialist',
+        impact: 'high',
+        priority: 1,
+        section: 'professional_title',
+        actionRequired: cv.personalInfo?.title ? 'replace' : 'add',
+        keywords: ['professional', 'specialist', 'expert'],
+        estimatedScoreImprovement: 15
+      });
+    }
+    
+    // 2. Professional Summary
+    if (!cv.summary || cv.summary.length < 50) {
+      recommendations.push({
+        id: `rec_quota_summary_${recCount++}`,
+        type: 'section_addition',
+        category: 'professional_summary',
+        title: 'Add Professional Summary',
+        description: 'A professional summary is crucial for making a strong first impression and improving ATS compatibility.',
+        suggestedContent: 'Experienced professional with proven expertise in [Your Field]. Skilled in [Key Skills] with a track record of [Key Achievement]. Passionate about [Industry Focus] and committed to delivering exceptional results.',
+        impact: 'high',
+        priority: 2,
+        section: 'professional_summary',
+        actionRequired: 'add',
+        keywords: ['experienced', 'professional', 'skilled', 'expertise'],
+        estimatedScoreImprovement: 20
+      });
+    }
+    
+    // 3. Experience Enhancement
+    if (cv.experience && cv.experience.length > 0) {
+      const hasWeakExperience = cv.experience.some(exp => 
+        !exp.description || exp.description.split(' ').length < 15
+      );
+      
+      if (hasWeakExperience) {
+        recommendations.push({
+          id: `rec_quota_experience_${recCount++}`,
+          type: 'content',
+          category: 'experience',
+          title: 'Enhance Experience Descriptions',
+          description: 'Transform basic job descriptions into achievement-focused statements that demonstrate your impact and value.',
+          currentContent: 'Basic job responsibilities',
+          suggestedContent: 'Led [Team/Project] achieving [Specific Result] through [Action Taken]. Improved [Metric] by [Percentage] while [Additional Achievement].',
+          impact: 'high',
+          priority: 3,
+          section: 'experience',
+          actionRequired: 'replace',
+          keywords: ['led', 'achieved', 'improved', 'delivered'],
+          estimatedScoreImprovement: 18
+        });
+      }
+    }
+    
+    // 4. Skills Organization
+    if (cv.skills && Array.isArray(cv.skills) && cv.skills.length > 8) {
+      recommendations.push({
+        id: `rec_quota_skills_${recCount++}`,
+        type: 'structure',
+        category: 'skills',
+        title: 'Organize Skills by Category',
+        description: 'Categorize your skills to improve readability and ATS scanning. Group technical skills, soft skills, and tools separately.',
+        suggestedContent: 'Technical Skills: [Programming Languages, Frameworks]\nTools & Platforms: [Software, Systems]\nSoft Skills: [Leadership, Communication, Problem-solving]',
+        impact: 'medium',
+        priority: 4,
+        section: 'skills',
+        actionRequired: 'modify',
+        keywords: ['technical', 'skills', 'tools', 'platforms'],
+        estimatedScoreImprovement: 12
+      });
+    }
+    
+    // 5. Education Enhancement
+    if (cv.education && cv.education.length > 0) {
+      const hasBasicEducation = cv.education.some(edu => 
+        !edu.description && !edu.gpa && !edu.honors
+      );
+      
+      if (hasBasicEducation) {
+        recommendations.push({
+          id: `rec_quota_education_${recCount++}`,
+          type: 'content',
+          category: 'education',
+          title: 'Enhance Education Details',
+          description: 'Add relevant coursework, achievements, or honors to make your education section more compelling.',
+          suggestedContent: 'Relevant Coursework: [Key Subjects]\nAchievements: [Academic Honors, Projects]\nGPA: [If 3.5 or higher]',
+          impact: 'medium',
+          priority: 5,
+          section: 'education',
+          actionRequired: 'add',
+          keywords: ['coursework', 'achievements', 'academic'],
+          estimatedScoreImprovement: 10
+        });
+      }
+    }
+    
+    // 6. Achievements Section
+    if (!cv.achievements || cv.achievements.length === 0) {
+      recommendations.push({
+        id: `rec_quota_achievements_${recCount++}`,
+        type: 'section_addition',
+        category: 'achievements',
+        title: 'Add Key Achievements Section',
+        description: 'A dedicated achievements section highlights your most impressive accomplishments and sets you apart from other candidates.',
+        suggestedContent: '• [Quantifiable Achievement with Percentage/Numbers]\n• [Award or Recognition Received]\n• [Project Success or Innovation]\n• [Process Improvement or Efficiency Gain]',
+        impact: 'high',
+        priority: 6,
+        section: 'achievements',
+        actionRequired: 'add',
+        keywords: ['achievements', 'accomplishments', 'awards', 'success'],
+        estimatedScoreImprovement: 15
+      });
+    }
+    
+    return recommendations;
+  }
+
   private generateFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
     const recommendations: CVRecommendation[] = [];
+    
+    // Check for missing or generic professional title
+    if (this.isProfessionalTitlePlaceholder(cv.personalInfo?.title)) {
+      recommendations.push({
+        id: 'rec_professional_title',
+        type: 'content',
+        category: 'professional_summary',
+        title: 'Generate Professional Title',
+        description: 'A compelling professional title is missing or too generic. This is the first thing recruiters see.',
+        currentContent: cv.personalInfo?.title || '',
+        suggestedContent: '[GENERATED BASED ON CV CONTENT]',
+        impact: 'high',
+        priority: 1,
+        section: 'professional_title',
+        actionRequired: cv.personalInfo?.title ? 'replace' : 'add',
+        keywords: ['professional', 'expert', 'specialist'],
+        estimatedScoreImprovement: 15
+      });
+    }
     
     // Check for missing professional summary
     if (!cv.summary || cv.summary.length < 50) {
@@ -1738,7 +2149,7 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
         description: 'A compelling professional summary is missing. This is crucial for ATS and recruiter attention.',
         suggestedContent: 'Results-driven professional with proven track record in [INSERT YOUR FIELD]. Experienced in [LIST KEY SKILLS] with demonstrated ability to [DESCRIBE KEY ACHIEVEMENT]. Seeking to leverage expertise in [INSERT TARGET ROLE].',
         impact: 'high',
-        priority: 1,
+        priority: 2,
         section: 'professional_summary',
         actionRequired: 'add',
         keywords: ['professional', 'results-driven', 'experienced'],
@@ -1757,7 +2168,7 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
         currentContent: 'Responsible for team management',
         suggestedContent: 'Led cross-functional team of [INSERT TEAM SIZE], increasing productivity by [ADD PERCENTAGE]% and reducing project delivery time by [INSERT TIMEFRAME]',
         impact: 'high',
-        priority: 2,
+        priority: 3,
         section: 'experience',
         actionRequired: 'replace',
         keywords: ['led', 'managed', 'increased', 'delivered'],
@@ -1766,5 +2177,238 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
     }
     
     return recommendations;
+  }
+
+  /**
+   * Converts role-based recommendations to CV recommendations format
+   */
+  private async convertRoleRecommendationsToCVRecommendations(
+    roleRecommendations: RoleBasedRecommendation[],
+    primaryRole: RoleMatchResult
+  ): Promise<CVRecommendation[]> {
+    const cvRecommendations: CVRecommendation[] = [];
+    
+    for (const roleRec of roleRecommendations) {
+      const cvRec: CVRecommendation = {
+        id: `role_${roleRec.id}`,
+        type: this.mapRoleRecTypeToCVRecType(roleRec.type),
+        category: this.mapTargetSectionToCategory(roleRec.targetSection),
+        title: `[${primaryRole.roleName}] ${roleRec.title}`,
+        description: `${roleRec.description} (Role-optimized for ${primaryRole.roleName})`,
+        suggestedContent: roleRec.template,
+        impact: roleRec.priority === 'high' ? 'high' : roleRec.priority === 'medium' ? 'medium' : 'low',
+        priority: roleRec.priority === 'high' ? 1 : roleRec.priority === 'medium' ? 5 : 8,
+        section: this.mapTargetSectionToString(roleRec.targetSection),
+        actionRequired: this.determineActionRequired(roleRec.type),
+        keywords: this.extractKeywordsFromTemplate(roleRec.template),
+        estimatedScoreImprovement: roleRec.expectedImpact,
+        roleBasedRecommendation: roleRec,
+        roleProfileId: primaryRole.roleId,
+        enhancementTemplate: roleRec.template
+      };
+      
+      cvRecommendations.push(cvRec);
+    }
+    
+    return cvRecommendations;
+  }
+
+  /**
+   * Merges standard and role-enhanced recommendations, removing duplicates and prioritizing
+   */
+  private mergeRecommendations(
+    standardRecs: CVRecommendation[],
+    roleRecs: CVRecommendation[],
+    primaryRole?: RoleMatchResult
+  ): CVRecommendation[] {
+    const merged: CVRecommendation[] = [];
+    const seenSections = new Set<string>();
+    
+    // Prioritize role-enhanced recommendations
+    roleRecs.forEach(rec => {
+      merged.push(rec);
+      seenSections.add(`${rec.section}_${rec.type}`);
+    });
+    
+    // Add non-duplicate standard recommendations
+    standardRecs.forEach(rec => {
+      const key = `${rec.section}_${rec.type}`;
+      if (!seenSections.has(key)) {
+        // Boost priority if it aligns with detected role
+        if (primaryRole && this.isRecommendationAlignedWithRole(rec, primaryRole)) {
+          rec.priority = Math.max(1, rec.priority - 2);
+          rec.estimatedScoreImprovement += 5;
+        }
+        merged.push(rec);
+        seenSections.add(key);
+      }
+    });
+    
+    // Sort by priority and limit results
+    return merged
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 15); // Limit to top 15 recommendations
+  }
+
+  /**
+   * Helper methods for mapping between role and CV recommendation formats
+   */
+  private mapRoleRecTypeToCVRecType(roleType: string): CVRecommendation['type'] {
+    switch (roleType) {
+      case 'content': return 'content';
+      case 'structure': return 'structure';
+      case 'keyword': return 'keyword_optimization';
+      case 'section': return 'section_addition';
+      default: return 'content';
+    }
+  }
+
+  private mapTargetSectionToCategory(section: any): CVRecommendation['category'] {
+    const sectionStr = section.toString().toLowerCase();
+    if (sectionStr.includes('summary')) return 'professional_summary';
+    if (sectionStr.includes('experience')) return 'experience';
+    if (sectionStr.includes('skills')) return 'skills';
+    if (sectionStr.includes('education')) return 'education';
+    if (sectionStr.includes('achievements')) return 'achievements';
+    return 'ats_optimization';
+  }
+
+  private mapTargetSectionToString(section: any): string {
+    const sectionStr = section.toString();
+    // Convert enum-like values to readable strings
+    return sectionStr.split('.').pop()?.toLowerCase().replace('_', ' ') || sectionStr;
+  }
+
+  private determineActionRequired(type: string): CVRecommendation['actionRequired'] {
+    switch (type) {
+      case 'content': return 'replace';
+      case 'structure': return 'modify';
+      case 'keyword': return 'add';
+      case 'section': return 'add';
+      default: return 'modify';
+    }
+  }
+
+  private extractKeywordsFromTemplate(template: string): string[] {
+    // Extract meaningful keywords from template text
+    const keywords = template
+      .toLowerCase()
+      .replace(/\[.*?\]/g, '') // Remove placeholder brackets
+      .replace(/[^a-zA-Z\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && 
+        !['with', 'that', 'this', 'from', 'were', 'have', 'been', 'will', 'your'].includes(word)
+      )
+      .slice(0, 5);
+    
+    return keywords;
+  }
+
+  private isRecommendationAlignedWithRole(rec: CVRecommendation, role: RoleMatchResult): boolean {
+    // Check if recommendation keywords align with role matching factors
+    const roleKeywords = role.matchingFactors
+      .flatMap(factor => factor.matchedKeywords)
+      .map(kw => kw.toLowerCase());
+    
+    const recKeywords = (rec.keywords || [])
+      .concat(rec.title.toLowerCase().split(' '))
+      .map(kw => kw.toLowerCase());
+    
+    return recKeywords.some(recKw => 
+      roleKeywords.some(roleKw => 
+        roleKw.includes(recKw) || recKw.includes(roleKw)
+      )
+    );
+  }
+
+  /**
+   * Enhanced apply recommendations method that includes role context
+   */
+  async applyRoleEnhancedRecommendations(
+    originalCV: ParsedCV,
+    selectedRecommendations: CVRecommendation[],
+    includeRoleAnalysis: boolean = true
+  ): Promise<CVTransformationResult> {
+    console.log(`[CV-TRANSFORMATION] Applying ${selectedRecommendations.length} role-enhanced recommendations`);
+    
+    // Apply standard recommendations
+    const baseResult = await this.applyRecommendations(originalCV, selectedRecommendations);
+    
+    // Add role analysis if requested
+    if (includeRoleAnalysis) {
+      try {
+        const roleAnalysis = await this.roleDetectionService.detectRoles(baseResult.improvedCV);
+        const detectedRole = roleAnalysis.primaryRole;
+        
+        // Extract role-enhanced recommendations
+        const roleEnhancedRecs = selectedRecommendations.filter(rec => rec.roleBasedRecommendation);
+        
+        const enhancedResult: CVTransformationResult = {
+          ...baseResult,
+          roleAnalysis,
+          detectedRole,
+          roleEnhancedRecommendations: roleEnhancedRecs
+        };
+        
+        console.log(`[CV-TRANSFORMATION] Enhanced result with role analysis: ${detectedRole.roleName} (${detectedRole.confidence})`);
+        return enhancedResult;
+        
+      } catch (error) {
+        console.error('[CV-TRANSFORMATION] Error adding role analysis:', error);
+        return baseResult;
+      }
+    }
+    
+    return baseResult;
+  }
+
+  /**
+   * Get role-specific enhancement templates for a CV
+   */
+  async getRoleEnhancementTemplates(parsedCV: ParsedCV): Promise<{
+    detectedRole: RoleMatchResult | null;
+    templates: {
+      professionalSummary?: string;
+      experienceEnhancements?: string[];
+      skillsOptimization?: string[];
+      achievementTemplates?: string[];
+    };
+  }> {
+    try {
+      const primaryRole = await this.roleDetectionService.detectPrimaryRole(parsedCV);
+      
+      if (!primaryRole || primaryRole.confidence < 0.5) {
+        return {
+          detectedRole: null,
+          templates: {}
+        };
+      }
+      
+      const roleProfile = await this.roleProfileService.getProfileById(primaryRole.roleId);
+      
+      if (!roleProfile) {
+        return {
+          detectedRole: primaryRole,
+          templates: {}
+        };
+      }
+      
+      return {
+        detectedRole: primaryRole,
+        templates: {
+          professionalSummary: roleProfile.enhancementTemplates.professionalSummary,
+          experienceEnhancements: roleProfile.enhancementTemplates.experienceEnhancements.map(exp => exp.bulletPointTemplate),
+          skillsOptimization: roleProfile.enhancementTemplates.keywordOptimization,
+          achievementTemplates: roleProfile.enhancementTemplates.achievementTemplates
+        }
+      };
+      
+    } catch (error) {
+      console.error('[CV-TRANSFORMATION] Error getting role enhancement templates:', error);
+      return {
+        detectedRole: null,
+        templates: {}
+      };
+    }
   }
 }

@@ -6,6 +6,7 @@ export interface SelectedFeatures {
   atsOptimization: boolean;
   keywordEnhancement: boolean;
   achievementHighlighting: boolean;
+  achievementhighlighting: boolean; // Alternative spelling used in codebase
   skillsVisualization: boolean;
   generatePodcast: boolean;
   privacyMode: boolean;

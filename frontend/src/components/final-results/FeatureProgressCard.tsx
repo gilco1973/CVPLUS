@@ -112,7 +112,9 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
       
       <p className="text-sm text-gray-400 mb-3">{feature.description}</p>
       
-      {(progress.status === 'processing' || (progress.status === 'completed' && progress.progress === 100)) && (
+      {/* Always show progress bar for processing, retrying, and recently completed features */}
+      {(progress.status === 'processing' || progress.status === 'retrying' || 
+        (progress.status === 'completed' && (progress.progress || 0) > 0)) && (
         <div className="space-y-2">
           <div className="flex justify-between text-xs text-gray-400 mb-1">
             <span>Progress</span>
@@ -120,10 +122,12 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
-              className={`h-2 rounded-full transition-all duration-500 ${
-                progress.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
+              className={`h-2 rounded-full transition-all duration-300 ${
+                progress.status === 'completed' ? 'bg-green-500' : 
+                progress.status === 'retrying' ? 'bg-yellow-500' :
+                progress.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
               }`}
-              style={{ width: `${progress.progress || 0}%` }}
+              style={{ width: `${Math.max(progress.progress || 0, progress.status === 'processing' ? 5 : 0)}%` }}
             />
           </div>
           {progress.currentStep && (
@@ -132,8 +136,27 @@ export const FeatureProgressCard: React.FC<FeatureProgressCardProps> = ({
         </div>
       )}
       
-      {progress.status === 'failed' && progress.error && (
-        <p className="text-sm text-red-400">{progress.error}</p>
+      {progress.status === 'failed' && (
+        <div className="space-y-2">
+          {progress.error && (
+            <p className="text-sm text-red-400">{progress.error}</p>
+          )}
+          {/* Show progress bar for failed features to indicate how far they got */}
+          {(progress.progress || 0) > 0 && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Progress before failure</span>
+                <span>{progress.progress}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-1">
+                <div 
+                  className="h-1 rounded-full bg-red-500 transition-all duration-300"
+                  style={{ width: `${progress.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       )}
       
       {progress.status === 'completed' && (

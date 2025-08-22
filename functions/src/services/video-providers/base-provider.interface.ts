@@ -19,6 +19,9 @@ export interface VideoGenerationOptions {
   includeNameCard?: boolean;
   jobId?: string;
   webhookUrl?: string;
+  resolution?: string;
+  format?: string;
+  features?: string[];
   // HeyGen specific options
   voiceSpeed?: number; // 0.8 - 1.2
   emotion?: 'neutral' | 'happy' | 'serious' | 'enthusiastic';
@@ -29,6 +32,8 @@ export interface VideoGenerationOptions {
 export interface VideoGenerationResult {
   jobId: string;
   providerId: string;
+  success?: boolean;
+  qualityScore?: number;
   videoUrl?: string; // Available immediately for synchronous providers
   thumbnailUrl?: string;
   status: 'queued' | 'processing' | 'completed' | 'failed';
@@ -39,11 +44,17 @@ export interface VideoGenerationResult {
     format: string;
     expectedSize?: number;
     generatedAt: Date;
+    providerId?: string;
+    duration?: number;
+    size?: number;
+    promptTokens?: number;
+    outputSize?: number;
   };
   error?: {
     code: string;
     message: string;
     retryable: boolean;
+    type?: string;
   };
 }
 
@@ -247,6 +258,7 @@ export interface ProviderSelectionCriteria {
     timeOfDay: number; // 0-23
     isRetry?: boolean;
     previousFailures?: string[]; // Provider IDs that have failed
+    urgency?: 'low' | 'normal' | 'high'; // Request urgency level
   };
 }
 

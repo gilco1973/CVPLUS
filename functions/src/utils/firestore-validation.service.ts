@@ -80,14 +80,21 @@ export class FirestoreValidationService {
       }
 
       // Validate data structure recursively
-      const { sanitizedData, stats } = this.validateDataRecursive(
-        data, 
-        path, 
-        0, 
-        opts, 
-        errors, 
-        warnings
-      );
+      // For update operations, we need special handling of dot-notation paths
+      let sanitizedData: any;
+      let stats: { undefinedRemoved: number; nullsFound: number };
+      
+      if (operation === 'update' && this.isUpdateWithDotNotation(data)) {
+        // Handle update operations with dot-notation field paths
+        const result = this.validateUpdateDataWithPaths(data, path, opts, errors, warnings);
+        sanitizedData = result.sanitizedData;
+        stats = result.stats;
+      } else {
+        // Standard recursive validation
+        const result = this.validateDataRecursive(data, path, 0, opts, errors, warnings);
+        sanitizedData = result.sanitizedData;
+        stats = result.stats;
+      }
 
       context.undefinedFieldsRemoved = stats.undefinedRemoved;
       context.nullFieldsFound = stats.nullsFound;
@@ -380,6 +387,90 @@ export class FirestoreValidationService {
         }
       }
     }
+  }
+
+  /**
+   * Check if data contains dot-notation field paths (for update operations)
+   */
+  private static isUpdateWithDotNotation(data: any): boolean {
+    if (!data || typeof data !== 'object') return false;
+    
+    return Object.keys(data).some(key => key.includes('.'));
+  }
+
+  /**
+   * Validate update data with dot-notation field paths
+   */
+  private static validateUpdateDataWithPaths(
+    data: Record<string, any>,
+    path: string,
+    options: ValidationOptions,
+    errors: string[],
+    warnings: string[]
+  ): { sanitizedData: any; stats: { undefinedRemoved: number; nullsFound: number } } {
+    const stats = { undefinedRemoved: 0, nullsFound: 0 };
+    const sanitizedData: Record<string, any> = {};
+    
+    console.log(`[Firestore Validation] Validating update data with dot-notation paths`);
+    
+    for (const [fieldPath, value] of Object.entries(data)) {
+      // For update operations, dot-notation paths are valid Firestore field paths
+      // We only need to validate the actual values, not the field names
+      if (value === undefined) {
+        warnings.push(`${fieldPath}: Undefined value removed (Firestore incompatible)`);
+        stats.undefinedRemoved++;
+        continue;
+      }
+      
+      if (value === null) {
+        stats.nullsFound++;
+        if (!options.allowNullValues) {
+          warnings.push(`${fieldPath}: Null value found`);
+        }
+        sanitizedData[fieldPath] = null;
+        continue;
+      }
+      
+      // Validate the field value recursively if it's a complex type
+      if (typeof value === 'object' && value !== null && 
+          !Array.isArray(value) && 
+          !(value instanceof Date) &&
+          (!value.constructor || value.constructor.name !== 'FieldValue')) {
+        
+        const result = this.validateDataRecursive(
+          value, 
+          fieldPath, 
+          0, 
+          options, 
+          errors, 
+          warnings
+        );
+        
+        if (result.sanitizedData !== undefined) {
+          sanitizedData[fieldPath] = result.sanitizedData;
+        }
+        
+        stats.undefinedRemoved += result.stats.undefinedRemoved;
+        stats.nullsFound += result.stats.nullsFound;
+      } else {
+        // Validate primitive or special values (including FieldValue)
+        if (value && value.constructor && value.constructor.name === 'FieldValue') {
+          // Firestore FieldValue objects are valid
+          sanitizedData[fieldPath] = value;
+        } else {
+          const result = this.validatePrimitive(value, fieldPath, options, errors, warnings, { undefinedRemoved: 0, nullsFound: 0 });
+          
+          if (result.sanitizedData !== undefined) {
+            sanitizedData[fieldPath] = result.sanitizedData;
+          }
+          
+          stats.undefinedRemoved += result.stats.undefinedRemoved;
+          stats.nullsFound += result.stats.nullsFound;
+        }
+      }
+    }
+    
+    return { sanitizedData, stats };
   }
 
   /**

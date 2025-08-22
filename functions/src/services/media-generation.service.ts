@@ -500,18 +500,26 @@ Style: Concise, impactful, third-person narrative.`;
   /**
    * Get technical skills from skills union type
    */
-  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getTechnicalSkills(skills: string[] | { [key: string]: string[]; technical?: string[]; soft?: string[]; languages?: string[]; tools?: string[]; frontend?: string[]; backend?: string[]; databases?: string[]; cloud?: string[]; competencies?: string[]; frameworks?: string[]; expertise?: string[]; } | undefined): string[] {
     if (!skills) return [];
     if (Array.isArray(skills)) return skills;
-    return skills.technical || [];
+    // For object format, try technical first, then other technical categories
+    if (typeof skills === 'object') {
+      return skills.technical || skills.frontend || skills.backend || skills.frameworks || skills.tools || skills.expertise || [];
+    }
+    return [];
   }
 
   /**
    * Get soft skills from skills union type
    */
-  private getSoftSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getSoftSkills(skills: string[] | { [key: string]: string[]; technical?: string[]; soft?: string[]; languages?: string[]; tools?: string[]; frontend?: string[]; backend?: string[]; databases?: string[]; cloud?: string[]; competencies?: string[]; frameworks?: string[]; expertise?: string[]; } | undefined): string[] {
     if (!skills || Array.isArray(skills)) return [];
-    return skills.soft || [];
+    // For object format, try soft skills or competencies
+    if (typeof skills === 'object') {
+      return skills.soft || skills.competencies || [];
+    }
+    return [];
   }
 
   /**

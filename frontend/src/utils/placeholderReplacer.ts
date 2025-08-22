@@ -4,6 +4,9 @@
  * NEVER auto-replaces placeholders with fake data - only user-provided real data
  */
 
+// Import sanitization function at the top
+import { sanitizeHTML } from './security/contentSanitizer';
+
 export interface PlaceholderReplacements {
   [key: string]: string;
 }
@@ -60,6 +63,7 @@ export const extractPlaceholders = (content: string): string[] => {
 /**
  * Creates preview content showing placeholders as interactive elements
  * NEVER replaces placeholders with fake data - shows them as clickable elements for user input
+ * NOW WITH XSS PROTECTION: All content is sanitized before return
  */
 export const createPreviewContent = (
   content: string,
@@ -76,7 +80,13 @@ export const createPreviewContent = (
     processedContent = makeInteractivePlaceholders(processedContent);
   }
   
-  return processedContent;
+  // CRITICAL SECURITY FIX: Sanitize all HTML content before return
+  return sanitizeHTML(processedContent, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 'br', 'p', 'span', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['class', 'data-placeholder', 'onclick'],
+    FORBID_SCRIPTS: true,
+    SANITIZE_DOM: true
+  });
 };
 
 /**

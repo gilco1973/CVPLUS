@@ -97,6 +97,10 @@ export async function testDuplicateBlocking(jobId: string = 'test-job-123') {
 if (typeof window !== 'undefined') {
   (window as any).testDuplicateBlocking = testDuplicateBlocking;
   
+  // Console messages disabled to reduce noise
+  // Uncomment to show test function availability
+  /*
   console.log('🧪 Test function available: window.testDuplicateBlocking()');
   console.log('📝 Usage: testDuplicateBlocking("your-job-id")');
+  */
 }
