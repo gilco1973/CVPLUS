@@ -10,14 +10,19 @@ import OpenAI from 'openai';
 import { config } from '../config/environment';
 
 export interface LanguageProficiency {
-  language: string;
-  level: 'Native' | 'Fluent' | 'Professional' | 'Conversational' | 'Basic';
-  score: number; // 0-100
+  name: string;
+  proficiency: 'native' | 'fluent' | 'professional' | 'limited' | 'elementary';
+  score?: number; // 0-100
   certifications?: string[];
   yearsOfExperience?: number;
   contexts?: string[]; // Business, Technical, Academic, etc.
   verified?: boolean;
   flag?: string; // Country flag emoji
+  frameworks?: {
+    cefr?: string;
+    actfl?: string;
+    custom?: string;
+  };
 }
 
 export interface LanguageVisualization {
@@ -87,19 +92,28 @@ export class LanguageProficiencyService {
   // Common proficiency frameworks
   private proficiencyFrameworks = {
     CEFR: {
-      'Native': 'C2+',
-      'Fluent': 'C2',
-      'Professional': 'C1',
-      'Conversational': 'B2',
-      'Basic': 'A2-B1'
+      'native': 'C2+',
+      'fluent': 'C2',
+      'professional': 'C1',
+      'limited': 'B2',
+      'elementary': 'A2-B1'
     },
     ACTFL: {
-      'Native': 'Distinguished',
-      'Fluent': 'Superior',
-      'Professional': 'Advanced High',
-      'Conversational': 'Intermediate High',
-      'Basic': 'Intermediate Low'
+      'native': 'Distinguished',
+      'fluent': 'Superior',
+      'professional': 'Advanced High',
+      'limited': 'Intermediate High',
+      'elementary': 'Intermediate Low'
     }
+  };
+
+  // Proficiency level to score mapping
+  private proficiencyScores = {
+    'native': 100,
+    'fluent': 90,
+    'professional': 70,
+    'limited': 50,
+    'elementary': 30
   };
   
   constructor() {
@@ -207,17 +221,22 @@ export class LanguageProficiencyService {
       // Merge AI findings with extracted languages
       for (const aiLang of aiLanguages) {
         const existing = languages.find(l => 
-          l.language.toLowerCase() === aiLang.language.toLowerCase()
+          l.name.toLowerCase() === aiLang.language.toLowerCase()
         );
         
         if (!existing) {
+          const proficiency = this.normalizeLevel(aiLang.level);
           languages.push({
-            language: aiLang.language,
-            level: this.normalizeLevel(aiLang.level),
-            score: this.levelToScore(aiLang.level),
+            name: aiLang.language,
+            proficiency,
+            score: this.proficiencyScores[proficiency],
             certifications: aiLang.certifications,
             contexts: aiLang.contexts,
-            flag: this.languageFlags[aiLang.language] || '🌐'
+            flag: this.languageFlags[aiLang.language] || '🌐',
+            frameworks: {
+              cefr: this.proficiencyFrameworks.CEFR[proficiency],
+              actfl: this.proficiencyFrameworks.ACTFL[proficiency]
+            }
           });
         } else {
           // Enhance existing entry
@@ -241,12 +260,16 @@ export class LanguageProficiencyService {
     // Always include native language if identifiable
     if (languages.length === 0 || !languages.find(l => l.level === 'Native')) {
       const nativeLanguage = this.inferNativeLanguage(cv);
-      if (nativeLanguage && !languages.find(l => l.language === nativeLanguage)) {
+      if (nativeLanguage && !languages.find(l => l.name === nativeLanguage)) {
         languages.unshift({
-          language: nativeLanguage,
-          level: 'Native',
+          name: nativeLanguage,
+          proficiency: 'native',
           score: 100,
-          flag: this.languageFlags[nativeLanguage] || '🌐'
+          flag: this.languageFlags[nativeLanguage] || '🌐',
+          frameworks: {
+            cefr: this.proficiencyFrameworks.CEFR['native'],
+            actfl: this.proficiencyFrameworks.ACTFL['native']
+          }
         });
       }
     }
@@ -267,70 +290,73 @@ export class LanguageProficiencyService {
     for (const pattern of patterns) {
       const match = langString.match(pattern);
       if (match) {
-        const language = match[1].trim();
+        const name = match[1].trim();
         const levelStr = match[2].trim();
-        const level = this.normalizeLevel(levelStr);
+        const proficiency = this.normalizeLevel(levelStr);
         
         return {
-          language,
-          level,
-          score: this.levelToScore(level),
-          flag: this.languageFlags[language] || '🌐'
+          name,
+          proficiency,
+          score: this.proficiencyScores[proficiency],
+          flag: this.languageFlags[name] || '🌐',
+          frameworks: {
+            cefr: this.proficiencyFrameworks.CEFR[proficiency],
+            actfl: this.proficiencyFrameworks.ACTFL[proficiency]
+          }
         };
       }
     }
     
     // If no pattern matches, assume it's just the language name
+    const proficiency = 'professional'; // Default assumption
     return {
-      language: langString.trim(),
-      level: 'Professional', // Default assumption
-      score: 70,
-      flag: this.languageFlags[langString.trim()] || '🌐'
+      name: langString.trim(),
+      proficiency,
+      score: this.proficiencyScores[proficiency],
+      flag: this.languageFlags[langString.trim()] || '🌐',
+      frameworks: {
+        cefr: this.proficiencyFrameworks.CEFR[proficiency],
+        actfl: this.proficiencyFrameworks.ACTFL[proficiency]
+      }
     };
   }
   
   /**
    * Normalize proficiency level
    */
-  private normalizeLevel(levelStr: string): LanguageProficiency['level'] {
+  private normalizeLevel(levelStr: string): LanguageProficiency['proficiency'] {
     const normalized = levelStr.toLowerCase();
     
     if (normalized.includes('native') || normalized.includes('mother')) {
-      return 'Native';
+      return 'native';
     }
     if (normalized.includes('fluent') || normalized.includes('c2') || 
         normalized.includes('superior') || normalized.includes('excellent')) {
-      return 'Fluent';
+      return 'fluent';
     }
     if (normalized.includes('professional') || normalized.includes('c1') ||
         normalized.includes('advanced') || normalized.includes('proficient')) {
-      return 'Professional';
+      return 'professional';
     }
     if (normalized.includes('conversational') || normalized.includes('b2') ||
-        normalized.includes('intermediate') || normalized.includes('good')) {
-      return 'Conversational';
+        normalized.includes('intermediate') || normalized.includes('good') ||
+        normalized.includes('limited')) {
+      return 'limited';
     }
     if (normalized.includes('basic') || normalized.includes('beginner') ||
         normalized.includes('a1') || normalized.includes('a2') || 
         normalized.includes('elementary')) {
-      return 'Basic';
+      return 'elementary';
     }
     
-    return 'Professional'; // Default
+    return 'professional'; // Default
   }
   
   /**
    * Convert level to numeric score
    */
-  private levelToScore(level: LanguageProficiency['level']): number {
-    const scores = {
-      'Native': 100,
-      'Fluent': 90,
-      'Professional': 70,
-      'Conversational': 50,
-      'Basic': 30
-    };
-    return scores[level];
+  private levelToScore(level: LanguageProficiency['proficiency']): number {
+    return this.proficiencyScores[level] || 50;
   }
   
   /**
@@ -406,7 +432,7 @@ export class LanguageProficiencyService {
       type: 'circular',
       data: {
         languages: proficiencies.map(p => ({
-          name: p.language,
+          name: p.name,
           value: p.score,
           level: p.level,
           flag: p.flag,
@@ -426,15 +452,15 @@ export class LanguageProficiencyService {
     visualizations.push({
       type: 'bar',
       data: {
-        labels: proficiencies.map(p => `${p.flag} ${p.language}`),
+        labels: proficiencies.map(p => `${p.flag} ${p.name}`),
         datasets: [{
           label: 'Proficiency Level',
-          data: proficiencies.map(p => p.score),
+          data: proficiencies.map(p => p.score || this.proficiencyScores[p.proficiency]),
           backgroundColor: proficiencies.map(p => 
-            p.level === 'Native' ? '#10B981' :
-            p.level === 'Fluent' ? '#3B82F6' :
-            p.level === 'Professional' ? '#8B5CF6' :
-            p.level === 'Conversational' ? '#F59E0B' :
+            p.proficiency === 'native' ? '#10B981' :
+            p.proficiency === 'fluent' ? '#3B82F6' :
+            p.proficiency === 'professional' ? '#8B5CF6' :
+            p.proficiency === 'limited' ? '#F59E0B' :
             '#6B7280'
           )
         }]
@@ -453,10 +479,10 @@ export class LanguageProficiencyService {
       visualizations.push({
         type: 'radar',
         data: {
-          labels: proficiencies.slice(0, 6).map(p => p.language),
+          labels: proficiencies.slice(0, 6).map(p => p.name),
           datasets: [{
             label: 'Language Proficiency',
-            data: proficiencies.slice(0, 6).map(p => p.score),
+            data: proficiencies.slice(0, 6).map(p => p.score || this.proficiencyScores[p.proficiency]),
             borderColor: '#3B82F6',
             backgroundColor: 'rgba(59, 130, 246, 0.2)'
           }]
@@ -477,9 +503,9 @@ export class LanguageProficiencyService {
       data: {
         languages: proficiencies.map(p => ({
           flag: p.flag,
-          name: p.language,
-          level: p.level,
-          levelText: this.proficiencyFrameworks.CEFR[p.level],
+          name: p.name,
+          level: p.proficiency,
+          levelText: this.proficiencyFrameworks.CEFR[p.proficiency],
           certified: p.verified,
           certifications: p.certifications
         }))
@@ -497,13 +523,13 @@ export class LanguageProficiencyService {
     visualizations.push({
       type: 'matrix',
       data: {
-        languages: proficiencies.map(p => p.language),
+        languages: proficiencies.map(p => p.name),
         skills: ['Speaking', 'Writing', 'Reading', 'Listening'],
         values: proficiencies.map(p => {
           // Estimate sub-skills based on overall level
           const base = p.score;
           return {
-            language: p.language,
+            language: p.name,
             skills: {
               'Speaking': base - 5 + Math.random() * 10,
               'Writing': base - 5 + Math.random() * 10,
@@ -533,7 +559,7 @@ export class LanguageProficiencyService {
     proficiencies: LanguageProficiency[]
   ): LanguageVisualization['insights'] {
     const fluentLanguages = proficiencies.filter(p => 
-      p.level === 'Native' || p.level === 'Fluent'
+      p.proficiency === 'native' || p.proficiency === 'fluent'
     );
     
     const businessReady = proficiencies.filter(p => 
@@ -541,11 +567,11 @@ export class LanguageProficiencyService {
         c.toLowerCase().includes('business') || 
         c.toLowerCase().includes('professional')
       )
-    ).map(p => p.language);
+    ).map(p => p.name);
     
     const certifiedLanguages = proficiencies.filter(p => 
       p.certifications && p.certifications.length > 0
-    ).map(p => p.language);
+    ).map(p => p.name);
     
     const recommendations: string[] = [];
     
@@ -558,14 +584,14 @@ export class LanguageProficiencyService {
       recommendations.push('Consider obtaining language certifications to validate your skills');
     }
     
-    const conversationalLanguages = proficiencies.filter(p => p.level === 'Conversational');
+    const conversationalLanguages = proficiencies.filter(p => p.proficiency === 'limited');
     if (conversationalLanguages.length > 0) {
       recommendations.push(
         `Improve ${conversationalLanguages[0].language} to professional level for career advancement`
       );
     }
     
-    if (!proficiencies.find(p => p.language === 'English') && proficiencies.length > 0) {
+    if (!proficiencies.find(p => p.name === 'English') && proficiencies.length > 0) {
       recommendations.push('Consider adding English for broader international opportunities');
     }
     
@@ -638,7 +664,7 @@ export class LanguageProficiencyService {
     language: LanguageProficiency,
     cv: ParsedCV
   ): number {
-    if (language.level === 'Native') {
+    if (language.proficiency === 'native') {
       // Estimate based on age (if available) or professional experience
       const totalExperience = cv.experience?.reduce((sum, exp) => {
         const start = new Date(exp.startDate || 0);
@@ -662,13 +688,13 @@ export class LanguageProficiencyService {
     
     // Minimum years based on level
     const minYears = {
-      'Fluent': 5,
-      'Professional': 3,
-      'Conversational': 2,
-      'Basic': 1
+      'fluent': 5,
+      'professional': 3,
+      'limited': 2,
+      'elementary': 1
     };
     
-    return Math.max(years, minYears[language.level] || 0);
+    return Math.max(years, minYears[language.proficiency] || 0);
   }
   
   /**
@@ -765,7 +791,7 @@ export class LanguageProficiencyService {
     }
     
     const langIndex = visualization.proficiencies.findIndex(p => 
-      p.language === languageId
+      p.name === languageId
     );
     
     if (langIndex === -1) {

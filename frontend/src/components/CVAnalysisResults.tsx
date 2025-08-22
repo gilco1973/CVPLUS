@@ -572,94 +572,16 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       const successMessage = `✨ Magic Transform completed! Applied ${result.appliedImprovements} improvements and generated ${result.generatedFeatures.length} features${result.userTier === 'PREMIUM' ? ' (Premium)' : ''}.`;
       toast.success(successMessage, { duration: 5000 });
       
-      // Enhanced navigation with same multi-strategy approach
+      // Navigate to role selection first, then preview
+      // Store the magic transform intent for after role selection
+      sessionStorage.setItem(`magic-transform-intent-${job.id}`, 'true');
       
-      // Strategy 1: Parent callback
-      try {
-        onContinue(magicSelectedRecs);
-        
-        // Verify navigation with timeout
-        const navigationPromise = new Promise<boolean>((resolve) => {
-          let attempts = 0;
-          const maxAttempts = 8;
-          const checkInterval = 125;
-          
-          const checkNavigation = () => {
-            attempts++;
-            const currentPath = window.location.pathname;
-            const expectedPath = `/preview/${job.id}`;
-            
-            if (currentPath === expectedPath) {
-              resolve(true);
-              return;
-            }
-            
-            if (attempts < maxAttempts) {
-              setTimeout(checkNavigation, checkInterval);
-            } else {
-              console.warn('⚠️ [DEBUG] Enhanced Magic transform navigation timeout');
-              resolve(false);
-            }
-          };
-          
-          setTimeout(checkNavigation, 100);
-        });
-        
-        const navigationSucceeded = await navigationPromise;
-        
-        if (navigationSucceeded) {
-          toast.success('🎉 Welcome to your enhanced CV preview!', { duration: 4000 });
-          setIsMagicTransforming(false);
-          setMagicTransformProgress(null);
-          return;
-        }
-        
-      } catch (callbackError) {
-        console.error('❌ [DEBUG] Enhanced Magic transform parent callback error:', callbackError);
-      }
+      // Navigate to role selection page
+      navigate(`/role-select/${job.id}`);
       
-      // Strategy 2: Robust fallback
-      try {
-        const fallbackSuccess = await robustNavigation.navigateToPreview(
-          navigate,
-          job.id,
-          magicSelectedRecs,
-          {
-            replace: true,
-            timeout: 400,
-            maxRetries: 2,
-            onSuccess: () => {
-              toast.success('✨ Enhanced Magic transformation complete!');
-              setIsMagicTransforming(false);
-              setMagicTransformProgress(null);
-            },
-            onFailure: (error) => {
-              console.error('❌ [DEBUG] Enhanced Magic transform robust navigation failed:', error);
-            }
-          }
-        );
-        
-        if (fallbackSuccess) {
-          return;
-        }
-        
-      } catch (robustError) {
-        console.error('❌ [DEBUG] Enhanced Magic transform robust navigation error:', robustError);
-      }
-      
-      // Strategy 3: Emergency navigation
-      toast.loading('Redirecting to your enhanced CV...', { duration: 2000 });
-      
-      setTimeout(() => {
-        try {
-          window.location.href = `/preview/${job.id}`;
-        } catch (emergencyError) {
-          console.error('💥 [DEBUG] Enhanced Magic transform emergency navigation failed:', emergencyError);
-          toast.error('Magic transformation completed, but navigation failed. Please refresh.');
-        }
-        setIsMagicTransforming(false);
-        setMagicTransformProgress(null);
-      }, 200);
+      // Clear transformation state
+      setIsMagicTransforming(false);
+      setMagicTransformProgress(null);
       
     } catch (error: unknown) {
       logError('enhancedMagicTransform', error);

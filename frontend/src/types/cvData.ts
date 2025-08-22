@@ -56,7 +56,12 @@ export interface CVLanguageItem {
   name?: string;
   language?: string;
   level?: string;
-  proficiency?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Native' | 'Fluent';
+  proficiency?: 'elementary' | 'limited' | 'professional' | 'fluent' | 'native';
+  certifications?: string[];
+  yearsOfExperience?: number;
+  contexts?: string[];
+  verified?: boolean;
+  flag?: string;
 }
 
 export interface CVSkillsData {

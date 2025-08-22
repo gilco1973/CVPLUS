@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Target, Users, Sparkles, TrendingUp, ChevronRight, RefreshCw } from 'lucide-react';
+import { Target, Users, Sparkles, TrendingUp, ChevronRight, RefreshCw, ArrowLeft } from 'lucide-react';
 import { RoleProfileSelector } from './RoleProfileSelector';
 import { RoleBasedRecommendations } from './RoleBasedRecommendations';
 import type { Job } from '../../services/cvService';
@@ -29,6 +29,7 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
   const [recommendations, setRecommendations] = useState<RoleBasedRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState<'detection' | 'recommendations'>('detection');
   const [isRoleDetected, setIsRoleDetected] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Handle role selection from the selector
   const handleRoleSelected = (roleProfile: RoleProfile | null, isDetected: boolean) => {
@@ -71,51 +72,104 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
   const hasRecommendations = recommendations.length > 0;
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-xl p-6 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl">
-              <Target className="w-6 h-6 text-white" />
+    <div className={`space-y-8 ${className}`}>
+      {/* Enhanced Header with Live Status */}
+      <div className="bg-gradient-to-r from-blue-900/30 via-purple-900/20 to-cyan-900/30 rounded-2xl p-8 border border-blue-500/30 backdrop-blur-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-start gap-6">
+            <div className="relative">
+              <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-lg">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              {isAnalyzing && (
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                </div>
+              )}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-100">Enhanced CV Analysis</h1>
-              <p className="text-gray-400">
-                AI-powered role detection and personalized recommendations for your CV
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-100">AI Role Analysis</h1>
+                {hasRoleSelected && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-300 font-medium">Role Detected</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl">
+                Our advanced AI analyzes your professional background to identify your role and 
+                generate personalized enhancement recommendations.
               </p>
+              {selectedRole && (
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-gray-400">Detected Role:</span>
+                  <span className="text-cyan-300 font-semibold">{selectedRole.name}</span>
+                  <span className="text-gray-500">•</span>
+                  <span className="text-purple-300">{selectedRole.category}</span>
+                </div>
+              )}
             </div>
           </div>
           
-          {/* Progress Indicator */}
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${
-              hasRoleSelected ? 'bg-green-500' : 'bg-gray-500'
-            }`}></div>
-            <span className="text-sm text-gray-400">Role Selected</span>
+          {/* Enhanced Progress Indicator */}
+          <div className="flex flex-col gap-4 lg:min-w-[240px]">
+            <div className="flex items-center gap-3">
+              <div className={`relative w-12 h-2 rounded-full overflow-hidden bg-gray-700`}>
+                <div className={`absolute top-0 left-0 h-full transition-all duration-700 rounded-full ${
+                  hasRoleSelected ? 'w-full bg-gradient-to-r from-green-400 to-emerald-500' : 
+                  isAnalyzing ? 'w-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse' :
+                  'w-1/4 bg-gradient-to-r from-cyan-400 to-blue-500'
+                }`}></div>
+              </div>
+              <div className="text-sm">
+                <div className={`font-medium ${
+                  hasRoleSelected ? 'text-green-400' : 'text-cyan-400'
+                }`}>
+                  {hasRoleSelected ? 'Role Confirmed' : isAnalyzing ? 'Analyzing...' : 'Role Detection'}
+                </div>
+              </div>
+            </div>
             
-            <ChevronRight className="w-4 h-4 text-gray-500" />
-            
-            <div className={`w-3 h-3 rounded-full ${
-              hasRecommendations ? 'bg-green-500' : 'bg-gray-500'
-            }`}></div>
-            <span className="text-sm text-gray-400">Recommendations</span>
+            <div className="flex items-center gap-3">
+              <div className={`relative w-12 h-2 rounded-full overflow-hidden bg-gray-700`}>
+                <div className={`absolute top-0 left-0 h-full transition-all duration-700 rounded-full ${
+                  hasRecommendations ? 'w-full bg-gradient-to-r from-purple-400 to-pink-500' :
+                  hasRoleSelected ? 'w-1/3 bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse' :
+                  'w-0'
+                }`}></div>
+              </div>
+              <div className="text-sm">
+                <div className={`font-medium ${
+                  hasRecommendations ? 'text-purple-400' : 
+                  hasRoleSelected ? 'text-purple-400' : 'text-gray-500'
+                }`}>
+                  {hasRecommendations ? `${recommendations.length} Recommendations` : 
+                   hasRoleSelected ? 'Generating Ideas...' : 'Recommendations Pending'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Tabs */}
+      {/* Enhanced Tab Navigation */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'detection' | 'recommendations')}>
-        <TabsList className="grid w-full grid-cols-2 bg-gray-800 border border-gray-700">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-800/70 backdrop-blur-sm border border-gray-600 rounded-xl p-1">
           <TabsTrigger 
             value="detection" 
-            className="flex items-center gap-2 data-[state=active]:bg-primary-600 data-[state=active]:text-white"
+            className="flex items-center gap-3 px-6 py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-700"
           >
-            <Target className="w-4 h-4" />
-            <span>Role Detection</span>
+            <Target className="w-5 h-5" />
+            <div className="flex flex-col items-start">
+              <span className="font-semibold">Role Detection</span>
+              <span className="text-xs opacity-80">
+                {hasRoleSelected ? 'Complete' : 'Analyze CV'}
+              </span>
+            </div>
             {hasRoleSelected && (
-              <Badge variant="success" className="ml-1 text-xs">
-                Complete
+              <Badge variant="success" className="ml-2">
+                ✓
               </Badge>
             )}
           </TabsTrigger>
@@ -123,54 +177,76 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
           <TabsTrigger 
             value="recommendations" 
             disabled={!hasRoleSelected}
-            className="flex items-center gap-2 data-[state=active]:bg-primary-600 data-[state=active]:text-white disabled:opacity-50"
+            className="flex items-center gap-3 px-6 py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Recommendations</span>
+            <Sparkles className="w-5 h-5" />
+            <div className="flex flex-col items-start">
+              <span className="font-semibold">Recommendations</span>
+              <span className="text-xs opacity-80">
+                {hasRecommendations ? `${recommendations.length} Ready` : 'Generate Ideas'}
+              </span>
+            </div>
             {hasRecommendations && (
-              <Badge variant="success" className="ml-1 text-xs">
+              <Badge variant="success" className="ml-2">
                 {recommendations.length}
               </Badge>
             )}
           </TabsTrigger>
         </TabsList>
 
-        {/* Role Detection Tab */}
-        <TabsContent value="detection" className="space-y-6">
-          <RoleProfileSelector
-            jobId={job.id}
-            onRoleSelected={handleRoleSelected}
-            onAnalysisUpdate={handleAnalysisUpdate}
-            className="animate-fade-in-up"
-          />
+        {/* Enhanced Role Detection Tab */}
+        <TabsContent value="detection" className="space-y-8">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <RoleProfileSelector
+              jobId={job.id}
+              onRoleSelected={handleRoleSelected}
+              onAnalysisUpdate={handleAnalysisUpdate}
+              className="animate-fade-in-up"
+            />
+          </div>
           
-          {/* Quick Navigation */}
+          {/* Enhanced Quick Navigation */}
           {hasRoleSelected && (
-            <Card className="border-green-500/30 bg-green-900/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <div>
-                      <p className="text-green-300 font-medium">
-                        Role selected: {selectedRole?.name}
-                      </p>
-                      <p className="text-sm text-green-400/80">
-                        Ready to generate personalized recommendations
-                      </p>
+            <div className="animate-slide-up">
+              <Card className="border-green-500/40 bg-gradient-to-r from-green-900/30 to-emerald-900/20 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-6 h-6 text-green-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-green-300 mb-2">
+                          Role Successfully Detected!
+                        </h3>
+                        <div className="space-y-1">
+                          <p className="text-green-200">
+                            <span className="font-medium">Identified Role:</span> {selectedRole?.name}
+                          </p>
+                          <p className="text-green-200/80">
+                            <span className="font-medium">Category:</span> {selectedRole?.category}
+                          </p>
+                          <p className="text-sm text-green-300/70 mt-2">
+                            Ready to generate {detectedRole ? Math.round(detectedRole.confidence * 100) : '85'}% confidence-based recommendations
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        onClick={() => setActiveTab('recommendations')}
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 font-semibold shadow-lg transition-all duration-300 hover:shadow-xl"
+                      >
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Generate Recommendations
+                        <ChevronRight className="w-5 h-5 ml-2" />
+                      </Button>
                     </div>
                   </div>
-                  
-                  <Button
-                    onClick={() => setActiveTab('recommendations')}
-                    className="bg-green-600 hover:bg-green-500 text-white"
-                  >
-                    Continue to Recommendations
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
 
@@ -206,73 +282,110 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
         </TabsContent>
       </Tabs>
 
-      {/* Role Context Summary */}
+      {/* Enhanced Role Context Summary */}
       {hasRoleSelected && (
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-100 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Selected Role Context
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                <div className="text-lg font-bold text-blue-300">
-                  {selectedRole?.name}
+        <div className="animate-fade-in">
+          <Card className="bg-gradient-to-r from-gray-800/60 to-gray-700/40 border border-gray-600 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-100 flex items-center gap-3">
+                <Users className="w-6 h-6 text-cyan-400" />
+                Professional Profile Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="p-6 bg-gradient-to-br from-cyan-900/30 to-blue-900/20 border border-cyan-500/30 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Target className="w-5 h-5 text-cyan-400" />
+                      <span className="text-sm text-cyan-300 font-medium">Detected Role</span>
+                    </div>
+                    <div className="text-xl font-bold text-cyan-100 mb-1">
+                      {selectedRole?.name}
+                    </div>
+                    <div className="text-cyan-300/70">{selectedRole?.category}</div>
+                    {selectedRole?.experienceLevel && (
+                      <div className="text-sm text-cyan-400/60 capitalize mt-1">
+                        {selectedRole.experienceLevel} Level
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Selected Role</div>
-              </div>
-              
-              <div className="text-center p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-                <div className="text-lg font-bold text-purple-300">
-                  {detectedRole ? Math.round(detectedRole.confidence * 100) : '85'}%
+                
+                <div className="p-6 bg-gradient-to-br from-purple-900/30 to-pink-900/20 border border-purple-500/30 rounded-xl text-center">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {detectedRole ? Math.round(detectedRole.confidence * 100) : '85'}%
+                  </div>
+                  <div className="text-sm text-purple-200">Match Confidence</div>
+                  <div className="w-full bg-purple-900/40 rounded-full h-2 mt-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-400 to-pink-400 h-2 rounded-full transition-all duration-700"
+                      style={{ width: `${detectedRole ? detectedRole.confidence * 100 : 85}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Match Confidence</div>
-              </div>
-              
-              <div className="text-center p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
-                <div className="text-lg font-bold text-green-300">
-                  {recommendations.length || '8-12'}
+                
+                <div className="p-6 bg-gradient-to-br from-green-900/30 to-emerald-900/20 border border-green-500/30 rounded-xl text-center">
+                  <div className="text-3xl font-bold text-green-300 mb-2">
+                    {recommendations.length || '8-12'}
+                  </div>
+                  <div className="text-sm text-green-200">Recommendations</div>
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className={`w-2 h-2 rounded-full ${
+                        i < (recommendations.length > 0 ? 3 : 1) ? 'bg-green-400' : 'bg-green-900'
+                      }`}></div>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Recommendations</div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* Action Bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          {onBack && (
-            <Button
-              onClick={onBack}
-              variant="outline"
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              Back to Analysis
-            </Button>
-          )}
-        </div>
-        
-        <div className="text-sm text-gray-500">
-          {hasRoleSelected ? (
-            <span className="text-green-400">
-              ✓ Role-enhanced analysis ready
-            </span>
-          ) : (
-            <span>
-              Complete role selection to continue
-            </span>
-          )}
+      {/* Enhanced Action Bar */}
+      <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <Button
+                onClick={onBack}
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-3"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Upload
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+              hasRoleSelected 
+                ? 'bg-green-500/20 border border-green-500/40 text-green-300'
+                : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300'
+            }`}>
+              {hasRoleSelected ? (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">Ready to Continue</span>
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="font-medium">Select Role to Continue</span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Fallback UI components if shadcn/ui is not available
+// Enhanced Fallback UI components with improved styling
 const Tabs: React.FC<any> = ({ value, onValueChange, children, ...props }) => (
   <div {...props}>{children}</div>
 );
@@ -281,19 +394,24 @@ const TabsList: React.FC<any> = ({ children, className, ...props }) => (
   <div className={`flex ${className}`} {...props}>{children}</div>
 );
 
-const TabsTrigger: React.FC<any> = ({ value, children, className, disabled, onClick, ...props }) => (
-  <button 
-    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${className}`}
-    disabled={disabled}
-    onClick={() => onClick?.(value)}
-    {...props}
-  >
-    {children}
-  </button>
-);
+const TabsTrigger: React.FC<any> = ({ value, children, className, disabled, onClick, ...props }) => {
+  const isActive = props['data-state'] === 'active';
+  return (
+    <button 
+      className={`flex-1 px-4 py-2 text-sm font-medium transition-all duration-300 ${className} ${
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700/50'
+      }`}
+      disabled={disabled}
+      onClick={() => !disabled && onClick?.(value)}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 const TabsContent: React.FC<any> = ({ value, children, className, ...props }) => (
-  <div className={`mt-6 ${className}`} {...props}>{children}</div>
+  <div className={`mt-8 ${className}`} {...props}>{children}</div>
 );
 
 const Button: React.FC<any> = ({ children, className, variant, onClick, disabled, ...props }) => (
@@ -302,7 +420,7 @@ const Button: React.FC<any> = ({ children, className, variant, onClick, disabled
       variant === 'outline' 
         ? designSystem.components.button.variants.secondary.default
         : designSystem.components.button.variants.primary.default
-    } ${designSystem.components.button.sizes.md} ${className}`}
+    } ${designSystem.components.button.sizes.md} ${className} transition-all duration-300`}
     onClick={onClick}
     disabled={disabled}
     {...props}
@@ -318,7 +436,7 @@ const Card: React.FC<any> = ({ children, className, ...props }) => (
 );
 
 const CardHeader: React.FC<any> = ({ children, ...props }) => (
-  <div className="mb-4" {...props}>{children}</div>
+  <div className="mb-6" {...props}>{children}</div>
 );
 
 const CardTitle: React.FC<any> = ({ children, className, ...props }) => (
@@ -335,13 +453,13 @@ const CardContent: React.FC<any> = ({ children, className, ...props }) => (
 
 const Badge: React.FC<any> = ({ children, variant, className, ...props }) => {
   const variantClasses = {
-    success: 'bg-green-500/20 text-green-300 border-green-500/30',
-    default: 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+    success: 'bg-green-500/20 text-green-300 border border-green-500/40',
+    default: 'bg-gray-500/20 text-gray-300 border border-gray-500/40'
   };
   
   return (
     <span 
-      className={`px-2 py-0.5 text-xs font-medium rounded-full border ${variantClasses[variant || 'default']} ${className}`}
+      className={`px-3 py-1 text-xs font-medium rounded-full ${variantClasses[variant || 'default']} ${className}`}
       {...props}
     >
       {children}

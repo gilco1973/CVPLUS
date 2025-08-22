@@ -142,26 +142,29 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
       }));
     };
     
+    // 🚨 CRITICAL FIX: Don't fallback to originalData when no enhanced data exists
+    // This was causing identical before/after comparison (both pointing to same object)
     const enhancedData = enhancedSourceData ? {
       personalInfo: enhancedSourceData.personalInfo || {},
       experience: processExperienceWithPlaceholders(enhancedSourceData.experience || []),
       skills: enhancedSourceData.skills || {},
       education: Array.isArray(enhancedSourceData.education) ? enhancedSourceData.education : [],
       summary: processTextWithPlaceholders(enhancedSourceData.summary || ''),
-    } : originalData;
+    } : null; // Return null instead of originalData to indicate no enhanced version exists
     
     // Enhanced debug logging to help track the data source and comparison
     if (process.env.NODE_ENV === 'development') {
       console.log('[CVPreview] Data sources:', {
         hasJobImprovedCV: !!job?.improvedCV,
         hasSessionStorageImprovedCV: !!enhancedSourceData && !job?.improvedCV,
-        enhancedDataSource: enhancedSourceData ? 'enhanced' : 'original',
+        enhancedDataSource: enhancedSourceData ? 'enhanced' : 'none',
         originalSummaryLength: originalData.summary.length,
-        enhancedSummaryLength: enhancedData.summary.length,
-        summaryHasPlaceholders: enhancedData.summary.includes('['),
+        enhancedSummaryLength: enhancedData?.summary?.length || 0,
+        summaryHasPlaceholders: enhancedData?.summary?.includes('[') || false,
         originalSummaryPreview: originalData.summary.substring(0, 100) + '...',
-        enhancedSummaryPreview: enhancedData.summary.substring(0, 100) + '...',
-        summariesAreDifferent: originalData.summary !== enhancedData.summary
+        enhancedSummaryPreview: enhancedData?.summary?.substring(0, 100) + '...' || 'No enhanced data',
+        summariesAreDifferent: enhancedData ? (originalData.summary !== enhancedData.summary) : false,
+        hasEnhancedData: !!enhancedData
       });
     }
     
@@ -541,17 +544,17 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="p-8 space-y-8">
                   <CVPersonalInfo 
-                    data={cvData.enhanced.personalInfo}
+                    data={cvData.enhanced?.personalInfo || cvData.original.personalInfo}
                     jobId={jobId}
                     metadata={cvData.metadata}
                   />
 
-                  {cvData.enhanced.summary && (
+                  {(cvData.enhanced?.summary || cvData.original.summary) && (
                     <section className="border-b border-gray-200 pb-6">
                       <h2 className="text-xl font-bold text-gray-900 mb-4">Professional Summary</h2>
                       <div className="text-gray-700 leading-relaxed">
                         <EditablePlaceholderWrapper
-                          content={cvData.enhanced.summary}
+                          content={cvData.enhanced?.summary || cvData.original.summary}
                           onContentUpdate={(newContent) => handleContentUpdate(newContent, 'summary', 'professional_summary')}
                           fieldPath="summary"
                           section="professional_summary"
@@ -562,18 +565,18 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                   )}
 
                   <CVExperience 
-                    data={cvData.enhanced.experience}
+                    data={cvData.enhanced?.experience || cvData.original.experience}
                     jobId={jobId}
                     onContentUpdate={handleContentUpdate}
                   />
 
                   <CVSkills 
-                    data={cvData.enhanced.skills}
+                    data={cvData.enhanced?.skills || cvData.original.skills}
                     jobId={jobId}
                   />
 
                   <CVEducation 
-                    data={cvData.enhanced.education}
+                    data={cvData.enhanced?.education || cvData.original.education}
                     jobId={jobId}
                   />
                 </div>
@@ -595,7 +598,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       <div>
                         <strong className="text-black">Enhanced Summary (first 200 chars):</strong>
                         <div className="bg-white p-2 rounded mt-1 max-h-20 overflow-auto text-black border">
-                          {cvData.enhanced.summary.substring(0, 200)}...
+                          {cvData.enhanced?.summary?.substring(0, 200) + '...' || 'No enhanced data available'}
                         </div>
                       </div>
                     </div>
@@ -603,19 +606,22 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                       <div>
                         <strong className="text-black">Are they different?</strong> 
                         <span className="text-black font-bold">
-                          {cvData.original.summary !== cvData.enhanced.summary ? '✅ YES' : '❌ NO - IDENTICAL'}
+                          {cvData.enhanced ? 
+                            (cvData.original.summary !== cvData.enhanced.summary ? '✅ YES' : '❌ NO - IDENTICAL') : 
+                            '⚠️ NO ENHANCED DATA - Apply improvements first'
+                          }
                         </span>
                       </div>
                       <div>
                         <strong className="text-black">Character count:</strong> 
                         <span className="text-black">
-                          Original: {cvData.original.summary.length} | Enhanced: {cvData.enhanced.summary.length}
+                          Original: {cvData.original.summary.length} | Enhanced: {cvData.enhanced?.summary?.length || 0}
                         </span>
                       </div>
                       <div>
                         <strong className="text-black">Has placeholders:</strong> 
                         <span className="text-black">
-                          {cvData.enhanced.summary.includes('[') ? '✅ YES ([INSERT] placeholders found)' : '❌ NO'}
+                          {cvData.enhanced?.summary?.includes('[') ? '✅ YES ([INSERT] placeholders found)' : '❌ NO'}
                         </span>
                       </div>
                     </div>
@@ -655,7 +661,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                     </div>
                     <div className="p-6">
                       <CVPersonalInfo 
-                        data={cvData.enhanced.personalInfo}
+                        data={cvData.enhanced?.personalInfo || cvData.original.personalInfo}
                         jobId={jobId}
                         metadata={cvData.metadata}
                       />
@@ -664,7 +670,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                 </div>
 
                 {/* Professional Summary Comparison */}
-                {(cvData.original.summary || cvData.enhanced.summary) && (
+                {(cvData.original.summary || cvData.enhanced?.summary) && (
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="bg-gray-50 px-6 py-4 border-b">
                       <h2 className="text-lg font-semibold text-gray-900">Professional Summary</h2>
@@ -678,7 +684,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                         )}
                       </div>
                       <div className="p-6">
-                        {cvData.enhanced.summary ? (
+                        {cvData.enhanced?.summary ? (
                           <div className="text-gray-700 leading-relaxed">
                             <EditablePlaceholderWrapper
                               content={cvData.enhanced.summary}
@@ -689,7 +695,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                             />
                           </div>
                         ) : (
-                          <p className="text-gray-400 italic">No summary provided</p>
+                          <p className="text-gray-400 italic">No enhanced summary available - Apply improvements first</p>
                         )}
                       </div>
                     </div>
@@ -710,7 +716,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                     </div>
                     <div className="p-6">
                       <CVExperience 
-                        data={cvData.enhanced.experience}
+                        data={cvData.enhanced?.experience || cvData.original.experience}
                         jobId={jobId}
                         onContentUpdate={handleContentUpdate}
                       />
@@ -732,7 +738,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                     </div>
                     <div className="p-6">
                       <CVSkills 
-                        data={cvData.enhanced.skills}
+                        data={cvData.enhanced?.skills || cvData.original.skills}
                         jobId={jobId}
                       />
                     </div>
@@ -753,7 +759,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
                     </div>
                     <div className="p-6">
                       <CVEducation 
-                        data={cvData.enhanced.education}
+                        data={cvData.enhanced?.education || cvData.original.education}
                         jobId={jobId}
                       />
                     </div>

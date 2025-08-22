@@ -1,7 +1,7 @@
 /**
- * Role Detection Service
+ * Core Role Detection Service
  * 
- * Intelligent role matching service with fuzzy matching and enhanced accuracy
+ * Main service that orchestrates role detection with enhanced accuracy
  */
 
 import { ParsedCV } from '../types/job';

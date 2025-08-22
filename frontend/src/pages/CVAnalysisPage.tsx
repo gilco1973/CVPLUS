@@ -75,7 +75,7 @@ export const CVAnalysisPage = () => {
       return;
     }
 
-    const targetPath = `/preview/${jobId}`;
+    const targetPath = `/role-select/${jobId}`;
     console.log('📍 [PARENT] Navigation target:', targetPath);
 
     try {

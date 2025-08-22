@@ -15,6 +15,7 @@ const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ defaul
 const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
 const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
 const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
+const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then(m => ({ default: m.RoleSelectionPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const KeywordOptimization = lazy(() => import('./pages/KeywordOptimization').then(m => ({ default: m.KeywordOptimization })));
 const FinalResultsPage = lazy(() => import('./pages/FinalResultsPage').then(m => ({ default: m.FinalResultsPage })));
@@ -57,6 +58,14 @@ const router = createBrowserRouter(
             <AboutPage />
           </Suspense>
         </GlobalLayout>
+      ),
+    },
+    {
+      path: '/role-select/:jobId',
+      element: (
+        <Suspense fallback={<PageLoader />}>
+          <RoleSelectionPage />
+        </Suspense>
       ),
     },
     {

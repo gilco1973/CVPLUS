@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Sparkles, Zap, AlertTriangle, Crown } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowRight, ArrowLeft, Sparkles, Zap, AlertTriangle, Crown, Target, CheckCircle } from 'lucide-react';
 import { PremiumFeatureSelectionPanel } from '../components/PremiumFeatureSelectionPanel';
 import { Header } from '../components/Header';
 import { Section } from '../components/layout/Section';
@@ -10,18 +10,19 @@ import { useFeatureValidation, useBulkFeatureOperations } from '../hooks/useFeat
 import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import toast from 'react-hot-toast';
 import { FEATURE_CONFIGS } from '../config/featureConfigs';
-import { RoleProfileIntegration } from '../components/role-profiles/RoleProfileIntegration';
+// Role profiles are now handled in the dedicated RoleSelectionPage
 
 export const FeatureSelectionPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { isPremium } = usePremiumStatus();
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [jobData, setJobData] = useState<any>(null);
   const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
-  const [showRoleProfile, setShowRoleProfile] = useState(false);
+  const [roleContext, setRoleContext] = useState<any>(null);
 
   // Feature validation hook
   const {
@@ -40,6 +41,15 @@ export const FeatureSelectionPage = () => {
 
   // Bulk operations hook
   const { selectAllAccessible, selectOnlyFree, getAccessibleCount, getPremiumCount } = useBulkFeatureOperations();
+
+  // Initialize default feature selections and role context
+  useEffect(() => {
+    // Get role context from navigation state if available
+    const state = location.state;
+    if (state?.roleContext) {
+      setRoleContext(state.roleContext);
+    }
+  }, [location.state]);
 
   // Initialize default feature selections
   useEffect(() => {
@@ -216,7 +226,12 @@ export const FeatureSelectionPage = () => {
   };
 
   const handleBack = () => {
-    navigate('/');
+    // Navigate back to role selection if we have a jobId, otherwise to home
+    if (jobId) {
+      navigate(`/role-select/${jobId}`);
+    } else {
+      navigate('/');
+    }
   };
 
   const selectedCount = Object.values(selectedFeatures).filter(Boolean).length;
@@ -237,43 +252,87 @@ export const FeatureSelectionPage = () => {
       />
       
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Progress Indicator */}
+        {/* Enhanced Progress Indicator */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
                 ✓
               </div>
-              <span className="text-green-400 font-medium">CV Uploaded</span>
-            </div>
-            <div className="flex-1 h-px bg-gray-600 mx-4"></div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                2
+              <div>
+                <div className="text-green-400 font-semibold">CV Uploaded</div>
+                <div className="text-xs text-gray-500">Complete</div>
               </div>
-              <span className="text-cyan-400 font-medium">Select Features</span>
             </div>
-            <div className="flex-1 h-px bg-gray-600 mx-4"></div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 text-sm font-semibold">
+            
+            <div className="flex-1 h-1 bg-gray-700 mx-6 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-green-500 to-cyan-500 w-2/3 rounded-full"></div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                ✓
+              </div>
+              <div>
+                <div className="text-green-400 font-semibold">Role Detected</div>
+                <div className="text-xs text-gray-500">Complete</div>
+              </div>
+            </div>
+            
+            <div className="flex-1 h-1 bg-gray-700 mx-6 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-green-500 to-cyan-500 w-full rounded-full"></div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold animate-pulse">
                 3
               </div>
-              <span className="text-gray-400 font-medium">Generate CV</span>
+              <div>
+                <div className="text-cyan-400 font-semibold">Select Features</div>
+                <div className="text-xs text-gray-500">Current step</div>
+              </div>
+            </div>
+            
+            <div className="flex-1 h-1 bg-gray-700 mx-6 rounded-full"></div>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 font-bold">
+                4
+              </div>
+              <div>
+                <div className="text-gray-400 font-semibold">Generate CV</div>
+                <div className="text-xs text-gray-500">Final step</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Role Profile Integration */}
-        {showRoleProfile && jobData && (
-          <Section variant="content" background="transparent" spacing="lg">
-            <RoleProfileIntegration
-              job={jobData}
-              onContinue={(selectedRecommendations, roleContext) => {
-                setShowRoleProfile(false);
-                // Continue to feature selection
-              }}
-              onBack={() => setShowRoleProfile(false)}
-            />
+        {/* Role Context Display (if available) */}
+        {roleContext?.selectedRole && (
+          <Section variant="content" background="transparent" spacing="sm">
+            <div className="mb-6 p-6 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 rounded-xl border border-cyan-500/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center">
+                    <Target className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                      Role-Based Optimization Active
+                    </h3>
+                    <p className="text-gray-300 text-sm">
+                      Features optimized for <span className="text-cyan-300 font-medium">{roleContext.selectedRole.name}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-cyan-400">
+                    {roleContext.selectedRecommendations?.length || '12'}+
+                  </div>
+                  <div className="text-xs text-gray-400">Recommendations</div>
+                </div>
+              </div>
+            </div>
           </Section>
         )}
 
@@ -287,24 +346,22 @@ export const FeatureSelectionPage = () => {
               Select the features you want to include in your enhanced CV. You can always change these later.
             </p>
             
-            {/* Role Profile Integration Button */}
-            {!showRoleProfile && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-500/30">
+            {/* Role-Based Feature Recommendations */}
+            {roleContext?.selectedRole && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-100 mb-1">
-                      🎯 Role Profile Analysis
+                    <h3 className="text-lg font-semibold text-green-300 mb-1">
+                      🎯 Role-Based Recommendations Applied
                     </h3>
-                    <p className="text-gray-300 text-sm">
-                      Get personalized recommendations based on your professional role
+                    <p className="text-green-200 text-sm">
+                      Features below are optimized for {roleContext.selectedRole.name} roles
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowRoleProfile(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  >
-                    Analyze Role
-                  </button>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-green-300 text-sm font-medium">Active</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -380,7 +437,7 @@ export const FeatureSelectionPage = () => {
             className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Upload
+            Back to Role Selection
           </button>
           
           <button
