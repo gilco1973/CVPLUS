@@ -12,7 +12,6 @@ import { AsyncGenerationErrorBoundary } from '../components/error-boundaries/Asy
 import { FirestoreErrorBoundary } from '../components/error-boundaries/FirestoreErrorBoundary';
 import { ProgressiveEnhancementRenderer } from '../components/ProgressiveEnhancementRenderer';
 import { CVComparisonView } from '../components/cv-comparison/CVComparisonView';
-import { TemplateSelection } from '../components/results/TemplateSelection';
 import { useAsyncMode } from '../hooks/useAsyncMode';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { useCVGeneration } from '../hooks/useCVGeneration';
@@ -28,7 +27,6 @@ export const FinalResultsPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const [showComparison, setShowComparison] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState('tech-innovation');
   const { asyncMode, isAsyncInitialization } = useAsyncMode(jobId);
   const { 
     job, loading, error, generationConfig, baseHTML, enhancedHTML, 
@@ -279,13 +277,6 @@ export const FinalResultsPage = () => {
               <DownloadActions job={job} />
             </div>
 
-            {/* Template Selection */}
-            <div className="mb-8">
-              <TemplateSelection 
-                selectedTemplate={selectedTemplate}
-                setSelectedTemplate={setSelectedTemplate}
-              />
-            </div>
 
             {/* Podcast Player */}
             {generationConfig?.features?.generatePodcast && (

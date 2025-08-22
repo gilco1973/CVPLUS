@@ -193,8 +193,16 @@ export {
 
 // Export CORS testing functions
 export {
-  testCors
+  testCors,
+  testCorsCall
 } from './functions/corsTestFunction';
+
+// Export comprehensive CORS testing scripts
+export {
+  testCorsHTTP,
+  testCorsCallable,
+  validateCorsConfiguration
+} from './scripts/test-cors';
 
 // Export CV improvement functions
 export { 

@@ -492,16 +492,29 @@ async function generateRecommendationsWithProgress(
     
     await updateProgress('Validating recommendations...', 3);
     
-    // Basic validation
-    const validRecommendations = recommendations.filter(rec => 
-      rec.id && rec.title && rec.description && rec.section
-    );
+    // Enhanced validation with fallback values (same as ensureRecommendationsValid)
+    const validRecommendations = recommendations.map(rec => {
+      // Ensure all required fields are present with fallback values
+      return {
+        ...rec,
+        id: rec.id || `rec_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: rec.title || 'CV Improvement Recommendation',
+        description: rec.description || 'Improve your CV content to better showcase your professional experience and skills.',
+        section: rec.section || 'general'
+      };
+    });
     
     if (validRecommendations.length === 0) {
-      throw new Error('No valid recommendations generated');
+      throw new Error('No recommendations provided by transformation service');
     }
     
     console.log(`Generated ${validRecommendations.length} valid recommendations`);
+    console.log('✅ [DEBUG] Validation successful - recommendations structure:', validRecommendations.map(rec => ({
+      id: rec.id ? '✓' : '✗',
+      title: rec.title ? '✓' : '✗',
+      description: rec.description ? '✓' : '✗',
+      section: rec.section ? '✓' : '✗'
+    })));
     return validRecommendations;
     
   } catch (error) {

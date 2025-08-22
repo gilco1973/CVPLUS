@@ -92,7 +92,7 @@ export const TemplateSelection = ({ selectedTemplate, setSelectedTemplate }: Tem
           <button
             key={template.id}
             onClick={() => setSelectedTemplate(template.id)}
-            className={`p-4 rounded-lg border-2 text-left transition-all relative ${
+            className={`p-4 rounded-lg border-2 text-left transition-all relative overflow-hidden ${
               selectedTemplate === template.id
                 ? 'border-blue-400 bg-blue-900/30 text-blue-300'
                 : 'border-gray-600 hover:border-gray-500 text-gray-300 bg-gray-700/50'
@@ -108,12 +108,12 @@ export const TemplateSelection = ({ selectedTemplate, setSelectedTemplate }: Tem
             <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-2">
                 <span className="text-xl">{template.emoji}</span>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">{template.name}</div>
-                  <div className="text-xs text-gray-500 capitalize">{template.category}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm break-words leading-tight">{template.name}</div>
+                  <div className="text-xs text-gray-500 capitalize truncate">{template.category}</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-400 leading-relaxed">
+              <div className="text-xs text-gray-400 leading-relaxed break-words">
                 {template.description}
               </div>
             </div>

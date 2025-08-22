@@ -75,7 +75,7 @@ export class TemplateCompatibility {
         generateFeaturePreview
       );
     } else {
-      return CVTemplateGenerator.generateHTML(
+      return CVTemplateGenerator.generateLegacyHTML(
         previewData,
         templateId,
         selectedFeatures,

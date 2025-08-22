@@ -271,12 +271,22 @@ export function getSectionDisplayName(sectionKey: string): string {
 /**
  * Calculates improvement statistics
  */
-export function calculateImprovementStats(comparison: CVComparison) {
+export function calculateImprovementStats(comparison: CVComparison | null) {
+  if (!comparison) {
+    return {
+      totalSections: 0,
+      modifiedSections: 0,
+      newSections: 0,
+      enhancedSections: 0,
+      improvementPercentage: 0
+    };
+  }
+
   const stats = {
-    totalSections: comparison.sections.length,
-    modifiedSections: comparison.improvementSummary.sectionsModified.length,
-    newSections: comparison.improvementSummary.newSections.length,
-    enhancedSections: comparison.improvementSummary.enhancedContent.length,
+    totalSections: comparison.sections?.length || 0,
+    modifiedSections: comparison.improvementSummary?.sectionsModified?.length || 0,
+    newSections: comparison.improvementSummary?.newSections?.length || 0,
+    enhancedSections: comparison.improvementSummary?.enhancedContent?.length || 0,
     improvementPercentage: 0
   };
 

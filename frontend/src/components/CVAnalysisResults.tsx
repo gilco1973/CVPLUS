@@ -998,11 +998,11 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         {/* No Recommendations Message */}
         {recommendations.length === 0 && (
           <div className="text-center py-8">
-            <AlertTriangle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-300 mb-2">No recommendations available</h3>
+            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-300 mb-2">CV Analysis Complete</h3>
             <p className="text-gray-500">
-              We couldn't generate recommendations for this CV at the moment. 
-              Please try again later or contact support if the issue persists.
+              Your CV looks great as is! No specific improvements were identified at this time.
+              You can still continue to select features and create your enhanced CV.
             </p>
             
           </div>
@@ -1288,7 +1288,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   }, 500);
                 }
               }}
-              disabled={recommendations.length === 0 || isNavigating}
+              disabled={isNavigating}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>

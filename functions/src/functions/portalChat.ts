@@ -17,7 +17,7 @@ import { embeddingService } from '../services/embedding.service';
 import { enhancedDbService } from '../services/enhanced-db.service';
 import { EnhancedJob, UserRAGProfile, ChatMessage } from '../types/enhanced-models';
 import { PortalConfig, PortalStatus } from '../types/portal';
-import { corsOptions, addCorsHeaders } from '../config/cors';
+import { corsOptions, requestCorsOptions, addCorsHeaders } from '../config/cors';
 import { withPremiumAccess } from '../middleware/premiumGuard';
 import { nanoid } from 'nanoid';
 
@@ -679,13 +679,7 @@ export const portalChatPublic = onRequest(
   {
     timeoutSeconds: 60,
     memory: '1GiB',
-    cors: [
-      'https://huggingface.co',
-      /https:\/\/.*\.hf\.space$/,
-      /https:\/\/.*\.gradio\.app$/,
-      'http://localhost:3000',
-      'http://localhost:7860'
-    ]
+    ...requestCorsOptions
   },
   async (req, res) => {
     const startTime = Date.now();
