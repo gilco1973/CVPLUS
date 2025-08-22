@@ -597,8 +597,18 @@ export class JobSubscriptionManager {
             console.log(`[JobSubscriptionManager] Job update for ${jobId}:`, docSnapshot.data()?.status);
           }
 
-          // Only notify callbacks if there's an actual change to avoid excessive updates
-          if (hasActualChange) {
+          // For progress tracking, we want more frequent updates during processing
+          // Only skip if there's absolutely no meaningful change
+          const isProgressUpdate = jobData && (
+            jobData.status === 'processing' || 
+            jobData.status === 'generating' ||
+            Object.values(jobData.enhancedFeatures || {}).some((f: any) => 
+              f.status === 'processing' || f.status === 'retrying'
+            )
+          );
+          
+          // For processing states, be more lenient with updates
+          if (hasActualChange || isProgressUpdate) {
             // Notify all callbacks with debouncing and filtering
             for (const [callback, registration] of subscription.callbacks) {
               // Apply filter if specified

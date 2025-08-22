@@ -1,29 +1,38 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
+import { requireAuth, AuthenticatedRequest } from './authGuard';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction';
 
 export const premiumGuard = (feature: PremiumFeature) => {
-  return async (data: any, context: any) => {
-    // Verify authentication
-    if (!context.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const userId = context.auth.uid;
+  return async (request: any): Promise<AuthenticatedRequest> => {
+    // First ensure user is authenticated
+    const authenticatedRequest = await requireAuth(request);
+    const { uid } = authenticatedRequest.auth;
 
     try {
-      // Get user subscription
-      const subscription = await getUserSubscriptionInternal(userId);
+      logger.info('Premium access check initiated', { uid, feature });
+
+      // Get user subscription with detailed logging
+      const subscription = await getUserSubscriptionInternal(uid);
+      
+      logger.info('Subscription data retrieved', {
+        uid,
+        hasSubscription: !!subscription,
+        lifetimeAccess: subscription?.lifetimeAccess,
+        subscriptionStatus: subscription?.subscriptionStatus,
+        features: subscription?.features ? Object.keys(subscription.features) : [],
+        hasRequestedFeature: subscription?.features?.[feature]
+      });
 
       // Check for lifetime premium access
-      if (!subscription?.lifetimeAccess || !subscription?.features?.[feature]) {
-        logger.warn('Premium feature access denied', {
-          userId,
+      if (!subscription?.lifetimeAccess) {
+        logger.warn('Premium access denied: No lifetime access', {
+          uid,
           feature,
-          lifetimeAccess: subscription?.lifetimeAccess,
-          hasFeature: subscription?.features?.[feature]
+          subscriptionStatus: subscription?.subscriptionStatus,
+          hasSubscription: !!subscription
         });
 
         throw new HttpsError(
@@ -33,87 +42,210 @@ export const premiumGuard = (feature: PremiumFeature) => {
             feature,
             upgradeUrl: '/pricing',
             accessType: 'lifetime',
-            currentStatus: subscription?.subscriptionStatus || 'free'
+            currentStatus: subscription?.subscriptionStatus || 'free',
+            reason: 'no-lifetime-access'
           }
         );
       }
 
-      logger.info('Premium feature access granted', {
-        userId,
+      // Check specific feature access
+      if (!subscription?.features?.[feature]) {
+        logger.warn('Premium access denied: Feature not included', {
+          uid,
+          feature,
+          availableFeatures: subscription.features ? Object.keys(subscription.features) : [],
+          lifetimeAccess: subscription.lifetimeAccess
+        });
+
+        throw new HttpsError(
+          'permission-denied',
+          `Your premium subscription does not include access to '${feature}'. Please upgrade your plan.`,
+          {
+            feature,
+            upgradeUrl: '/pricing',
+            availableFeatures: subscription.features || {},
+            reason: 'feature-not-included'
+          }
+        );
+      }
+
+      logger.info('Premium access granted', {
+        uid,
         feature,
         subscriptionStatus: subscription.subscriptionStatus
       });
 
-      // Access granted - function can proceed
-      return true;
+      return authenticatedRequest;
 
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error('Error in premium guard', { error, userId, feature });
+      logger.error('Premium guard error', { 
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error,
+        uid, 
+        feature 
+      });
+      
       throw new HttpsError(
         'internal',
         'Failed to verify premium access',
-        error
+        { 
+          feature, 
+          originalError: error instanceof Error ? error.message : 'Unknown error',
+          uid
+        }
       );
     }
   };
 };
 
-// Wrapper for Cloud Functions that need premium access
+// Enhanced wrapper with better error context and request handling
 export const withPremiumAccess = (feature: PremiumFeature, handler: Function) => {
-  return async (data: any, context: any) => {
-    // First check premium access
-    await premiumGuard(feature)(data, context);
+  return async (request: any, context?: any) => {
+    const startTime = Date.now();
     
-    // If access is granted, execute the original handler
-    return await handler(data, context);
+    try {
+      logger.info('Premium function execution started', {
+        feature,
+        uid: request.auth?.uid,
+        hasData: !!request.data,
+        dataKeys: request.data ? Object.keys(request.data) : []
+      });
+
+      // Check premium access and authenticate
+      const authenticatedRequest = await premiumGuard(feature)(request);
+      
+      // Execute the original handler with authenticated request
+      const result = await handler(authenticatedRequest, context);
+      
+      const executionTime = Date.now() - startTime;
+      logger.info('Premium function execution completed', {
+        feature,
+        uid: authenticatedRequest.auth.uid,
+        executionTime,
+        hasResult: !!result
+      });
+      
+      return result;
+      
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+      
+      if (error instanceof HttpsError) {
+        logger.warn('Premium function execution failed with known error', {
+          feature,
+          uid: request.auth?.uid,
+          executionTime,
+          errorCode: error.code,
+          errorMessage: error.message
+        });
+        throw error;
+      }
+      
+      logger.error('Premium function execution failed with unknown error', {
+        feature,
+        uid: request.auth?.uid,
+        executionTime,
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error
+      });
+      
+      throw new HttpsError(
+        'internal',
+        `Failed to execute premium function: ${feature}`,
+        {
+          feature,
+          originalError: error instanceof Error ? error.message : 'Unknown error'
+        }
+      );
+    }
   };
 };
 
 // Helper to check multiple features
 export const requireAnyPremiumFeature = (features: PremiumFeature[]) => {
-  return async (data: any, context: any) => {
-    if (!context.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const userId = context.auth.uid;
+  return async (request: any) => {
+    const authenticatedRequest = await requireAuth(request);
+    const { uid } = authenticatedRequest.auth;
 
     try {
-      const subscription = await getUserSubscriptionInternal(userId);
+      logger.info('Multiple premium features check initiated', { uid, features });
+      
+      const subscription = await getUserSubscriptionInternal(uid);
 
       if (!subscription?.lifetimeAccess) {
         throw new HttpsError(
           'permission-denied',
           'Lifetime premium access required',
-          { upgradeUrl: '/pricing' }
+          { 
+            upgradeUrl: '/pricing',
+            requiredFeatures: features,
+            reason: 'no-lifetime-access'
+          }
         );
       }
 
       // Check if user has access to any of the required features
+      const availableFeatures = Object.keys(subscription.features || {});
       const hasAnyFeature = features.some(feature => 
         subscription.features?.[feature] === true
       );
 
       if (!hasAnyFeature) {
+        logger.warn('Multiple premium features access denied', {
+          uid,
+          requiredFeatures: features,
+          availableFeatures
+        });
+        
         throw new HttpsError(
           'permission-denied',
           `Access denied. Requires one of: ${features.join(', ')}`,
-          { requiredFeatures: features }
+          { 
+            requiredFeatures: features,
+            availableFeatures: subscription.features || {},
+            reason: 'insufficient-features'
+          }
         );
       }
 
-      return true;
+      logger.info('Multiple premium features access granted', {
+        uid,
+        requiredFeatures: features,
+        grantedFeatures: availableFeatures
+      });
+
+      return authenticatedRequest;
+      
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error('Error checking multiple premium features', { error, userId, features });
-      throw new HttpsError('internal', 'Failed to verify premium access');
+      logger.error('Error checking multiple premium features', { 
+        error: error instanceof Error ? error.message : error,
+        uid, 
+        features 
+      });
+      
+      throw new HttpsError(
+        'internal', 
+        'Failed to verify premium access',
+        {
+          requiredFeatures: features,
+          originalError: error instanceof Error ? error.message : 'Unknown error'
+        }
+      );
     }
   };
 };
+

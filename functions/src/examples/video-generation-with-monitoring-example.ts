@@ -12,7 +12,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { corsOptions } from '../config/cors';
 import { enhancedVideoGenerationService, EnhancedVideoGenerationOptions } from '../services/enhanced-video-generation.service';
-import { premiumGuard } from '../middleware/premiumGuard';
+import { withPremiumAccess } from '../middleware/premiumGuard';
 import { VideoGenerationMonitor, VideoMonitoringHooks } from '../services/video-monitoring-hooks.service';
 
 /**
@@ -27,21 +27,15 @@ export const generateVideoIntroductionWithMonitoring = onCall(
     memory: '2GiB',
     ...corsOptions
   },
-  async (request) => {
+  withPremiumAccess('videoIntroduction', async (request) => {
     // Initialize monitoring early in the function
-    const userId = request.auth?.uid;
+    const userId = request.auth.uid;
     const { jobId, duration = 'medium', style = 'professional' } = request.data;
     
     // Create monitoring instance for this generation
-    const monitor = new VideoGenerationMonitor(userId!, jobId, 'enhanced');
+    const monitor = new VideoGenerationMonitor(userId, jobId, 'enhanced');
     
     try {
-      // Standard authentication and premium checks
-      if (!request.auth) {
-        throw new Error('User must be authenticated');
-      }
-
-      await premiumGuard('videoIntroduction')(request.data, { auth: request.auth });
 
       // Get job data
       const jobDoc = await admin.firestore()
@@ -225,7 +219,7 @@ export const generateVideoIntroductionWithMonitoring = onCall(
 
       throw new Error(`Video generation failed: ${error.message}`);
     }
-  }
+  })
 );
 
 /**

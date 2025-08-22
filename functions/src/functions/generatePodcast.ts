@@ -15,14 +15,13 @@ export const generatePodcast = onCall(
     ...corsOptions
   },
   withPremiumAccess('podcast', async (request) => {
-    console.log('🎙️ generatePodcast function called with data:', request.data);
-    
-    if (!request.auth) {
-      console.error('❌ Authentication failed - no auth token');
-      throw new Error('User must be authenticated');
-    }
-
-    console.log('✅ User authenticated:', request.auth.uid);
+    const startTime = Date.now();
+    console.log('🎙️ generatePodcast function called with enhanced auth', {
+      uid: request.auth.uid,
+      email: request.auth.token.email,
+      data: request.data,
+      timestamp: new Date().toISOString()
+    });
 
     const { 
       jobId, 
@@ -54,6 +53,16 @@ export const generatePodcast = onCall(
       const jobData = jobDoc.data();
       console.log('📄 Job data keys:', Object.keys(jobData || {}));
       console.log('🔍 Has parsedData:', !!jobData?.parsedData);
+      
+      // Verify job ownership
+      if (jobData?.userId !== request.auth.uid) {
+        console.error('❌ Job ownership verification failed', {
+          jobId,
+          requestUid: request.auth.uid,
+          jobUserId: jobData?.userId
+        });
+        throw new Error('Access denied: Job belongs to different user');
+      }
       
       if (!jobData?.parsedData) {
         console.error('❌ No parsedData found in job document');

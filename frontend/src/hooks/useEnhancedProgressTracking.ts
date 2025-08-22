@@ -108,8 +108,8 @@ export const useEnhancedProgressTracking = ({
         const data = job;
       const now = Date.now();
       
-      // Throttle updates to prevent overwhelming the UI
-      if (now - lastUpdateTime.current < 200) {
+      // Reduced throttling for progress tracking - allow more frequent updates
+      if (now - lastUpdateTime.current < 100) {
         return;
       }
       lastUpdateTime.current = now;
@@ -218,7 +218,7 @@ export const useEnhancedProgressTracking = ({
       },
       {
         enableLogging: true,
-        debounceMs: 200, // Match the previous throttling behavior
+        debounceMs: 100, // Faster updates for progress tracking
         errorRecovery: true
       }
     );

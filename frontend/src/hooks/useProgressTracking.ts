@@ -131,7 +131,7 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
       },
       {
         enableLogging: true,
-        debounceMs: 250, // Slightly longer debounce for progress updates
+        debounceMs: 100, // Shorter debounce for faster progress updates
         errorRecovery: true
       }
     );
