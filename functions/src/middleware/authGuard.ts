@@ -57,9 +57,26 @@ export const requireAuth = async (request: CallableRequest): Promise<Authenticat
       });
     }
 
-    // Additional security checks
-    if (!token.email_verified && token.email) {
-      logger.warn('Authentication warning: Unverified email', {
+    // SECURITY REQUIREMENT: Email verification enforcement for production
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.FUNCTIONS_EMULATOR !== 'true';
+    
+    if (!token.email_verified && token.email && isProduction) {
+      logger.error('Authentication failed: Email verification required in production', {
+        uid,
+        email: token.email,
+        emailVerified: token.email_verified,
+        environment: process.env.NODE_ENV,
+        isProduction
+      });
+      throw new HttpsError(
+        'permission-denied', 
+        'Email verification is required. Please verify your email address before accessing this service.'
+      );
+    }
+    
+    // Log warning in development only
+    if (!token.email_verified && token.email && !isProduction) {
+      logger.warn('Authentication warning: Unverified email (development mode)', {
         uid,
         email: token.email,
         emailVerified: token.email_verified
@@ -160,10 +177,9 @@ export const getUserInfo = (request: AuthenticatedRequest) => {
  * Check if user has administrative privileges
  */
 export const isAdmin = (request: AuthenticatedRequest): boolean => {
-  const adminEmails = [
-    'gil.klainert@gmail.com',
-    'admin@cvplus.ai'
-  ];
+  // SECURITY IMPROVEMENT: Use environment variables for admin emails
+  const adminEmailsEnv = process.env.ADMIN_EMAILS || 'gil.klainert@gmail.com,admin@cvplus.ai';
+  const adminEmails = adminEmailsEnv.split(',').map(email => email.trim());
   
   return adminEmails.includes(request.auth.token.email || '');
 };

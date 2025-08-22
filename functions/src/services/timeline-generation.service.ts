@@ -71,8 +71,8 @@ export class TimelineGenerationService {
     console.log(`[Timeline Service] Delegating to enhanced V2 service for job: ${jobId}`);
     
     try {
-      // Delegate to the enhanced V2 service
-      const result = await timelineGenerationServiceV2.generateTimeline(parsedCV, jobId);
+      // Delegate to the enhanced V2 service with storage enabled for direct calls
+      const result = await timelineGenerationServiceV2.generateTimeline(parsedCV, jobId, true);
       
       console.log(`[Timeline Service] Successfully completed timeline generation for job: ${jobId}`);
       return result;
@@ -90,6 +90,7 @@ export class TimelineGenerationService {
     console.log('[Timeline Service] Validating timeline data without storage');
     
     try {
+      // Validation only, no storage needed
       const result = await timelineGenerationServiceV2.validateTimelineData(parsedCV);
       console.log(`[Timeline Service] Validation completed. Valid: ${result.isValid}, Errors: ${result.errors.length}`);
       return result;

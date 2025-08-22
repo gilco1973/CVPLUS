@@ -2,7 +2,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
-import { timelineGenerationService } from '../services/timeline-generation.service';
+import { timelineGenerationService, timelineGenerationServiceV2 } from '../services/timeline-generation.service';
 // htmlFragmentGenerator import removed - using React SPA architecture
 import { sanitizeForFirestore, sanitizeErrorContext } from '../utils/firestore-sanitizer';
 import { handleFunctionError } from '../utils/enhanced-error-handler';
@@ -59,10 +59,11 @@ export const generateTimeline = onCall(
         throw new Error('Failed to initialize timeline processing status');
       }
 
-      // Generate timeline
-      const timelineData = await timelineGenerationService.generateTimeline(
+      // Generate timeline (without storing - we'll handle storage here)
+      const timelineData = await timelineGenerationServiceV2.generateTimeline(
         jobData.parsedData,
-        jobId
+        jobId,
+        false  // Don't store in V2 service, we'll handle it here
       );
 
       // Update progress with safe Firestore operation

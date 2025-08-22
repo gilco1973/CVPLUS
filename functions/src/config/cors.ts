@@ -19,12 +19,12 @@ const allowedOrigins: (string | RegExp)[] = [
   'http://127.0.0.1:3000', // React dev server (127.0.0.1)
   'http://127.0.0.1:5000', // Firebase emulator (127.0.0.1)
   'http://127.0.0.1:5001', // Firebase Functions emulator (127.0.0.1)
-  // HuggingFace Spaces domains for portal chat
+  // HuggingFace Spaces domains for portal chat - SECURE: Specific origins only
   'https://huggingface.co',
-  /https:\/\/.*\.hf\.space$/,
-  /https:\/\/.*\.gradio\.app$/,
-  /https:\/\/.*\.streamlit\.app$/,
-  /https:\/\/.*-[a-z0-9]+-[a-z0-9]+\.hf\.space$/, // HF Space URLs with user-space format
+  // SECURITY FIX: Replace wildcards with specific trusted origins
+  // 'https://your-specific-app.hf.space', // Add specific HF Space URLs only when needed
+  // 'https://your-gradio-app.gradio.app', // Add specific Gradio URLs only when needed
+  // NO wildcard patterns - they create security vulnerabilities
 ];
 
 // Firebase Functions v2 CORS options for onCall functions

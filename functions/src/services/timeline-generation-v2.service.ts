@@ -16,7 +16,7 @@ export class TimelineGenerationServiceV2 {
   /**
    * Generate timeline data from parsed CV with enhanced validation
    */
-  async generateTimeline(parsedCV: ParsedCV, jobId: string): Promise<TimelineData> {
+  async generateTimeline(parsedCV: ParsedCV, jobId: string, shouldStore: boolean = false): Promise<TimelineData> {
     console.log(`[Timeline Service V2] Starting timeline generation for job: ${jobId}`);
     
     // Input validation
@@ -41,11 +41,16 @@ export class TimelineGenerationServiceV2 {
       // Clean and validate data with bulletproof sanitization
       const cleanedData = timelineSanitizerService.cleanTimelineData(timelineData);
       
-      // Store timeline data with enhanced error handling and retry logic
-      await this.storage.storeTimelineData(jobId, cleanedData);
+      // Only store if explicitly requested (for direct calls, not when used as part of CV generation)
+      if (shouldStore) {
+        console.log(`[Timeline Service V2] Storing timeline data for job: ${jobId}`);
+        await this.storage.storeTimelineData(jobId, cleanedData);
+      } else {
+        console.log(`[Timeline Service V2] Timeline data generated successfully, storage skipped`);
+      }
       
       console.log(`[Timeline Service V2] Successfully generated timeline for job: ${jobId}`);
-      return timelineData;
+      return cleanedData;
       
     } catch (error) {
       console.error(`[Timeline Service V2] Failed to generate timeline for job ${jobId}:`, error);
