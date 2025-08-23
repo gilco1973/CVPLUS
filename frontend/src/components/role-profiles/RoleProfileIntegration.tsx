@@ -141,45 +141,6 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
               )}
             </div>
           </div>
-          
-          {/* Enhanced Progress Indicator */}
-          <div className="flex flex-col gap-4 lg:min-w-[240px]">
-            <div className="flex items-center gap-3">
-              <div className={`relative w-12 h-2 rounded-full overflow-hidden bg-gray-700`}>
-                <div className={`absolute top-0 left-0 h-full transition-all duration-700 rounded-full ${
-                  hasRoleSelected ? 'w-full bg-gradient-to-r from-green-400 to-emerald-500' : 
-                  isAnalyzing ? 'w-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse' :
-                  'w-1/4 bg-gradient-to-r from-cyan-400 to-blue-500'
-                }`}></div>
-              </div>
-              <div className="text-sm">
-                <div className={`font-medium ${
-                  hasRoleSelected ? 'text-green-400' : 'text-cyan-400'
-                }`}>
-                  {hasRoleSelected ? 'Role Confirmed' : isAnalyzing ? 'Analyzing...' : 'Role Detection'}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className={`relative w-12 h-2 rounded-full overflow-hidden bg-gray-700`}>
-                <div className={`absolute top-0 left-0 h-full transition-all duration-700 rounded-full ${
-                  hasRecommendations ? 'w-full bg-gradient-to-r from-purple-400 to-pink-500' :
-                  hasRoleSelected ? 'w-1/3 bg-gradient-to-r from-purple-400 to-pink-500 animate-pulse' :
-                  'w-0'
-                }`}></div>
-              </div>
-              <div className="text-sm">
-                <div className={`font-medium ${
-                  hasRecommendations ? 'text-purple-400' : 
-                  hasRoleSelected ? 'text-purple-400' : 'text-gray-500'
-                }`}>
-                  {hasRecommendations ? `${recommendations.length} Recommendations` : 
-                   hasRoleSelected ? 'Generating Ideas...' : 'Recommendations Pending'}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

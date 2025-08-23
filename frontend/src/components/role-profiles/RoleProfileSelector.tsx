@@ -125,8 +125,9 @@ export const RoleProfileSelector: React.FC<RoleProfileSelectorProps> = ({
     } catch (err: any) {
       console.error('[RoleProfileSelector] Detection error:', err);
       logError('detectRole', err);
-      setError(`Detection failed: ${err.message}`);
-      toast.error('Failed to detect role profile', { duration: 4000 });
+      setError(`Role detection is currently experiencing issues. You can manually select a role profile below.`);
+      toast.error('Role detection unavailable - please select manually', { duration: 6000 });
+      setShowManualSelection(true); // Always show manual selection when detection fails
     } finally {
       setIsDetecting(false);
     }
@@ -196,7 +197,9 @@ export const RoleProfileSelector: React.FC<RoleProfileSelectorProps> = ({
   };
 
   const isLoading = externalLoading || isDetecting || isApplying;
-  const hasDetectedRole = detectedRole && detectedRole.confidence > 0.5;
+  const hasDetectedRole = detectedRole && detectedRole.confidence > 0.4; // Lower threshold to show more results
+  const isHighConfidence = detectedRole && detectedRole.confidence > 0.7;
+  const shouldShowManualSelection = !hasDetectedRole || !isHighConfidence;
   const showError = error && !isLoading;
 
   return (

@@ -9,6 +9,8 @@ import {
   RoleProfileAnalysis,
   RoleBasedRecommendation
 } from '../types/role-profile.types';
+import { EnrichmentService, EnrichmentResult } from './external-data/enrichment/enrichment.service';
+import { EnrichedCVData } from './external-data/types';
 
 export interface CVRecommendation {
   id: string;
@@ -62,11 +64,13 @@ export class CVTransformationService {
   private claudeService: VerifiedClaudeService;
   private roleDetectionService: RoleDetectionService;
   private roleProfileService: RoleProfileService;
+  private enrichmentService: EnrichmentService;
 
   constructor() {
     this.claudeService = new VerifiedClaudeService();
     this.roleDetectionService = new RoleDetectionService();
     this.roleProfileService = new RoleProfileService();
+    this.enrichmentService = new EnrichmentService();
   }
 
   /**
@@ -76,7 +80,8 @@ export class CVTransformationService {
     parsedCV: ParsedCV,
     enableRoleDetection: boolean = true,
     targetRole?: string,
-    industryKeywords?: string[]
+    industryKeywords?: string[],
+    externalData?: Partial<EnrichedCVData>
   ): Promise<CVRecommendation[]> {
     
     try {
@@ -102,17 +107,40 @@ export class CVTransformationService {
         }
       }
       
-      // Step 2: Generate standard recommendations
+      // Step 2: Enrich CV with external data if available
+      let enrichedCV = parsedCV;
+      let enrichmentResult: EnrichmentResult | null = null;
+      
+      if (externalData) {
+        try {
+          console.log('Enriching CV with external data');
+          enrichmentResult = await this.enrichmentService.enrichCV(parsedCV, externalData);
+          enrichedCV = enrichmentResult.enrichedCV;
+          console.log(`CV enriched. Quality improved by ${enrichmentResult.qualityImprovement.improvement}%`);
+        } catch (error) {
+          console.error('Failed to enrich CV with external data:', error);
+          // Continue with original CV if enrichment fails
+        }
+      }
+      
+      // Step 3: Generate standard recommendations
       const standardRecommendations = await this.generateDetailedRecommendations(
-        parsedCV,
+        enrichedCV,
         targetRole,
         industryKeywords
       );
       
-      // Step 3: Merge and prioritize recommendations
-      const mergedRecommendations = this.mergeRecommendations(
+      // Step 4: Add enrichment-based recommendations if data was enriched
+      let enrichmentRecommendations: CVRecommendation[] = [];
+      if (enrichmentResult && enrichmentResult.qualityImprovement.improvement > 10) {
+        enrichmentRecommendations = this.generateEnrichmentRecommendations(enrichmentResult);
+      }
+      
+      // Step 5: Merge and prioritize all recommendations
+      const mergedRecommendations = this.mergeAllRecommendations(
         standardRecommendations,
         roleEnhancedRecommendations,
+        enrichmentRecommendations,
         roleAnalysis?.primaryRole
       );
       
@@ -2057,6 +2085,91 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
     return cvRecommendations;
   }
 
+  /**
+   * Generate recommendations based on enrichment results
+   */
+  private generateEnrichmentRecommendations(enrichmentResult: EnrichmentResult): CVRecommendation[] {
+    const recommendations: CVRecommendation[] = [];
+    let recId = 1;
+    
+    // Recommend highlighting verified certifications
+    if (enrichmentResult.enrichmentSummary.certifications.certificationsVerified > 0) {
+      recommendations.push({
+        id: `enrich_cert_${recId++}`,
+        type: 'content',
+        category: 'achievements',
+        title: 'Highlight Verified Certifications',
+        description: 'Your certifications have been verified through external sources. Consider prominently displaying them.',
+        suggestedContent: 'Create a dedicated "Verified Certifications" section with credential IDs and verification links',
+        impact: 'high',
+        priority: 3,
+        section: 'certifications',
+        actionRequired: 'modify',
+        keywords: ['verified', 'certified', 'credential'],
+        estimatedScoreImprovement: 12
+      });
+    }
+    
+    // Recommend showcasing GitHub metrics
+    if (enrichmentResult.enrichmentSummary.portfolio.newProjectsAdded > 0) {
+      recommendations.push({
+        id: `enrich_portfolio_${recId++}`,
+        type: 'content',
+        category: 'achievements',
+        title: 'Showcase Open Source Contributions',
+        description: 'Your GitHub projects show significant engagement. Add metrics like stars and contributions.',
+        suggestedContent: 'Include project metrics: [STARS] stars, [FORKS] forks, [CONTRIBUTORS] contributors',
+        impact: 'high',
+        priority: 4,
+        section: 'projects',
+        actionRequired: 'add',
+        keywords: ['open source', 'github', 'contributions'],
+        estimatedScoreImprovement: 10
+      });
+    }
+    
+    // Recommend validated skills emphasis
+    if (enrichmentResult.enrichmentSummary.skills.skillsValidated > 5) {
+      recommendations.push({
+        id: `enrich_skills_${recId++}`,
+        type: 'structure',
+        category: 'skills',
+        title: 'Emphasize Validated Technical Skills',
+        description: 'Your technical skills have been validated through actual usage in projects and repositories.',
+        suggestedContent: 'Reorganize skills with proficiency levels: Expert, Advanced, Intermediate',
+        impact: 'medium',
+        priority: 5,
+        section: 'skills',
+        actionRequired: 'modify',
+        keywords: ['validated', 'proficiency', 'expertise'],
+        estimatedScoreImprovement: 8
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Merges all recommendations from different sources
+   */
+  private mergeAllRecommendations(
+    standardRecs: CVRecommendation[],
+    roleRecs: CVRecommendation[],
+    enrichmentRecs: CVRecommendation[],
+    primaryRole?: RoleMatchResult
+  ): CVRecommendation[] {
+    // First merge standard and role recommendations
+    const baseRecommendations = this.mergeRecommendations(standardRecs, roleRecs, primaryRole);
+    
+    // Then add enrichment recommendations
+    const allRecommendations = [...baseRecommendations, ...enrichmentRecs];
+    
+    // Sort by priority and limit
+    return allRecommendations
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 15);
+  }
+  
   /**
    * Merges standard and role-enhanced recommendations, removing duplicates and prioritizing
    */

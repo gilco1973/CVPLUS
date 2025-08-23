@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { CheckCircle, Circle, Crown, Lock, AlertTriangle } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { CheckCircle, Circle, Crown, Lock, AlertTriangle, Sparkles, Zap, Star } from 'lucide-react';
 import { usePremiumStatus } from '../hooks/usePremiumStatus';
+import { FeatureCard } from './FeatureCard';
 import { FeatureGate, PremiumBadge } from './pricing/FeatureGate';
 import { UpgradePrompt } from './pricing/UpgradePrompt';
 import { 
@@ -143,12 +144,10 @@ export const PremiumFeatureSelectionPanel: React.FC<PremiumFeatureSelectionPanel
 }) => {
   const { isPremium, features: userPremiumFeatures, isLoading } = usePremiumStatus();
   const [showUpgradeModal, setShowUpgradeModal] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  // Validate feature selection whenever it changes
-  useEffect(() => {
+  // Validate feature selection whenever it changes (memoized to prevent infinite loops)
+  const validationErrors = useMemo(() => {
     const validation = validateFeatureSelection(selectedFeatures, userPremiumFeatures);
-    setValidationErrors(validation.warnings);
+    return validation.warnings;
   }, [selectedFeatures, userPremiumFeatures]);
 
   const handleFeatureToggle = useCallback((featureId: string, enabled: boolean) => {
@@ -475,12 +474,27 @@ export const PremiumFeatureSelectionPanel: React.FC<PremiumFeatureSelectionPanel
         
         return (
           <div key={category} className="space-y-3">
-            <div className={`px-3 py-2 rounded-lg border ${getCategoryColor(category)}`}>
-              <h4 className="font-medium">{getCategoryTitle(category)}</h4>
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${getCategoryColor(category)}`}>
+              {category === 'core' && <Sparkles className="w-5 h-5" />}
+              {category === 'enhancement' && <Zap className="w-5 h-5" />}
+              {category === 'advanced' && <Star className="w-5 h-5" />}
+              <h3 className="text-lg font-semibold">{getCategoryTitle(category)}</h3>
+              <div className="ml-auto text-sm opacity-75">
+                {categoryFeatures.filter(f => selectedFeatures[f.id]).length} of {categoryFeatures.length} selected
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 gap-3">
-              {categoryFeatures.map(renderFeatureItem)}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {categoryFeatures.map((feature) => (
+                <FeatureCard
+                  key={feature.id}
+                  feature={feature}
+                  isSelected={selectedFeatures[feature.id]}
+                  onToggle={handleFeatureToggle}
+                  onUpgradePrompt={setShowUpgradeModal}
+                  enforceRestrictions={enforceRestrictions}
+                />
+              ))}
             </div>
           </div>
         );

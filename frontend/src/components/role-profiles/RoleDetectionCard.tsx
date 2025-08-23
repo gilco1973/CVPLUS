@@ -189,7 +189,9 @@ export const RoleDetectionCard: React.FC<RoleDetectionCardProps> = ({
                     </div>
                   </div>
                   <div className="text-lg font-semibold text-blue-300 mb-2">#{index + 1} Match</div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{factor}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {typeof factor === 'string' ? factor : factor?.description || factor?.type || 'Match factor'}
+                  </p>
                 </div>
               ))}
             </div>
@@ -204,7 +206,9 @@ export const RoleDetectionCard: React.FC<RoleDetectionCardProps> = ({
                       className="flex items-center gap-3 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg hover:bg-blue-900/30 transition-colors"
                     >
                       <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-300">{factor}</span>
+                      <span className="text-sm text-gray-300">
+                        {typeof factor === 'string' ? factor : factor?.description || factor?.type || 'Match factor'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -293,7 +297,9 @@ export const RoleDetectionCard: React.FC<RoleDetectionCardProps> = ({
                   key={index}
                   className="p-3 bg-neutral-700/50 border border-neutral-600 rounded-lg"
                 >
-                  <p className="text-sm text-gray-300">{rec}</p>
+                  <p className="text-sm text-gray-300">
+                    {typeof rec === 'string' ? rec : rec?.title || rec?.description || 'Recommendation'}
+                  </p>
                 </div>
               ))}
               

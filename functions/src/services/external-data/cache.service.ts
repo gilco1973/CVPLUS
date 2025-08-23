@@ -187,11 +187,11 @@ export class CacheService {
   async invalidate(pattern: string): Promise<void> {
     try {
       // Clear memory cache entries matching pattern
-      for (const [key] of this.memoryCache) {
+      this.memoryCache.forEach((value, key) => {
         if (key.includes(pattern)) {
           this.memoryCache.delete(key);
         }
-      }
+      });
       
       // Clear Firestore entries
       const snapshot = await this.db
@@ -307,9 +307,9 @@ export class CacheService {
    */
   private getMemoryCacheSize(): number {
     let totalSize = 0;
-    for (const entry of this.memoryCache.values()) {
+    Array.from(this.memoryCache.values()).forEach(entry => {
       totalSize += this.getObjectSize(entry.data);
-    }
+    });
     return totalSize;
   }
 
@@ -331,11 +331,11 @@ export class CacheService {
       const now = Timestamp.now();
       
       // Clean memory cache
-      for (const [key, entry] of this.memoryCache) {
+      this.memoryCache.forEach((entry, key) => {
         if (this.isExpired(entry)) {
           this.memoryCache.delete(key);
         }
-      }
+      });
       
       // Clean Firestore cache
       const snapshot = await this.db

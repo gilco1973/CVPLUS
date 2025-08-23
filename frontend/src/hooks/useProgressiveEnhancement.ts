@@ -958,7 +958,7 @@ export function useProgressiveEnhancement({
       hasStartedRef.current = true;
       startEnhancement();
     }
-  }, [autoStart, memoizedSelectedFeatures.length > 0]); // Remove startEnhancement from dependencies
+  }, [autoStart, memoizedSelectedFeatures.length, jobId]); // Track actual length and jobId, not boolean comparison
 
   // Cleanup on unmount
   useEffect(() => {

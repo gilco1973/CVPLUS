@@ -40,7 +40,7 @@ export class RoleDetectionService {
     
     // Enhanced configuration with updated weights
     this.config = {
-      confidenceThreshold: 0.6,
+      confidenceThreshold: 0.5, // Lowered to improve matching rate
       maxResults: 5,
       enableMultiRoleDetection: true,
       weightingFactors: {

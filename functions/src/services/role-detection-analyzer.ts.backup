@@ -197,161 +197,40 @@ export class RoleDetectionAnalyzer {
   }
 
   /**
-   * Create improved fallback analysis when no strong matches are found
-   * Attempts to detect likely roles based on skills and experience patterns
+   * Create fallback analysis when no strong matches are found
    */
   createFallbackAnalysis(parsedCV: ParsedCV): RoleProfileAnalysis {
-    // Try to detect role based on skills and experience
-    const detectedRole = this.detectRoleFromSkills(parsedCV);
-    
     const fallbackRole: RoleMatchResult = {
-      roleId: detectedRole.roleId,
-      roleName: detectedRole.roleName,
-      confidence: detectedRole.confidence,
-      matchingFactors: detectedRole.matchingFactors,
-      enhancementPotential: 75,
+      roleId: 'generic_professional',
+      roleName: 'Professional',
+      confidence: 0.3,
+      matchingFactors: [],
+      enhancementPotential: 70,
       recommendations: [{
-        id: 'improve_targeting',
+        id: 'generic_summary',
         type: 'content',
         priority: 'high',
-        title: 'Enhance Role Targeting',
-        description: `Based on your background, consider emphasizing your ${detectedRole.roleName.toLowerCase()} experience`,
-        template: detectedRole.template,
+        title: 'Add Professional Summary',
+        description: 'Create a compelling professional summary to improve CV impact',
+        template: 'Results-driven professional with expertise in [YOUR FIELD]...',
         targetSection: CVSection.PROFESSIONAL_SUMMARY,
-        expectedImpact: 30
-      }, {
-        id: 'manual_selection',
-        type: 'structure',
-        priority: 'medium',
-        title: 'Manual Role Selection',
-        description: 'Select a specific role profile to get more targeted recommendations',
-        template: 'Choose from available role profiles for personalized suggestions',
-        targetSection: CVSection.PROFESSIONAL_SUMMARY,
-        expectedImpact: 40
+        expectedImpact: 25
       }]
     };
     
     return {
       primaryRole: fallbackRole,
       alternativeRoles: [],
-      overallConfidence: detectedRole.confidence,
+      overallConfidence: 0.3,
       enhancementSuggestions: {
-        immediate: fallbackRole.recommendations,
-        strategic: [{
-          id: 'skills_alignment',
-          type: 'content',
-          priority: 'medium',
-          title: 'Align Skills with Target Role',
-          description: 'Review and emphasize skills most relevant to your target role',
-          template: 'Highlight key skills: ' + detectedRole.keySkills.join(', '),
-          targetSection: CVSection.SKILLS,
-          expectedImpact: 25
-        }]
+        immediate: [fallbackRole.recommendations[0]],
+        strategic: []
       },
       gapAnalysis: {
         missingSkills: [],
-        weakAreas: ['Role targeting could be more specific'],
-        strengthAreas: detectedRole.keySkills.length > 0 ? ['Strong skill foundation'] : []
+        weakAreas: ['Professional positioning needs improvement'],
+        strengthAreas: []
       }
     };
-  }
-
-  /**
-   * Detect most likely role based on skills and experience patterns
-   */
-  private detectRoleFromSkills(parsedCV: ParsedCV): {
-    roleId: string;
-    roleName: string;
-    confidence: number;
-    matchingFactors: MatchingFactor[];
-    keySkills: string[];
-    template: string;
-  } {
-    const skillPatterns = {
-      'software_developer': {
-        keywords: ['javascript', 'python', 'java', 'react', 'node', 'programming', 'development', 'coding', 'software', 'web'],
-        roleName: 'Software Developer',
-        template: 'Experienced software developer with expertise in modern programming languages and frameworks...'
-      },
-      'data_analyst': {
-        keywords: ['data', 'sql', 'python', 'analytics', 'excel', 'tableau', 'statistics', 'analysis', 'reporting'],
-        roleName: 'Data Analyst', 
-        template: 'Detail-oriented data analyst with strong analytical skills and experience in data visualization...'
-      },
-      'project_manager': {
-        keywords: ['project', 'management', 'agile', 'scrum', 'planning', 'coordination', 'leadership', 'team'],
-        roleName: 'Project Manager',
-        template: 'Results-driven project manager with proven ability to lead cross-functional teams...'
-      },
-      'marketing_specialist': {
-        keywords: ['marketing', 'social media', 'content', 'seo', 'advertising', 'brand', 'campaigns', 'digital'],
-        roleName: 'Marketing Specialist',
-        template: 'Creative marketing professional with expertise in digital marketing strategies...'
-      },
-      'business_analyst': {
-        keywords: ['business', 'analysis', 'requirements', 'stakeholder', 'process', 'improvement', 'documentation'],
-        roleName: 'Business Analyst',
-        template: 'Strategic business analyst with strong analytical and communication skills...'
-      }
-    };
-
-    // Extract all skills and experience text
-    const allSkills: string[] = [];
-    if (parsedCV.skills) {
-      if (Array.isArray(parsedCV.skills)) {
-        allSkills.push(...parsedCV.skills.map(s => s.toLowerCase()));
-      } else {
-        allSkills.push(...Object.values(parsedCV.skills).flat().map(s => s.toLowerCase()));
-      }
-    }
-
-    // Add experience keywords
-    if (parsedCV.experience) {
-      parsedCV.experience.forEach(exp => {
-        allSkills.push(...extractKeywords(exp.position.toLowerCase()));
-        if (exp.description) {
-          allSkills.push(...extractKeywords(exp.description.toLowerCase()));
-        }
-      });
-    }
-
-    // Score each role pattern
-    let bestMatch = {
-      roleId: 'general_professional',
-      roleName: 'Professional',
-      confidence: 0.65,
-      matchingFactors: [] as MatchingFactor[],
-      keySkills: [] as string[],
-      template: 'Dedicated professional with diverse experience and strong work ethic...'
-    };
-
-    Object.entries(skillPatterns).forEach(([roleId, pattern]) => {
-      const matchingSkills = allSkills.filter(skill => 
-        pattern.keywords.some(keyword => skill.includes(keyword))
-      );
-      
-      if (matchingSkills.length > 0) {
-        const confidence = Math.min(0.8, 0.5 + (matchingSkills.length / pattern.keywords.length) * 0.3);
-        
-        if (confidence > bestMatch.confidence) {
-          bestMatch = {
-            roleId,
-            roleName: pattern.roleName,
-            confidence,
-            matchingFactors: [{
-              type: 'skills',
-              score: confidence,
-              weight: 1.0,
-              description: `Found ${matchingSkills.length} relevant skills`,
-              details: matchingSkills.slice(0, 5).join(', ')
-            }],
-            keySkills: Array.from(new Set(matchingSkills)).slice(0, 5),
-            template: pattern.template
-          };
-        }
-      }
-    });
-
-    return bestMatch;
   }
 }

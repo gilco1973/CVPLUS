@@ -49,7 +49,7 @@ export class VerifiedClaudeService {
 
   constructor(config?: VerifiedClaudeConfig) {
     this.config = {
-      enableVerification: true,
+      enableVerification: false, // Temporarily disabled due to verification service issues
       service: 'verified-claude',
       fallbackToOriginal: true,
       maxRetries: 3,

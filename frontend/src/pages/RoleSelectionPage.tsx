@@ -87,7 +87,7 @@ export const RoleSelectionPage: React.FC = () => {
   const handleSkipRoleSelection = () => {
     if (!jobId) return;
     
-    toast.info('Skipping role analysis - proceeding with standard features');
+    toast('Skipping role analysis - proceeding with standard features');
     navigate(`/select-features/${jobId}`);
   };
 
