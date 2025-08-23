@@ -342,8 +342,8 @@ export class RoleDetectionAnalyzer {
               type: 'skills',
               score: confidence,
               weight: 1.0,
-              description: `Found ${matchingSkills.length} relevant skills`,
-              details: matchingSkills.slice(0, 5).join(', ')
+              details: `Found ${matchingSkills.length} relevant skills: ${matchingSkills.slice(0, 5).join(', ')}`,
+              matchedKeywords: matchingSkills
             }],
             keySkills: Array.from(new Set(matchingSkills)).slice(0, 5),
             template: pattern.template

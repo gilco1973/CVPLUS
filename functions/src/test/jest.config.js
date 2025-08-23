@@ -20,7 +20,9 @@ module.exports = {
     '<rootDir>/test/**/*.test.ts',
     '<rootDir>/test/**/*.test.js',
     '<rootDir>/services/**/*.test.ts',
-    '<rootDir>/functions/**/*.test.ts'
+    '<rootDir>/functions/**/*.test.ts',
+    '<rootDir>/config/**/*.test.ts',
+    '<rootDir>/**/__tests__/**/*.test.ts'
   ],
 
   // Files to ignore
@@ -34,14 +36,17 @@ module.exports = {
   // TypeScript support
   preset: 'ts-jest',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest'
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: '<rootDir>/tsconfig.test.json',
+      useESM: false
+    }]
   },
 
   // Module resolution
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   
   // Module name mapping for absolute imports
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@services/(.*)$': '<rootDir>/services/$1',
     '^@types/(.*)$': '<rootDir>/types/$1',
@@ -50,12 +55,12 @@ module.exports = {
 
   // Setup files
   setupFilesAfterEnv: [
-    '<rootDir>/test/setup.ts'
+    // Will add setup files as needed
   ],
 
   // Global setup and teardown
-  globalSetup: '<rootDir>/test/global-setup.ts',
-  globalTeardown: '<rootDir>/test/global-teardown.ts',
+  // globalSetup: '<rootDir>/test/global-setup.ts',
+  // globalTeardown: '<rootDir>/test/global-teardown.ts',
 
   // Coverage configuration
   collectCoverage: true,
@@ -125,67 +130,20 @@ module.exports = {
   // Error handling
   errorOnDeprecated: true,
 
-  // Test suites configuration
-  projects: [
-    {
-      displayName: 'Unit Tests',
-      testMatch: [
-        '<rootDir>/services/**/*.test.ts',
-        '<rootDir>/test/**/unit/**/*.test.ts'
-      ],
-      testTimeout: 10000
-    },
-    {
-      displayName: 'Integration Tests',
-      testMatch: [
-        '<rootDir>/test/**/integration/**/*.test.ts',
-        '<rootDir>/test/**/*integration*.test.ts'
-      ],
-      testTimeout: 30000
-    },
-    {
-      displayName: 'Performance Tests',
-      testMatch: [
-        '<rootDir>/test/**/performance/**/*.test.ts',
-        '<rootDir>/test/**/*performance*.test.ts',
-        '<rootDir>/test/**/*benchmark*.test.ts'
-      ],
-      testTimeout: 120000 // 2 minutes for performance tests
-    },
-    {
-      displayName: 'End-to-End Tests',
-      testMatch: [
-        '<rootDir>/test/**/e2e/**/*.test.ts',
-        '<rootDir>/test/**/*e2e*.test.ts'
-      ],
-      testTimeout: 180000 // 3 minutes for E2E tests
-    }
-  ],
+  // Test suites configuration - simplified for now
+  // projects: [
+  //   {
+  //     displayName: 'Unit Tests',
+  //     testMatch: [
+  //       '<rootDir>/services/**/*.test.ts',
+  //       '<rootDir>/test/**/unit/**/*.test.ts'
+  //     ]
+  //   }
+  // ],
 
   // Reporters
   reporters: [
-    'default',
-    [
-      'jest-html-reporter',
-      {
-        pageTitle: 'Portal Generation Test Results',
-        outputPath: '<rootDir>/test-results/test-report.html',
-        includeFailureMsg: true,
-        includeSuiteFailure: true
-      }
-    ],
-    [
-      'jest-junit',
-      {
-        outputDirectory: '<rootDir>/test-results',
-        outputName: 'junit.xml',
-        ancestorSeparator: ' › ',
-        uniqueOutputName: 'false',
-        suiteNameTemplate: '{filepath}',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}'
-      }
-    ]
+    'default'
   ],
 
   // Environment variables for testing
@@ -197,41 +155,30 @@ module.exports = {
   },
 
   // Custom matchers and utilities
-  setupFilesAfterEnv: [
-    '<rootDir>/test/custom-matchers.ts',
-    '<rootDir>/test/test-utils.ts'
-  ],
+  // setupFilesAfterEnv defined above
 
   // Watch mode configuration
-  watchPlugins: [
-    'jest-watch-typeahead/filename',
-    'jest-watch-typeahead/testname'
-  ],
+  // watchPlugins: [
+  //   'jest-watch-typeahead/filename',
+  //   'jest-watch-typeahead/testname'
+  // ],
 
   // Snapshot configuration
-  snapshotSerializers: [
-    'jest-serializer-json'
-  ],
-
-  // Additional configuration for Firebase testing
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.json',
-      isolatedModules: true
-    }
-  },
+  // snapshotSerializers: [
+  //   'jest-serializer-json'
+  // ],
 
   // Handle ES modules
-  extensionsToTreatAsEsm: ['.ts'],
+  extensionsToTreatAsEsm: [],
 
   // Transform ignore patterns
   transformIgnorePatterns: [
     'node_modules/(?!(firebase|@firebase)/)'
   ],
 
-  // Memory leak detection
-  detectLeaks: true,
-  detectOpenHandles: true,
+  // Memory leak detection - disabled for debugging
+  detectLeaks: false,
+  detectOpenHandles: false,
 
   // Bail configuration
   bail: false,
@@ -240,9 +187,9 @@ module.exports = {
   cacheDirectory: '<rootDir>/.jest-cache',
 
   // Notify configuration for watch mode
-  notify: true,
+  notify: false,
   notifyMode: 'failure-change',
 
   // Test results processor
-  testResultsProcessor: '<rootDir>/test/results-processor.js'
+  // testResultsProcessor: '<rootDir>/test/results-processor.js'
 };

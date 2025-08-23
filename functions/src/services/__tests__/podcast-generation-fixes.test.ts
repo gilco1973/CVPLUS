@@ -31,6 +31,10 @@ describe('PodcastGenerationService - Enhanced Error Handling', () => {
   let mockParsedCV: ParsedCV;
 
   beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+    jest.resetAllMocks();
+    
     // Set required environment variables
     process.env.ELEVENLABS_API_KEY = 'test-api-key-1234567890';
     process.env.ELEVENLABS_HOST1_VOICE_ID = 'test-voice-1';
@@ -64,8 +68,15 @@ describe('PodcastGenerationService - Enhanced Error Handling', () => {
   });
 
   afterEach(() => {
-    // Clean up any temp files
+    // Clean up mocks and environment variables
     jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
+    
+    // Clean up environment variables to prevent test interference
+    delete process.env.ELEVENLABS_API_KEY;
+    delete process.env.ELEVENLABS_HOST1_VOICE_ID;
+    delete process.env.ELEVENLABS_HOST2_VOICE_ID;
   });
 
   describe('mergeAudioSegments validation', () => {

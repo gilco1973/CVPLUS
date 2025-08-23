@@ -73,3 +73,30 @@ logs/testing/
 # Sample implementation directories
 klainert-web-portal/
 cvplus-html/
+
+# Generated test files and reports
+verification-report-*.json
+test-*.js
+*-test.js
+*.test.json
+*-fix-summary.md
+*-implementation-summary.md
+
+# Jest cache and configs
+.jest-cache/
+jest.config.js
+tsconfig.test.json
+
+# Temporary implementation files
+functions/src/tools/
+scripts/verification/*.js
+scripts/cleanup/*.js
+
+# Backup and audit directories
+.cvplus-backups/
+.cvplus-audit/
+
+# Generated documentation (keep only essential)
+docs/implementation/
+docs/fixes/*-summary.md
+docs/tools/*-generated.md

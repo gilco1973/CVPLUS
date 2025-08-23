@@ -32,7 +32,9 @@ export const generateTestimonialsCarousel = onCall(
       }
 
       // Generate testimonials carousel
-      const carousel = await testimonialsService.generateTestimonialsCarousel(parsedCV, jobId);
+      // Temporary fix: Use getUserTestimonials instead
+      const userTestimonials = await testimonialsService.getUserTestimonials(request.auth.uid);
+      const carousel = { testimonials: userTestimonials, totalCount: userTestimonials.length };
 
       logger.info(`Successfully generated testimonials carousel with ${carousel.testimonials.length} testimonials`);
 
@@ -68,7 +70,9 @@ export const addTestimonial = onCall(
 
       logger.info(`Adding testimonial to job: ${jobId}`);
 
-      const newTestimonial = await testimonialsService.addTestimonial(jobId, testimonial);
+      // Temporary fix: Use createTestimonial instead
+      const newTestimonialId = await testimonialsService.createTestimonial(testimonial);
+      const newTestimonial = { ...testimonial, id: newTestimonialId };
 
       return {
         success: true,
@@ -135,7 +139,8 @@ export const removeTestimonial = onCall(
 
       logger.info(`Removing testimonial ${testimonialId} from job: ${jobId}`);
 
-      await testimonialsService.removeTestimonial(jobId, testimonialId);
+      // Temporary fix: Use deleteTestimonial instead
+      await testimonialsService.deleteTestimonial(request.auth.uid, testimonialId);
 
       return {
         success: true,

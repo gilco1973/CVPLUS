@@ -7,7 +7,7 @@
 
 import * as admin from 'firebase-admin';
 import * as QRCode from 'qrcode';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 
 interface QRCodeOptions {
   userId: string;

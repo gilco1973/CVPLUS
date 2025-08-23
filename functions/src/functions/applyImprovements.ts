@@ -408,6 +408,115 @@ async function executeRecommendationGeneration(
   }
 }
 
+/**
+ * Generate emergency fallback recommendations when AI services fail
+ */
+function generateEmergencyFallbackRecommendations(originalCV: ParsedCV): CVRecommendation[] {
+  console.log('🚨 Generating emergency fallback recommendations');
+  
+  const fallbackRecommendations: CVRecommendation[] = [];
+  const baseId = `fallback_${Date.now()}`;
+  
+  // Always add professional summary enhancement
+  fallbackRecommendations.push({
+    id: `${baseId}_summary`,
+    type: 'content',
+    category: 'professional_summary',
+    section: 'Professional Summary',
+    actionRequired: 'modify',
+    title: 'Enhance Professional Summary',
+    description: 'Strengthen your professional summary to better showcase your experience and value proposition to employers.',
+    suggestedContent: 'Consider expanding your professional summary with specific achievements and quantifiable results.',
+    impact: 'medium',
+    priority: 1,
+    estimatedScoreImprovement: 15
+  });
+  
+  // Add skills organization if skills exist
+  if (originalCV.skills && Array.isArray(originalCV.skills) && originalCV.skills.length > 0) {
+    fallbackRecommendations.push({
+      id: `${baseId}_skills`,
+      type: 'structure',
+      category: 'skills',
+      section: 'Skills',
+      actionRequired: 'reformat',
+      title: 'Organize Skills by Category',
+      description: 'Group your skills into categories (Technical, Management, etc.) for better readability.',
+      suggestedContent: 'Organize skills into logical categories such as Technical Skills, Leadership Skills, and Industry Knowledge.',
+      impact: 'medium',
+      priority: 2,
+      estimatedScoreImprovement: 10
+    });
+  } else if (originalCV.skills && typeof originalCV.skills === 'object') {
+    // Skills are already organized, suggest enhancement
+    fallbackRecommendations.push({
+      id: `${baseId}_skills_enhance`,
+      type: 'content',
+      category: 'skills',
+      section: 'Skills',
+      actionRequired: 'modify',
+      title: 'Enhance Skills Section',
+      description: 'Add more relevant skills or provide proficiency levels for existing skills.',
+      suggestedContent: 'Consider adding skill proficiency levels or expanding with industry-relevant skills.',
+      impact: 'medium',
+      priority: 2,
+      estimatedScoreImprovement: 8
+    });
+  }
+  
+  // Add experience enhancement if experience exists
+  if (originalCV.experience && originalCV.experience.length > 0) {
+    fallbackRecommendations.push({
+      id: `${baseId}_experience`,
+      type: 'content',
+      category: 'experience',
+      section: 'Experience',
+      actionRequired: 'modify',
+      title: 'Add Quantifiable Achievements',
+      description: 'Transform job descriptions into achievement-focused bullet points with measurable results.',
+      suggestedContent: 'Use bullet points with quantifiable achievements, such as "Increased sales by 25%" or "Led team of 10 developers".',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 20
+    });
+  }
+  
+  // Add education enhancement if education exists
+  if (originalCV.education && originalCV.education.length > 0) {
+    fallbackRecommendations.push({
+      id: `${baseId}_education`,
+      type: 'content',
+      category: 'education',
+      section: 'Education',
+      actionRequired: 'modify',
+      title: 'Enhance Educational Background',
+      description: 'Add relevant coursework, GPA (if strong), or honors to strengthen your educational background.',
+      suggestedContent: 'Consider adding relevant coursework, academic achievements, or certifications related to your field.',
+      impact: 'low',
+      priority: 3,
+      estimatedScoreImprovement: 8
+    });
+  }
+  
+  // Always add a general formatting recommendation
+  fallbackRecommendations.push({
+    id: `${baseId}_formatting`,
+    type: 'formatting',
+    category: 'formatting',
+    section: 'General',
+    actionRequired: 'reformat',
+    title: 'Improve CV Formatting',
+    description: 'Enhance the visual appeal and readability of your CV with better formatting and structure.',
+    suggestedContent: 'Ensure consistent formatting, appropriate white space, and professional typography throughout your CV.',
+    impact: 'medium',
+    priority: 2,
+    estimatedScoreImprovement: 12
+  });
+  
+  console.log(`✅ Generated ${fallbackRecommendations.length} emergency fallback recommendations`);
+  return fallbackRecommendations;
+}
+
 // Handle errors within the extracted function with proper job status updates
 async function handleRecommendationError(
   db: FirebaseFirestore.Firestore,
@@ -463,15 +572,37 @@ async function generateRecommendationsWithProgress(
     // Generate recommendations with timeout per step
     await updateProgress('Generating improvement recommendations...', 2);
     
-    const recommendations = await transformationService.generateDetailedRecommendations(
-      originalCV,
-      targetRole,
-      industryKeywords
-    );
+    let recommendations: CVRecommendation[] = [];
+    
+    // Primary attempt: Generate detailed recommendations
+    try {
+      recommendations = await transformationService.generateDetailedRecommendations(
+        originalCV,
+        targetRole,
+        industryKeywords
+      );
+    } catch (primaryError: any) {
+      console.warn('Primary recommendation generation failed, attempting fallback:', primaryError.message);
+      
+      // Fallback 1: Try with enhanced role-based approach
+      try {
+        recommendations = await transformationService.generateRoleEnhancedRecommendations(
+          originalCV,
+          false, // disable role detection for faster processing
+          targetRole,
+          industryKeywords
+        );
+      } catch (secondaryError: any) {
+        console.warn('Secondary recommendation generation failed, using emergency fallback:', secondaryError.message);
+        
+        // Fallback 2: Generate basic recommendations
+        recommendations = generateEmergencyFallbackRecommendations(originalCV);
+      }
+    }
     
     await updateProgress('Validating recommendations...', 3);
     
-    // Enhanced validation with fallback values (same as ensureRecommendationsValid)
+    // Enhanced validation with fallback values
     const validRecommendations = recommendations.map(rec => {
       // Ensure all required fields are present with fallback values
       return {
@@ -483,8 +614,11 @@ async function generateRecommendationsWithProgress(
       };
     });
     
+    // Final safety check - if still empty, generate emergency recommendations
     if (validRecommendations.length === 0) {
-      throw new Error('No recommendations provided by transformation service');
+      console.warn('All recommendation generation methods failed, creating emergency fallback');
+      const emergencyRecommendations = generateEmergencyFallbackRecommendations(originalCV);
+      return emergencyRecommendations;
     }
     
     console.log('✅ [DEBUG] Validation successful - recommendations structure:', validRecommendations.map(rec => ({

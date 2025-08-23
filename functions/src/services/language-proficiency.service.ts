@@ -258,7 +258,7 @@ export class LanguageProficiencyService {
     }
     
     // Always include native language if identifiable
-    if (languages.length === 0 || !languages.find(l => l.level === 'Native')) {
+    if (languages.length === 0 || !languages.find(l => l.proficiency === 'native')) {
       const nativeLanguage = this.inferNativeLanguage(cv);
       if (nativeLanguage && !languages.find(l => l.name === nativeLanguage)) {
         languages.unshift({
@@ -373,7 +373,7 @@ export class LanguageProficiencyService {
       // Verify certifications
       if (cv.certifications) {
         const relatedCerts = cv.certifications.filter(cert => 
-          this.isLanguageCertification(cert.name, lang.language)
+          this.isLanguageCertification(cert.name, lang.name)
         );
         if (relatedCerts.length > 0) {
           lang.certifications = relatedCerts.map(c => c.name);
@@ -434,7 +434,7 @@ export class LanguageProficiencyService {
         languages: proficiencies.map(p => ({
           name: p.name,
           value: p.score,
-          level: p.level,
+          level: p.proficiency,
           flag: p.flag,
           certified: (p.certifications?.length || 0) > 0
         }))
@@ -587,7 +587,7 @@ export class LanguageProficiencyService {
     const conversationalLanguages = proficiencies.filter(p => p.proficiency === 'limited');
     if (conversationalLanguages.length > 0) {
       recommendations.push(
-        `Improve ${conversationalLanguages[0].language} to professional level for career advancement`
+        `Improve ${conversationalLanguages[0].name} to professional level for career advancement`
       );
     }
     
@@ -678,8 +678,8 @@ export class LanguageProficiencyService {
     // Look for language mentions in experience
     let years = 0;
     cv.experience?.forEach(exp => {
-      if (exp.description?.toLowerCase().includes(language.language.toLowerCase()) ||
-          exp.company?.toLowerCase().includes(language.language.toLowerCase())) {
+      if (exp.description?.toLowerCase().includes(language.name.toLowerCase()) ||
+          exp.company?.toLowerCase().includes(language.name.toLowerCase())) {
         const start = new Date(exp.startDate || 0);
         const end = exp.endDate ? new Date(exp.endDate) : new Date();
         years += (end.getFullYear() - start.getFullYear());

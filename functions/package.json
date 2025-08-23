@@ -14,7 +14,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:cv-processing": "jest cv-processing.test.ts"
+    "test:cv-processing": "jest cv-processing.test.ts",
+    "verify": "../scripts/verification/run-verification.sh",
+    "verify:emulator": "../scripts/verification/run-verification.sh --emulator",
+    "verify:production": "../scripts/verification/run-verification.sh --production",
+    "verify:mock": "../scripts/verification/run-verification.sh --mock",
+    "emulators:start": "../scripts/verification/start-emulators.sh",
+    "emulators:stop": "../scripts/verification/stop-emulators.sh",
+    "verify:test": "ts-node src/tools/verification/test-runner.ts"
   },
   "engines": {
     "node": "20"
