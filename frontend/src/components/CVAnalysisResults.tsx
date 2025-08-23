@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronDown, ChevronUp, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { applyImprovements } from '../services/cvService';
+import { applyImprovements, type Job } from '../services/cvService';
 import { MagicTransformService, type MagicTransformProgress, type MagicTransformResult } from '../services/features/MagicTransformService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
-import type { Job } from '../services/cvService';
 import toast from 'react-hot-toast';
 import { robustNavigation } from '../utils/robustNavigation';
 import type { PrioritizedRecommendation } from '../types/ats';
@@ -69,14 +68,16 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   const isMountedRef = useRef(true);
   
   useEffect(() => {
-    console.log(`🔄 [STATE CHANGE] Recommendations updated:`, {
-      length: recommendations.length,
-      jobId: job.id,
-      loadedJobId,
-      isLoading,
-      timestamp: new Date().toISOString(),
-      recommendations: recommendations.map(r => ({ id: r.id, title: r.title, priority: r.priority }))
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`🔄 [STATE CHANGE] Recommendations updated:`, {
+        length: recommendations.length,
+        jobId: job.id,
+        loadedJobId,
+        isLoading,
+        timestamp: new Date().toISOString(),
+        recommendations: recommendations.map(r => ({ id: r.id, title: r.title, priority: r.priority }))
+      });
+    }
   }, [recommendations, job.id, loadedJobId, isLoading]);
 
   // Cleanup function to prevent memory leaks
@@ -91,26 +92,34 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   const loadAnalysisAndRecommendations = useCallback(async () => {
     // Enhanced duplicate prevention checks
     if (loadedJobId === job.id) {
-      console.log(`[CVAnalysisResults] Already loaded for job ${job.id}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Already loaded for job ${job.id}`);
+      }
       return;
     }
     
     if (isLoading) {
-      console.log(`[CVAnalysisResults] Already loading, skipping duplicate request`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Already loading, skipping duplicate request`);
+      }
       return;
     }
 
-    console.log(`[CVAnalysisResults] Starting load for job ${job.id}:`, {
-      currentLoadedJobId: loadedJobId,
-      isCurrentlyLoading: isLoading,
-      isMounted: isMountedRef.current,
-      strictMode: process.env.NODE_ENV === 'development'
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[CVAnalysisResults] Starting load for job ${job.id}:`, {
+        currentLoadedJobId: loadedJobId,
+        isCurrentlyLoading: isLoading,
+        isMounted: isMountedRef.current,
+        strictMode: process.env.NODE_ENV === 'development'
+      });
+    }
     
     try {
       // Check if component is still mounted
       if (!isMountedRef.current) {
-        console.log(`[CVAnalysisResults] Component unmounted, aborting load`);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[CVAnalysisResults] Component unmounted, aborting load`);
+        }
         return;
       }
       
@@ -141,13 +150,17 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       setAtsAnalysis(mockAnalysis);
       
       // Get real recommendations from backend using RequestManager (zero-tolerance duplicate prevention)
-      console.log(`[CVAnalysisResults] Calling CVServiceCore.getRecommendations for job: ${job.id}`);
-      console.log(`[CVAnalysisResults] Job object:`, { id: job.id, status: job.status, userId: job.userId });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Calling CVServiceCore.getRecommendations for job: ${job.id}`);
+        console.warn(`[CVAnalysisResults] Job object:`, { id: job.id, status: job.status, userId: job.userId });
+      }
       
       let recommendationsData;
       try {
         recommendationsData = await CVServiceCore.getRecommendations(job.id);
-        console.log(`[CVAnalysisResults] Raw API response received:`, recommendationsData);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[CVAnalysisResults] Raw API response received:`, recommendationsData);
+        }
       } catch (apiError: unknown) {
         console.error(`[CVAnalysisResults] API call failed:`, apiError);
         console.error(`[CVAnalysisResults] Error details:`, {
@@ -158,7 +171,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         
         // Check if the error is a timeout - use fallback recommendations
         if (apiError instanceof Error && apiError.message.includes('Timeout after')) {
-          console.log(`[CVAnalysisResults] Timeout detected, using fallback mock recommendations for testing`);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[CVAnalysisResults] Timeout detected, using fallback mock recommendations for testing`);
+          }
           
           // Create realistic mock recommendations for fallback
           const fallbackRecommendations = [
@@ -226,38 +241,44 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             }
           };
           
-          console.log(`[CVAnalysisResults] Using ${fallbackRecommendations.length} fallback recommendations`);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[CVAnalysisResults] Using ${fallbackRecommendations.length} fallback recommendations`);
+          }
           
         } else {
           throw apiError;
         }
       }
       
-      console.log(`[CVAnalysisResults] getRecommendations completed for job: ${job.id}`);
-      console.log('Raw recommendations data:', recommendationsData);
-      console.log('Response structure keys:', Object.keys(recommendationsData || {}));
-      
-      if (recommendationsData?.data) {
-        console.log('Data structure keys:', Object.keys(recommendationsData.data));
-        console.log('Recommendations array length:', recommendationsData.data.recommendations?.length || 0);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] getRecommendations completed for job: ${job.id}`);
+        console.warn('Raw recommendations data:', recommendationsData);
+        console.warn('Response structure keys:', Object.keys(recommendationsData || {}));
+        
+        if (recommendationsData?.data) {
+          console.warn('Data structure keys:', Object.keys(recommendationsData.data));
+          console.warn('Recommendations array length:', recommendationsData.data.recommendations?.length || 0);
+        }
+        
+        // Debug all possible data paths
+        console.warn('Debugging all possible data structures:', {
+          'recommendationsData': !!recommendationsData,
+          'recommendationsData.data': !!recommendationsData?.data,
+          'recommendationsData.data.recommendations': !!recommendationsData?.data?.recommendations,
+          'recommendationsData.recommendations': !!recommendationsData?.recommendations,
+          'recommendationsData.success': !!recommendationsData?.success,
+          'recommendationsData.result': !!recommendationsData?.result,
+          'Array.isArray(recommendationsData?.data?.recommendations)': Array.isArray(recommendationsData?.data?.recommendations),
+          'recommendationsData?.data?.recommendations?.length': recommendationsData?.data?.recommendations?.length
+        });
       }
-      
-      // Debug all possible data paths
-      console.log('Debugging all possible data structures:', {
-        'recommendationsData': !!recommendationsData,
-        'recommendationsData.data': !!recommendationsData?.data,
-        'recommendationsData.data.recommendations': !!recommendationsData?.data?.recommendations,
-        'recommendationsData.recommendations': !!recommendationsData?.recommendations,
-        'recommendationsData.success': !!recommendationsData?.success,
-        'recommendationsData.result': !!recommendationsData?.result,
-        'Array.isArray(recommendationsData?.data?.recommendations)': Array.isArray(recommendationsData?.data?.recommendations),
-        'recommendationsData?.data?.recommendations?.length': recommendationsData?.data?.recommendations?.length
-      });
       
       // Transform backend recommendations to frontend format
       let backendRecs: PrioritizedRecommendation[] | null = null;
       
-      console.log('🔍 [DATA PARSING] Starting comprehensive data structure analysis...');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('🔍 [DATA PARSING] Starting comprehensive data structure analysis...');
+      }
       
       // Check multiple possible response structures with enhanced debugging
       const structureChecks: Array<{name: string; condition: boolean; data: PrioritizedRecommendation[] | unknown}> = [
@@ -289,22 +310,28 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       ];
       
       structureChecks.forEach((check, index) => {
-        console.log(`🔍 Check ${index + 1} - ${check.name}:`, {
-          condition: check.condition,
-          hasData: !!check.data,
-          dataLength: Array.isArray(check.data) ? check.data.length : 'N/A'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`🔍 Check ${index + 1} - ${check.name}:`, {
+            condition: check.condition,
+            hasData: !!check.data,
+            dataLength: Array.isArray(check.data) ? check.data.length : 'N/A'
+          });
+        }
         
         if (check.condition && !backendRecs) {
-          console.log(`✅ MATCH! Using structure: ${check.name}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`✅ MATCH! Using structure: ${check.name}`);
+          }
           backendRecs = check.data as PrioritizedRecommendation[];
         }
       });
       
       if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
         const validBackendRecs: PrioritizedRecommendation[] = backendRecs as PrioritizedRecommendation[];
-        console.log(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
-        console.log('First 3 recommendations:', validBackendRecs.slice(0, 3));
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);
+          console.warn('First 3 recommendations:', validBackendRecs.slice(0, 3));
+        }
         const transformedRecommendations: RecommendationItem[] = validBackendRecs.map((rec: unknown) => {
           // Type guard to ensure rec is an object
           if (!rec || typeof rec !== 'object') {
@@ -336,22 +363,28 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
           };
         });
         
-        console.log(`Successfully transformed ${transformedRecommendations.length} recommendations`);
-        console.log('First transformed recommendation:', transformedRecommendations[0]);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Successfully transformed ${transformedRecommendations.length} recommendations`);
+          console.warn('First transformed recommendation:', transformedRecommendations[0]);
+        }
         
         // Check if component is still mounted before setting state
         if (!isMountedRef.current) return;
         
-        console.log(`🎉 SUCCESS! Setting ${transformedRecommendations.length} recommendations in component state`);
-        console.log('Recommendations about to be set:', transformedRecommendations);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`🎉 SUCCESS! Setting ${transformedRecommendations.length} recommendations in component state`);
+          console.warn('Recommendations about to be set:', transformedRecommendations);
+        }
         setRecommendations(transformedRecommendations);
         
         // Verify state was set correctly
         setTimeout(() => {
-          console.log('📊 State verification after setting recommendations:', {
-            recommendationsLength: transformedRecommendations.length,
-            componentStillMounted: isMountedRef.current
-          });
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('📊 State verification after setting recommendations:', {
+              recommendationsLength: transformedRecommendations.length,
+              componentStillMounted: isMountedRef.current
+            });
+          }
         }, 100);
         
       } else {
@@ -422,21 +455,27 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   useEffect(() => {
     // Skip if component unmounted
     if (!isMountedRef.current) {
-      console.log(`[CVAnalysisResults] Component unmounted, skipping useEffect`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Component unmounted, skipping useEffect`);
+      }
       return;
     }
     
-    console.log(`[CVAnalysisResults] useEffect triggered:`, {
-      jobId: job.id,
-      loadedJobId,
-      isLoading,
-      isMounted: isMountedRef.current,
-      strictMode: process.env.NODE_ENV === 'development'
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[CVAnalysisResults] useEffect triggered:`, {
+        jobId: job.id,
+        loadedJobId,
+        isLoading,
+        isMounted: isMountedRef.current,
+        strictMode: process.env.NODE_ENV === 'development'
+      });
+    }
     
     // Reset state if job changed
     if (loadedJobId && loadedJobId !== job.id) {
-      console.log(`[CVAnalysisResults] Job changed from ${loadedJobId} to ${job.id}, resetting state`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Job changed from ${loadedJobId} to ${job.id}, resetting state`);
+      }
       setRecommendations([]);
       setAtsAnalysis(null);
       setIsLoading(true);
@@ -446,13 +485,17 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
     // Enhanced duplicate prevention for StrictMode
     // Only load if not already loaded/loading for this job
     if (loadedJobId !== job.id && !isLoading) {
-      console.log(`[CVAnalysisResults] Loading recommendations for new job: ${job.id}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Loading recommendations for new job: ${job.id}`);
+      }
       loadAnalysisAndRecommendations();
     } else {
-      console.log(`[CVAnalysisResults] Skipping load - already loaded/loading:`, {
-        alreadyLoaded: loadedJobId === job.id,
-        isCurrentlyLoading: isLoading
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[CVAnalysisResults] Skipping load - already loaded/loading:`, {
+          alreadyLoaded: loadedJobId === job.id,
+          isCurrentlyLoading: isLoading
+        });
+      }
     }
   }, [job.id, isLoading, loadAnalysisAndRecommendations, loadedJobId]); // Keep dependency simple - enhanced logic handles StrictMode
 
@@ -698,13 +741,15 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
           <div className="flex-shrink-0">
             <button
               onClick={() => {
-                console.log('🪄 Magic Transform clicked! Current state:', {
-                  recommendationsLength: recommendations.length,
-                  magicSelectedRecsLength: magicSelectedRecs.length,
-                  isMagicTransforming,
-                  recommendations: recommendations.map(r => ({ id: r.id, title: r.title, priority: r.priority })),
-                  magicSelectedRecs: magicSelectedRecs.map(r => ({ id: r.id, title: r.title, priority: r.priority })),
-                });
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('🪄 Magic Transform clicked! Current state:', {
+                    recommendationsLength: recommendations.length,
+                    magicSelectedRecsLength: magicSelectedRecs.length,
+                    isMagicTransforming,
+                    recommendations: recommendations.map(r => ({ id: r.id, title: r.title, priority: r.priority })),
+                    magicSelectedRecs: magicSelectedRecs.map(r => ({ id: r.id, title: r.title, priority: r.priority })),
+                  });
+                }
                 handleMagicTransform();
               }}
               disabled={isMagicTransforming || magicSelectedRecs.length === 0 || recommendations.length === 0}
@@ -1088,7 +1133,9 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                     }
                   } else {
                     // No recommendations selected - just continue to preview
-                    console.log('No recommendations selected, proceeding to preview');
+                    if (process.env.NODE_ENV === 'development') {
+                      console.warn('No recommendations selected, proceeding to preview');
+                    }
                   }
                   
                   // Store recommendations for preview page

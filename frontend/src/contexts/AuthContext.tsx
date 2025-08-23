@@ -165,7 +165,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        console.log('🔍 Checking for redirect result...');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🔍 Checking for redirect result...');
+        }
         
         // Add a timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => 
@@ -178,19 +180,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ]);
         
         if (result && typeof result === 'object' && 'user' in result) {
-          console.log('✅ Google redirect sign-in successful:', {
-            email: result.user.email,
-            uid: result.user.uid,
-            displayName: result.user.displayName
-          });
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('✅ Google redirect sign-in successful:', {
+              email: result.user.email,
+              uid: result.user.uid,
+              displayName: result.user.displayName
+            });
+          }
           
           // User just signed in via redirect
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
-            console.log('🔑 Processing Google access token...');
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('🔑 Processing Google access token...');
+            }
             await storeGoogleTokens(result.user.uid, credential.accessToken);
             setHasCalendarPermissions(true);
-            console.log('✅ Google calendar permissions granted');
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('✅ Google calendar permissions granted');
+            }
           }
           
           // Clear any previous errors
@@ -198,10 +206,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Force a user state update (redundant but ensures consistency)
           setUser(result.user);
-          console.log('👤 User state manually updated');
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('👤 User state manually updated');
+          }
           
         } else {
-          console.log('ℹ️ No redirect result found - user likely navigated directly');
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('ℹ️ No redirect result found - user likely navigated directly');
+          }
         }
       } catch (error) {
         console.error('[handleRedirectResult] Error:', error);
@@ -222,11 +234,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔄 Auth state changed:', user ? {
-        email: user.email,
-        uid: user.uid,
-        displayName: user.displayName
-      } : 'User signed out');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('🔄 Auth state changed:', user ? {
+          email: user.email,
+          uid: user.uid,
+          displayName: user.displayName
+        } : 'User signed out');
+      }
       
       setUser(user);
       setLoading(false); // Ensure loading is cleared when auth state resolves

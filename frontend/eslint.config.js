@@ -80,13 +80,21 @@ export default tseslint.config(
     }
   },
   
-  // Configuration for test files
+  // Configuration for test files and debugging files
   {
-    files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
+    files: [
+      '**/*.test.{ts,tsx}', 
+      '**/__tests__/**/*.{ts,tsx}',
+      '**/test*.{ts,tsx,js}',
+      '**/debug*.{ts,tsx,js}',
+      '**/scripts/**/*.{ts,tsx,js}',
+      '**/utils/test*.{ts,tsx,js}'
+    ],
     languageOptions: {
       globals: {
         ...globals.jest,
-        ...globals.browser
+        ...globals.browser,
+        ...globals.node
       }
     },
     rules: {
@@ -95,7 +103,11 @@ export default tseslint.config(
       // Allow non-null assertions in tests
       '@typescript-eslint/no-non-null-assertion': 'off',
       // Allow empty functions in tests (mocks)
-      '@typescript-eslint/no-empty-function': 'off'
+      '@typescript-eslint/no-empty-function': 'off',
+      // Allow console statements in test/debug files
+      'no-console': 'off',
+      // Allow unused variables in test files
+      '@typescript-eslint/no-unused-vars': 'off'
     }
   },
   
@@ -110,6 +122,22 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       'no-console': 'off'
+    }
+  },
+
+  // Configuration for root test files
+  {
+    files: ['test*.js', 'test*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser
+      }
+    },
+    rules: {
+      'no-console': 'off',
+      'no-undef': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'
     }
   }
 );
