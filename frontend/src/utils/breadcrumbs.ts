@@ -21,11 +21,29 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Analysis Results', current: true, icon: 'Eye' },
       ];
 
+    case 'role-selection':
+      return [
+        { label: 'Upload CV', path: '/', icon: 'FileText' },
+        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
+        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
+        { label: 'Role Selection', current: true, icon: 'Target' },
+      ];
+
+    case 'feature-selection':
+      return [
+        { label: 'Upload CV', path: '/', icon: 'FileText' },
+        { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
+        { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
+        { label: 'Feature Selection', current: true, icon: 'CheckCircle' },
+      ];
+
     case 'preview':
       return [
         { label: 'Upload CV', path: '/', icon: 'FileText' },
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
         { label: 'Preview & Customize', current: true, icon: 'Palette' },
       ];
 
@@ -34,6 +52,7 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Upload CV', path: '/', icon: 'FileText' },
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
         { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: 'Palette' },
         { label: 'Template Selection', current: true, icon: 'Palette' },
       ];
@@ -43,7 +62,7 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Upload CV', path: '/', icon: 'FileText' },
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: 'Palette' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
         { label: 'Feature Selection', current: true, icon: 'CheckCircle' },
       ];
 
@@ -52,7 +71,8 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Upload CV', path: '/', icon: 'FileText' },
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
-        { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: 'Palette' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
+        { label: 'Feature Selection', path: jobId ? `/feature-select/${jobId}` : undefined, icon: 'CheckCircle' },
         { label: 'Final Results', current: true, icon: 'CheckCircle' },
       ];
 
@@ -61,6 +81,7 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Upload CV', path: '/', icon: 'FileText' },
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
+        { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
         { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: 'Palette' },
         { label: 'Keyword Optimization', current: true, icon: 'BarChart3' },
       ];

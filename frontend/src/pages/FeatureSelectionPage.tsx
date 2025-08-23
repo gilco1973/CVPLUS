@@ -246,8 +246,8 @@ export const FeatureSelectionPage = () => {
       <Header 
         currentPage="feature-selection" 
         jobId={jobId} 
-        title="Customize Your CV" 
-        subtitle="Select the features you want in your enhanced CV"
+        title="Feature Selection" 
+        subtitle="Choose features to enhance your CV"
         variant="dark" 
       />
       
@@ -285,7 +285,7 @@ export const FeatureSelectionPage = () => {
             
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold animate-pulse">
-                3
+                4
               </div>
               <div>
                 <div className="text-cyan-400 font-semibold">Select Features</div>
@@ -297,7 +297,7 @@ export const FeatureSelectionPage = () => {
             
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 font-bold">
-                4
+                5
               </div>
               <div>
                 <div className="text-gray-400 font-semibold">Generate CV</div>

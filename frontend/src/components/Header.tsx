@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
                         ? 'bg-primary-100 text-primary-700' 
                         : 'bg-white/20 text-white'
                     }`}>
-                      {getStepNumber(currentPage)}/4
+                      {getStepNumber(currentPage)}/5
                     </span>
                   </div>
                 )}
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {currentPage && (
                   <div className="flex items-center space-x-2 text-sm">
                     <span className={variant === 'default' ? 'text-gray-600' : 'text-gray-200'}>
-                      Step {getStepNumber(currentPage)} of 4:
+                      Step {getStepNumber(currentPage)} of 5:
                     </span>
                     <span className={`font-medium ${variant === 'default' ? 'text-primary-600' : 'text-primary-200'}`}>
                       {getStepLabel(currentPage)}
@@ -209,16 +209,20 @@ const getStepNumber = (currentPage: string): string => {
       return '1';
     case 'analysis':
       return '2';
-    case 'preview':
+    case 'role-selection':
       return '3';
+    case 'feature-selection':
+      return '4'; // Feature selection is step 4
+    case 'preview':
+      return '3a'; // Preview & Customize (alternative to role selection)
     case 'templates':
-      return '3a'; // Templates are sub-step of customization
+      return '4a'; // Templates are sub-step of customization
     case 'keywords':
-      return '3b'; // Keywords are sub-step of customization
+      return '4b'; // Keywords are sub-step of customization
     case 'results':
-      return '4'; // Results are step 4 in the complete flow
+      return '4'; // Feature selection is step 4 (legacy)
     case 'final-results':
-      return '4'; // Final results are also step 4
+      return '5'; // Final results is step 5
     default:
       return '1';
   }
@@ -230,6 +234,10 @@ const getStepLabel = (currentPage: string): string => {
       return 'Processing CV';
     case 'analysis':
       return 'Analysis Results';
+    case 'role-selection':
+      return 'Role Selection';
+    case 'feature-selection':
+      return 'Feature Selection';
     case 'preview':
       return 'Preview & Customize';
     case 'templates':
@@ -237,7 +245,7 @@ const getStepLabel = (currentPage: string): string => {
     case 'keywords':
       return 'Keyword Optimization';
     case 'results':
-      return 'Final Results';
+      return 'Feature Selection'; // Legacy support
     case 'final-results':
       return 'Your Enhanced CV';
     default:

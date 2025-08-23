@@ -147,6 +147,11 @@ export {
   generateLanguageCertificate
 } from './functions/languageProficiency';
 
+// Export external data integration functions
+export {
+  enrichCVWithExternalData
+} from './functions/enrichCVWithExternalData';
+
 // Export testimonials functions
 export {
   generateTestimonialsCarousel,

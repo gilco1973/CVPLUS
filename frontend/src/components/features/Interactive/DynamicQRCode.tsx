@@ -87,12 +87,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [analytics, setAnalytics] = useState<QRCodeAnalytics | null>(null);
-  const [selectedUrl, setSelectedUrl] = useState<string>(
-    qrData?.qrCode?.value || basicData?.url || ''
-  );
-  const [showSettings, setShowSettings] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
+  
   // Enhanced data fetching using hooks
   const {
     data: fetchedQRData,
@@ -106,13 +101,20 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
     params: { profileId }
   });
 
-  // Firebase analytics function
-  const trackQRScan = httpsCallable(functions, 'trackQRCodeScan');
-  const getQRAnalytics = httpsCallable(functions, 'getQRCodeAnalytics');
-
   // Use enhanced data if available, fall back to basic data
   const qrData = enhancedData || fetchedQRData;
   const basicData = data;
+  
+  // Initialize selectedUrl after qrData is defined
+  const [selectedUrl, setSelectedUrl] = useState<string>(
+    qrData?.qrCode?.value || basicData?.url || ''
+  );
+  const [showSettings, setShowSettings] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Firebase analytics function
+  const trackQRScan = httpsCallable(functions, 'trackQRCodeScan');
+  const getQRAnalytics = httpsCallable(functions, 'getQRCodeAnalytics');
 
   // Generate QR code options
   const getQRCodeOptions = useCallback((): QRCodeOptions => {

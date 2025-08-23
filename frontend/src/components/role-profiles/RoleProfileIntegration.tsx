@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Target, Users, Sparkles, TrendingUp, ChevronRight, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Target, Users, Sparkles, TrendingUp, ChevronRight, RefreshCw, ArrowLeft, CheckCircle } from 'lucide-react';
 import { RoleProfileSelector } from './RoleProfileSelector';
 import { RoleBasedRecommendations } from './RoleBasedRecommendations';
 import type { Job } from '../../services/cvService';
@@ -30,15 +30,23 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
   const [activeTab, setActiveTab] = useState<'detection' | 'recommendations'>('detection');
   const [isRoleDetected, setIsRoleDetected] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false); // NEW: Track user interaction
 
   // Handle role selection from the selector
   const handleRoleSelected = (roleProfile: RoleProfile | null, isDetected: boolean) => {
+    console.log('🎯 [RoleSelection] Role selected:', { roleProfile: roleProfile?.name, isDetected, userHasInteracted });
+    
     setSelectedRole(roleProfile);
     setIsRoleDetected(isDetected);
     
-    // Automatically switch to recommendations tab if role is selected
-    if (roleProfile) {
+    // FIXED: Don't automatically switch to recommendations tab
+    // Only switch if user has explicitly interacted (clicked a button)
+    if (roleProfile && userHasInteracted) {
+      console.log('🎯 [RoleSelection] Switching to recommendations tab (user interaction detected)');
       setActiveTab('recommendations');
+    } else if (roleProfile && !userHasInteracted) {
+      console.log('🎯 [RoleSelection] Role detected but staying on detection tab (no user interaction yet)');
+      // Stay on detection tab to allow user to see the detected role and manually proceed
     }
   };
 
@@ -55,8 +63,30 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
     setRecommendations(recs);
   };
 
+  // NEW: Handle manual tab switching (indicates user interaction)
+  const handleTabChange = (value: string) => {
+    console.log('🎯 [RoleSelection] User manually switching tabs:', value);
+    setUserHasInteracted(true); // Mark that user has interacted
+    setActiveTab(value as 'detection' | 'recommendations');
+  };
+
+  // NEW: Handle manual proceed to recommendations
+  const handleProceedToRecommendations = () => {
+    console.log('🎯 [RoleSelection] User manually proceeding to recommendations');
+    setUserHasInteracted(true);
+    setActiveTab('recommendations');
+  };
+
   // Handle continue to preview with role context
   const handleContinueToPreview = (selectedRecommendations: string[]) => {
+    // FIXED: Only proceed if user has explicitly interacted
+    if (!userHasInteracted) {
+      console.log('🚫 [RoleSelection] Preventing auto-navigation - no user interaction yet');
+      return;
+    }
+    
+    console.log('✅ [RoleSelection] User confirmed - proceeding to feature selection');
+    
     const roleContext = {
       selectedRole,
       detectedRole,
@@ -154,7 +184,7 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
       </div>
 
       {/* Enhanced Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'detection' | 'recommendations')}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2 bg-gray-800/70 backdrop-blur-sm border border-gray-600 rounded-xl p-1">
           <TabsTrigger 
             value="detection" 
@@ -205,7 +235,7 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
             />
           </div>
           
-          {/* Enhanced Quick Navigation */}
+          {/* Enhanced Quick Navigation - FIXED: Now requires manual interaction */}
           {hasRoleSelected && (
             <div className="animate-slide-up">
               <Card className="border-green-500/40 bg-gradient-to-r from-green-900/30 to-emerald-900/20 backdrop-blur-sm">
@@ -235,7 +265,7 @@ export const RoleProfileIntegration: React.FC<RoleProfileIntegrationProps> = ({
                     
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
-                        onClick={() => setActiveTab('recommendations')}
+                        onClick={handleProceedToRecommendations}
                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 font-semibold shadow-lg transition-all duration-300 hover:shadow-xl"
                       >
                         <Sparkles className="w-5 h-5 mr-2" />

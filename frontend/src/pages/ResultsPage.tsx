@@ -13,12 +13,12 @@ import { PodcastPlayer } from '../components/PodcastPlayer';
 import { CVPreview } from '../components/CVPreview';
 import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
 import { 
-  ResultsPageHeader,
   FeatureSelectionPanel,
   FormatSelectionPanel,
   TemplateSelection,
   useFeatureAvailability
 } from '../components/results';
+import { Header } from '../components/Header';
 import type { SelectedFeatures, SelectedFormats } from '../types/results';
 import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
@@ -320,7 +320,14 @@ export const ResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-neutral-900">
-      <ResultsPageHeader />
+      <Header 
+        currentPage="feature-selection"
+        jobId={jobId}
+        title="Feature Selection" 
+        subtitle="Choose templates and features to enhance your CV"
+        variant="dark"
+        showBreadcrumbs={true}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* PII Warning */}
