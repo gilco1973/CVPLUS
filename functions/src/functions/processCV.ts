@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { CVParser } from '../services/cvParser';
 import { PIIDetector } from '../services/piiDetector';
+import { PolicyEnforcementService } from '../services/policy-enforcement.service';
 import { corsOptions } from '../config/cors';
 import { requireGoogleAuth, updateUserLastLogin } from '../utils/auth';
 
@@ -22,13 +23,15 @@ export const processCV = onCall(
     // Update user login tracking
     await updateUserLastLogin(user.uid, user.email, user.name, user.picture);
 
-    const { jobId, fileUrl, mimeType, isUrl } = request.data;
+    const { jobId, fileUrl, mimeType, isUrl, fileName, fileSize } = request.data;
     
     console.log('ProcessCV parameters:', { 
       jobId: jobId || 'MISSING', 
       fileUrl: fileUrl ? (fileUrl.substring(0, 100) + '...') : 'MISSING',
       mimeType: mimeType || 'MISSING',
-      isUrl: isUrl
+      isUrl: isUrl,
+      fileName: fileName || 'MISSING',
+      fileSize: fileSize || 'MISSING'
     });
 
     if (!jobId || (!fileUrl && !isUrl)) {
@@ -62,10 +65,12 @@ export const processCV = onCall(
       
       const parser = new CVParser(apiKey);
       let parsedCV;
+      let cvContent = '';
 
       if (isUrl) {
         // Parse from URL
         parsedCV = await parser.parseFromURL(fileUrl, userInstructions);
+        cvContent = JSON.stringify(parsedCV); // Use parsed data as content for policy check
       } else {
         // Download file from storage
         const bucket = admin.storage().bucket();
@@ -84,15 +89,84 @@ export const processCV = onCall(
         const file = bucket.file(filePath);
         const [buffer] = await file.download();
         
+        // Convert buffer to string for policy checking
+        cvContent = buffer.toString('utf-8');
+        
         // Parse the CV
         parsedCV = await parser.parseCV(buffer, mimeType, userInstructions);
       }
+
+      // 🚨 POLICY ENFORCEMENT: Check upload policy before processing
+      const policyService = new PolicyEnforcementService();
+      
+      // Get request metadata for policy check
+      const requestInfo = {
+        ipAddress: request.rawRequest.ip || request.rawRequest.connection?.remoteAddress,
+        userAgent: request.rawRequest.headers?.['user-agent']
+      };
+
+      const policyCheckRequest = {
+        userId: user.uid,
+        cvContent: cvContent,
+        fileName: fileName || 'unknown.pdf',
+        fileSize: fileSize || buffer?.length || cvContent.length,
+        fileType: mimeType || 'application/octet-stream',
+        requestInfo
+      };
+
+      console.log('🔍 Running policy enforcement check for user:', user.uid);
+      const policyResult = await policyService.checkUploadPolicy(policyCheckRequest);
+      
+      // Handle policy violations
+      if (!policyResult.allowed) {
+        const criticalViolations = policyResult.violations.filter(v => 
+          v.severity === 'critical' || (v.severity === 'high' && v.requiresAction)
+        );
+
+        if (criticalViolations.length > 0) {
+          // Block the upload completely
+          const blockingViolation = criticalViolations[0];
+          
+          console.warn('🚨 Upload blocked due to policy violation:', {
+            userId: user.uid,
+            violationType: blockingViolation.type,
+            severity: blockingViolation.severity
+          });
+          
+          // Update job with policy violation status
+          await admin.firestore()
+            .collection('jobs')
+            .doc(jobId)
+            .set({
+              status: 'policy_violation',
+              policyViolation: {
+                type: blockingViolation.type,
+                message: blockingViolation.message,
+                severity: blockingViolation.severity,
+                details: blockingViolation.details,
+                suggestedActions: blockingViolation.suggestedActions
+              },
+              updatedAt: FieldValue.serverTimestamp()
+            }, { merge: true });
+
+          throw new Error(`Upload blocked: ${blockingViolation.message}`);
+        }
+      }
+
+      // Log policy check results (for monitoring)
+      console.log('✅ Policy check completed:', {
+        userId: user.uid,
+        allowed: policyResult.allowed,
+        violations: policyResult.violations.length,
+        warnings: policyResult.warnings.length,
+        cvHash: policyResult.metadata.cvHash.substring(0, 8) + '...'
+      });
 
       // Detect PII
       const piiDetector = new PIIDetector(apiKey);
       const piiResult = await piiDetector.detectAndMaskPII(parsedCV);
 
-      // Save parsed data with PII information and user association
+      // Save parsed data with PII information, policy results, and user association
       await admin.firestore()
         .collection('jobs')
         .doc(jobId)
@@ -105,6 +179,15 @@ export const processCV = onCall(
             recommendations: piiResult.recommendations
           },
           privacyVersion: piiResult.maskedData,
+          policyCheck: {
+            allowed: policyResult.allowed,
+            violations: policyResult.violations,
+            warnings: policyResult.warnings,
+            cvHash: policyResult.metadata.cvHash,
+            extractedNames: policyResult.metadata.extractedNames,
+            usageStats: policyResult.metadata.usageStats,
+            checkedAt: new Date()
+          },
           userId: user.uid, // Associate job with authenticated user
           userEmail: user.email,
           hasCalendarPermissions: user.hasCalendarPermissions || false,

@@ -53,5 +53,46 @@ service cloud.firestore {
       allow read: if false;
       allow write: if false;
     }
+    
+    // User subscriptions - users can read their own, functions can write
+    match /userSubscriptions/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+    }
+    
+    // CV Hash Records - functions only (for duplicate detection)
+    match /cvHashRecords/{hashId} {
+      allow read: if false;
+      allow write: if false; // Only functions can write
+    }
+    
+    // User Policy Records - users can read their own, functions can write
+    match /userPolicyRecords/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Only functions can write
+      
+      // Policy check history - users can read their own
+      match /checkHistory/{checkId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+      
+      // Upload history - users can read their own
+      match /uploadHistory/{uploadId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
+    
+    // Policy Violations - admin/functions only
+    match /policyViolations/{violationId} {
+      allow read: if false;
+      allow write: if false; // Only functions can write
+    }
+    
+    // User Verified Names - users can read/write their own
+    match /userVerifiedNames/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

@@ -1,6 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from './useSubscription';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase/config';
+
+interface UsageStats {
+  currentMonthUploads: number;
+  uniqueCVsThisMonth: number;
+  remainingUploads: number;
+  subscriptionStatus: 'free' | 'premium';
+  lifetimeAccess: boolean;
+  lastUpdated: Date;
+}
 
 interface PremiumStatus {
   isPremium: boolean;
@@ -9,7 +20,9 @@ interface PremiumStatus {
   features: Record<string, boolean>;
   subscriptionStatus: string;
   purchasedAt?: any;
+  usageStats: UsageStats | null;
   refreshStatus: () => Promise<void>;
+  refreshUsage: () => Promise<void>;
 }
 
 /**
@@ -24,6 +37,8 @@ export const usePremiumStatus = (): PremiumStatus => {
     features: Record<string, boolean>;
     timestamp: number;
   } | null>(null);
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
 
   // Cache premium status for 5 minutes to improve performance
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -48,11 +63,46 @@ export const usePremiumStatus = (): PremiumStatus => {
     }
   }, [subscription, isLifetimePremium, user]);
 
+  // Fetch user usage statistics
+  const fetchUsageStats = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setUsageLoading(true);
+      const getUserUsageStats = httpsCallable(functions, 'getUserUsageStats');
+      const result = await getUserUsageStats({ userId: user.uid });
+      
+      if (result.data) {
+        setUsageStats({
+          ...result.data as any,
+          lastUpdated: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching usage stats:', error);
+      setUsageStats(null);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, [user]);
+
   // Refresh premium status with cache invalidation
   const refreshStatus = useCallback(async () => {
     setCachedStatus(null); // Invalidate cache
-    await refreshSubscription();
-  }, [refreshSubscription]);
+    await Promise.all([refreshSubscription(), fetchUsageStats()]);
+  }, [refreshSubscription, fetchUsageStats]);
+
+  // Refresh usage statistics only
+  const refreshUsage = useCallback(async () => {
+    await fetchUsageStats();
+  }, [fetchUsageStats]);
+
+  // Initial fetch of usage stats when user logs in
+  useEffect(() => {
+    if (user && !usageStats) {
+      fetchUsageStats();
+    }
+  }, [user, usageStats, fetchUsageStats]);
 
   // Real-time status monitoring for premium feature changes
   useEffect(() => {
@@ -62,23 +112,27 @@ export const usePremiumStatus = (): PremiumStatus => {
     const interval = setInterval(() => {
       if (!isCacheValid() && user) {
         refreshSubscription();
+        // Also refresh usage stats every cache cycle
+        fetchUsageStats();
       }
     }, CACHE_DURATION);
 
     return () => clearInterval(interval);
-  }, [user, isCacheValid, refreshSubscription]);
+  }, [user, isCacheValid, refreshSubscription, fetchUsageStats]);
 
   // Return cached data if available and valid, otherwise return live data
   const shouldUseCached = isCacheValid() && cachedStatus && !isLoading;
   
   return {
     isPremium: shouldUseCached ? cachedStatus.isPremium : isLifetimePremium,
-    isLoading: isLoading && !shouldUseCached,
+    isLoading: (isLoading && !shouldUseCached) || usageLoading,
     error,
     features: shouldUseCached ? cachedStatus.features : (subscription?.features || {}),
     subscriptionStatus: subscription?.subscriptionStatus || 'free',
     purchasedAt: subscription?.purchasedAt,
-    refreshStatus
+    usageStats,
+    refreshStatus,
+    refreshUsage
   };
 };
 
@@ -149,5 +203,89 @@ export const usePremiumIndicator = () => {
     statusColor: getStatusColor(),
     featureCount: getFeatureCount(),
     features
+  };
+};
+
+/**
+ * Hook for usage tracking and limit management
+ */
+export const useUsageLimits = () => {
+  const { usageStats, isPremium, isLoading, refreshUsage } = usePremiumStatus();
+  
+  const canUpload = useCallback(() => {
+    if (!usageStats) return false;
+    return usageStats.remainingUploads > 0;
+  }, [usageStats]);
+  
+  const getRemainingUploads = useCallback(() => {
+    if (!usageStats) return 0;
+    return usageStats.remainingUploads;
+  }, [usageStats]);
+  
+  const getUsagePercentage = useCallback(() => {
+    if (!usageStats) return 0;
+    const maxUploads = isPremium ? Infinity : 3; // Free plan: 3, Premium: unlimited
+    if (maxUploads === Infinity) return 0;
+    return Math.min(100, (usageStats.currentMonthUploads / maxUploads) * 100);
+  }, [usageStats, isPremium]);
+  
+  const isApproachingLimit = useCallback(() => {
+    if (!usageStats || isPremium) return false;
+    return usageStats.remainingUploads <= 1;
+  }, [usageStats, isPremium]);
+  
+  return {
+    usageStats,
+    canUpload: canUpload(),
+    remainingUploads: getRemainingUploads(),
+    usagePercentage: getUsagePercentage(),
+    isApproachingLimit: isApproachingLimit(),
+    isLoading,
+    refreshUsage
+  };
+};
+
+/**
+ * Hook for policy violation alerts and warnings
+ */
+export const usePolicyStatus = () => {
+  const { user } = useAuth();
+  const [violations, setViolations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const fetchViolations = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const getUserViolations = httpsCallable(functions, 'getUserPolicyViolations');
+      const result = await getUserViolations({ userId: user.uid });
+      
+      if (result.data) {
+        setViolations(result.data as any[]);
+      }
+    } catch (error) {
+      console.error('Error fetching policy violations:', error);
+      setViolations([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+  
+  useEffect(() => {
+    if (user) {
+      fetchViolations();
+    }
+  }, [user, fetchViolations]);
+  
+  const hasActiveViolations = violations.some(v => v.status === 'active');
+  const hasWarnings = violations.some(v => v.severity === 'low' || v.severity === 'medium');
+  
+  return {
+    violations,
+    hasActiveViolations,
+    hasWarnings,
+    isLoading,
+    refreshViolations: fetchViolations
   };
 };

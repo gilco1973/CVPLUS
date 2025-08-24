@@ -314,3 +314,12 @@ export {
   applyRoleProfile,
   getRoleBasedRecommendations
 } from './functions/role-profile.functions';
+
+// Export policy enforcement functions
+export {
+  getUserUsageStats,
+} from './functions/policies/getUserUsageStats';
+
+export {
+  getUserPolicyViolations,
+} from './functions/policies/getUserPolicyViolations';
