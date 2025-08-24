@@ -294,7 +294,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
                 <div className="bg-red-900/20 rounded-lg p-3">
                   <h5 className="text-sm font-medium text-red-400 mb-2">Missing Competitive Keywords</h5>
                   <div className="flex flex-wrap gap-2">
-                    {(enhancedResult.advancedScore?.competitorBenchmark?.gapAnalysis || []).slice(0, 8).map((keyword: any, index: any) => (
+                    {(enhancedResult.advancedScore?.competitorBenchmark?.gapAnalysis || []).slice(0, 8).map((keyword: string, index: number) => (
                       <span key={index} className="text-xs px-2 py-1 bg-red-500/20 text-red-300 rounded">
                         {keyword}
                       </span>
@@ -564,7 +564,7 @@ export const ATSScore = (props: ATSScoreComponentProps) => {
               </span>
             </button>
             <p className="text-xs text-gray-400">
-              Potential improvement: +{enhancedResult.advancedScore.recommendations.reduce((sum: number, rec: any) => sum + (typeof rec === 'object' ? rec.estimatedScoreImprovement : 5), 0)} points
+              Potential improvement: +{enhancedResult.advancedScore.recommendations.reduce((sum: number, rec: string | { estimatedScoreImprovement?: number }) => sum + (typeof rec === 'object' ? rec.estimatedScoreImprovement || 5 : 5), 0)} points
             </p>
           </div>
         ) : (

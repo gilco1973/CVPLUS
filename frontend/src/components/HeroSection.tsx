@@ -67,7 +67,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [showVideoControls, setShowVideoControls] = useState(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [showFeatures, setShowFeatures] = useState(false);
+  const [_showFeatures, _setShowFeatures] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -144,9 +144,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     videoRef.current.currentTime = newTime;
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
+  const _formatTime = (_time: number) => {
+    const minutes = Math.floor(_time / 60);
+    const seconds = Math.floor(_time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 

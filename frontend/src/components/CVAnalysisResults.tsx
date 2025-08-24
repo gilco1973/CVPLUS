@@ -326,7 +326,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         }
       });
       
-      if (backendRecs && Array.isArray(backendRecs) && (backendRecs as any[]).length > 0) {
+      if (backendRecs && Array.isArray(backendRecs) && backendRecs.length > 0) {
         const validBackendRecs: PrioritizedRecommendation[] = backendRecs as PrioritizedRecommendation[];
         if (process.env.NODE_ENV === 'development') {
           console.warn(`🎉 SUCCESS! Found ${validBackendRecs.length} recommendations to process`);

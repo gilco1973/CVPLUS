@@ -2,18 +2,19 @@
  * Results Page - Refactored with Modular Components
  */
 
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Wand2, Clock } from 'lucide-react';
 import { getJob, generateCV } from '../services/cvService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
 import type { Job } from '../types/cv';
 import { PIIWarning } from '../components/PIIWarning';
-import { PodcastPlayer } from '../components/PodcastPlayer';
+// Lazy load heavy components for better bundle size
+const PodcastPlayer = React.lazy(() => import('../components/PodcastPlayer').then(m => ({ default: m.PodcastPlayer })));
+const FeatureSelectionPanel = React.lazy(() => import('../components/results/FeatureSelectionPanel').then(m => ({ default: m.FeatureSelectionPanel })));
 import { CVPreview } from '../components/CVPreview';
-import { GeneratedCVDisplay } from '../components/GeneratedCVDisplay';
+import { GeneratedCVDisplayLazy } from '../components/GeneratedCVDisplayLazy';
 import { 
-  FeatureSelectionPanel,
   FormatSelectionPanel,
   TemplateSelection,
   useFeatureAvailability
@@ -381,11 +382,24 @@ export const ResultsPage = () => {
               setSelectedTemplate={setSelectedTemplate}
             />
             
-            <FeatureSelectionPanel
-              selectedFeatures={selectedFeatures}
-              setSelectedFeatures={setSelectedFeatures}
-              featureAvailability={featureAvailability}
-            />
+            <Suspense fallback={
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[1,2,3,4,5,6].map(i => (
+                      <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            }>
+              <FeatureSelectionPanel
+                selectedFeatures={selectedFeatures}
+                setSelectedFeatures={setSelectedFeatures}
+                featureAvailability={featureAvailability}
+              />
+            </Suspense>
             
             <FormatSelectionPanel
               selectedFormats={selectedFormats}
@@ -434,12 +448,21 @@ export const ResultsPage = () => {
 
           {/* Right Column - Preview */}
           <div className="space-y-6">
-            <PodcastPlayer jobId={job.id} />
+            <Suspense fallback={
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            }>
+              <PodcastPlayer jobId={job.id} />
+            </Suspense>
             
             {job.generatedCV ? (
               <>
-                {console.log('🖥️ [RENDER DEBUG] Showing GeneratedCVDisplay instead of CVPreview - this prevents dynamic updates')}
-                <GeneratedCVDisplay job={job} />
+                {console.log('🖥️ [RENDER DEBUG] Showing GeneratedCVDisplayLazy instead of CVPreview - this prevents dynamic updates')}
+                <GeneratedCVDisplayLazy job={job} />
               </>
             ) : (
               <>

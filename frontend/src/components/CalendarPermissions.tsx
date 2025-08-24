@@ -26,7 +26,7 @@ export const CalendarPermissions: React.FC<CalendarPermissionsProps> = ({
       await requestCalendarPermissions();
       toast.success('Calendar permissions granted! You can now sync career milestones.');
       onPermissionsGranted?.();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to grant calendar permissions. Please try again.');
     } finally {
       setIsRequesting(false);

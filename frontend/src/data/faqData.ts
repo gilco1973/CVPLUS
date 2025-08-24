@@ -53,7 +53,7 @@ export const FAQ_CATEGORIES: FAQCategory[] = [
     description: 'Subscription plans, billing information, and premium features',
     icon: 'dollar-sign',
     color: 'yellow',
-    count: 9
+    count: 6
   },
   {
     id: createCategoryId('integrations'),
@@ -331,18 +331,22 @@ Upload tip: For best results, use PDF or Word formats with standard fonts and cl
     answer: `CVPlus offers flexible pricing plans to meet various professional needs:
 
 **Free Plan - $0:**
-• AI CV Analysis & Enhancement
-• Professional CV Templates
-• ATS Optimization & Scoring
-• Skills Visualization Charts
-• Interactive Career Timeline
-• Basic QR Code Generation
-• Portfolio Gallery
-• Multi-format Export (PDF, DOCX, HTML)
-• Basic Analytics & Tracking
+• Up to 3 CV uploads per month
+• Light parsing with basic AI suggestions (clarity, grammar, structure)
+• Basic formatting only
+• Always free
+• Exports are limited (plain text or watermarked)
+• Intended for personal use only
 
-**Premium Plan - $49 One-time:**
-• Everything in Free Forever
+**Lifetime Premium - $49 One-time:**
+• Unlimited refinements on your own CV
+• Up to 3 unique CVs per month (unlimited iterations of each)
+• Full parsing + ATS optimization
+• Premium templates & layouts
+• AI-generated tailored cover letters
+• Career insights & industry-specific keyword suggestions
+• Full document history & downloads
+• Export to PDF and HTML formats
 • Personal Web Portal (Custom URL)
 • AI Chat Assistant (RAG-powered)
 • AI Career Podcast Generation
@@ -353,11 +357,148 @@ Upload tip: For best results, use PDF or Word formats with standard fonts and cl
 **Payment Options:**
 • One-time payment for lifetime premium access
 • All major credit cards accepted via Stripe
-• Secure payment processing`,
+• PayPal support available
+• Secure payment processing via Stripe`,
     category: createCategoryId('pricing-billing'),
-    tags: ['pricing', 'plans', 'subscription', 'free trial', 'enterprise'],
+    tags: ['pricing', 'plans', 'lifetime', 'free trial', 'premium'],
     priority: 'high',
-    lastUpdated: '2024-08-17',
+    lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-002'),
+    question: 'Can I use my account to improve a friend\'s CV?',
+    answer: `No. Each account is licensed for personal use only. Uploading CVs that belong to someone else is against our Fair Use Policy. If you're a recruiter or coach, please explore our Professional Plan.
+
+**Why This Policy Exists:**
+• Ensures fair usage for all users
+• Protects privacy and data security
+• Maintains service quality and availability
+• Prevents account sharing and misuse
+
+**For Professional Use:**
+If you are a career coach, recruiter, or agency, please contact us about a Professional Plan. This ensures fair usage and provides higher-volume tools designed for professional needs.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['fair use', 'personal use', 'professional plan', 'policy'],
+    priority: 'high',
+    lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-003'),
+    question: 'What does "3 unique CVs per month" mean?',
+    answer: `This means you can work on up to 3 completely different CV versions per month. For example:
+• One tailored for marketing roles
+• One for project management positions  
+• One for tech roles
+
+**Key Points:**
+• **Unlimited refinements** within each CV - polish endlessly
+• **3 different versions/identities** per month maximum
+• **Resets monthly** - you get 3 fresh slots each month
+• **Fair use enforcement** - prevents account sharing
+
+**Examples of "Unique CVs":**
+✅ Marketing CV vs. Sales CV vs. Product Management CV
+✅ Senior Developer CV vs. Tech Lead CV vs. Engineering Manager CV
+✅ Different career focuses or major role changes
+
+**Not Considered "Unique":**
+❌ Minor tweaks to the same CV
+❌ Updating contact information only
+❌ Small formatting changes
+❌ Adding one new job to existing CV`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['unique CVs', 'monthly limit', 'refinements', 'fair use'],
+    priority: 'high',
+    lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-004'),
+    question: 'Why not just use ChatGPT for CV improvements?',
+    answer: `ChatGPT is general-purpose. Our AI is built specifically for CVs with specialized features:
+
+**CVPlus Advantages:**
+• **ATS Optimization** - Score and optimize for Applicant Tracking Systems
+• **Industry-Specific Keywords** - Tailored recommendations by field
+• **Professional Templates** - ATS-friendly, modern designs
+• **Format Preservation** - Maintains your CV structure and styling
+• **Career Insights** - Industry benchmarking and salary data
+• **Unlimited Refinements** - Perfect your CV over time
+• **Export Options** - PDF, HTML, and multiple formats
+• **One-Time Payment** - $49 lifetime vs. ongoing ChatGPT costs
+
+**What ChatGPT Can't Do:**
+❌ ATS compatibility scoring
+❌ Industry-specific optimization
+❌ Professional template application
+❌ Format-aware editing
+❌ Career progression analysis
+❌ Direct export to job-ready formats
+❌ Unlimited iterations without ongoing costs
+
+**Bottom Line:**
+ChatGPT rewrites text. CVPlus optimizes careers.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['ChatGPT comparison', 'ATS optimization', 'specialized AI', 'value proposition'],
+    priority: 'medium',
+    lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-005'),
+    question: 'Can I edit the PDF or HTML after I download it?',
+    answer: `Yes, technically you can edit exported files — but they are licensed for your personal use only.
+
+**Usage Rights:**
+✅ **Personal use** - Edit for your own job applications
+✅ **Format adjustments** - Modify layout, fonts, colors for personal preference
+✅ **Content updates** - Add new experiences, update contact information
+✅ **Multiple versions** - Create variations for different job applications
+
+**Prohibited Uses:**
+❌ **Representing others** - Editing to represent another person violates policy
+❌ **Commercial redistribution** - Sharing edited files as a service
+❌ **Template reselling** - Using our designs commercially
+❌ **Account sharing** - Letting others use files as if they created them
+
+**Consequences:**
+Violating usage terms may result in account suspension and loss of access to your data and premium features.
+
+**For Professional Use:**
+If you need to create CVs for clients, please contact us about our Professional Plan which includes appropriate licensing for business use.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['file editing', 'usage rights', 'personal use', 'licensing'],
+    priority: 'medium',
+    lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-006'),
+    question: 'Why are free exports limited?',
+    answer: `Because parsing and exporting CVs costs us money every time. To keep the Free Plan available for everyone, we limit exports and reserve full PDF/HTML downloads for Premium users.
+
+**Free Plan Export Options:**
+• Plain text format
+• Watermarked PDF (CVPlus branding)
+• Basic formatting only
+• Limited to 3 exports per month
+
+**Premium Plan Export Options:**
+• Full PDF with complete formatting
+• Professional HTML version
+• Multiple format options
+• Unlimited exports
+• No watermarks or branding
+• High-resolution output
+
+**Why This Model Works:**
+• **Sustainable Service** - Covers processing costs
+• **Fair Access** - Everyone gets basic features
+• **Premium Value** - Advanced users get full features
+• **No Ads** - Clean experience for all users
+
+**Running AI on CVs costs us money every time** — which is why we limit free usage. Our Lifetime Premium plan removes those limits for a single $49 payment.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['export limitations', 'free plan', 'premium features', 'sustainability'],
+    priority: 'medium',
+    lastUpdated: '2024-08-24',
   },
 
   // Integrations Category

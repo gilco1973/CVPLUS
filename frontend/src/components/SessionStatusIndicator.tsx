@@ -60,7 +60,7 @@ export const SessionStatusIndicator: React.FC<SessionStatusIndicatorProps> = ({
     
     const mainSteps = ['upload', 'processing', 'analysis', 'features', 'templates', 'preview', 'results'];
     const completedSteps = mainSteps.filter(step => 
-      session.completedSteps.includes(step as any)
+      session.completedSteps.includes(step as 'upload' | 'processing' | 'analysis' | 'features' | 'templates' | 'preview' | 'results')
     );
     
     return Math.round((completedSteps.length / mainSteps.length) * 100);

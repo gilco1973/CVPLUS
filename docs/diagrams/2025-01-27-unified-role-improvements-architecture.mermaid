@@ -1,0 +1,132 @@
+```mermaid
+graph TB
+    subgraph "CURRENT FLOW (3 Steps)"
+        A1[CVAnalysisPage<br/>Analysis Results] --> B1[RoleSelectionPage<br/>Role Detection & Selection]
+        B1 --> C1[FeatureSelectionPage<br/>Feature Selection]
+    end
+
+    subgraph "PROPOSED UNIFIED FLOW (2 Steps)"
+        A2[UnifiedCVAnalysisPage<br/>Integrated Experience] --> C2[FeatureSelectionPage<br/>Feature Selection]
+    end
+
+    subgraph "UnifiedCVAnalysisPage Architecture"
+        direction TB
+        UA[UnifiedCVAnalysisPage] --> ATS[ATSAnalysisSection]
+        UA --> RDS[RoleDetectionSection]
+        UA --> RIS[RoleBasedImprovementsSection]
+        UA --> ABS[ActionButtonsSection]
+        
+        ATS --> ATS1[ATS Score Display]
+        ATS --> ATS2[Issues & Suggestions]
+        ATS --> ATS3[Improvement Predictions]
+        
+        RDS --> RDS1[Auto Role Detection]
+        RDS --> RDS2[Confidence Indicators]
+        RDS --> RDS3[Manual Override]
+        RDS --> RDS4[Skip Option]
+        
+        RIS --> RIS1[Role-Specific Recommendations]
+        RIS --> RIS2[Impact Scoring]
+        RIS --> RIS3[Selection Interface]
+        RIS --> RIS4[Preview Changes]
+        
+        ABS --> ABS1[Enhanced Magic Transform]
+        ABS --> ABS2[Continue to Features]
+    end
+
+    subgraph "State Management Architecture"
+        direction LR
+        SM[UnifiedAnalysisState] --> ATSM[ATS Analysis Data]
+        SM --> RM[Role Management Data]
+        SM --> REC[Unified Recommendations]
+        SM --> UI[UI State Management]
+        
+        ATSM --> ATSM1[Current Score]
+        ATSM --> ATSM2[Predicted Score]
+        ATSM --> ATSM3[Issues List]
+        
+        RM --> RM1[Detected Role]
+        RM --> RM2[Selected Role]
+        RM --> RM3[Confidence Score]
+        
+        REC --> REC1[ATS Recommendations]
+        REC --> REC2[Role-Based Recommendations]
+        REC --> REC3[Unified Priority Scoring]
+        
+        UI --> UI1[Section Visibility]
+        UI --> UI2[Loading States]
+        UI --> UI3[Selection Tracking]
+    end
+
+    subgraph "Component Size Compliance (200-line max)"
+        direction TB
+        CVA[CVAnalysisResults<br/>1,280 lines] -.->|Split into| CVA1[ATSAnalysisSection<br/>~180 lines]
+        CVA -.->|Split into| CVA2[RecommendationsSection<br/>~150 lines]
+        CVA -.->|Split into| CVA3[MagicTransformSection<br/>~100 lines]
+        CVA -.->|Split into| CVA4[UnifiedContainer<br/>~200 lines]
+        
+        RPI[RoleProfileIntegration<br/>460 lines] -.->|Split into| RPI1[RoleDetectionCard<br/>~120 lines]
+        RPI -.->|Split into| RPI2[RoleSelectionDropdown<br/>~80 lines]
+        RPI -.->|Split into| RPI3[RoleRecommendationsPanel<br/>~150 lines]
+        RPI -.->|Split into| RPI4[RoleContainer<br/>~110 lines]
+    end
+
+    subgraph "User Experience Flow"
+        direction LR
+        UX1[User uploads CV] --> UX2[ATS Analysis displays]
+        UX2 --> UX3[Role auto-detected]
+        UX3 --> UX4{Role confident?}
+        UX4 -->|Yes| UX5[Show role-based recommendations]
+        UX4 -->|No| UX6[Manual role selection]
+        UX6 --> UX5
+        UX5 --> UX7[User selects improvements]
+        UX7 --> UX8[Enhanced Magic Transform or Continue]
+        UX8 --> UX9[Feature Selection Page]
+    end
+
+    subgraph "Progressive Disclosure Strategy"
+        direction TB
+        PD1[ATS Analysis] --> PD2[Role Detection Auto-expand]
+        PD2 --> PD3[Recommendations Update]
+        PD3 --> PD4[Action Buttons Activate]
+        
+        PD1 -.->|Always Visible| PD1
+        PD2 -.->|High Confidence| PD2E[Expand Automatically]
+        PD2 -.->|Low Confidence| PD2M[Manual Trigger]
+        PD3 -.->|Role Selected| PD3U[Update Recommendations]
+        PD4 -.->|Selections Made| PD4A[Enable Actions]
+    end
+
+    subgraph "Integration Points"
+        direction LR
+        IP1[Existing Job Service] --> IP2[Role Profile System]
+        IP2 --> IP3[Recommendation Engine]
+        IP3 --> IP4[ATS Analysis Service]
+        IP4 --> IP5[Magic Transform Service]
+        
+        IP1 -.->|Maintains| IP1A[Current API Contract]
+        IP2 -.->|Preserves| IP2A[Role Data Structures]
+        IP3 -.->|Enhances| IP3A[Unified Scoring]
+        IP4 -.->|Integrates| IP4A[Combined Analysis]
+        IP5 -.->|Enhances| IP5A[Role-Aware Transform]
+    end
+
+    %% Styling
+    classDef currentFlow fill:#ffebee,stroke:#c62828
+    classDef proposedFlow fill:#e8f5e8,stroke:#2e7d32
+    classDef component fill:#e3f2fd,stroke:#1976d2
+    classDef state fill:#fff3e0,stroke:#f57c00
+    classDef compliance fill:#f3e5f5,stroke:#7b1fa2
+    classDef ux fill:#e0f2f1,stroke:#00695c
+    classDef progressive fill:#fce4ec,stroke:#c2185b
+    classDef integration fill:#fff8e1,stroke:#f9a825
+
+    class A1,B1,C1 currentFlow
+    class A2,C2 proposedFlow
+    class UA,ATS,RDS,RIS,ABS component
+    class SM,ATSM,RM,REC,UI state
+    class CVA1,CVA2,CVA3,CVA4,RPI1,RPI2,RPI3,RPI4 compliance
+    class UX1,UX2,UX3,UX4,UX5,UX6,UX7,UX8,UX9 ux
+    class PD1,PD2,PD3,PD4 progressive
+    class IP1,IP2,IP3,IP4,IP5 integration
+```

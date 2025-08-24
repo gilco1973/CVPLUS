@@ -160,7 +160,7 @@ export const useFeatureFlags = () => {
  */
 export const logFeatureFlagStatus = (userId: string) => {
   if (process.env.NODE_ENV === 'development') {
-    console.log('🚩 Feature Flag Status:', {
+    console.warn('🚩 Feature Flag Status:', {
       userId: userId,
       flags: getFeatureFlagStatus(userId)
     });

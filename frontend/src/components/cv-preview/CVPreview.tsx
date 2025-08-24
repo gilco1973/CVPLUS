@@ -174,7 +174,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
       {state.editingSection && (
         <SectionEditor
           section={state.editingSection}
-          data={(state.previewData as any)?.[state.editingSection] || state.previewData}
+          data={(state.previewData as CVParsedData)?.[state.editingSection] || state.previewData}
           onSave={(newValue) => handleSectionEdit(state.editingSection!, newValue)}
           onCancel={() => actions.setEditingSection(null)}
         />

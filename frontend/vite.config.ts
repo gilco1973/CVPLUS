@@ -75,10 +75,34 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Simplified chunk configuration to prevent infinite loops
+          // Core vendors
           'react-vendor': ['react', 'react-dom'],
           'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/functions'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'lucide-react']
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'lucide-react'],
+          
+          // Feature chunks for better splitting
+          'cv-features-core': [
+            './src/components/features/ContactForm',
+            './src/components/features/SocialMediaLinks',
+            './src/components/features/Interactive/DynamicQRCode'
+          ],
+          'cv-features-advanced': [
+            './src/components/features/AI-Powered/AIPodcastPlayer',
+            './src/components/features/VideoIntroduction',
+            './src/components/features/PortfolioGallery'
+          ],
+          'cv-features-visual-basic': [
+            './src/components/features/Visual/AchievementCards',
+            './src/components/features/CertificationBadges'
+          ],
+          'cv-features-visual-advanced': [
+            './src/components/features/Visual/SkillsVisualization'
+          ],
+          'cv-services': [
+            './src/services/cv/CVAnalyzer',
+            './src/services/cv/CVServiceCore',
+            './src/services/cvService'
+          ]
         }
       }
     },

@@ -116,10 +116,8 @@ export const updateLanguageProficiency = CVTransformer.updateLanguageProficiency
 export const addLanguageProficiency = CVTransformer.addLanguageProficiency;
 export const removeLanguageProficiency = CVTransformer.removeLanguageProficiency;
 
-// CV Analyzer functions
-import { CVAnalyzer } from './cv/CVAnalyzer';
-export const analyzeAchievements = CVAnalyzer.analyzeAchievements;
-export const generateAchievementShowcase = CVAnalyzer.generateAchievementShowcase;
+// CV Analyzer functions - lazy loaded for better bundle splitting
+export { analyzeAchievements, generateAchievementShowcase } from './lazyAnalyzer';
 
 // Types
 export type { Job } from '../types/cv';

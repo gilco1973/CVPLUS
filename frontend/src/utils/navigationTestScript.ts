@@ -10,9 +10,11 @@ export const testNavigationFix = {
    * Run comprehensive navigation tests
    */
   runTests: (jobId: string = 'test-job-123') => {
-    console.group('🧪 Navigation Fix Test Suite');
-    console.log('🧪 Current URL:', window.location.href);
-    console.log('🧪 Target job ID:', jobId);
+    if (process.env.NODE_ENV === 'development') {
+      console.group('🧪 Navigation Fix Test Suite');
+      console.warn('🧪 Current URL:', window.location.href);
+      console.warn('🧪 Target job ID:', jobId);
+    }
   
     // Test 1: Verify routes exist
     const routes = [
@@ -21,11 +23,15 @@ export const testNavigationFix = {
       `/final-results/${jobId}`
     ];
     
-    console.log('🧪 Testing route patterns...');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🧪 Testing route patterns...');
+    }
     const routeResults = routes.map(route => {
       try {
         const url = new URL(route, window.location.origin);
-        console.log('✅ Route valid:', url.href);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('✅ Route valid:', url.href);
+        }
         return true;
       } catch (e) {
         console.error('❌ Route invalid:', route, e);
@@ -34,14 +40,18 @@ export const testNavigationFix = {
     });
   
     // Test 2: SessionStorage operations
-    console.log('🧪 Testing sessionStorage...');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🧪 Testing sessionStorage...');
+    }
     let storageResult = false;
     try {
       const testData = ['rec-1', 'rec-2', 'rec-3'];
       sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(testData));
       const retrieved = JSON.parse(sessionStorage.getItem(`recommendations-${jobId}`) || '[]');
       storageResult = JSON.stringify(testData) === JSON.stringify(retrieved);
-      console.log('✅ SessionStorage test passed:', retrieved);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('✅ SessionStorage test passed:', retrieved);
+      }
       
       // Cleanup
       sessionStorage.removeItem(`recommendations-${jobId}`);
@@ -50,37 +60,53 @@ export const testNavigationFix = {
     }
   
     // Test 3: Test robust navigation utility
-    console.log('🧪 Testing robust navigation utility...');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🧪 Testing robust navigation utility...');
+    }
     let navigationResult = false;
     try {
       navigationResult = robustNavigation.validateRoute(jobId);
-      console.log(`✅ Route validation: ${navigationResult ? 'PASS' : 'FAIL'}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`✅ Route validation: ${navigationResult ? 'PASS' : 'FAIL'}`);
+      }
     } catch (e) {
       console.error('❌ Route validation failed:', e);
     }
     
     // Test 4: Test navigation debugger
-    console.log('🧪 Testing navigation debugger...');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🧪 Testing navigation debugger...');
+    }
     try {
       navigationDebugger.log('Test Event', { jobId, data: { test: true } });
-      console.log('✅ Navigation debugger working');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('✅ Navigation debugger working');
+      }
     } catch (e) {
       console.error('❌ Navigation debugger failed:', e);
     }
     
     // Test 5: Current page context
     const currentPath = window.location.pathname;
-    console.log('🧪 Current path:', currentPath);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🧪 Current path:', currentPath);
+    }
     
     let contextResult = false;
     if (currentPath.includes('/analysis/')) {
-      console.log('✅ On analysis page - navigation should work');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('✅ On analysis page - navigation should work');
+      }
       contextResult = true;
     } else if (currentPath.includes('/preview/')) {
-      console.log('✅ Already on preview page!');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('✅ Already on preview page!');
+      }
       contextResult = true;
     } else {
-      console.log('⚠️ Not on analysis or preview page. Navigate to an analysis page first.');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ Not on analysis or preview page. Navigate to an analysis page first.');
+      }
     }
     
     // Summary
@@ -92,11 +118,17 @@ export const testNavigationFix = {
       context: contextResult
     };
     
-    console.log('📊 Test Results:', allResults);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('📊 Test Results:', allResults);
+    }
     const allPassed = Object.values(allResults).every(Boolean);
-    console.log(`📊 Overall: ${allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`📊 Overall: ${allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`);
+    }
     
-    console.groupEnd();
+    if (process.env.NODE_ENV === 'development') {
+      console.groupEnd();
+    }
     return allResults;
   },
   
@@ -104,7 +136,9 @@ export const testNavigationFix = {
    * Quick readiness check
    */
   checkReadiness: () => {
-    console.log('🔧 Checking navigation readiness...');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Checking navigation readiness...');
+    }
     const checks = {
       robustNavigation: typeof robustNavigation !== 'undefined',
       navigationDebugger: typeof navigationDebugger !== 'undefined',
@@ -112,9 +146,11 @@ export const testNavigationFix = {
       windowLocation: typeof window !== 'undefined' && !!window.location
     };
     
-    Object.entries(checks).forEach(([check, result]) => {
-      console.log(`${result ? '✅' : '❌'} ${check}`);
-    });
+    if (process.env.NODE_ENV === 'development') {
+      Object.entries(checks).forEach(([check, result]) => {
+        console.warn(`${result ? '✅' : '❌'} ${check}`);
+      });
+    }
     
     return Object.values(checks).every(Boolean);
   }
@@ -123,5 +159,7 @@ export const testNavigationFix = {
 // Export for global access in development
 if (typeof window !== 'undefined') {
   (window as any).testNavigationFix = testNavigationFix;
-  console.log('🔧 Navigation test utilities loaded. Use testNavigationFix.runTests() to test.');
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('🔧 Navigation test utilities loaded. Use testNavigationFix.runTests() to test.');
+  }
 }

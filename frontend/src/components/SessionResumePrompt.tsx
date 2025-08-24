@@ -9,7 +9,7 @@ import { ResumeIntelligence } from '../services/navigation/resumeIntelligence';
 
 export interface SessionResumePromptProps {
   session: EnhancedSessionState;
-  onResume: (step?: string, options?: any) => Promise<void>;
+  onResume: (step?: string, options?: Record<string, unknown>) => Promise<void>;
   onDismiss?: () => void;
   autoShow?: boolean;
   showAlternatives?: boolean;
@@ -104,7 +104,7 @@ export const SessionResumePrompt: React.FC<SessionResumePromptProps> = ({
 
   const getProgressPercentage = (): number => {
     const totalSteps = ['upload', 'processing', 'analysis', 'features', 'templates', 'preview', 'results'];
-    const completedSteps = totalSteps.filter(step => session.completedSteps.includes(step as any));
+    const completedSteps = totalSteps.filter(step => session.completedSteps.includes(step as 'upload' | 'processing' | 'analysis' | 'features' | 'templates' | 'preview' | 'results'));
     return Math.round((completedSteps.length / totalSteps.length) * 100);
   };
 

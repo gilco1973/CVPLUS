@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react';
-import { designSystem } from '../config/designSystem';
+import { Search, ChevronDown as _ChevronDown, ChevronUp as _ChevronUp } from 'lucide-react';
+import { designSystem as _designSystem } from '../config/designSystem';
 import type { ExternalDataResult, SelectedItems } from '../types/externalData';
 import { PreviewHeader } from './external/PreviewHeader';
 import { SourceDataSection } from './external/SourceDataSection';

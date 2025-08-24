@@ -75,7 +75,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   const generateCalendarDays = (): JSX.Element[] => {
     const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const _lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
@@ -177,7 +177,9 @@ This meeting was requested through the availability calendar on the professional
       `&add=${encodeURIComponent(`${professionalEmail},${attendeeEmail}`)}` +
       `&sf=true&output=xml`;
 
-    console.log('Opening calendar URL:', calendarUrl);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Opening calendar URL:', calendarUrl);
+    }
 
     // Open Google Calendar in new tab
     window.open(calendarUrl, '_blank');

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Shield, CheckCircle, Circle, Loader2, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Search, Shield as _Shield, CheckCircle as _CheckCircle, Circle as _Circle, Loader2, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { designSystem } from '../config/designSystem';
-import { useExternalData, type ExternalDataSource } from '../hooks/useExternalData';
+import { useExternalData, type ExternalDataSource as _ExternalDataSource } from '../hooks/useExternalData';
 import { ExternalDataPreview } from './ExternalDataPreview';
 import { SourceSelector } from './external/SourceSelector';
 import { PrivacyNotice } from './external/PrivacyNotice';
@@ -121,7 +121,9 @@ export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = ({
         <ExternalDataPreview
           data={enrichedData}
           onSelectionChange={(selectedItems) => {
-            console.log('Preview selection changed:', selectedItems);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Preview selection changed:', selectedItems);
+            }
           }}
           className="animate-fade-in-up"
         />
