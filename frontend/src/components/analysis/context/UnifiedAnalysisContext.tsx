@@ -167,12 +167,26 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
     dispatch(unifiedAnalysisActions.resetState());
   }, []);
 
+  // NEW: Helper methods for revised flow
+  const completeRoleSelection = useCallback(() => {
+    console.log('[UnifiedAnalysisContext] completeRoleSelection called');
+    dispatch(unifiedAnalysisActions.completeRoleSelection());
+  }, []);
+
+  const canProceedToRecommendations = useMemo(() => {
+    // For free users: Can proceed after analysis is complete (skip role selection)
+    // For premium users: Can proceed after role selection is complete
+    return state.analysisResults?.analysisComplete === true && 
+           (state.roleSelectionComplete || !state.selectedRole);
+  }, [state.analysisResults, state.roleSelectionComplete, state.selectedRole]);
+
   const contextValue = useMemo(() => ({
     state,
     dispatch,
     canProceedToRoleDetection,
     canProceedToImprovements,
     canProceedToActions,
+    canProceedToRecommendations, // NEW: Add new computed property
     hasSelectedRecommendations,
     startRoleDetection,
     selectRole,
@@ -185,12 +199,14 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
     totalSteps,
     initializeAnalysis,
     completeAnalysis,
+    completeRoleSelection, // NEW: Add new helper method
     resetFlow
   }), [
     state,
     canProceedToRoleDetection,
     canProceedToImprovements,
     canProceedToActions,
+    canProceedToRecommendations, // NEW
     hasSelectedRecommendations,
     startRoleDetection,
     selectRole,
@@ -202,6 +218,7 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
     currentStepIndex,
     initializeAnalysis,
     completeAnalysis,
+    completeRoleSelection, // NEW
     resetFlow
   ]);
 

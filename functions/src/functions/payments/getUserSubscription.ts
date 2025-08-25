@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
-import { db } from '../../config/firebase';
 import { corsOptions } from '../../config/cors';
+import { cachedSubscriptionService, UserSubscriptionData } from '../../services/cached-subscription.service';
 
 interface GetUserSubscriptionData {
   userId: string;
@@ -27,27 +27,8 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
     const { userId } = data;
 
     try {
-      // Get user subscription from Firestore
-      const subscriptionDoc = await db
-        .collection('userSubscriptions')
-        .doc(userId)
-        .get();
-
-      if (!subscriptionDoc.exists) {
-        return {
-          subscriptionStatus: 'free',
-          lifetimeAccess: false,
-          features: {
-            webPortal: false,
-            aiChat: false,
-            podcast: false,
-            advancedAnalytics: false
-          },
-          message: 'No premium subscription found'
-        };
-      }
-
-      const subscriptionData = subscriptionDoc.data()!;
+      // Get user subscription with caching
+      const subscriptionData = await cachedSubscriptionService.getUserSubscription(userId);
 
       logger.info('User subscription retrieved', {
         userId,
@@ -66,7 +47,9 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
         stripeCustomerId: subscriptionData.stripeCustomerId,
         message: subscriptionData.lifetimeAccess 
           ? 'Lifetime premium access active'
-          : 'Free tier active'
+          : subscriptionData.subscriptionStatus === 'free' 
+            ? 'No premium subscription found'
+            : 'Free tier active'
       };
 
     } catch (error) {
@@ -86,29 +69,18 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
 );
 
 // Helper function for internal use (not exposed as Cloud Function)
-export async function getUserSubscriptionInternal(userId: string) {
+// Now uses caching for improved performance
+export async function getUserSubscriptionInternal(userId: string): Promise<UserSubscriptionData> {
   try {
-    const subscriptionDoc = await db
-      .collection('userSubscriptions')
-      .doc(userId)
-      .get();
-
-    if (!subscriptionDoc.exists) {
-      return {
-        subscriptionStatus: 'free',
-        lifetimeAccess: false,
-        features: {
-          webPortal: false,
-          aiChat: false,
-          podcast: false,
-          advancedAnalytics: false
-        }
-      };
-    }
-
-    return subscriptionDoc.data();
+    logger.debug('Getting user subscription internally with cache', { userId });
+    return await cachedSubscriptionService.getUserSubscription(userId);
   } catch (error) {
     logger.error('Error getting user subscription internally', { error, userId });
     throw error;
   }
+}
+
+// Helper function to invalidate cache when subscription changes
+export function invalidateUserSubscriptionCache(userId: string): void {
+  cachedSubscriptionService.invalidateUserSubscription(userId);
 }

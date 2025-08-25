@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Sparkles, Zap, AlertTriangle, Crown, Target, CheckCircle, Eye, Settings, Play } from 'lucide-react';
 import { PremiumFeatureSelectionPanel } from '../components/PremiumFeatureSelectionPanel';
@@ -90,6 +90,12 @@ export const FeatureSelectionPage = () => {
   const [roleContext, setRoleContext] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState<'template' | 'features' | 'final'>('template');
 
+  // Memoize the feature restriction callback to prevent infinite loops
+  const handleFeatureRestricted = useCallback((featureId: string, premiumType: string) => {
+    toast.error(`${featureId} requires ${premiumType} access. Please upgrade to use this feature.`);
+    setShowPremiumPrompt(true);
+  }, []);
+
   // Feature validation hook
   const {
     isValid: isSelectionValid,
@@ -99,10 +105,7 @@ export const FeatureSelectionPage = () => {
   } = useFeatureValidation({
     selectedFeatures,
     enforceRestrictions: true,
-    onFeatureRestricted: (featureId, premiumType) => {
-      toast.error(`${featureId} requires ${premiumType} access. Please upgrade to use this feature.`);
-      setShowPremiumPrompt(true);
-    }
+    onFeatureRestricted: handleFeatureRestricted
   });
 
   // Bulk operations hook
@@ -487,6 +490,8 @@ export const FeatureSelectionPage = () => {
                 selectedFeatures={selectedFeatures}
                 previewMode={previewMode}
                 onPreviewModeChange={setPreviewMode}
+                jobData={jobData}
+                cvData={jobData?.parsedData as any}
               />
             </Section>
           </div>

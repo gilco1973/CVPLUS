@@ -28,9 +28,9 @@ export async function enhanceCVWithRoleDetection(parsedCV: ParsedCV): Promise<{
   
   try {
     // Step 1: Detect the primary role
-    const roleAnalysis = await roleDetectionService.detectRoles(parsedCV);
+    const roleResults = await roleDetectionService.detectRoles(parsedCV);
     
-    const primaryRole = roleAnalysis.primaryRole;
+    const primaryRole = roleResults[0]; // Get the highest confidence match
     
     // Step 2: Generate role-enhanced recommendations
     const recommendations = await cvTransformationService.generateRoleEnhancedRecommendations(
@@ -224,10 +224,10 @@ export const exampleUsageInFirebaseFunction = {
       return {
         success: true,
         data: {
-          primaryRole: analysis.primaryRole,
-          alternatives: analysis.alternativeRoles.slice(0, 3),
-          recommendations: analysis.enhancementSuggestions.immediate.slice(0, 5),
-          gapAnalysis: analysis.gapAnalysis
+          primaryRole: analysis[0],
+          alternatives: analysis.slice(1, 4),
+          recommendations: analysis[0]?.recommendations.slice(0, 5) || [],
+          gapAnalysis: analysis[0]?.fitAnalysis || { strengths: [], gaps: [], overallAssessment: '' }
         }
       };
     } catch (error) {

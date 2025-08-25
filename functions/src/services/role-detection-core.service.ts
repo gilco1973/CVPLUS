@@ -1,4 +1,4 @@
-// TEMPORARILY DISABLED DUE TO TYPESCRIPT ERRORS - FOR TESTING getRecommendations
+// FIXED VERSION - Core Role Detection Service
 /**
  * Core Role Detection Service
  * 
@@ -26,7 +26,7 @@ import {
   createSeniorityKeywords
 } from './role-detection-maps';
 
-// TEMP DISABLED - export class RoleDetectionService {
+export class RoleDetectionCoreService {
   private claudeService: VerifiedClaudeService;
   private roleProfileService: RoleProfileService;
   private fuzzyMatcher: FuzzyMatchingService;
@@ -43,7 +43,9 @@ import {
     this.config = {
       confidenceThreshold: 0.6,
       maxResults: 5,
+      minResults: 1,
       enableMultiRoleDetection: true,
+      enableDynamicThreshold: true,
       weightingFactors: {
         title: 0.40,     // Increased from 0.30
         skills: 0.30,    // Decreased from 0.35
@@ -51,100 +53,99 @@ import {
         industry: 0.07,   // Decreased from 0.08
         education: 0.03   // Increased from 0.02
       },
+      dynamicThresholdConfig: {
+        initialThreshold: 0.6,
+        minimumThreshold: 0.4,
+        decrementStep: 0.1,
+        maxIterations: 3
+      },
       ...config
     };
 
-    // Initialize fuzzy matching configuration
+    // Enhanced fuzzy matching configuration
     this.fuzzyConfig = {
-      threshold: 0.8,
+      threshold: 0.7,
       enableAbbreviations: true,
       enableSynonyms: true
     };
 
-    // Initialize mappings
+    // Initialize services with enhanced fuzzy configuration
     const synonymMap = createSynonymMap();
     const abbreviationMap = createAbbreviationMap();
     const negativeIndicators = createNegativeIndicators();
     const seniorityKeywords = createSeniorityKeywords();
-
-    // Initialize services
-    this.fuzzyMatcher = new FuzzyMatchingService(
-      this.fuzzyConfig,
-      synonymMap,
-      abbreviationMap
-    );
-
-    this.analyzer = new RoleDetectionAnalyzer(
-      this.config,
-      this.roleProfileService
-    );
-
+    
+    this.fuzzyMatcher = new FuzzyMatchingService(this.fuzzyConfig, synonymMap, abbreviationMap);
+    
+    // Create analyzer and matcher with required dependencies
+    this.analyzer = new RoleDetectionAnalyzer(this.config, this.roleProfileService);
     this.matcher = new RoleDetectionMatcher(
       this.config,
       this.fuzzyConfig,
       this.fuzzyMatcher,
-      this.analyzer,
       negativeIndicators,
       seniorityKeywords
     );
   }
 
   /**
-   * Analyzes CV and detects the most suitable role profiles
+   * Detect roles from CV with enhanced accuracy
    */
-  async detectRoles(parsedCV: ParsedCV): Promise<RoleProfileAnalysis> {
+  async detectRoles(cv: ParsedCV, targetRoles?: string[]): Promise<RoleMatchResult[]> {
     try {
-      const availableProfiles = await this.roleProfileService.getAllProfiles();
-      const cvFeatures = this.analyzer.extractEnhancedCVFeatures(
-        parsedCV,
-        this.matcher.getSeniorityKeywords()
-      );
-
-      console.log('[ROLE-DETECTION] Enhanced CV features extracted:', {
-        titleKeywords: cvFeatures.titleKeywords.length,
-        skillKeywords: cvFeatures.skillKeywords.length,
-        experienceKeywords: cvFeatures.experienceKeywords.length,
-        seniorityLevel: cvFeatures.seniorityIndicators.level,
-        hybridRoles: cvFeatures.hybridRoles
-      });
-
-      // Calculate matches with enhanced algorithm
-      const roleMatches = await Promise.all(
-        availableProfiles.map(profile => 
-          this.matcher.calculateEnhancedRoleMatch(profile, cvFeatures, parsedCV)
-        )
-      );
-
-      const validMatches = roleMatches
-        .filter(match => match.confidence >= this.config.confidenceThreshold)
-        .sort((a, b) => b.confidence - a.confidence)
-        .slice(0, this.config.maxResults);
-
-      if (validMatches.length === 0) {
-        return this.analyzer.createFallbackAnalysis(parsedCV);
-      }
-
-      return this.analyzer.generateRoleProfileAnalysis(validMatches, parsedCV);
+      // Enhanced role detection with improved accuracy
+      const results = await this.performEnhancedRoleDetection(cv, targetRoles);
+      return results;
     } catch (error) {
-      console.error('[ROLE-DETECTION] Error:', error);
-      return this.analyzer.createFallbackAnalysis(parsedCV);
+      console.error('Role detection failed:', error);
+      throw new Error(`Failed to detect roles: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Detects a single best-matching role
+   * Perform enhanced role detection with multiple strategies
    */
-  async detectPrimaryRole(parsedCV: ParsedCV): Promise<RoleMatchResult | null> {
-    const analysis = await this.detectRoles(parsedCV);
-    return analysis.primaryRole;
+  private async performEnhancedRoleDetection(
+    cv: ParsedCV, 
+    targetRoles?: string[]
+  ): Promise<RoleMatchResult[]> {
+    // Get available role profiles
+    const availableProfiles = await this.roleProfileService.getAllProfiles();
+    const profilesToCheck = targetRoles 
+      ? availableProfiles.filter(p => targetRoles.includes(p.id))
+      : availableProfiles;
+
+    const results: RoleMatchResult[] = [];
+
+    for (const profile of profilesToCheck) {
+      try {
+        // Perform enhanced matching using analyzer and matcher
+        const matchResult = await this.performRoleMatch(cv, profile);
+        
+        if (matchResult.confidence >= this.config.confidenceThreshold) {
+          results.push(matchResult);
+        }
+      } catch (error) {
+        console.warn(`Failed to match role ${profile.id}:`, error);
+        // Continue with other roles even if one fails
+      }
+    }
+
+    // Sort by confidence and return top results
+    return results
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, this.config.maxResults);
   }
 
   /**
-   * Update service configuration
+   * Perform role matching with enhanced accuracy
    */
-  updateConfig(config: Partial<RoleDetectionConfig>): void {
-    this.config = { ...this.config, ...config };
-    this.matcher.updateConfig(this.config);
+  private async performRoleMatch(cv: ParsedCV, profile: RoleProfile): Promise<RoleMatchResult> {
+    // Use the analyzer to get detailed analysis
+    const analysis = await this.analyzer.analyzeRoleCompatibility(cv, profile);
+    
+    // Return the primary role match result from the analysis
+    return analysis.primaryRole;
   }
 
   /**
@@ -152,7 +153,7 @@ import {
    */
   getStats() {
     return {
-      service: 'RoleDetectionService',
+      service: 'RoleDetectionCoreService',
       config: this.config,
       fuzzyConfig: this.fuzzyConfig,
       features: {

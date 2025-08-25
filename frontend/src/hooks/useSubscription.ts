@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  getUserSubscription, 
   checkFeatureAccess, 
   GetUserSubscriptionResponse,
   CheckFeatureAccessResponse 
 } from '../services/paymentService';
+import { subscriptionCache } from '../services/subscriptionCache';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
 
@@ -37,7 +37,7 @@ export const useSubscription = (): UseSubscriptionReturn => {
     setError(null);
 
     try {
-      const subscriptionData = await getUserSubscription({
+      const subscriptionData = await subscriptionCache.getSubscription({
         userId: user.uid
       });
       
@@ -63,6 +63,10 @@ export const useSubscription = (): UseSubscriptionReturn => {
   };
 
   const refreshSubscription = async () => {
+    // Invalidate cache before refreshing to force fresh data
+    if (user) {
+      subscriptionCache.invalidateUser(user.uid);
+    }
     await fetchSubscription();
   };
 

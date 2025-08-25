@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UnifiedAnalysisContainer } from '../components/analysis/unified/UnifiedAnalysisContainer';
+import { UnifiedAnalysisProvider, useUnifiedAnalysis } from '../components/analysis/context/UnifiedAnalysisContext';
 import { ExternalDataSources } from '../components/ExternalDataSources';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +11,178 @@ import { ArrowLeft, Loader2, Database, ChevronRight } from 'lucide-react';
 import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
+// Helper function to map unified analysis steps to breadcrumb currentPage values
+const mapStepToCurrentPage = (step: string): string => {
+  switch (step) {
+    case 'analysis':
+      return 'analysis';
+    case 'role-detection':
+      return 'role-selection';
+    case 'improvements':
+      return 'improvements'; // NEW: Separate improvements/recommendations step
+    case 'actions':
+      return 'feature-selection';
+    default:
+      return 'analysis';
+  }
+};
+
+// Helper function to get appropriate titles based on step
+const getStepTitleAndSubtitle = (step: string) => {
+  switch (step) {
+    case 'analysis':
+      return {
+        title: 'Processing Your CV',
+        subtitle: 'Analyzing your CV with AI-powered insights'
+      };
+    case 'role-detection':
+      return {
+        title: 'Role Detection',
+        subtitle: 'AI-powered role detection and career analysis'
+      };
+    case 'improvements':
+      return {
+        title: 'Improvements',
+        subtitle: 'Review recommendations and select improvements'
+      };
+    case 'actions':
+      return {
+        title: 'Ready to Transform',
+        subtitle: 'Choose how to enhance your CV'
+      };
+    default:
+      return {
+        title: 'CV Analysis',
+        subtitle: 'Analyzing your professional profile'
+      };
+  }
+};
+
+// Component that uses UnifiedAnalysisContext to get current step for Header
+const CVAnalysisContent = ({ job, jobId }: { job: Job, jobId: string }) => {
+  const { state } = useUnifiedAnalysis();
+  const navigate = useNavigate();
+  const [showExternalData, setShowExternalData] = useState(false);
+  const [externalDataCompleted, setExternalDataCompleted] = useState(false);
+  
+  const currentPageForBreadcrumbs = mapStepToCurrentPage(state.currentStep);
+  const { title, subtitle } = getStepTitleAndSubtitle(state.currentStep);
+  
+  const handleNavigateToFeatures = (data: any) => {
+    navigate(`/preview/${jobId}`, {
+      state: {
+        jobData: data.jobData,
+        roleContext: {
+          selectedRole: data.selectedRole,
+          selectedRecommendations: data.selectedRecommendations,
+          roleAnalysis: data.roleAnalysis
+        }
+      }
+    });
+  };
+
+  const handleExternalDataComplete = () => {
+    setExternalDataCompleted(true);
+    setShowExternalData(false);
+    toast.success('External data successfully integrated into your CV!');
+  };
+
+  const handleSkipExternalData = () => {
+    setExternalDataCompleted(true);
+    if (showExternalData) {
+      setShowExternalData(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-900">
+      <Header 
+        currentPage={currentPageForBreadcrumbs}
+        jobId={jobId}
+        title={title}
+        subtitle={subtitle}
+        variant="dark"
+        showBreadcrumbs={true}
+      />
+      
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {!showExternalData ? (
+          <>
+            <UnifiedAnalysisContainer
+              jobId={jobId}
+              jobData={job}
+              onNavigateToFeatures={handleNavigateToFeatures}
+              className="animate-fade-in-up"
+            />
+            
+            {/* External Data Enhancement Option */}
+            {!externalDataCompleted && state.currentStep === 'improvements' && (
+              <div className="mt-8 space-y-4">
+                <div className="text-center">
+                  <div className="w-px h-8 bg-neutral-600 mx-auto mb-4"></div>
+                  <p className="text-sm text-neutral-400 mb-4">
+                    Want to make your CV even more comprehensive?
+                  </p>
+                </div>
+                
+                <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.default} p-6`}>
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
+                        <Database className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-100 mb-2">
+                        Enhance with External Data
+                      </h3>
+                      <p className="text-neutral-400 text-sm mb-4 max-w-2xl mx-auto leading-relaxed">
+                        Import additional projects, certifications, and achievements from your GitHub, 
+                        LinkedIn, and other professional profiles to create a more comprehensive CV.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        onClick={handleSkipExternalData}
+                        className="px-4 py-2 text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
+                      >
+                        Skip This Step
+                      </button>
+                      
+                      <button
+                        onClick={() => setShowExternalData(true)}
+                        className={`
+                          ${designSystem.components.button.base}
+                          ${designSystem.components.button.variants.primary.default}
+                          ${designSystem.components.button.sizes.md}
+                          flex items-center gap-2
+                        `}
+                      >
+                        <Database className="w-4 h-4" />
+                        Enhance with External Data
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <ExternalDataSources
+            jobId={jobId}
+            onDataEnriched={handleExternalDataComplete}
+            onSkip={handleSkipExternalData}
+            className="animate-fade-in-up"
+          />
+        )}
+      </main>
+    </div>
+  );
+};
+
 export const CVAnalysisPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
@@ -17,8 +190,6 @@ export const CVAnalysisPage = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showExternalData, setShowExternalData] = useState(false);
-  const [externalDataCompleted, setExternalDataCompleted] = useState(false);
 
   useEffect(() => {
     if (!jobId) {
@@ -65,59 +236,6 @@ export const CVAnalysisPage = () => {
     return () => unsubscribe();
   }, [jobId, navigate, user]);
 
-  const handleExternalDataComplete = (enrichedData?: unknown[]) => {
-    console.log('External data enrichment completed:', enrichedData?.length || 0, 'items');
-    
-    // Data is already stored in Firestore by the enrichment service
-    if (enrichedData && enrichedData.length > 0) {
-      toast.success(`CV enriched with ${enrichedData.length} external data sources`);
-    }
-    
-    setExternalDataCompleted(true);
-    setShowExternalData(false);
-  };
-  
-  const handleSkipExternalData = () => {
-    console.log('External data enrichment skipped');
-    setExternalDataCompleted(true);
-    setShowExternalData(false);
-  };
-  
-  const handleNavigateToFeatures = (data: any) => {
-    console.log('🚀 [CVAnalysisPage] Navigate to features called:', {
-      jobId,
-      hasData: !!data,
-      dataKeys: data ? Object.keys(data) : []
-    });
-    
-    if (!jobId) {
-      console.error('❌ [CVAnalysisPage] No jobId available, cannot navigate');
-      toast.error('Missing job ID for navigation');
-      return;
-    }
-
-    const targetPath = `/customize/${jobId}`;
-    console.log('📍 [CVAnalysisPage] Navigation target:', targetPath);
-
-    try {
-      // All data is persisted in Firestore, no need for sessionStorage
-      // Navigate directly to feature selection with state
-      navigate(targetPath, {
-        state: {
-          jobData: data?.jobData || job,
-          roleContext: data?.roleContext,
-          selectedRecommendations: data?.selectedRecommendations || [],
-          analysisComplete: true
-        }
-      });
-      
-      toast.success('Analysis complete! Select your desired features.', { icon: '🚀' });
-      
-    } catch (error: unknown) {
-      console.error('💥 [CVAnalysisPage] Critical error in navigation:', error);
-      toast.error('Navigation error. Please try again.');
-    }
-  };
 
   const handleBack = () => {
     if (jobId) {
@@ -213,92 +331,10 @@ export const CVAnalysisPage = () => {
     );
   }
 
+  // Wrap with UnifiedAnalysisProvider to track step-based breadcrumbs
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <Header 
-        currentPage="analysis" 
-        jobId={jobId}
-        title="CV Analysis Complete"
-        subtitle="Review your results and select improvements"
-        variant="dark"
-        showBreadcrumbs={true}
-      />
-      
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!showExternalData ? (
-          <>
-            <UnifiedAnalysisContainer
-              jobId={jobId!}
-              jobData={job}
-              onNavigateToFeatures={handleNavigateToFeatures}
-              className="animate-fade-in-up"
-            />
-            
-            {/* External Data Enhancement Option */}
-            {!externalDataCompleted && (
-              <div className="mt-8 space-y-4">
-                <div className="text-center">
-                  <div className="w-px h-8 bg-neutral-600 mx-auto mb-4"></div>
-                  <p className="text-sm text-neutral-400 mb-4">
-                    Want to make your CV even more comprehensive?
-                  </p>
-                </div>
-                
-                <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.default} p-6`}>
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-                        <Database className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-semibold text-neutral-100 mb-2">
-                        Enhance with External Data
-                      </h3>
-                      <p className="text-neutral-400 text-sm mb-4 max-w-2xl mx-auto leading-relaxed">
-                        Import additional projects, certifications, and achievements from your GitHub, 
-                        LinkedIn, and other professional profiles to create a more comprehensive CV.
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-4">
-                      <button
-                        onClick={handleSkipExternalData}
-                        className="px-4 py-2 text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
-                      >
-                        Skip This Step
-                      </button>
-                      
-                      <button
-                        onClick={() => setShowExternalData(true)}
-                        className={`
-                          ${designSystem.components.button.base}
-                          ${designSystem.components.button.variants.primary.default}
-                          ${designSystem.components.button.sizes.md}
-                          flex items-center gap-2
-                        `}
-                      >
-                        <Database className="w-4 h-4" />
-                        Enhance with External Data
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <ExternalDataSources
-            jobId={jobId!}
-            onDataEnriched={handleExternalDataComplete}
-            onSkip={handleSkipExternalData}
-            className="animate-fade-in-up"
-          />
-        )}
-      </main>
-      
-    </div>
+    <UnifiedAnalysisProvider initialJobData={job}>
+      <CVAnalysisContent job={job} jobId={jobId!} />
+    </UnifiedAnalysisProvider>
   );
 };

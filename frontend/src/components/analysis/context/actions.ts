@@ -46,12 +46,14 @@ export const initialUnifiedAnalysisState: UnifiedAnalysisContextState = {
   selectedRole: null,
   roleDetectionStatus: 'idle',
   roleAnalysis: null,
+  roleSelectionComplete: false, // NEW: Track role selection completion
   
   // Improvements State
   recommendations: [],
   selectedRecommendations: [],
   improvementCategories: [],
   activeCategory: '',
+  recommendationsLoaded: false, // NEW: Track recommendations loading state
   
   // Progressive Flow State
   currentStep: 'analysis',
@@ -92,10 +94,12 @@ export const unifiedAnalysisActions = {
     type: 'SET_ROLE_DETECTION_STATUS' as const, 
     payload: validateString(status, 'roleDetectionStatus') as RoleDetectionStatus 
   }),
+  completeRoleSelection: () => ({ type: 'COMPLETE_ROLE_SELECTION' as const }),
   setRecommendations: (recommendations: any[]) => ({ 
     type: 'SET_RECOMMENDATIONS' as const, 
     payload: validateArray(recommendations, 'recommendations') 
   }),
+  setRecommendationsLoaded: (loaded: boolean) => ({ type: 'SET_RECOMMENDATIONS_LOADED' as const, payload: loaded }),
   toggleRecommendation: (id: string) => ({ type: 'TOGGLE_RECOMMENDATION' as const, payload: id }),
   setSelectedRecommendations: (ids: string[]) => ({ type: 'SET_SELECTED_RECOMMENDATIONS' as const, payload: ids }),
   setImprovementCategories: (categories: any[]) => ({ type: 'SET_IMPROVEMENT_CATEGORIES' as const, payload: categories }),
@@ -166,9 +170,19 @@ export function unifiedAnalysisReducer(
         isLoading: action.payload === 'analyzing' || action.payload === 'detecting'
       };
     
+    case 'COMPLETE_ROLE_SELECTION':
+      return { 
+        ...state, 
+        roleSelectionComplete: true,
+        currentStep: state.autoTriggerEnabled ? 'improvements' : state.currentStep
+      };
+    
     // Improvements Actions
     case 'SET_RECOMMENDATIONS':
-      return { ...state, recommendations: action.payload };
+      return { ...state, recommendations: action.payload, recommendationsLoaded: true };
+      
+    case 'SET_RECOMMENDATIONS_LOADED':
+      return { ...state, recommendationsLoaded: action.payload };
       
     case 'TOGGLE_RECOMMENDATION': {
       const isSelected = state.selectedRecommendations.includes(action.payload);

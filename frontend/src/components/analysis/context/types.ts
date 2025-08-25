@@ -60,12 +60,14 @@ export interface UnifiedAnalysisContextState {
   selectedRole: DetectedRole | null;
   roleDetectionStatus: RoleDetectionStatus;
   roleAnalysis: RoleProfileAnalysis | null;
+  roleSelectionComplete: boolean; // NEW: Track if role selection is complete
   
   // Improvements State
   recommendations: Recommendation[];
   selectedRecommendations: string[];
   improvementCategories: ImprovementCategory[];
   activeCategory: string;
+  recommendationsLoaded: boolean; // NEW: Track if recommendations are loaded
   
   // Progressive Flow State
   currentStep: AnalysisStep;
@@ -88,6 +90,7 @@ export type UnifiedAnalysisAction =
   | { type: 'SET_ROLE_ANALYSIS'; payload: RoleProfileAnalysis }
   | { type: 'SELECT_ROLE'; payload: DetectedRole }
   | { type: 'SET_ROLE_DETECTION_STATUS'; payload: RoleDetectionStatus }
+  | { type: 'COMPLETE_ROLE_SELECTION' } // NEW: Mark role selection as complete
   
   // Improvements Actions
   | { type: 'SET_RECOMMENDATIONS'; payload: Recommendation[] }
@@ -95,6 +98,7 @@ export type UnifiedAnalysisAction =
   | { type: 'SET_SELECTED_RECOMMENDATIONS'; payload: string[] }
   | { type: 'SET_IMPROVEMENT_CATEGORIES'; payload: ImprovementCategory[] }
   | { type: 'SET_ACTIVE_CATEGORY'; payload: string }
+  | { type: 'SET_RECOMMENDATIONS_LOADED'; payload: boolean } // NEW: Track recommendations state
   
   // Flow Control Actions
   | { type: 'SET_CURRENT_STEP'; payload: AnalysisStep }

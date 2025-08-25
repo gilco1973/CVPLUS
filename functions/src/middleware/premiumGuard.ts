@@ -1,6 +1,7 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
+import { subscriptionManagementService } from '../services/subscription-management.service';
 import { requireAuth, AuthenticatedRequest } from './authGuard';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction' | 'roleDetection' | 'externalData';
@@ -12,17 +13,16 @@ export const premiumGuard = (feature: PremiumFeature) => {
     const { uid } = authenticatedRequest.auth;
 
     try {
-      logger.info('Premium access check initiated', { uid, feature });
+      logger.debug('Premium access check initiated', { uid, feature });
 
-      // Get user subscription with detailed logging
+      // Get user subscription with caching for improved performance
       const subscription = await getUserSubscriptionInternal(uid);
       
-      logger.info('Subscription data retrieved', {
+      logger.debug('Subscription data retrieved from cache', {
         uid,
         hasSubscription: !!subscription,
         lifetimeAccess: subscription?.lifetimeAccess,
         subscriptionStatus: subscription?.subscriptionStatus,
-        features: subscription?.features ? Object.keys(subscription.features) : [],
         hasRequestedFeature: subscription?.features?.[feature]
       });
 
@@ -69,7 +69,7 @@ export const premiumGuard = (feature: PremiumFeature) => {
         );
       }
 
-      logger.info('Premium access granted', {
+      logger.debug('Premium access granted', {
         uid,
         feature,
         subscriptionStatus: subscription.subscriptionStatus
@@ -111,11 +111,10 @@ export const withPremiumAccess = (feature: PremiumFeature, handler: Function) =>
     const startTime = Date.now();
     
     try {
-      logger.info('Premium function execution started', {
+      logger.debug('Premium function execution started', {
         feature,
         uid: request.auth?.uid,
-        hasData: !!request.data,
-        dataKeys: request.data ? Object.keys(request.data) : []
+        hasData: !!request.data
       });
 
       // Check premium access and authenticate
@@ -125,7 +124,7 @@ export const withPremiumAccess = (feature: PremiumFeature, handler: Function) =>
       const result = await handler(authenticatedRequest, context);
       
       const executionTime = Date.now() - startTime;
-      logger.info('Premium function execution completed', {
+      logger.debug('Premium function execution completed', {
         feature,
         uid: authenticatedRequest.auth.uid,
         executionTime,
@@ -178,8 +177,9 @@ export const requireAnyPremiumFeature = (features: PremiumFeature[]) => {
     const { uid } = authenticatedRequest.auth;
 
     try {
-      logger.info('Multiple premium features check initiated', { uid, features });
+      logger.debug('Multiple premium features check initiated', { uid, features });
       
+      // Use cached subscription service for better performance
       const subscription = await getUserSubscriptionInternal(uid);
 
       if (!subscription?.lifetimeAccess) {
@@ -218,7 +218,7 @@ export const requireAnyPremiumFeature = (features: PremiumFeature[]) => {
         );
       }
 
-      logger.info('Multiple premium features access granted', {
+      logger.debug('Multiple premium features access granted', {
         uid,
         requiredFeatures: features,
         grantedFeatures: availableFeatures

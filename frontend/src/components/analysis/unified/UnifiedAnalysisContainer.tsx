@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoleDetectionSection } from '../role-detection/RoleDetectionSection';
 import { RoleDetectionPremiumGate } from '../../role-profiles/premium/RoleDetectionPremiumGate';
-import { CVAnalysisResults } from '../../CVAnalysisResults';
+import { RecommendationsContainer } from '../recommendations/RecommendationsContainer';
 import { UnifiedAnalysisProvider, useUnifiedAnalysis } from '../context/UnifiedAnalysisContext';
 import type { Job } from '../../../services/cvService';
 import type { DetectedRole } from '../../../types/role-profiles';
@@ -27,6 +27,7 @@ const UnifiedAnalysisContent: React.FC<{
     initializeAnalysis,
     completeAnalysis,
     selectRole,
+    completeRoleSelection,
     proceedToNext,
     goBack,
     currentStepIndex,
@@ -37,60 +38,43 @@ const UnifiedAnalysisContent: React.FC<{
   const navigate = useNavigate();
   
   useEffect(() => {
+    console.log('[UnifiedAnalysisContainer] Initializing analysis with jobData:', {
+      status: jobData?.status,
+      hasParsedData: !!jobData?.parsedData,
+      currentStep: state.currentStep
+    });
+    
     initializeAnalysis(jobData);
     
     // Analysis completion is handled by the actual CV analysis
     // which is triggered automatically when jobData is loaded
   }, [jobData, initializeAnalysis]);
   
-  // Watch for job status changes to detect when analysis is complete
+  // FIXED: Simplified status monitoring without navigation loops
   useEffect(() => {
-    console.log('[UnifiedAnalysisContainer] Status check:', {
+    console.log('[UnifiedAnalysisContainer] Current state:', {
       jobStatus: jobData?.status,
       currentStep: state.currentStep,
       hasParsedData: !!jobData?.parsedData,
-      canProceedToRoleDetection: state.canProceedToRoleDetection,
-      analysisComplete: state.analysisResults?.analysisComplete,
-      jobData: jobData
+      analysisComplete: state.analysisResults?.analysisComplete
     });
     
-    // Handle multiple statuses that indicate CV is ready for role detection
-    // 'parsed' - initial parsing complete
-    // 'analyzed' - analysis complete  
-    // 'completed' - all processing done (but still might need role detection)
-    // 'generating' - sometimes set after parsing before generation
-    const validStatuses = ['analyzed', 'parsed', 'completed', 'generating'];
-    const isValidStatus = jobData?.status && validStatuses.includes(jobData.status);
-    
-    if (isValidStatus && 
-        state.currentStep === 'analysis' && 
-        jobData?.parsedData &&
-        !state.analysisResults?.analysisComplete &&
-        // Add guard to prevent override when analysis data is already present from initialization
-        !state.analysisResults?.analysisData) {
-      console.log('[UnifiedAnalysisContainer] Triggering completeAnalysis for status:', jobData.status);
-      // Analysis is complete, trigger transition to role-detection
-      const analysisResults = {
-        analysisComplete: true,
-        processedAt: new Date().toISOString(),
-        // Include any available analysis data from jobData
-        ...(jobData.parsedData && { analysisData: jobData.parsedData })
-      };
-      
-      completeAnalysis(analysisResults);
-    }
-  }, [jobData?.status, state.currentStep, state.analysisResults?.analysisComplete, completeAnalysis]);
+    // The initializeAnalysis method in context already handles step initialization
+    // This effect is just for logging/monitoring, no navigation triggers
+  }, [jobData?.status, state.currentStep, state.analysisResults?.analysisComplete]);
   
   const handleRoleSelected = (role: DetectedRole) => {
     selectRole(role);
+    completeRoleSelection(); // NEW: Mark role selection as complete
     toast.success(`Role "${role.roleName}" selected successfully!`);
     
-    // Proceed immediately to next step
+    // Proceed to recommendations step
     proceedToNext();
   };
   
   const handleManualSelection = () => {
-    console.log('Manual role selection requested - skipping to next step');
+    console.log('Manual role selection requested - proceeding without role');
+    completeRoleSelection(); // NEW: Mark role selection as complete (even if skipped)
     proceedToNext();
   };
   
@@ -155,59 +139,25 @@ const UnifiedAnalysisContent: React.FC<{
           </RoleDetectionPremiumGate>
         )}
         
-        {/* Step 3: Improvements */}
+        {/* Step 3: Improvements - Pure Recommendations Display */}
         {state.currentStep === 'improvements' && (
-          <div className="space-y-6">
-            {/* Header showing context based on role selection */}
-            <div className="text-center space-y-4 mb-8">
-              {state.selectedRole ? (
-                <>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30">
-                    <div className="w-2 h-2 rounded-full bg-purple-400" />
-                    <span className="text-purple-300 font-medium">Role-Based Analysis</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-100">
-                    Enhanced Recommendations for {state.selectedRole.roleName}
-                  </div>
-                  <p className="text-gray-400">
-                    Personalized CV improvements tailored to your selected role
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30">
-                    <div className="w-2 h-2 rounded-full bg-blue-400" />
-                    <span className="text-blue-300 font-medium">General Analysis</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-100">
-                    CV Improvement Recommendations
-                  </div>
-                  <p className="text-gray-400">
-                    AI-powered suggestions to enhance your CV's impact
-                  </p>
-                </>
-              )}
-            </div>
-            
-            {/* CVAnalysisResults Component */}
-            <CVAnalysisResults
-              job={jobData}
-              onContinue={(selectedRecommendations: string[]) => {
-                // Navigate to features with the selected recommendations
-                handleNavigateToFeatures({
-                  jobData,
-                  selectedRole: state.selectedRole,
-                  selectedRecommendations,
-                  roleAnalysis: state.roleAnalysis
-                });
-              }}
-              onBack={() => {
-                // Use the goBack helper method which handles step navigation logic
-                goBack();
-              }}
-              className="w-full"
-            />
-          </div>
+          <RecommendationsContainer
+            jobData={jobData}
+            onContinue={(selectedRecommendations: string[]) => {
+              // Navigate to features with the selected recommendations
+              handleNavigateToFeatures({
+                jobData,
+                selectedRole: state.selectedRole,
+                selectedRecommendations,
+                roleAnalysis: state.roleAnalysis
+              });
+            }}
+            onBack={() => {
+              // Use the goBack helper method which handles step navigation logic
+              goBack();
+            }}
+            className="w-full"
+          />
         )}
         
         {/* Step 4: Actions - Placeholder for future implementation */}

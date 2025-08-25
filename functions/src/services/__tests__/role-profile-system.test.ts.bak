@@ -5,7 +5,7 @@
  */
 
 import { ParsedCV } from '../../types/job';
-import { EnhancedRoleDetectionService as RoleDetectionService } from '../enhanced-role-detection.service';
+import { RoleDetectionService } from '../role-detection.service';
 import { RoleProfileService } from '../role-profile.service';
 import { CVTransformationService } from '../cv-transformation.service';
 import { RoleCategory, ExperienceLevel } from '../../types/role-profile.types';

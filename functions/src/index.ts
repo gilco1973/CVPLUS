@@ -217,6 +217,11 @@ export {
   testCorsCall
 } from './functions/corsTestFunction';
 
+// Export admin functions
+export {
+  getCacheStats
+} from './functions/admin/getCacheStats';
+
 // Export comprehensive CORS testing scripts
 export {
   testCorsHTTP,
@@ -232,7 +237,7 @@ export {
 } from './functions/applyImprovements';
 
 // Export enhanced CV analysis function  
-// TEMP DISABLED - export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
+export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
 
 // Export feature management functions
 export { skipFeature } from './functions/skipFeature';

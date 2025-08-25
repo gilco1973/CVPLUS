@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePremiumStatus } from './usePremiumStatus';
 import { 
   validateFeatureSelection,
@@ -44,6 +44,18 @@ export const useFeatureValidation = ({
     warnings: []
   });
 
+  // Memoize feature keys to prevent unnecessary recalculations
+  const selectedFeaturesKeys = useMemo(() => 
+    Object.keys(selectedFeatures).sort(), 
+    [selectedFeatures]
+  );
+
+  // Memoize selected features values to detect actual changes
+  const selectedFeaturesValues = useMemo(() => 
+    selectedFeaturesKeys.map(key => selectedFeatures[key]), 
+    [selectedFeatures, selectedFeaturesKeys]
+  );
+
   // Validate features whenever selection or premium status changes
   useEffect(() => {
     if (isLoading) return;
@@ -60,10 +72,13 @@ export const useFeatureValidation = ({
         }
       });
     }
-  }, [selectedFeatures, userPremiumFeatures, isLoading, onFeatureRestricted]);
+  }, [selectedFeaturesValues, userPremiumFeatures, isLoading, onFeatureRestricted, selectedFeatures]);
 
-  // Get accessible features (filtered version of selected features)
-  const accessibleFeatures = filterAccessibleFeatures(selectedFeatures, userPremiumFeatures);
+  // Get accessible features (filtered version of selected features) - memoized
+  const accessibleFeatures = useMemo(() => 
+    filterAccessibleFeatures(selectedFeatures, userPremiumFeatures),
+    [selectedFeatures, userPremiumFeatures]
+  );
 
   // Check if a specific feature can be selected
   const canSelectFeature = useCallback((featureId: string): boolean => {

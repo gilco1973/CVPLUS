@@ -457,7 +457,7 @@ export const CVPreviewPageNew: React.FC<CVPreviewPageNewProps> = ({ className = 
   };
   
   const handleContinueToFeatures = () => {
-    navigate(`/results/${jobId}`);
+    navigate(`/customize/${jobId}`);
   };
 
   // Main render
