@@ -119,7 +119,33 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
   // Additional helper methods
   const initializeAnalysis = useCallback((jobData: Job) => {
     dispatch(unifiedAnalysisActions.setJobData(jobData));
-    dispatch(unifiedAnalysisActions.setCurrentStep('analysis'));
+    
+    // Smart step initialization based on job data state
+    // If job has been analyzed and processed, skip to improvements step
+    const validStatuses = ['analyzed', 'parsed', 'completed', 'generating'];
+    const hasValidStatus = jobData?.status && validStatuses.includes(jobData.status);
+    const hasParsedData = jobData?.parsedData;
+    
+    if (hasValidStatus && hasParsedData) {
+      // Job is already processed, go directly to improvements to show recommendations
+      console.log('[UnifiedAnalysisContext] Job already processed, initializing to improvements step');
+      dispatch(unifiedAnalysisActions.setCurrentStep('improvements'));
+      // Set comprehensive analysis results to prevent container useEffect from triggering
+      dispatch(unifiedAnalysisActions.setAnalysisResults({
+        analysisComplete: true,
+        processedAt: new Date().toISOString(),
+        analysisData: jobData.parsedData,
+        // Include any other analysis metadata if available
+        ...(jobData.parsedData && {
+          atsScore: jobData.parsedData.atsScore,
+          keyMetrics: jobData.parsedData.keyMetrics
+        })
+      }));
+    } else {
+      // Job needs processing, start with analysis step
+      console.log('[UnifiedAnalysisContext] Job needs processing, initializing to analysis step');
+      dispatch(unifiedAnalysisActions.setCurrentStep('analysis'));
+    }
   }, []);
 
   const completeAnalysis = useCallback((results: AnalysisResults) => {

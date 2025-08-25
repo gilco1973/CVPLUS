@@ -65,7 +65,9 @@ const UnifiedAnalysisContent: React.FC<{
     if (isValidStatus && 
         state.currentStep === 'analysis' && 
         jobData?.parsedData &&
-        !state.analysisResults?.analysisComplete) {
+        !state.analysisResults?.analysisComplete &&
+        // Add guard to prevent override when analysis data is already present from initialization
+        !state.analysisResults?.analysisData) {
       console.log('[UnifiedAnalysisContainer] Triggering completeAnalysis for status:', jobData.status);
       // Analysis is complete, trigger transition to role-detection
       const analysisResults = {

@@ -31,6 +31,7 @@ export interface AnalysisResults {
   keyMetrics?: Record<string, any>;
   analysisComplete: boolean;
   processedAt?: string;
+  analysisData?: any; // Job parsedData for analysis context
 }
 
 // Improvement Category
