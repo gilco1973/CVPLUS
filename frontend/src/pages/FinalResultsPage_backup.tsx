@@ -872,7 +872,7 @@ export const FinalResultsPage = () => {
     return (
       <div className="min-h-screen bg-gray-900">
         <Header 
-          currentPage="final-results" 
+          currentPage="results" 
           jobId={jobId}
           title="Your Enhanced CV"
           subtitle={getSubtitle()}
@@ -922,7 +922,7 @@ export const FinalResultsPage = () => {
     return (
       <div className="min-h-screen bg-gray-900">
         <Header 
-          currentPage="final-results" 
+          currentPage="results" 
           jobId={jobId}
           title="Your Enhanced CV"
           subtitle="Error loading CV"
@@ -952,7 +952,7 @@ export const FinalResultsPage = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header 
-        currentPage="final-results" 
+        currentPage="results" 
         jobId={jobId}
         title="Your Enhanced CV"
         subtitle={isProcessingFeatures ? 

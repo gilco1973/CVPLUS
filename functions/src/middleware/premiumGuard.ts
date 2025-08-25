@@ -3,7 +3,7 @@ import { logger } from 'firebase-functions';
 import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
 import { requireAuth, AuthenticatedRequest } from './authGuard';
 
-type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction' | 'roleDetection';
+type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction' | 'roleDetection' | 'externalData';
 
 export const premiumGuard = (feature: PremiumFeature) => {
   return async (request: any): Promise<AuthenticatedRequest> => {

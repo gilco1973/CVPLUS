@@ -8,6 +8,11 @@ import {
   AccountNameData 
 } from './name-verification.service';
 import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
+import { 
+  ExternalDataSecurityAudit,
+  RateLimitStatus,
+  ExternalDataUsageStats 
+} from '../types/external-data-analytics.types';
 
 export interface PolicyCheckRequest {
   userId: string;
@@ -15,6 +20,15 @@ export interface PolicyCheckRequest {
   fileName: string;
   fileSize: number;
   fileType: string;
+  requestInfo?: {
+    ipAddress?: string;
+    userAgent?: string;
+  };
+}
+
+export interface ExternalDataPolicyCheckRequest {
+  userId: string;
+  sources: string[];
   requestInfo?: {
     ipAddress?: string;
     userAgent?: string;
@@ -34,7 +48,7 @@ export interface PolicyCheckResult {
 }
 
 export interface PolicyViolation {
-  type: 'duplicate_cv' | 'name_mismatch' | 'usage_limit_exceeded' | 'account_sharing';
+  type: 'duplicate_cv' | 'name_mismatch' | 'usage_limit_exceeded' | 'account_sharing' | 'premium_required' | 'rate_limit_exceeded';
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
   details: any;
@@ -75,6 +89,19 @@ export class PolicyEnforcementService {
   private readonly PREMIUM_PLAN_LIMITS = {
     monthlyUploads: Infinity,
     uniqueCVs: 3
+  };
+
+  private readonly EXTERNAL_DATA_RATE_LIMITS = {
+    free: {
+      requestsPerHour: 3,
+      requestsPerDay: 10,
+      burstLimit: 1
+    },
+    premium: {
+      requestsPerHour: 100,
+      requestsPerDay: 500,
+      burstLimit: 10
+    }
   };
 
   /**
@@ -519,6 +546,267 @@ export class PolicyEnforcementService {
     } catch (error) {
       logger.error('Error flagging violation', { error, userId, cvHash, violationType });
       throw new Error('Failed to flag policy violation');
+    }
+  }
+
+  /**
+   * Check external data access policy
+   */
+  async checkExternalDataAccess(request: ExternalDataPolicyCheckRequest): Promise<PolicyCheckResult> {
+    try {
+      logger.info('[POLICY-CHECK] Starting external data access check', {
+        userId: request.userId,
+        sources: request.sources
+      });
+
+      const violations: PolicyViolation[] = [];
+      const warnings: PolicyWarning[] = [];
+      const actions: PolicyAction[] = [];
+
+      // Step 1: Get user subscription status
+      const subscriptionData = await getUserSubscriptionInternal(request.userId);
+      const isLifetimeAccess = subscriptionData?.lifetimeAccess === true;
+      const isPremium = subscriptionData?.subscriptionStatus === 'premium' || isLifetimeAccess;
+
+      // Step 2: Check premium access requirement
+      if (!isPremium) {
+        violations.push({
+          type: 'premium_required',
+          severity: 'high',
+          message: 'External data enrichment requires premium access',
+          details: {
+            currentPlan: subscriptionData?.subscriptionStatus || 'free',
+            requiredPlan: 'premium',
+            feature: 'externalData'
+          },
+          requiresAction: true,
+          suggestedActions: ['upgrade_to_premium', 'view_pricing']
+        });
+
+        actions.push({
+          type: 'block_upload',
+          priority: 'immediate',
+          payload: { reason: 'premium_required', feature: 'externalData' }
+        });
+      }
+
+      // Step 3: Check rate limits (only for premium users)
+      if (isPremium) {
+        const rateLimitCheck = await this.checkExternalDataRateLimit(request.userId, isPremium);
+        
+        if (rateLimitCheck.isLimited) {
+          violations.push({
+            type: 'rate_limit_exceeded',
+            severity: 'medium',
+            message: 'External data rate limit exceeded',
+            details: rateLimitCheck,
+            requiresAction: true,
+            suggestedActions: ['wait_for_reset', 'contact_support']
+          });
+
+          actions.push({
+            type: 'block_upload',
+            priority: 'high',
+            payload: { reason: 'rate_limit_exceeded', rateLimitStatus: rateLimitCheck }
+          });
+        } else if (rateLimitCheck.currentHour.remaining <= 5) {
+          warnings.push({
+            type: 'approaching_limit',
+            message: 'Approaching external data rate limit',
+            details: rateLimitCheck
+          });
+        }
+      }
+
+      // Step 4: Log security audit event
+      await this.recordExternalDataSecurityAudit({
+        userId: request.userId,
+        action: violations.length > 0 ? 'unauthorized_access' : 'access_attempt',
+        timestamp: new Date(),
+        ipAddress: request.requestInfo?.ipAddress,
+        userAgent: request.requestInfo?.userAgent,
+        premiumStatus: isPremium,
+        errorCode: violations.length > 0 ? violations[0].type : undefined,
+        metadata: {
+          sources: request.sources,
+          subscriptionStatus: subscriptionData?.subscriptionStatus
+        }
+      });
+
+      const result: PolicyCheckResult = {
+        allowed: violations.every(v => !v.requiresAction),
+        violations,
+        warnings,
+        actions,
+        metadata: {
+          cvHash: '', // Not applicable for external data
+          extractedNames: [],
+          usageStats: {
+            currentMonthUploads: 0,
+            uniqueCVsThisMonth: 0,
+            remainingUploads: isPremium ? 999 : 0,
+            subscriptionStatus: isPremium ? 'premium' : 'free',
+            lifetimeAccess: isLifetimeAccess
+          }
+        }
+      };
+
+      logger.info('[POLICY-CHECK] External data access check completed', {
+        userId: request.userId,
+        allowed: result.allowed,
+        violationsCount: violations.length
+      });
+
+      return result;
+
+    } catch (error) {
+      logger.error('[POLICY-CHECK] Error during external data access check', {
+        error: error instanceof Error ? error.message : error,
+        userId: request.userId
+      });
+      throw new Error('External data access policy check failed');
+    }
+  }
+
+  /**
+   * Check external data rate limits
+   */
+  private async checkExternalDataRateLimit(userId: string, isPremium: boolean): Promise<RateLimitStatus> {
+    try {
+      const now = new Date();
+      const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+      const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const limits = isPremium 
+        ? this.EXTERNAL_DATA_RATE_LIMITS.premium 
+        : this.EXTERNAL_DATA_RATE_LIMITS.free;
+
+      // Query usage for current hour
+      const hourlyUsageSnapshot = await this.db
+        .collection('external_data_usage')
+        .doc(userId)
+        .collection('events')
+        .where('timestamp', '>=', currentHour)
+        .where('timestamp', '<', new Date(currentHour.getTime() + 60 * 60 * 1000))
+        .get();
+
+      // Query usage for current day
+      const dailyUsageSnapshot = await this.db
+        .collection('external_data_usage')
+        .doc(userId)
+        .collection('events')
+        .where('timestamp', '>=', currentDay)
+        .where('timestamp', '<', new Date(currentDay.getTime() + 24 * 60 * 60 * 1000))
+        .get();
+
+      const hourlyRequests = hourlyUsageSnapshot.size;
+      const dailyRequests = dailyUsageSnapshot.size;
+
+      const hourlyRemaining = Math.max(0, limits.requestsPerHour - hourlyRequests);
+      const dailyRemaining = Math.max(0, limits.requestsPerDay - dailyRequests);
+
+      const isLimited = hourlyRemaining <= 0 || dailyRemaining <= 0;
+
+      return {
+        userId,
+        currentHour: {
+          requests: hourlyRequests,
+          limit: limits.requestsPerHour,
+          remaining: hourlyRemaining,
+          resetTime: new Date(currentHour.getTime() + 60 * 60 * 1000)
+        },
+        currentDay: {
+          requests: dailyRequests,
+          limit: limits.requestsPerDay,
+          remaining: dailyRemaining,
+          resetTime: new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
+        },
+        isLimited,
+        nextAllowedRequest: isLimited 
+          ? new Date(Math.min(
+              currentHour.getTime() + 60 * 60 * 1000,
+              currentDay.getTime() + 24 * 60 * 60 * 1000
+            ))
+          : undefined
+      };
+
+    } catch (error) {
+      logger.error('[RATE-LIMIT-CHECK] Error checking external data rate limit', {
+        error: error instanceof Error ? error.message : error,
+        userId
+      });
+      
+      // Return permissive result on error to avoid blocking legitimate users
+      return {
+        userId,
+        currentHour: {
+          requests: 0,
+          limit: 999,
+          remaining: 999,
+          resetTime: new Date()
+        },
+        currentDay: {
+          requests: 0,
+          limit: 999,
+          remaining: 999,
+          resetTime: new Date()
+        },
+        isLimited: false
+      };
+    }
+  }
+
+  /**
+   * Record external data security audit event
+   */
+  private async recordExternalDataSecurityAudit(audit: ExternalDataSecurityAudit): Promise<void> {
+    try {
+      // Skip recording in development environment
+      const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                           process.env.NODE_ENV === 'development' ||
+                           process.env.FIRESTORE_EMULATOR_HOST;
+      
+      if (isDevelopment) {
+        logger.info('[SECURITY-AUDIT] Skipping audit recording in development environment');
+        return;
+      }
+
+      await this.db.collection('external_data_security_audit').add({
+        ...audit,
+        timestamp: FieldValue.serverTimestamp()
+      });
+
+      // Also add to daily summary
+      const dateKey = audit.timestamp.toISOString().split('T')[0];
+      const dailySummaryRef = this.db
+        .collection('external_data_security_audit')
+        .doc('daily_summary')
+        .collection('data')
+        .doc(dateKey);
+
+      await dailySummaryRef.set({
+        date: dateKey,
+        totalAttempts: FieldValue.increment(1),
+        [`${audit.action}Count`]: FieldValue.increment(1),
+        lastUpdated: FieldValue.serverTimestamp(),
+        uniqueUsers: FieldValue.arrayUnion(audit.userId),
+        ...(audit.ipAddress && {
+          [`ipAddresses.${audit.ipAddress}`]: FieldValue.increment(1)
+        })
+      }, { merge: true });
+
+      logger.info('[SECURITY-AUDIT] External data security audit recorded', {
+        userId: audit.userId,
+        action: audit.action,
+        premiumStatus: audit.premiumStatus
+      });
+
+    } catch (error) {
+      logger.error('[SECURITY-AUDIT] Failed to record external data security audit', {
+        error: error instanceof Error ? error.message : error,
+        userId: audit.userId
+      });
+      // Don't throw - audit logging should not block the main operation
     }
   }
 

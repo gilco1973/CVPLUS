@@ -152,6 +152,23 @@ export {
   enrichCVWithExternalData
 } from './functions/enrichCVWithExternalData';
 
+// Export external data analytics functions
+export {
+  trackExternalDataUsage,
+  getUserExternalDataUsageStats
+} from './functions/trackExternalDataUsage';
+
+export {
+  getExternalDataAnalytics,
+  getDailyExternalDataAnalytics
+} from './functions/getExternalDataAnalytics';
+
+export {
+  trackConversionEvent,
+  getConversionMetrics,
+  getBusinessIntelligenceReport
+} from './functions/getConversionMetrics';
+
 // Export testimonials functions
 export {
   generateTestimonialsCarousel,

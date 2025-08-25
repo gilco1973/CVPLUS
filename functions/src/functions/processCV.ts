@@ -73,7 +73,103 @@ export const processCV = onCall(
         // 🔧 DEVELOPMENT SKIP: Handle development skip requests
         if (fileUrl === 'development-skip' && mimeType === 'development/skip') {
           console.log('🔧 Development skip requested - using cached CV data...');
-          // This will trigger the development mode CV reuse logic below
+          
+          // Only trigger development CV reuse for explicit skip requests
+          const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                               process.env.NODE_ENV === 'development' ||
+                               process.env.FIRESTORE_EMULATOR_HOST;
+          
+          if (isDevelopment) {
+            console.log('📌 Development environment detected - processing skip request');
+            console.log('   FUNCTIONS_EMULATOR:', process.env.FUNCTIONS_EMULATOR);
+            console.log('   NODE_ENV:', process.env.NODE_ENV);
+            console.log('   FIRESTORE_EMULATOR_HOST:', process.env.FIRESTORE_EMULATOR_HOST);
+            
+            // 🚀 DEVELOPMENT OPTIMIZATION: Skip LLM parsing and reuse last saved parsed CV
+            console.log('🔧 Development mode: Skipping LLM CV parsing and reusing last saved CV...');
+            
+            try {
+              // For development, use the known real CV data (simplified query to avoid index issues)
+              const realJobId = 'uaJjVwzuzuho6Rma3FoK'; // Real job with parsed CV data
+              const realJobDoc = await admin.firestore()
+                .collection('jobs')
+                .doc(realJobId)
+                .get();
+              
+              if (realJobDoc.exists && realJobDoc.data()?.parsedData) {
+                const lastJobData = realJobDoc.data();
+                const reusedCV = lastJobData.parsedData;
+                
+                console.log('✅ Found real parsed CV to reuse:');
+                console.log('   - From job:', realJobDoc.id);
+                console.log('   - Name:', reusedCV?.personalInfo?.name || 'Unknown');
+                console.log('   - Updated:', lastJobData.updatedAt?.toDate?.() || 'Unknown');
+                
+                // Create a development-optimized parsed CV with timestamp
+                parsedCV = {
+                  ...reusedCV,
+                  // Add development markers
+                  _developmentMode: true,
+                  _reusedFromJob: realJobDoc.id,
+                  _reusedAt: new Date(),
+                  // Update personal info to show this is development
+                  personalInfo: {
+                    ...reusedCV.personalInfo,
+                    name: `${reusedCV.personalInfo?.name || 'Real User'} (Dev Mode)`
+                  }
+                };
+                
+                // Set cvContent for policy checking (simplified for dev)
+                cvContent = JSON.stringify(parsedCV);
+                
+                console.log('🎯 Development optimization: LLM parsing skipped, using cached CV');
+              } else {
+                console.log('❌ No previous parsed CVs found for development skip');
+                
+                // Update job status to indicate no cached CV is available
+                await admin.firestore()
+                  .collection('jobs')
+                  .doc(jobId)
+                  .set({
+                    status: 'failed',
+                    error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.',
+                    errorType: 'no_cached_data',
+                    developmentSkipFailed: true,
+                    updatedAt: FieldValue.serverTimestamp()
+                  }, { merge: true });
+
+                // Return immediately to prevent further execution
+                return {
+                  success: false,
+                  error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.'
+                };
+              }
+            } catch (reuseError) {
+              console.log('❌ Failed to reuse parsed CV for development skip:', reuseError.message);
+              
+              // Update job status to indicate reuse failure
+              await admin.firestore()
+                .collection('jobs')
+                .doc(jobId)
+                .set({
+                  status: 'failed',
+                  error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.',
+                  errorType: 'cache_access_failed',
+                  technicalError: reuseError.message,
+                  developmentSkipFailed: true,
+                  updatedAt: FieldValue.serverTimestamp()
+                }, { merge: true });
+
+              // Return immediately to prevent further execution
+              return {
+                success: false,
+                error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.'
+              };
+            }
+          } else {
+            // Not in development environment - can't process skip request
+            throw new Error('Development skip is only available in development environment');
+          }
         } else if (isUrl) {
           // Parse from URL
           parsedCV = await parser.parseFromURL(fileUrl, userInstructions);
@@ -126,102 +222,8 @@ export const processCV = onCall(
 
       console.log('🔍 Running policy enforcement check for user:', user.uid);
       
-      // Log environment for debugging
-      const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
-                           process.env.NODE_ENV === 'development' ||
-                           process.env.FIRESTORE_EMULATOR_HOST;
-      
-      if (isDevelopment) {
-        console.log('📌 Development environment detected - optimizations enabled');
-        console.log('   FUNCTIONS_EMULATOR:', process.env.FUNCTIONS_EMULATOR);
-        console.log('   NODE_ENV:', process.env.NODE_ENV);
-        console.log('   FIRESTORE_EMULATOR_HOST:', process.env.FIRESTORE_EMULATOR_HOST);
-        
-        // 🚀 DEVELOPMENT OPTIMIZATION: Skip LLM parsing and reuse last saved parsed CV
-        console.log('🔧 Development mode: Skipping LLM CV parsing and reusing last saved CV...');
-        
-        try {
-          // Find the most recent job with parsed data
-          const recentJobsSnapshot = await admin.firestore()
-            .collection('jobs')
-            .where('status', 'in', ['analyzed', 'completed'])
-            .where('parsedData', '!=', null)
-            .orderBy('parsedData')
-            .orderBy('updatedAt', 'desc')
-            .limit(1)
-            .get();
-          
-          if (!recentJobsSnapshot.empty) {
-            const lastJobData = recentJobsSnapshot.docs[0].data();
-            const reusedCV = lastJobData.parsedData;
-            
-            console.log('✅ Found last parsed CV to reuse:');
-            console.log('   - From job:', recentJobsSnapshot.docs[0].id);
-            console.log('   - Name:', reusedCV?.personalInfo?.name || 'Unknown');
-            console.log('   - Updated:', lastJobData.updatedAt?.toDate?.() || 'Unknown');
-            
-            // Create a development-optimized parsed CV with timestamp
-            parsedCV = {
-              ...reusedCV,
-              // Add development markers
-              _developmentMode: true,
-              _reusedFromJob: recentJobsSnapshot.docs[0].id,
-              _reusedAt: new Date(),
-              // Update personal info to show this is development
-              personalInfo: {
-                ...reusedCV.personalInfo,
-                name: `${reusedCV.personalInfo?.name || 'Test User'} (Dev Mode)`
-              }
-            };
-            
-            // Set cvContent for policy checking (simplified for dev)
-            cvContent = JSON.stringify(parsedCV);
-            
-            console.log('🎯 Development optimization: LLM parsing skipped, using cached CV');
-          } else {
-            console.log('❌ No previous parsed CVs found for development skip');
-            
-            // Update job status to indicate no cached CV is available
-            await admin.firestore()
-              .collection('jobs')
-              .doc(jobId)
-              .set({
-                status: 'failed',
-                error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.',
-                errorType: 'no_cached_data',
-                developmentSkipFailed: true,
-                updatedAt: FieldValue.serverTimestamp()
-              }, { merge: true });
-
-            // Return immediately to prevent further execution
-            return {
-              success: false,
-              error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.'
-            };
-          }
-        } catch (reuseError) {
-          console.log('❌ Failed to reuse parsed CV for development skip:', reuseError.message);
-          
-          // Update job status to indicate reuse failure
-          await admin.firestore()
-            .collection('jobs')
-            .doc(jobId)
-            .set({
-              status: 'failed',
-              error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.',
-              errorType: 'cache_access_failed',
-              technicalError: reuseError.message,
-              developmentSkipFailed: true,
-              updatedAt: FieldValue.serverTimestamp()
-            }, { merge: true });
-
-          // Return immediately to prevent further execution
-          return {
-            success: false,
-            error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.'
-          };
-        }
-      }
+      // Note: Development optimization is now handled only for explicit skip requests above
+      // Regular CV uploads will proceed with normal processing regardless of development mode
       
       const policyResult = await policyService.checkUploadPolicy(policyCheckRequest);
       

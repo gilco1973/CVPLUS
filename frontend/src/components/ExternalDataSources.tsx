@@ -9,6 +9,9 @@ import { PrivacyNotice } from './external/PrivacyNotice';
 import { DataSummary } from './external/DataSummary';
 import { ExternalDataActions } from './external/ExternalDataActions';
 import { ExternalDataSourcesGate } from './premium/PremiumGate';
+import { SmartIncentiveManager } from './premium/SmartIncentiveManager';
+import { FeatureEngagementTracker } from './premium/ProgressiveRevelationManager';
+import { useProgressiveRevelation } from '../hooks/useProgressiveRevelation';
 
 interface ExternalDataSourcesProps {
   jobId: string;
@@ -39,22 +42,29 @@ const ExternalDataSourcesCore: React.FC<ExternalDataSourcesProps> = ({
     setIsPrivacyAccepted
   } = useExternalData(jobId);
   
+  const { trackInteraction: trackProgressiveInteraction } = useProgressiveRevelation('externalDataSources');
+  
   const [showPreview, setShowPreview] = useState(false);
   
-  // Handle fetch data
+  // Handle fetch data with progressive revelation tracking
   const handleFetchData = async () => {
+    trackProgressiveInteraction('fetch_attempt');
     await fetchExternalData();
     if (enrichedData.length > 0) {
       setShowPreview(true);
+      trackProgressiveInteraction('data_fetched');
     }
   };
   
   // Handle continue with enriched data
   const handleContinue = () => {
+    trackProgressiveInteraction('continue_action');
     if (onDataEnriched && enrichedData.length > 0) {
       onDataEnriched(enrichedData);
+      trackProgressiveInteraction('data_used');
     } else if (onSkip) {
       onSkip();
+      trackProgressiveInteraction('skipped');
     }
   };
   
@@ -111,7 +121,10 @@ const ExternalDataSourcesCore: React.FC<ExternalDataSourcesProps> = ({
       {enrichedData.length > 0 && (
         <div className="flex items-center justify-center">
           <button
-            onClick={() => setShowPreview(!showPreview)}
+            onClick={() => {
+              setShowPreview(!showPreview);
+              trackProgressiveInteraction(showPreview ? 'preview_hidden' : 'preview_shown');
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white"
           >
             {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -145,14 +158,21 @@ const ExternalDataSourcesCore: React.FC<ExternalDataSourcesProps> = ({
         onClearAndRefetch={() => {
           clearData();
           setShowPreview(false);
+          trackProgressiveInteraction('data_cleared');
         }}
       />
     </div>
   );
 };
 
-// Main exported component with premium gate
+// Main exported component with premium gate and smart incentives
 export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = (props) => {
+  const { 
+    trackInteraction,
+    shouldShowUpgradePrompt,
+    personalizedMessage 
+  } = useProgressiveRevelation('externalDataSources');
+  
   const handleAnalyticsEvent = (event: string, data?: Record<string, any>) => {
     // Track premium upgrade interactions
     if (process.env.NODE_ENV === 'development') {
@@ -160,18 +180,62 @@ export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = (props) =
     }
     // TODO: Integrate with actual analytics service
   };
+  
+  const handleIncentiveShown = (incentive: any) => {
+    trackInteraction('incentive_view');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Smart Incentive Shown:', incentive);
+    }
+  };
+  
+  const handleIncentiveClicked = (incentive: any) => {
+    trackInteraction('incentive_click');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Smart Incentive Clicked:', incentive);
+    }
+  };
+  
+  const handleIncentiveDismissed = (incentive: any) => {
+    trackInteraction('incentive_dismiss');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Smart Incentive Dismissed:', incentive);
+    }
+  };
 
   return (
-    <ExternalDataSourcesGate 
-      showPreview={true}
-      previewOpacity={0.3}
-      className={props.className}
-      onAnalyticsEvent={handleAnalyticsEvent}
-      onAccessDenied={() => {
-        toast.error('External data sources are available with Premium access');
-      }}
+    <FeatureEngagementTracker 
+      featureName="externalDataSources"
+      trackHover={true}
+      trackClicks={true}
     >
-      <ExternalDataSourcesCore {...props} />
-    </ExternalDataSourcesGate>
+      <div className="relative">
+        <ExternalDataSourcesGate 
+          showPreview={true}
+          previewOpacity={0.3}
+          className={props.className}
+          onAnalyticsEvent={handleAnalyticsEvent}
+          onAccessDenied={() => {
+            toast.error('External data sources are available with Premium access');
+            trackInteraction('access_denied');
+          }}
+        >
+          <ExternalDataSourcesCore {...props} />
+        </ExternalDataSourcesGate>
+        
+        {/* Smart Incentive Manager */}
+        {shouldShowUpgradePrompt && (
+          <div className="mt-6">
+            <SmartIncentiveManager
+              featureName="externalDataSources"
+              onIncentiveShown={handleIncentiveShown}
+              onIncentiveClicked={handleIncentiveClicked}
+              onIncentiveDismissed={handleIncentiveDismissed}
+              enableABTesting={true}
+              variant="default"
+            />
+          </div>
+        )}
+      </div>
+    </FeatureEngagementTracker>
   );
 };
