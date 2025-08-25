@@ -67,7 +67,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {/* Email Field */}
       <div>
         <label htmlFor="senderEmail" className="block text-sm font-medium text-gray-700 mb-1">
-          Your Email *
+          {t('forms.contactForm.fields.email.label')} *
         </label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -79,7 +79,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               errors.senderEmail ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Enter your email address"
+            placeholder={t('forms.contactForm.fields.email.placeholder')}
             aria-describedby={errors.senderEmail ? 'email-error' : undefined}
           />
         </div>
@@ -94,7 +94,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {showPhoneField && (
         <div>
           <label htmlFor="senderPhone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number
+            {t('forms.contactForm.fields.phone.label')}
           </label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -106,7 +106,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
               className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.senderPhone ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter your phone number (optional)"
+              placeholder={t('forms.contactForm.fields.phone.placeholder')}
               aria-describedby={errors.senderPhone ? 'phone-error' : undefined}
             />
           </div>
