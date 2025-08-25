@@ -220,8 +220,6 @@ const getStepNumber = (currentPage: string): string => {
     case 'keywords':
       return '4b'; // Keywords are sub-step of customization
     case 'results':
-      return '4'; // Feature selection is step 4 (legacy)
-    case 'final-results':
       return '5'; // Final results is step 5
     default:
       return '1';
@@ -245,8 +243,6 @@ const getStepLabel = (currentPage: string): string => {
     case 'keywords':
       return 'Keyword Optimization';
     case 'results':
-      return 'Feature Selection'; // Legacy support
-    case 'final-results':
       return 'Your Enhanced CV';
     default:
       return 'Getting Started';

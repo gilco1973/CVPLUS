@@ -20,7 +20,7 @@ export const testNavigationFix = {
     const routes = [
       `/analysis/${jobId}`,
       `/preview/${jobId}`,
-      `/final-results/${jobId}`
+      `/results/${jobId}`
     ];
     
     if (process.env.NODE_ENV === 'development') {

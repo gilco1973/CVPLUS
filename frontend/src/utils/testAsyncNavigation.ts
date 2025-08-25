@@ -120,8 +120,8 @@ export const testAsyncNavigationFlow = {
       // Step 5: Immediate navigation
       steps.push({
         step: 'immediate_navigation',
-        description: 'Navigate to /final-results immediately',
-        target: `/final-results/${jobId}`,
+        description: 'Navigate to /results immediately',
+        target: `/results/${jobId}`,
         timestamp: Date.now()
       });
       
@@ -150,7 +150,7 @@ export const testAsyncNavigationFlow = {
       steps.push({
         step: 'navigation_after_completion',
         description: 'Navigate after completion',
-        target: `/final-results/${jobId}`,
+        target: `/results/${jobId}`,
         timestamp: Date.now()
       });
     }

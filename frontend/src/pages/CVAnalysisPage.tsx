@@ -96,7 +96,7 @@ export const CVAnalysisPage = () => {
       return;
     }
 
-    const targetPath = `/select-features/${jobId}`;
+    const targetPath = `/customize/${jobId}`;
     console.log('📍 [CVAnalysisPage] Navigation target:', targetPath);
 
     try {

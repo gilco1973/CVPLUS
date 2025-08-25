@@ -79,7 +79,7 @@ export const RoleSelectionPage: React.FC = () => {
     }
 
     // Navigate to feature selection
-    navigate(`/select-features/${jobId}`, {
+    navigate(`/customize/${jobId}`, {
       state: { roleContext, selectedRecommendations }
     });
   };
@@ -88,7 +88,7 @@ export const RoleSelectionPage: React.FC = () => {
     if (!jobId) return;
     
     toast('Skipping role analysis - proceeding with standard features');
-    navigate(`/select-features/${jobId}`);
+    navigate(`/customize/${jobId}`);
   };
 
   if (isLoading) {

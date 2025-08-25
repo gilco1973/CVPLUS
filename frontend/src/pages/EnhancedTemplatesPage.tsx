@@ -250,7 +250,7 @@ export const EnhancedTemplatesPage = () => {
         const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
         toast.success(`🎨 Generating ${selectedTemplateData?.name} CV! Redirecting...`);
         
-        navigate(`/final-results/${jobId}`);
+        navigate(`/results/${jobId}`);
         
       } else {
         console.log('🔄 [SYNC MODE] Generating enhanced CV synchronously...');
@@ -266,7 +266,7 @@ export const EnhancedTemplatesPage = () => {
         
         if (result.success) {
           toast.success(`✅ ${result.metadata.templateName} CV generated successfully!`);
-          navigate(`/final-results/${jobId}`);
+          navigate(`/results/${jobId}`);
         } else {
           throw new Error(result.error || 'Generation failed');
         }

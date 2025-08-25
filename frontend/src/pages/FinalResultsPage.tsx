@@ -103,7 +103,7 @@ export const FinalResultsPage = () => {
     
     return (
       <div className="min-h-screen bg-neutral-900">
-        <Header currentPage="final-results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
+        <Header currentPage="results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
         <div className="flex items-center justify-center py-20">
           <div className="text-center max-w-md mx-auto">
             {isAsyncInitialization ? (
@@ -138,7 +138,7 @@ export const FinalResultsPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-neutral-900">
-        <Header currentPage="final-results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
+        <Header currentPage="results" jobId={jobId} title="Your Enhanced CV" variant="dark" />
         <div className="max-w-none mx-auto px-6 py-8">
           <div className="bg-neutral-800 rounded-lg shadow-lg p-8 text-center border border-neutral-700 error-shake">
             <FileText className="w-16 h-16 text-red-400 mx-auto mb-4" />
@@ -178,7 +178,7 @@ export const FinalResultsPage = () => {
       <FinalResultsErrorBoundary>
         <div className="min-h-screen bg-neutral-900">
         <Header 
-          currentPage="final-results" 
+          currentPage="results" 
           jobId={jobId} 
           title="Your Enhanced CV" 
           subtitle={

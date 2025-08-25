@@ -620,7 +620,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       sessionStorage.setItem(`magic-transform-intent-${job.id}`, 'true');
       
       // Navigate directly to feature selection page
-      navigate(`/select-features/${job.id}`);
+      navigate(`/customize/${job.id}`);
       
       // Clear transformation state
       setIsMagicTransforming(false);

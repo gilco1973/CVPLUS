@@ -96,7 +96,7 @@ const UnifiedAnalysisContent: React.FC<{
     if (onNavigateToFeatures) {
       onNavigateToFeatures(data);
     } else {
-      navigate(`/select-features/${jobId}`, {
+      navigate(`/customize/${jobId}`, {
         state: {
           jobData: data.jobData,
           roleContext: {

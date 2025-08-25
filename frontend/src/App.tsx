@@ -36,6 +36,12 @@ const RoleSelectRedirect = () => {
   return <Navigate to={`/analysis/${jobId}`} replace />;
 };
 
+// Redirect old /select-features routes to /customize for backward compatibility
+const FeatureSelectRedirect = () => {
+  const { jobId } = useParams<{ jobId: string }>();
+  return <Navigate to={`/customize/${jobId}`} replace />;
+};
+
 const router = createBrowserRouter(
   [
     {
@@ -72,12 +78,17 @@ const router = createBrowserRouter(
       element: <RoleSelectRedirect />,
     },
     {
-      path: '/select-features/:jobId',
+      path: '/customize/:jobId',
       element: (
         <Suspense fallback={<PageLoader />}>
           <FeatureSelectionPage />
         </Suspense>
       ),
+    },
+    // Redirect old /select-features routes to /customize for backward compatibility
+    {
+      path: '/select-features/:jobId',
+      element: <FeatureSelectRedirect />,
     },
     {
       path: '/process/:jobId',
@@ -105,14 +116,6 @@ const router = createBrowserRouter(
     },
     {
       path: '/results/:jobId',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <ResultsPage />
-        </Suspense>
-      ),
-    },
-    {
-      path: '/final-results/:jobId',
       element: (
         <Suspense fallback={<PageLoader />}>
           <FinalResultsPage />

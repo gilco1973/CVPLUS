@@ -26,7 +26,7 @@ export const FEATURE_FLAGS: FeatureFlags = {
       'cv-preview': 100,    // CVPreviewPageNew is complete and tested
       'cv-analysis': 50,    // Gradual rollout for testing
       'processing': 25,     // Conservative rollout
-      'final-results': 25   // Conservative rollout
+      'results': 25   // Conservative rollout
     }
   },
 
@@ -114,7 +114,7 @@ export const getFeatureFlagStatus = (userId: string) => {
       'cv-preview': useReactSPA(userId, 'cv-preview'),
       'cv-analysis': useReactSPA(userId, 'cv-analysis'),
       'processing': useReactSPA(userId, 'processing'),
-      'final-results': useReactSPA(userId, 'final-results'),
+      'results': useReactSPA(userId, 'results'),
     },
     jsonAPIs: {
       'cv-data': useJSONAPIs(userId, 'cv-data'),
@@ -140,7 +140,7 @@ export const useFeatureFlags = () => {
       cvPreview: useReactSPA(userId, 'cv-preview'),
       cvAnalysis: useReactSPA(userId, 'cv-analysis'),
       processing: useReactSPA(userId, 'processing'),
-      finalResults: useReactSPA(userId, 'final-results'),
+      results: useReactSPA(userId, 'results'),
     },
     jsonAPIs: {
       cvData: useJSONAPIs(userId, 'cv-data'),

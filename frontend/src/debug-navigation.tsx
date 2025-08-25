@@ -18,13 +18,13 @@ export const NavigationDebugger: React.FC = () => {
     console.log('- URL:', window.location.href);
     
     // Check if we're on the expected route
-    const isFeatureSelection = location.pathname.includes('select-features');
+    const isFeatureSelection = location.pathname.includes('customize') || location.pathname.includes('select-features');
     const isResults = location.pathname.includes('results');
     
     console.log('🎯 Route Analysis:');
     console.log('- Is Feature Selection route:', isFeatureSelection);
     console.log('- Is Results route:', isResults);
-    console.log('- Expected: Feature Selection route');
+    console.log('- Expected: Feature Selection route (customize or select-features)');
     
     if (isResults && !isFeatureSelection) {
       console.error('❌ NAVIGATION BUG: Currently on Results route but expected Feature Selection!');

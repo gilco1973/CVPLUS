@@ -204,7 +204,7 @@ export const TemplatesPage = () => {
         toast.success('CV generation initiated! Redirecting to progress...');
         
         // Navigate immediately to show real-time progress
-        navigate(`/final-results/${jobId}`);
+        navigate(`/results/${jobId}`);
         
       } else {
         // Sync mode: wait for completion then navigate (original behavior)
@@ -213,7 +213,7 @@ export const TemplatesPage = () => {
         
         await generateCV(jobId, selectedTemplate, defaultFeatures);
         toast.success('CV generated successfully!');
-        navigate(`/final-results/${jobId}`);
+        navigate(`/results/${jobId}`);
       }
     } catch (error: unknown) {
       console.error('Error in CV generation:', error);
