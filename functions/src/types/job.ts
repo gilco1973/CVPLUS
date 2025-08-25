@@ -5,7 +5,7 @@
 export interface Job {
   id: string;
   userId: string;
-  status: 'pending' | 'processing' | 'analyzed' | 'generating' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'parsed' | 'analyzed' | 'generating' | 'completed' | 'failed';
   fileUrl?: string;
   mimeType?: string;
   isUrl?: boolean;

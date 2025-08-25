@@ -292,9 +292,9 @@ export const FeatureSelectionPage = () => {
   };
 
   const handleBack = () => {
-    // Navigate back to role selection if we have a jobId, otherwise to home
+    // Navigate back to analysis page if we have a jobId, otherwise to home
     if (jobId) {
-      navigate(`/role-select/${jobId}`);
+      navigate(`/analysis/${jobId}`);
     } else {
       navigate('/');
     }

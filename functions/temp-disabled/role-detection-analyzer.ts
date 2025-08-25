@@ -1,3 +1,4 @@
+// TEMPORARILY DISABLED DUE TO TYPESCRIPT ERRORS - FOR TESTING getRecommendations
 /**
  * Role Detection Analyzer
  * 
@@ -25,7 +26,7 @@ import {
 } from './role-detection-helpers';
 import { detectExperienceLevel } from './role-detection-maps';
 
-export class RoleDetectionAnalyzer {
+// TEMP DISABLED - export class RoleDetectionAnalyzer {
   private config: RoleDetectionConfig;
   private roleProfileService: RoleProfileService;
   private recommendationsService: RoleRecommendationsService;

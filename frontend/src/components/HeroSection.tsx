@@ -76,7 +76,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setShowFeatures(true);
+          _setShowFeatures(true);
         }
       },
       { threshold: 0.3 }

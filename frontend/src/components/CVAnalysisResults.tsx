@@ -619,8 +619,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       // Store the magic transform intent for after role selection
       sessionStorage.setItem(`magic-transform-intent-${job.id}`, 'true');
       
-      // Navigate to role selection page
-      navigate(`/role-select/${job.id}`);
+      // Navigate directly to feature selection page
+      navigate(`/select-features/${job.id}`);
       
       // Clear transformation state
       setIsMagicTransforming(false);

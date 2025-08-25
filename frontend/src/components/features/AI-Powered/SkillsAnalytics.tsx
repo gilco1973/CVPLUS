@@ -968,12 +968,19 @@ export const SkillsAnalytics: React.FC<SkillsAnalyticsProps> = ({
                       
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-gray-700">Recommendations:</p>
-                        {gap.recommendations.slice(0, 2).map((rec, recIndex) => (
-                          <div key={recIndex} className="flex items-start gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-gray-600">{rec}</span>
-                          </div>
-                        ))}
+                        {gap.recommendations.slice(0, 2).map((rec, recIndex) => {
+                          // Handle both string and object formats for recommendations
+                          const recText = typeof rec === 'string' 
+                            ? rec 
+                            : rec?.title || rec?.description || (rec?.type && rec?.targetSection ? `${rec.type}: ${rec.targetSection}` : JSON.stringify(rec));
+                          
+                          return (
+                            <div key={recIndex} className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm text-gray-600">{recText}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}

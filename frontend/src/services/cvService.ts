@@ -8,6 +8,7 @@
 export {
   CVServiceCore,
   createJob,
+  createDevelopmentJob,
   uploadCV,
   processCV,
   subscribeToJob,

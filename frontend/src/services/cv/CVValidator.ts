@@ -130,8 +130,9 @@ export class CVValidator {
   }> {
     try {
       // Import functions dynamically to avoid initialization issues
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
+      const { httpsCallable } = await import('firebase/functions');
+      const { getFunctionsInstance } = await import('../../config/firebase-optimized');
+      const functions = getFunctionsInstance();
       
       // Call the secure Firebase Function with premium validation
       const updateJobFeaturesFunction = httpsCallable(functions, 'updateJobFeatures');

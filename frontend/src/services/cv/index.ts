@@ -14,6 +14,7 @@ export {
   CVServiceCore,
   // Legacy compatibility exports
   createJob,
+  createDevelopmentJob,
   uploadCV,
   processCV,
   subscribeToJob,

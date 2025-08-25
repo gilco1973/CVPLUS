@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Shield as _Shield, CheckCircle as _CheckCircle, Circle as _Circle, Loader2, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Search, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { designSystem } from '../config/designSystem';
 import { useExternalData, type ExternalDataSource as _ExternalDataSource } from '../hooks/useExternalData';
@@ -7,6 +7,8 @@ import { ExternalDataPreview } from './ExternalDataPreview';
 import { SourceSelector } from './external/SourceSelector';
 import { PrivacyNotice } from './external/PrivacyNotice';
 import { DataSummary } from './external/DataSummary';
+import { ExternalDataActions } from './external/ExternalDataActions';
+import { ExternalDataSourcesGate } from './premium/PremiumGate';
 
 interface ExternalDataSourcesProps {
   jobId: string;
@@ -15,12 +17,14 @@ interface ExternalDataSourcesProps {
   className?: string;
 }
 
-export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = ({
+// Internal component without premium gate
+const ExternalDataSourcesCore: React.FC<ExternalDataSourcesProps> = ({
   jobId,
   onDataEnriched,
   onSkip,
   className = ''
 }) => {
+
   const {
     sources,
     isLoading,
@@ -130,73 +134,44 @@ export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = ({
       )}
       
       {/* Action Buttons */}
-      <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.default} p-6`}>
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-neutral-400">
-            {stats.enabledSources > 0 ? (
-              `${stats.enabledSources} sources selected`
-            ) : (
-              'Select sources to enhance your CV'
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {onSkip && (
-              <button
-                onClick={onSkip}
-                disabled={isLoading}
-                className="px-4 py-2 text-neutral-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Skip This Step
-              </button>
-            )}
-            
-            {enrichedData.length > 0 ? (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    clearData();
-                    setShowPreview(false);
-                  }}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 border border-neutral-600 text-neutral-300 hover:border-neutral-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Fetch Again
-                </button>
-                
-                <button
-                  onClick={handleContinue}
-                  className={`${designSystem.components.button.base} ${designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.md} flex items-center gap-2`}
-                >
-                  Continue with Data
-                  <span className="px-2 py-1 bg-white/20 rounded-full text-xs">
-                    {stats.totalItems}
-                  </span>
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleFetchData}
-                disabled={isLoading || stats.enabledSources === 0 || !isPrivacyAccepted}
-                className={`${designSystem.components.button.base} ${isLoading ? designSystem.components.button.variants.primary.loading : designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.md} flex items-center gap-2`}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Fetching Data...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Fetch External Data
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <ExternalDataActions
+        isLoading={isLoading}
+        enrichedData={enrichedData}
+        stats={stats}
+        isPrivacyAccepted={isPrivacyAccepted}
+        onSkip={onSkip}
+        onFetchData={handleFetchData}
+        onContinue={handleContinue}
+        onClearAndRefetch={() => {
+          clearData();
+          setShowPreview(false);
+        }}
+      />
     </div>
+  );
+};
+
+// Main exported component with premium gate
+export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = (props) => {
+  const handleAnalyticsEvent = (event: string, data?: Record<string, any>) => {
+    // Track premium upgrade interactions
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ExternalDataSources Analytics:', { event, data });
+    }
+    // TODO: Integrate with actual analytics service
+  };
+
+  return (
+    <ExternalDataSourcesGate 
+      showPreview={true}
+      previewOpacity={0.3}
+      className={props.className}
+      onAnalyticsEvent={handleAnalyticsEvent}
+      onAccessDenied={() => {
+        toast.error('External data sources are available with Premium access');
+      }}
+    >
+      <ExternalDataSourcesCore {...props} />
+    </ExternalDataSourcesGate>
   );
 };

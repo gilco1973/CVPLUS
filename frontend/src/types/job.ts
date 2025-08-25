@@ -5,7 +5,7 @@ import type { CVStep } from './session';
 export interface Job {
   id: string;
   userId: string;
-  status: 'pending' | 'processing' | 'analyzed' | 'generating' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'parsed' | 'analyzed' | 'generating' | 'completed' | 'failed';
   fileUrl?: string;
   mimeType?: string;
   fileName?: string;
@@ -104,7 +104,8 @@ export interface Job {
 export type JobStatus = 
   | 'draft'           // Session created, no processing started
   | 'pending'         // File uploaded, waiting for processing
-  | 'processing'      // AI processing in progress  
+  | 'processing'      // AI processing in progress
+  | 'parsed'          // CV parsed, ready for analysis or role detection  
   | 'analyzed'        // Analysis complete, ready for user input
   | 'customizing'     // User making selections/customizations
   | 'generating'      // Final CV generation in progress

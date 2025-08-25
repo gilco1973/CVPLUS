@@ -49,6 +49,7 @@
     "isomorphic-dompurify": "^2.26.0",
     "mammoth": "^1.6.0",
     "nanoid": "^5.1.5",
+    "node-fetch": "^2.7.0",
     "nodemailer": "^7.0.5",
     "openai": "^5.11.0",
     "pdf-lib": "^1.17.1",

@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { CVHashService, DuplicateCheckResult, CVMetadata } from './cv-hash.service';
 import { 
   NameVerificationService, 
@@ -82,6 +82,39 @@ export class PolicyEnforcementService {
    */
   async checkUploadPolicy(request: PolicyCheckRequest): Promise<PolicyCheckResult> {
     try {
+      // Skip policy checks in development/emulator environment
+      const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                           process.env.NODE_ENV === 'development' ||
+                           process.env.FIRESTORE_EMULATOR_HOST;
+      
+      if (isDevelopment) {
+        logger.info('Skipping policy checks in development environment', { 
+          userId: request.userId,
+          FUNCTIONS_EMULATOR: process.env.FUNCTIONS_EMULATOR,
+          NODE_ENV: process.env.NODE_ENV,
+          FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST
+        });
+        
+        // Return allowed result with minimal metadata
+        return {
+          allowed: true,
+          violations: [],
+          warnings: [],
+          actions: [],
+          metadata: {
+            cvHash: 'dev-hash-' + Date.now(),
+            extractedNames: [],
+            usageStats: {
+              currentMonthUploads: 0,
+              uniqueCVsThisMonth: 0,
+              remainingUploads: 999,
+              subscriptionStatus: 'free' as const,
+              lifetimeAccess: false
+            }
+          }
+        };
+      }
+
       logger.info('Starting policy check', { 
         userId: request.userId, 
         fileName: request.fileName,
@@ -169,7 +202,7 @@ export class PolicyEnforcementService {
               accountName: nameVerification.accountName,
               confidence: nameVerification.confidence,
               matchType: nameVerification.matchType,
-              suggestions: nameVerification.suggestions
+              suggestions: nameVerification.suggestions || []
             },
             requiresAction: true,
             suggestedActions: ['verify_name', 'update_account_name', 'explain_difference']
@@ -385,47 +418,67 @@ export class PolicyEnforcementService {
    */
   private async recordPolicyCheck(userId: string, checkData: any): Promise<void> {
     try {
+      // Skip recording in development environment
+      const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                           process.env.NODE_ENV === 'development' ||
+                           process.env.FIRESTORE_EMULATOR_HOST;
+      
+      if (isDevelopment) {
+        logger.info('Skipping policy check recording in development environment');
+        return;
+      }
       const policyRecordRef = this.db.collection('userPolicyRecords').doc(userId);
       const checkRecord = {
         userId,
         timestamp: new Date(),
-        violations: checkData.violations,
-        warnings: checkData.warnings,
-        cvHash: checkData.cvHash,
-        nameExtraction: checkData.nameExtraction,
-        nameVerification: checkData.nameVerification,
-        usageStats: checkData.usageStats,
-        requestInfo: checkData.requestInfo
+        violations: checkData.violations || [],
+        warnings: checkData.warnings || [],
+        cvHash: checkData.cvHash || '',
+        nameExtraction: checkData.nameExtraction || null,
+        nameVerification: checkData.nameVerification || null,
+        usageStats: checkData.usageStats || null,
+        requestInfo: {
+          ipAddress: checkData.requestInfo?.ipAddress || 'unknown',
+          userAgent: checkData.requestInfo?.userAgent || 'unknown'
+        }
       };
+
+      // Get existing document to handle increment properly
+      const existingDoc = await policyRecordRef.get();
+      const existingData = existingDoc.exists ? existingDoc.data() : null;
 
       // Update user's policy record
       await policyRecordRef.set({
         userId,
         lastCheckDate: new Date(),
-        totalChecks: this.db.FieldValue.increment(1),
-        totalViolations: this.db.FieldValue.increment(checkData.violations.length),
-        totalWarnings: this.db.FieldValue.increment(checkData.warnings.length)
+        totalChecks: (existingData?.totalChecks || 0) + 1,
+        totalViolations: (existingData?.totalViolations || 0) + checkData.violations.length,
+        totalWarnings: (existingData?.totalWarnings || 0) + checkData.warnings.length
       }, { merge: true });
 
       // Add to check history
       await policyRecordRef.collection('checkHistory').add(checkRecord);
 
       // Record violations separately for monitoring
-      if (checkData.violations.length > 0) {
+      if (checkData.violations && checkData.violations.length > 0) {
         await this.db.collection('policyViolations').add({
           userId,
           violations: checkData.violations,
-          cvHash: checkData.cvHash,
+          cvHash: checkData.cvHash || '',
           createdAt: new Date(),
           metadata: {
-            ipAddress: checkData.requestInfo?.ipAddress,
-            userAgent: checkData.requestInfo?.userAgent
+            ipAddress: checkData.requestInfo?.ipAddress || 'unknown',
+            userAgent: checkData.requestInfo?.userAgent || 'unknown'
           }
         });
       }
 
     } catch (error) {
-      logger.error('Error recording policy check', { error, userId });
+      logger.error('Error recording policy check', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        userId 
+      });
       // Don't throw here - policy check should succeed even if logging fails
     }
   }

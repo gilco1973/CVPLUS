@@ -11,6 +11,30 @@ import type {
   ErrorState
 } from './types';
 
+/**
+ * Input validation helpers
+ */
+const validateString = (value: unknown, fieldName: string): string => {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(`Invalid ${fieldName}: must be a non-empty string`);
+  }
+  return value;
+};
+
+const validateObject = (value: unknown, fieldName: string): any => {
+  if (!value || typeof value !== 'object') {
+    throw new Error(`Invalid ${fieldName}: must be an object`);
+  }
+  return value;
+};
+
+const validateArray = (value: unknown, fieldName: string): any[] => {
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid ${fieldName}: must be an array`);
+  }
+  return value;
+};
+
 // Initial State
 export const initialUnifiedAnalysisState: UnifiedAnalysisContextState = {
   // Core Data
@@ -38,31 +62,46 @@ export const initialUnifiedAnalysisState: UnifiedAnalysisContextState = {
   errors: []
 };
 
-// Action Creators
+// Action Creators with Input Validation
 export const unifiedAnalysisActions = {
-  // Core Data Actions
-  setJobData: (jobData: any) => ({ type: 'SET_JOB_DATA' as const, payload: jobData }),
-  setAnalysisResults: (results: any) => ({ type: 'SET_ANALYSIS_RESULTS' as const, payload: results }),
-  
-  // Role Detection Actions
-  startRoleDetection: (jobData: any) => ({ type: 'START_ROLE_DETECTION' as const, payload: { jobData } }),
-  setDetectedRoles: (roles: any[]) => ({ type: 'SET_DETECTED_ROLES' as const, payload: roles }),
-  setRoleAnalysis: (analysis: any) => ({ type: 'SET_ROLE_ANALYSIS' as const, payload: analysis }),
-  selectRole: (role: any) => ({ type: 'SELECT_ROLE' as const, payload: role }),
-  setRoleDetectionStatus: (status: RoleDetectionStatus) => ({ type: 'SET_ROLE_DETECTION_STATUS' as const, payload: status }),
-  
-  // Improvements Actions
-  setRecommendations: (recommendations: any[]) => ({ type: 'SET_RECOMMENDATIONS' as const, payload: recommendations }),
+  setJobData: (jobData: any) => ({ 
+    type: 'SET_JOB_DATA' as const, 
+    payload: validateObject(jobData, 'jobData') 
+  }),
+  setAnalysisResults: (results: any) => ({ 
+    type: 'SET_ANALYSIS_RESULTS' as const, 
+    payload: validateObject(results, 'analysisResults') 
+  }),
+  startRoleDetection: (jobData: any) => ({ 
+    type: 'START_ROLE_DETECTION' as const, 
+    payload: { jobData: validateObject(jobData, 'jobData') } 
+  }),
+  setDetectedRoles: (roles: any[]) => ({ 
+    type: 'SET_DETECTED_ROLES' as const, 
+    payload: validateArray(roles, 'detectedRoles') 
+  }),
+  setRoleAnalysis: (analysis: any) => ({ 
+    type: 'SET_ROLE_ANALYSIS' as const, 
+    payload: analysis ? validateObject(analysis, 'roleAnalysis') : null 
+  }),
+  selectRole: (role: any) => ({ 
+    type: 'SELECT_ROLE' as const, 
+    payload: validateObject(role, 'role') 
+  }),
+  setRoleDetectionStatus: (status: RoleDetectionStatus) => ({ 
+    type: 'SET_ROLE_DETECTION_STATUS' as const, 
+    payload: validateString(status, 'roleDetectionStatus') as RoleDetectionStatus 
+  }),
+  setRecommendations: (recommendations: any[]) => ({ 
+    type: 'SET_RECOMMENDATIONS' as const, 
+    payload: validateArray(recommendations, 'recommendations') 
+  }),
   toggleRecommendation: (id: string) => ({ type: 'TOGGLE_RECOMMENDATION' as const, payload: id }),
   setSelectedRecommendations: (ids: string[]) => ({ type: 'SET_SELECTED_RECOMMENDATIONS' as const, payload: ids }),
   setImprovementCategories: (categories: any[]) => ({ type: 'SET_IMPROVEMENT_CATEGORIES' as const, payload: categories }),
   setActiveCategory: (category: string) => ({ type: 'SET_ACTIVE_CATEGORY' as const, payload: category }),
-  
-  // Flow Control Actions
   setCurrentStep: (step: AnalysisStep) => ({ type: 'SET_CURRENT_STEP' as const, payload: step }),
   setAutoTrigger: (enabled: boolean) => ({ type: 'SET_AUTO_TRIGGER' as const, payload: enabled }),
-  
-  // UI Actions
   setLoading: (isLoading: boolean) => ({ type: 'SET_LOADING' as const, payload: isLoading }),
   addError: (error: ErrorState) => ({ type: 'ADD_ERROR' as const, payload: error }),
   removeError: (id: string) => ({ type: 'REMOVE_ERROR' as const, payload: id }),
@@ -85,7 +124,6 @@ export function unifiedAnalysisReducer(
   action: UnifiedAnalysisAction
 ): UnifiedAnalysisContextState {
   switch (action.type) {
-    // Core Data Actions
     case 'SET_JOB_DATA':
       return { ...state, jobData: action.payload };
       
@@ -96,7 +134,6 @@ export function unifiedAnalysisReducer(
         currentStep: state.autoTriggerEnabled ? 'role-detection' : state.currentStep
       };
     
-    // Role Detection Actions
     case 'START_ROLE_DETECTION':
       return { 
         ...state, 

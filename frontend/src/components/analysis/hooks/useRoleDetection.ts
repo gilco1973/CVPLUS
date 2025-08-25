@@ -3,9 +3,10 @@
  * Custom hook for managing role detection functionality
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useUnifiedAnalysis } from '../context/UnifiedAnalysisContext';
 import { unifiedAnalysisActions, createRoleDetectionError } from '../context/actions';
+import { roleProfileService } from '../../../services/roleProfileService';
 import type { 
   UseRoleDetectionReturn,
   RoleDetectionStatus 
@@ -16,56 +17,13 @@ import type {
   RoleProfileAnalysis 
 } from '../../../types/role-profiles';
 
-// Mock API calls - replace with actual API calls
-const mockDetectRole = async (jobData: Job): Promise<{
-  detectedRoles: DetectedRole[];
-  analysis: RoleProfileAnalysis;
-}> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Mock detected roles based on job data
-  const mockRoles: DetectedRole[] = [
-    {
-      roleId: 'software-engineer',
-      roleName: 'Software Engineer',
-      confidence: 0.92,
-      matchingFactors: ['Programming languages', 'Technical skills', 'Software development experience'],
-      enhancementPotential: 0.85,
-      recommendations: ['Highlight technical achievements', 'Add more specific technologies', 'Include project impacts']
-    },
-    {
-      roleId: 'frontend-developer',
-      roleName: 'Frontend Developer',
-      confidence: 0.78,
-      matchingFactors: ['JavaScript', 'React', 'UI/UX experience'],
-      enhancementPotential: 0.72,
-      recommendations: ['Showcase UI projects', 'Mention responsive design', 'Include user experience improvements']
-    }
-  ];
-  
-  const mockAnalysis: RoleProfileAnalysis = {
-    primaryRole: mockRoles[0],
-    alternativeRoles: mockRoles.slice(1),
-    analysisMetadata: {
-      processedAt: new Date().toISOString(),
-      confidenceThreshold: 0.7,
-      algorithmVersion: '1.0.0'
-    },
-    recommendationsCount: mockRoles[0].recommendations.length,
-    overallConfidence: mockRoles[0].confidence,
-    suggestedAction: 'apply_primary'
-  };
-  
-  return {
-    detectedRoles: mockRoles,
-    analysis: mockAnalysis
-  };
-};
-
 export const useRoleDetection = (): UseRoleDetectionReturn => {
   const { state, dispatch } = useUnifiedAnalysis();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [progressMessage, setProgressMessage] = useState<string>('');
+  const [retryCount, setRetryCount] = useState(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const progressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { 
     detectedRoles, 
@@ -75,31 +33,145 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
   } = state;
   
   const startDetection = useCallback(async (jobData: Job) => {
+    console.log('[useRoleDetection] startDetection called with jobData:', {
+      id: jobData?.id,
+      status: jobData?.status,
+      hasParsedData: !!jobData?.parsedData
+    });
+    
+    if (!jobData.id) {
+      const errorMessage = 'Job ID is required for role detection';
+      console.error('[useRoleDetection] Error: No job ID provided');
+      setLocalError(errorMessage);
+      dispatch(unifiedAnalysisActions.setRoleDetectionStatus('error'));
+      return;
+    }
+
     try {
+      console.log('[useRoleDetection] Starting role detection for job:', jobData.id);
       setLocalError(null);
       dispatch(unifiedAnalysisActions.setRoleDetectionStatus('analyzing'));
       
-      // Simulate role detection process
-      const { detectedRoles: roles, analysis } = await mockDetectRole(jobData);
+      // Progressive timeout handling with better UX
+      const setupProgressiveTimeouts = () => {
+        // Show "still processing" message after 15 seconds
+        setTimeout(() => {
+          setProgressMessage('AI is still analyzing your CV... This may take a moment for complex profiles.');
+        }, 15000);
+        
+        // Show fallback options after 45 seconds
+        setTimeout(() => {
+          setProgressMessage('Analysis is taking longer than usual. Fallback options will be provided soon.');
+        }, 45000);
+      };
       
-      dispatch(unifiedAnalysisActions.setDetectedRoles(roles));
+      setupProgressiveTimeouts();
+      
+      // Create timeout promise with 60-second limit and exponential backoff for retries
+      const baseTimeout = retryCount === 0 ? 60000 : Math.min(60000 * Math.pow(1.5, retryCount - 1), 120000);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          console.warn(`[useRoleDetection] Role detection timeout reached after ${baseTimeout / 1000} seconds`);
+          reject(new Error(`Role detection timed out after ${Math.round(baseTimeout / 1000)} seconds. AI processing took longer than expected.`));
+        }, baseTimeout);
+      });
+      
+      // Race the API call against the timeout
+      console.log('[useRoleDetection] About to call roleProfileService.detectRole with jobId:', jobData.id);
+      console.log(`[useRoleDetection] Timeout set to ${Math.round(baseTimeout / 1000)} seconds (retry attempt: ${retryCount})`);
+      
+      const detectionResponse = await Promise.race([
+        roleProfileService.detectRole(jobData.id),
+        timeoutPromise
+      ]);
+      
+      // Clear timeouts on successful response
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
+      console.log('[useRoleDetection] Received response from detectRole:', detectionResponse);
+      setProgressMessage('');
+      
+      if (!detectionResponse.success || !detectionResponse.data) {
+        throw new Error('Role detection failed - no data received');
+      }
+
+      const { detectedRole, analysis } = detectionResponse.data;
+      
+      // Convert single detected role to array format for UI
+      const detectedRoles: DetectedRole[] = [];
+      if (detectedRole) {
+        detectedRoles.push(detectedRole);
+      }
+      if (analysis?.alternativeRoles) {
+        detectedRoles.push(...analysis.alternativeRoles);
+      }
+      
+      dispatch(unifiedAnalysisActions.setDetectedRoles(detectedRoles));
       dispatch(unifiedAnalysisActions.setRoleAnalysis(analysis));
       dispatch(unifiedAnalysisActions.setRoleDetectionStatus('completed'));
       
       // Auto-select primary role if confidence is high
-      if (roles.length > 0 && roles[0].confidence > 0.8) {
-        dispatch(unifiedAnalysisActions.selectRole(roles[0]));
+      if (detectedRole && detectedRole.confidence > 0.8) {
+        dispatch(unifiedAnalysisActions.selectRole(detectedRole));
       }
       
+      // Reset retry count on success
+      setRetryCount(0);
+      
     } catch (error: any) {
-      console.error('Role detection failed:', error);
-      const errorMessage = error.message || 'Failed to detect role. Please try again.';
+      console.error('[useRoleDetection] Role detection failed:', error);
+      
+      // Clear any active timeouts
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
+      let errorMessage = 'Unable to detect role. Please select manually.';
+      let isTimeout = false;
+      let shouldProvideFallbacks = false;
+      
+      // Enhanced error handling with specific messages
+      if (error.message && error.message.includes('timed out')) {
+        isTimeout = true;
+        shouldProvideFallbacks = true;
+        
+        if (retryCount === 0) {
+          errorMessage = `AI analysis took longer than expected (${Math.round(baseTimeout / 1000)}s). Don't worry - fallback options are available below, or you can retry with extended timeout.`;
+        } else {
+          errorMessage = `Analysis timeout after ${retryCount + 1} attempts. Using fallback role options to help you proceed.`;
+        }
+      } else if (error.message && error.message.includes('network')) {
+        errorMessage = 'Network connection issue. Please check your internet and retry.';
+      } else if (error.message && error.message.includes('auth')) {
+        errorMessage = 'Authentication issue. Please refresh the page and try again.';
+      } else {
+        errorMessage = `Analysis failed: ${error.message || 'Unknown error'}. Using fallback options.`;
+        shouldProvideFallbacks = true;
+      }
       
       setLocalError(errorMessage);
+      setProgressMessage('');
       dispatch(unifiedAnalysisActions.setRoleDetectionStatus('error'));
       dispatch(unifiedAnalysisActions.addError(
-        createRoleDetectionError(errorMessage, error)
+        createRoleDetectionError(errorMessage, { 
+          ...error, 
+          isTimeout, 
+          retryCount, 
+          shouldProvideFallbacks 
+        })
       ));
+      
+      // Auto-provide fallback roles on timeout
+      if (shouldProvideFallbacks) {
+        console.log('[useRoleDetection] Auto-providing fallback roles due to timeout/error');
+        setTimeout(() => {
+          provideFallbackRoles();
+        }, 1000); // Small delay to let user see the error message first
+      }
     }
   }, [dispatch]);
   
@@ -110,11 +182,144 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
   
   const retry = useCallback(() => {
     if (state.jobData) {
+      setRetryCount(prev => prev + 1);
+      setLocalError(null);
+      setProgressMessage('');
+      console.log(`[useRoleDetection] Retrying detection (attempt ${retryCount + 2})`);
       startDetection(state.jobData);
     }
-  }, [state.jobData, startDetection]);
+  }, [state.jobData, startDetection, retryCount]);
+  
+  const provideFallbackRoles = useCallback(() => {
+    console.log('[useRoleDetection] Providing fallback roles');
+    
+    // Enhanced fallback roles with better descriptions and guidance
+    const fallbackRoles: DetectedRole[] = [
+      {
+        roleId: 'general-professional',
+        roleName: 'General Professional',
+        confidence: 0.7,
+        matchedSkills: [],
+        recommendations: [
+          'Versatile profile suitable for multiple industries',
+          'Good starting point if your role doesn\'t fit other categories',
+          'Provides balanced optimization for various positions'
+        ],
+        category: 'general'
+      },
+      {
+        roleId: 'software-developer',
+        roleName: 'Software Developer',
+        confidence: 0.6,
+        matchedSkills: [],
+        recommendations: [
+          'Ideal for programming, development, and engineering roles',
+          'Optimizes technical skills and project experience',
+          'Best for: Frontend, Backend, Full-stack, DevOps positions'
+        ],
+        category: 'technology'
+      },
+      {
+        roleId: 'business-analyst',
+        roleName: 'Business Analyst',
+        confidence: 0.6,
+        matchedSkills: [],
+        recommendations: [
+          'Perfect for analytical and process improvement roles',
+          'Emphasizes data analysis and business process skills',
+          'Best for: BA, Data Analyst, Process Analyst positions'
+        ],
+        category: 'business'
+      },
+      {
+        roleId: 'project-manager',
+        roleName: 'Project Manager',
+        confidence: 0.6,
+        matchedSkills: [],
+        recommendations: [
+          'Highlights leadership and coordination experience',
+          'Emphasizes team management and delivery skills',
+          'Best for: PM, Scrum Master, Team Lead positions'
+        ],
+        category: 'management'
+      },
+      {
+        roleId: 'marketing-specialist',
+        roleName: 'Marketing Specialist',
+        confidence: 0.5,
+        matchedSkills: [],
+        recommendations: [
+          'Optimizes creative and communication skills',
+          'Focuses on campaign and brand management experience',
+          'Best for: Marketing, Communications, Brand roles'
+        ],
+        category: 'marketing'
+      },
+      {
+        roleId: 'sales-representative',
+        roleName: 'Sales Professional',
+        confidence: 0.5,
+        matchedSkills: [],
+        recommendations: [
+          'Emphasizes relationship building and revenue generation',
+          'Highlights negotiation and client management skills',
+          'Best for: Sales, BD, Account Management positions'
+        ],
+        category: 'sales'
+      },
+      {
+        roleId: 'consultant',
+        roleName: 'Consultant',
+        confidence: 0.5,
+        matchedSkills: [],
+        recommendations: [
+          'Great for advisory and strategic roles',
+          'Emphasizes problem-solving and client interaction',
+          'Best for: Consulting, Advisory, Strategic roles'
+        ],
+        category: 'consulting'
+      },
+      {
+        roleId: 'operations-manager',
+        roleName: 'Operations Manager',
+        confidence: 0.5,
+        matchedSkills: [],
+        recommendations: [
+          'Focuses on process optimization and efficiency',
+          'Highlights operational excellence and team coordination',
+          'Best for: Operations, Process Management roles'
+        ],
+        category: 'operations'
+      }
+    ];
+    
+    dispatch(unifiedAnalysisActions.setDetectedRoles(fallbackRoles));
+    dispatch(unifiedAnalysisActions.setRoleDetectionStatus('completed'));
+    
+    // Provide helpful guidance message
+    const guidanceMessage = retryCount > 0 
+      ? `After ${retryCount + 1} attempts, we've provided these role options. Each role has specific optimization strategies - choose the one that best matches your career focus.`
+      : 'AI analysis took longer than expected, but don\'t worry! We\'ve provided these carefully selected role options. Choose the one that best matches your professional background for optimal CV optimization.';
+    
+    setLocalError(guidanceMessage);
+  }, [dispatch, retryCount]);
   
   const isLoading = roleDetectionStatus === 'analyzing' || roleDetectionStatus === 'detecting';
+  const hasTimedOut = localError?.includes('timed out') || localError?.includes('taking longer than expected');
+  const canRetry = hasTimedOut && retryCount < 2; // Allow up to 3 attempts total
+  const showFallbackOptions = (roleDetectionStatus === 'error' && detectedRoles.length > 0) || hasTimedOut;
+  
+  // Cleanup timeouts on unmount
+  const cleanup = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (progressTimeoutRef.current) {
+      clearTimeout(progressTimeoutRef.current);
+      progressTimeoutRef.current = null;
+    }
+  }, []);
   
   return {
     detectedRoles,
@@ -124,7 +329,14 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
     startDetection,
     selectRole,
     retry,
+    provideFallbackRoles,
     isLoading,
+    hasTimedOut,
+    canRetry,
+    retryCount,
+    showFallbackOptions,
+    progressMessage,
+    cleanup,
     error: localError
   };
 };

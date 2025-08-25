@@ -43,6 +43,37 @@ export class CVServiceCore {
     return CVParser.processCV(params);
   }
 
+  /**
+   * Development mode: Create a job that skips CV upload/parsing and uses cached CV
+   * Only works in development environment
+   */
+  static async createDevelopmentJob(userInstructions?: string): Promise<string> {
+    const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
+    if (!isDev) {
+      throw new Error('Development mode job creation is only available in development environment');
+    }
+    
+    // Create a job with development flag
+    const jobId = await CVParser.createJob({
+      userInstructions,
+      isUrl: false,
+      quickCreate: false,
+      developmentMode: true // Special flag for backend
+    });
+    
+    // Immediately call processCV with development flag to trigger CV reuse logic
+    await CVParser.processCV({
+      jobId,
+      fileUrl: 'development-skip',
+      mimeType: 'development/skip',
+      isUrl: false,
+      fileName: 'Development Mode Skip',
+      fileSize: 0
+    });
+    
+    return jobId;
+  }
+
   static async generateCV(jobId: string, templateId: string, features: string[]) {
     return CVParser.generateCV(jobId, templateId, features);
   }
@@ -197,6 +228,9 @@ export class CVServiceCore {
 // Core operations
 export const createJob = (url?: string, quickCreate?: boolean, userInstructions?: string) =>
   CVServiceCore.createJob({ url, quickCreate, userInstructions });
+
+export const createDevelopmentJob = (userInstructions?: string) =>
+  CVServiceCore.createDevelopmentJob(userInstructions);
 
 export const uploadCV = (file: File, jobId: string) =>
   CVServiceCore.uploadCV({ file, jobId });

@@ -1,3 +1,4 @@
+// TEMPORARILY DISABLED DUE TO TYPESCRIPT ERRORS - FOR TESTING getRecommendations
 /**
  * Role Profile Service
  * 
@@ -38,13 +39,21 @@ export class RoleProfileService {
       defaultDetectionConfig: {
         confidenceThreshold: 0.6,
         maxResults: 5,
+        minResults: 2,
         enableMultiRoleDetection: true,
+        enableDynamicThreshold: true,
         weightingFactors: {
           title: 0.3,
           skills: 0.35,
           experience: 0.25,
           industry: 0.08,
           education: 0.02
+        },
+        dynamicThresholdConfig: {
+          initialThreshold: 0.6,
+          minimumThreshold: 0.3,
+          decrementStep: 0.05,
+          maxIterations: 5
         }
       },
       ...config

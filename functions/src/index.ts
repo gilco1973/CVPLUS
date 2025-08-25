@@ -215,7 +215,7 @@ export {
 } from './functions/applyImprovements';
 
 // Export enhanced CV analysis function  
-export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
+// TEMP DISABLED - export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';
 
 // Export feature management functions
 export { skipFeature } from './functions/skipFeature';
@@ -307,7 +307,7 @@ export {
   videoAnalyticsDashboard
 } from './functions/video-analytics-dashboard';
 
-// Export role profile functions
+// Export enhanced role profile functions with Opus 4.1
 export {
   detectRoleProfile,
   getRoleProfiles,

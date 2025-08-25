@@ -21,6 +21,13 @@ const getConfidenceLabel = (confidence: number) => {
   return 'Low Match';
 };
 
+const getEnhancementPercentage = (enhancementPotential: number | undefined | null): number => {
+  if (typeof enhancementPotential !== 'number' || isNaN(enhancementPotential)) {
+    return 0; // Safe fallback
+  }
+  return Math.round(enhancementPotential);
+};
+
 export const DetectedRoleCard: React.FC<DetectedRoleCardProps> = ({
   role,
   isSelected,
@@ -28,9 +35,10 @@ export const DetectedRoleCard: React.FC<DetectedRoleCardProps> = ({
   onCustomize,
   className = ''
 }) => {
-  const confidenceColor = getConfidenceColor(role.confidence);
-  const confidenceLabel = getConfidenceLabel(role.confidence);
-  const confidencePercentage = Math.round(role.confidence * 100);
+  const confidenceColor = getConfidenceColor(role.confidence || 0);
+  const confidenceLabel = getConfidenceLabel(role.confidence || 0);
+  const confidencePercentage = Math.round((role.confidence || 0) * 100);
+  const enhancementPercentage = getEnhancementPercentage(role.enhancementPotential);
   
   return (
     <div className={`
@@ -114,21 +122,28 @@ export const DetectedRoleCard: React.FC<DetectedRoleCardProps> = ({
       <div className="mb-4">
         <h4 className="text-sm font-medium text-gray-300 mb-2">Key Matching Factors</h4>
         <div className="flex flex-wrap gap-2">
-          {role.matchingFactors.slice(0, 3).map((factor, index) => (
-            <span
-              key={index}
-              className={`
-                px-3 py-1 text-xs rounded-full border
-                ${isSelected 
-                  ? 'bg-cyan-500/20 border-cyan-500/30 text-cyan-300' 
-                  : 'bg-gray-700/50 border-gray-600 text-gray-300'
-                }
-              `}
-            >
-              {factor}
-            </span>
-          ))}
-          {role.matchingFactors.length > 3 && (
+          {role.matchingFactors && role.matchingFactors.slice(0, 3).map((factor, index) => {
+            // Handle both string and object formats
+            const factorText = typeof factor === 'string' 
+              ? factor 
+              : (factor as any).type || (factor as any).name || JSON.stringify(factor);
+            
+            return (
+              <span
+                key={index}
+                className={`
+                  px-3 py-1 text-xs rounded-full border
+                  ${isSelected 
+                    ? 'bg-cyan-500/20 border-cyan-500/30 text-cyan-300' 
+                    : 'bg-gray-700/50 border-gray-600 text-gray-300'
+                  }
+                `}
+              >
+                {factorText}
+              </span>
+            );
+          })}
+          {role.matchingFactors && role.matchingFactors.length > 3 && (
             <span className="px-3 py-1 text-xs rounded-full bg-gray-600 text-gray-400">
               +{role.matchingFactors.length - 3} more
             </span>
@@ -142,24 +157,47 @@ export const DetectedRoleCard: React.FC<DetectedRoleCardProps> = ({
           <span className="text-sm font-medium text-gray-300">Enhancement Potential</span>
           <div className="flex items-center gap-1">
             <span className={`text-sm font-bold text-${confidenceColor}-400`}>
-              +{Math.round(role.enhancementPotential * 100)}%
+              +{enhancementPercentage}%
             </span>
             <span className="text-xs text-gray-400">improvement</span>
           </div>
         </div>
       </div>
       
+      {/* Role Selection Reasoning */}
+      {role.scoringReasoning && (
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-300 mb-2">Why This Role?</h4>
+          <div className={`
+            p-3 rounded-lg text-sm leading-relaxed
+            ${isSelected 
+              ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-100' 
+              : 'bg-gray-700/30 border border-gray-600/50 text-gray-300'
+            }
+          `}>
+            {role.scoringReasoning}
+          </div>
+        </div>
+      )}
+      
       {/* Quick Recommendations Preview */}
       <div className="mb-4">
         <h4 className="text-sm font-medium text-gray-300 mb-2">Quick Recommendations</h4>
         <div className="space-y-1">
-          {role.recommendations.slice(0, 2).map((rec, index) => (
-            <div key={index} className="flex items-center gap-2 text-xs text-gray-400">
-              <div className="w-1 h-1 rounded-full bg-gray-500" />
-              <span className="truncate">{rec}</span>
-            </div>
-          ))}
-          {role.recommendations.length > 2 && (
+          {role.recommendations && role.recommendations.slice(0, 2).map((rec, index) => {
+            // Handle both string and object formats for recommendations
+            const recText = typeof rec === 'string' 
+              ? rec 
+              : rec?.title || rec?.description || (rec?.type && rec?.targetSection ? `${rec.type}: ${rec.targetSection}` : JSON.stringify(rec));
+            
+            return (
+              <div key={index} className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="w-1 h-1 rounded-full bg-gray-500" />
+                <span className="truncate">{recText}</span>
+              </div>
+            );
+          })}
+          {role.recommendations && role.recommendations.length > 2 && (
             <div className="text-xs text-gray-500 ml-3">
               +{role.recommendations.length - 2} more recommendations
             </div>

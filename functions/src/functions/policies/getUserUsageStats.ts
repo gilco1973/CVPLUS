@@ -83,7 +83,7 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
       logger.info('User usage stats retrieved', {
         userId,
         currentMonthUploads,
-        uniqueCVsThisMonth,
+        uniqueCVsThisMonth: uniqueCVHashes,
         remainingUploads: remainingUploads === Infinity ? 'unlimited' : remainingUploads,
         subscriptionStatus: isPremium ? 'premium' : 'free'
       });

@@ -167,7 +167,14 @@ export interface UseRoleDetectionReturn {
   startDetection: (jobData: Job) => Promise<void>;
   selectRole: (role: DetectedRole) => void;
   retry: () => void;
+  provideFallbackRoles: () => void;
   isLoading: boolean;
+  hasTimedOut: boolean;
+  canRetry: boolean;
+  retryCount: number;
+  showFallbackOptions: boolean;
+  progressMessage: string;
+  cleanup: () => void;
   error: string | null;
 }
 

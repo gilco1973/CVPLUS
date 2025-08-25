@@ -46,6 +46,7 @@ export interface DetectedRole {
   matchingFactors: string[];
   enhancementPotential: number;
   recommendations: string[];
+  scoringReasoning?: string;
 }
 
 export interface RoleProfileAnalysis {

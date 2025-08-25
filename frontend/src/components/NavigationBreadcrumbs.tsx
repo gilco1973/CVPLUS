@@ -1,5 +1,5 @@
 // NavigationBreadcrumbs - Intelligent navigation breadcrumbs with session awareness
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   EnhancedSessionState,
   NavigationContext,
@@ -28,6 +28,17 @@ export const NavigationBreadcrumbs: React.FC<NavigationBreadcrumbsProps> = ({
   compact = false
 }) => {
   const navigationManager = NavigationStateManager.getInstance();
+  
+  // Cleanup on component unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Cleanup is handled by the NavigationStateManager singleton
+      // But we can trigger cleanup if this is the last component
+      if (typeof window !== 'undefined') {
+        navigationManager.cleanup();
+      }
+    };
+  }, [navigationManager]);
   
   const breadcrumbs = navigationManager.generateBreadcrumbs(session);
   
@@ -78,14 +89,21 @@ export const NavigationBreadcrumbs: React.FC<NavigationBreadcrumbsProps> = ({
     return session.completedSteps.includes(step);
   };
 
-  const handleBreadcrumbClick = (breadcrumb: Breadcrumb) => {
+  const handleBreadcrumbClick = async (breadcrumb: Breadcrumb) => {
     if (!breadcrumb.accessible || isStepBlocked(breadcrumb.step)) {
       return;
     }
 
-    if (onNavigate) {
-      onNavigate(breadcrumb.step, breadcrumb.url);
-    } else {
+    try {
+      if (onNavigate) {
+        onNavigate(breadcrumb.step, breadcrumb.url);
+      } else {
+        // Use debounced navigation to prevent rapid clicking issues
+        await navigationManager.navigateWithDebounce(session.sessionId, breadcrumb.step, breadcrumb.url);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to direct navigation
       window.location.href = breadcrumb.url;
     }
   };

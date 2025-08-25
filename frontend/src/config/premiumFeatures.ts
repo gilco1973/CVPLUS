@@ -4,7 +4,7 @@
  */
 
 // Premium feature type matching useSubscription.ts
-type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
+type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'roleDetection';
 
 export interface PremiumFeatureMapping {
   featureId: string;
@@ -58,6 +58,29 @@ export const PREMIUM_FEATURE_MAPPINGS: PremiumFeatureMapping[] = [
     requiredForPortal: false
   },
   
+  // Role Detection Features - Premium Only
+  {
+    featureId: 'roleDetection',
+    premiumType: 'roleDetection',
+    category: 'advanced',
+    requiredForGeneration: false,
+    requiredForPortal: false
+  },
+  {
+    featureId: 'roleBasedRecommendations', 
+    premiumType: 'roleDetection',
+    category: 'advanced',
+    requiredForGeneration: false,
+    requiredForPortal: true
+  },
+  {
+    featureId: 'roleProfileApplication',
+    premiumType: 'roleDetection',
+    category: 'advanced', 
+    requiredForGeneration: false,
+    requiredForPortal: false
+  },
+
   // Multimedia Features
   {
     featureId: 'generatePodcast',

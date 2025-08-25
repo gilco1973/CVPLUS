@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase/config';
+import { functions } from '../lib/firebase';
 
 interface UsageStats {
   currentMonthUploads: number;

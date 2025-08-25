@@ -25,7 +25,31 @@ export async function requireGoogleAuth(request: CallableRequest): Promise<Authe
 
   const { uid, token } = request.auth;
 
-  // Verify this is a Google-authenticated user (not anonymous)
+  // 🔧 DEVELOPMENT MODE: Allow anonymous users in development environment
+  const isDevelopment = process.env.FUNCTIONS_EMULATOR === 'true' || 
+                       process.env.NODE_ENV === 'development' ||
+                       process.env.FIRESTORE_EMULATOR_HOST;
+
+  if (isDevelopment && !token.email) {
+    console.log('🔧 Development mode: Allowing anonymous user for testing');
+    console.log('   - User UID:', uid);
+    console.log('   - Environment detected:', {
+      FUNCTIONS_EMULATOR: process.env.FUNCTIONS_EMULATOR,
+      NODE_ENV: process.env.NODE_ENV,
+      FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST
+    });
+    
+    return {
+      uid,
+      email: `dev-user-${uid}@localhost.test`, // Synthetic email for development
+      emailVerified: true, // Assume verified in development
+      name: 'Development User',
+      picture: null,
+      hasCalendarPermissions: false // No calendar permissions for anonymous users
+    };
+  }
+
+  // Verify this is a Google-authenticated user (not anonymous) in production
   if (!token.email) {
     throw new Error('Google authentication required. Anonymous users are no longer supported.');
   }

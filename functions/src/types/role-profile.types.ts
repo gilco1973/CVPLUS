@@ -56,6 +56,12 @@ export interface RoleMatchResult {
   matchingFactors: MatchingFactor[];
   enhancementPotential: number;
   recommendations: RoleBasedRecommendation[];
+  scoringReasoning: string;
+  fitAnalysis: {
+    strengths: string[];
+    gaps: string[];
+    overallAssessment: string;
+  };
 }
 
 export interface MatchingFactor {
@@ -64,6 +70,23 @@ export interface MatchingFactor {
   weight: number;
   score: number;
   details?: string;
+  reasoning: MatchingReasoning;
+}
+
+export interface MatchingReasoning {
+  contributionExplanation: string;
+  keywordMatches: KeywordMatch[];
+  strengthAssessment: 'excellent' | 'good' | 'moderate' | 'weak';
+  improvementSuggestions: string[];
+  confidenceFactors: string[];
+}
+
+export interface KeywordMatch {
+  keyword: string;
+  found: boolean;
+  matchType: 'exact' | 'fuzzy' | 'synonym' | 'abbreviation';
+  relevance: number;
+  context?: string;
 }
 
 export interface RoleBasedRecommendation {
@@ -98,13 +121,21 @@ export interface ExperienceEnhancementTemplate {
 export interface RoleDetectionConfig {
   confidenceThreshold: number;
   maxResults: number;
+  minResults: number; // Guarantee minimum results
   enableMultiRoleDetection: boolean;
+  enableDynamicThreshold: boolean; // Auto-adjust threshold for multiple results
   weightingFactors: {
     title: number;
     skills: number;
     experience: number;
     industry: number;
     education: number;
+  };
+  dynamicThresholdConfig: {
+    initialThreshold: number;
+    minimumThreshold: number;
+    decrementStep: number;
+    maxIterations: number;
   };
 }
 
@@ -121,6 +152,30 @@ export interface RoleProfileAnalysis {
     weakAreas: string[];
     strengthAreas: string[];
   };
+  scoringBreakdown: ScoringBreakdown;
+  detectionMetadata: DetectionMetadata;
+}
+
+export interface ScoringBreakdown {
+  totalRolesAnalyzed: number;
+  adjustedThreshold: number;
+  originalThreshold: number;
+  averageConfidence: number;
+  topFactors: Array<{
+    factor: string;
+    contribution: number;
+    explanation: string;
+  }>;
+}
+
+export interface DetectionMetadata {
+  processingTime: number;
+  algorithmVersion: string;
+  adjustmentsMade: string[];
+  confidenceDistribution: Array<{
+    range: string;
+    count: number;
+  }>;
 }
 
 // Enums and constants

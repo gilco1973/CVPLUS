@@ -1,4 +1,5 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { getFunctionsInstance, getAuthInstance } from '../config/firebase-optimized';
 import type {
   RoleProfile,
   DetectedRole,
@@ -17,11 +18,15 @@ import { logError } from '../utils/errorHandling';
  * Handles all role profile related operations with Firebase Functions
  */
 export class RoleProfileService {
-  private functions = getFunctions();
+  private functions = getFunctionsInstance();
   private detectRoleProfile = httpsCallable(this.functions, 'detectRoleProfile');
   private getRoleProfiles = httpsCallable(this.functions, 'getRoleProfiles');
   private applyRoleProfile = httpsCallable(this.functions, 'applyRoleProfile');
   private getRoleBasedRecommendations = httpsCallable(this.functions, 'getRoleBasedRecommendations');
+  
+  // Request deduplication to prevent duplicate API calls
+  private activeRequests = new Map<string, { promise: Promise<any>; timestamp: number }>();
+  private readonly REQUEST_TTL = 5 * 60 * 1000; // 5 minutes TTL
 
   /**
    * Detect role profile for a CV/job
@@ -31,25 +36,124 @@ export class RoleProfileService {
     forceRegenerate = false
   ): Promise<RoleDetectionResponse> {
     try {
-      console.log('[RoleProfileService] Detecting role for job:', jobId);
+      // Check authentication first - wait for auth state if needed
+      const auth = getAuthInstance();
+      let currentUser = auth.currentUser;
       
-      const result = await this.detectRoleProfile({
+      console.log('[RoleProfileService] Detecting role for job:', jobId);
+      console.log('[RoleProfileService] Initial auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
+      console.log('[RoleProfileService] Functions instance:', this.functions);
+      console.log('[RoleProfileService] Using force regenerate:', forceRegenerate);
+      
+      // If no current user, wait for auth state to settle
+      if (!currentUser) {
+        console.log('[RoleProfileService] No current user, waiting for auth state...');
+        
+        // Wait for auth state with timeout
+        currentUser = await new Promise((resolve) => {
+          const unsubscribe = auth.onAuthStateChanged((user) => {
+            console.log('[RoleProfileService] Auth state changed:', user ? user.uid : 'null');
+            unsubscribe();
+            resolve(user);
+          });
+          
+          // Timeout after 5 seconds
+          setTimeout(() => {
+            console.log('[RoleProfileService] Auth state timeout after 5 seconds');
+            unsubscribe();
+            resolve(null);
+          }, 5000);
+        });
+      }
+      
+      console.log('[RoleProfileService] Final auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
+      
+      if (!currentUser) {
+        throw new Error('User must be authenticated to detect role profiles');
+      }
+      
+      // Clean up expired requests first
+      this.cleanupExpiredRequests();
+      
+      // Request deduplication - prevent duplicate calls for same job
+      const requestKey = `detectRole:${jobId}:${forceRegenerate}`;
+      const cachedRequest = this.activeRequests.get(requestKey);
+      if (cachedRequest) {
+        console.log('[RoleProfileService] Returning existing request for:', requestKey);
+        return cachedRequest.promise;
+      }
+      
+      const requestData = {
         jobId,
         forceRegenerate
-      }) as FirebaseFunctionResponse<RoleDetectionResponse['data']>;
-
-      if (!result.data?.success) {
-        throw new Error(result.data?.error || 'Role detection failed');
-      }
-
-      return {
-        success: true,
-        data: result.data.data!
       };
+      
+      console.log('[RoleProfileService] Calling detectRoleProfile with data:', requestData);
+      
+      // Create and cache the request promise
+      const requestPromise = (async (): Promise<RoleDetectionResponse> => {
+        try {
+          const result = await this.detectRoleProfile(requestData) as FirebaseFunctionResponse<RoleDetectionResponse['data']>;
+
+          console.log('[RoleProfileService] Raw result from detectRoleProfile:', result);
+
+          if (!result.data?.success) {
+            throw new Error(result.data?.error || 'Role detection failed');
+          }
+
+          console.log('[RoleProfileService] Successful detection result:', result.data.data);
+
+          return {
+            success: true,
+            data: result.data.data!
+          };
+        } finally {
+          // Clean up the request from cache
+          this.activeRequests.delete(requestKey);
+        }
+      })();
+      
+      // Cache the promise with timestamp
+      this.activeRequests.set(requestKey, {
+        promise: requestPromise,
+        timestamp: Date.now()
+      });
+      
+      return requestPromise;
     } catch (error: any) {
+      // Make sure to clean up on error
+      this.activeRequests.delete(requestKey);
       console.error('[RoleProfileService] Detection error:', error);
+      console.error('[RoleProfileService] Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       logError('detectRole', error);
       throw new Error(`Role detection failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Clean up expired requests from cache to prevent memory leaks
+   */
+  private cleanupExpiredRequests(): void {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+    
+    for (const [key, request] of this.activeRequests.entries()) {
+      if (now - request.timestamp > this.REQUEST_TTL) {
+        expiredKeys.push(key);
+      }
+    }
+    
+    // Remove expired requests
+    for (const key of expiredKeys) {
+      this.activeRequests.delete(key);
+    }
+    
+    if (expiredKeys.length > 0) {
+      console.log(`[RoleProfileService] Cleaned up ${expiredKeys.length} expired requests`);
     }
   }
 

@@ -59,6 +59,7 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
 
   // Helper Methods
   const startRoleDetection = useCallback((jobData: Job) => {
+    console.log('[UnifiedAnalysisContext] startRoleDetection called - dispatching action');
     dispatch(unifiedAnalysisActions.startRoleDetection(jobData));
   }, []);
 
@@ -78,12 +79,10 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
       const nextStep = steps[currentIndex + 1];
       dispatch(unifiedAnalysisActions.setCurrentStep(nextStep));
       
-      // Auto-trigger role detection if moving from analysis
       if (state.currentStep === 'analysis' && nextStep === 'role-detection' && state.jobData) {
         startRoleDetection(state.jobData);
       }
     } else if (currentIndex === steps.length - 1 && onNavigateToFeatures) {
-      // Final step - navigate to features
       onNavigateToFeatures({
         jobData: state.jobData,
         selectedRole: state.selectedRole,
@@ -91,17 +90,14 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
         roleAnalysis: state.roleAnalysis
       });
     }
-  }, [state.currentStep, state.jobData, state.selectedRole, 
-      state.selectedRecommendations, state.roleAnalysis, 
-      onNavigateToFeatures, startRoleDetection]);
+  }, [state, onNavigateToFeatures, startRoleDetection]);
 
   const goBack = useCallback(() => {
     const steps: AnalysisStep[] = ['analysis', 'role-detection', 'improvements', 'actions'];
     const currentIndex = steps.indexOf(state.currentStep);
     
     if (currentIndex > 0) {
-      const previousStep = steps[currentIndex - 1];
-      dispatch(unifiedAnalysisActions.setCurrentStep(previousStep));
+      dispatch(unifiedAnalysisActions.setCurrentStep(steps[currentIndex - 1]));
     }
   }, [state.currentStep]);
 
@@ -109,16 +105,13 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
     dispatch(unifiedAnalysisActions.clearErrors());
   }, []);
 
-  // Additional computed properties for extended interface
   const progressPercentage = useMemo(() => {
     const steps: AnalysisStep[] = ['analysis', 'role-detection', 'improvements', 'actions'];
-    const currentIndex = steps.indexOf(state.currentStep);
-    return ((currentIndex + 1) / steps.length) * 100;
+    return ((steps.indexOf(state.currentStep) + 1) / steps.length) * 100;
   }, [state.currentStep]);
 
   const currentStepIndex = useMemo(() => {
-    const steps: AnalysisStep[] = ['analysis', 'role-detection', 'improvements', 'actions'];
-    return steps.indexOf(state.currentStep);
+    return ['analysis', 'role-detection', 'improvements', 'actions'].indexOf(state.currentStep);
   }, [state.currentStep]);
 
   const totalSteps = 4;
@@ -130,52 +123,40 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
   }, []);
 
   const completeAnalysis = useCallback((results: AnalysisResults) => {
-    dispatch(unifiedAnalysisActions.setAnalysisResults(results));
+    console.log('[UnifiedAnalysisContext] completeAnalysis called with:', results);
+    console.log('[UnifiedAnalysisContext] autoTriggerEnabled:', state.autoTriggerEnabled);
+    console.log('[UnifiedAnalysisContext] jobData available:', !!state.jobData);
+    console.log('[UnifiedAnalysisContext] Current analysisResults:', state.analysisResults);
     
-    // Auto-trigger role detection if enabled
-    if (state.autoTriggerEnabled && state.jobData) {
-      setTimeout(() => {
-        startRoleDetection(state.jobData!);
-      }, 500); // Small delay for UI transition
-    }
-  }, [state.autoTriggerEnabled, state.jobData, startRoleDetection]);
+    dispatch(unifiedAnalysisActions.setAnalysisResults(results));
+    dispatch(unifiedAnalysisActions.setCurrentStep('role-detection'));
+    
+    // Note: The actual role detection will be triggered by RoleDetectionSection
+    // when it detects that canProceedToRoleDetection becomes true
+    console.log('[UnifiedAnalysisContext] Analysis complete, transitioning to role-detection step');
+    console.log('[UnifiedAnalysisContext] RoleDetectionSection will auto-trigger when canProceedToRoleDetection becomes true');
+  }, [state.autoTriggerEnabled, state.jobData, state.analysisResults]);
 
   const resetFlow = useCallback(() => {
     dispatch(unifiedAnalysisActions.resetState());
   }, []);
 
-  // Context Value
-  const contextValue: UnifiedAnalysisContextInterface & {
-    progressPercentage: number;
-    currentStepIndex: number;
-    totalSteps: number;
-    initializeAnalysis: (jobData: Job) => void;
-    completeAnalysis: (results: AnalysisResults) => void;
-    resetFlow: () => void;
-  } = useMemo(() => ({
+  const contextValue = useMemo(() => ({
     state,
     dispatch,
-    
-    // Computed Properties
     canProceedToRoleDetection,
     canProceedToImprovements,
     canProceedToActions,
     hasSelectedRecommendations,
-    
-    // Helper Methods
     startRoleDetection,
     selectRole,
     toggleRecommendation,
     proceedToNext,
     goBack,
     clearErrors,
-    
-    // Extended Properties
     progressPercentage,
     currentStepIndex,
     totalSteps,
-    
-    // Extended Methods
     initializeAnalysis,
     completeAnalysis,
     resetFlow
@@ -209,7 +190,7 @@ export const UnifiedAnalysisProvider: React.FC<UnifiedAnalysisProviderProps> = (
 export const useUnifiedAnalysis = () => {
   const context = useContext(UnifiedAnalysisContext);
   
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useUnifiedAnalysis must be used within a UnifiedAnalysisProvider');
   }
   

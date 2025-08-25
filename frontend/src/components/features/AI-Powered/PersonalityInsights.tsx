@@ -274,12 +274,19 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
                       💡 Recommendations
                     </h4>
                     <ul className="space-y-2">
-                      {profile.recommendations.map((rec, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="text-green-500 mt-1">✓</span>
-                          <span className="text-gray-700">{rec}</span>
-                        </li>
-                      ))}
+                      {profile.recommendations.map((rec, index) => {
+                        // Handle both string and object formats for recommendations
+                        const recText = typeof rec === 'string' 
+                          ? rec 
+                          : rec?.title || rec?.description || (rec?.type && rec?.targetSection ? `${rec.type}: ${rec.targetSection}` : JSON.stringify(rec));
+                        
+                        return (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">✓</span>
+                            <span className="text-gray-700">{recText}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>

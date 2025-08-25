@@ -6,10 +6,13 @@ import { SignInDialog } from '../components/SignInDialog';
 import { HeroSection } from '../components/HeroSection';
 import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
-import { uploadCV, createJob } from '../services/cvService';
-import { FileText, Globe, Sparkles } from 'lucide-react';
+import { uploadCV, createJob, createDevelopmentJob } from '../services/cvService';
+import { FileText, Globe, Sparkles, Code2, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getErrorMessage, logError } from '../utils/errorHandling';
+import { isDevelopmentMode } from '../utils/developmentMode';
+import { signInAnonymously } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -18,15 +21,34 @@ export const HomePage = () => {
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url', data: unknown } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url' | 'development', data: unknown } | null>(null);
   const [userInstructions, setUserInstructions] = useState<string>('');
 
   const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
     try {
       setIsLoading(true);
       
-      // Require authentication before file upload
-      const currentUser = user;
+      // In development mode, automatically sign in anonymously if not authenticated
+      let currentUser = user;
+      if (!currentUser && isDevelopmentMode()) {
+        console.log('🔧 Development mode: Auto-signing in anonymously for file upload...');
+        try {
+          const userCredential = await signInAnonymously(auth);
+          currentUser = userCredential.user;
+          // Wait a moment for auth state to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          toast.success('🔧 Development mode: Auto-signed in for file upload');
+        } catch (authError) {
+          console.warn('Development mode auto sign-in failed:', authError);
+          setIsLoading(false);
+          setShowSignInDialog(true);
+          setPendingAction({ type: 'file', data: { file, quickCreate } });
+          toast.error('Please sign in to upload your CV.');
+          return;
+        }
+      }
+
+      // Require authentication before file upload (production mode)
       if (!currentUser) {
         setIsLoading(false);
         setShowSignInDialog(true);
@@ -57,8 +79,27 @@ export const HomePage = () => {
     try {
       setIsLoading(true);
       
-      // Require authentication before URL processing
-      const currentUser = user;
+      // In development mode, automatically sign in anonymously if not authenticated
+      let currentUser = user;
+      if (!currentUser && isDevelopmentMode()) {
+        console.log('🔧 Development mode: Auto-signing in anonymously for URL processing...');
+        try {
+          const userCredential = await signInAnonymously(auth);
+          currentUser = userCredential.user;
+          // Wait a moment for auth state to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          toast.success('🔧 Development mode: Auto-signed in for URL processing');
+        } catch (authError) {
+          console.warn('Development mode auto sign-in failed:', authError);
+          setIsLoading(false);
+          setShowSignInDialog(true);
+          setPendingAction({ type: 'url', data: url });
+          toast.error('Please sign in to process URLs.');
+          return;
+        }
+      }
+
+      // Require authentication before URL processing (production mode)
       if (!currentUser) {
         setIsLoading(false);
         setShowSignInDialog(true);
@@ -91,6 +132,55 @@ export const HomePage = () => {
     handleFileUpload(file);
   };
 
+  const handleDevelopmentSkip = async () => {
+    try {
+      setIsLoading(true);
+      
+      // In development mode, automatically sign in anonymously if not authenticated
+      let currentUser = user;
+      if (!currentUser && isDevelopmentMode()) {
+        console.log('🔧 Development mode: Auto-signing in anonymously...');
+        try {
+          const userCredential = await signInAnonymously(auth);
+          currentUser = userCredential.user;
+          
+          // Brief delay to let auth context update
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          toast.success('🔧 Development mode: Auto-signed in for testing');
+        } catch (authError) {
+          console.warn('Development mode auto sign-in failed:', authError);
+          // Fall back to showing sign-in dialog
+          setIsLoading(false);
+          setShowSignInDialog(true);
+          setPendingAction({ type: 'development', data: {} });
+          toast.error('Please sign in to access development features.');
+          return;
+        }
+      } else if (!currentUser) {
+        // Production mode - require proper authentication
+        setIsLoading(false);
+        setShowSignInDialog(true);
+        setPendingAction({ type: 'development', data: {} });
+        toast.error('Please sign in with Google to access development features.');
+        return;
+      }
+
+      // Create development job that reuses last parsed CV
+      const jobId = await createDevelopmentJob(userInstructions);
+      
+      // Navigate directly to analysis page since CV is already "parsed"
+      navigate(`/analysis/${jobId}`);
+      
+      toast.success('🚀 Development mode: Skipped upload & auth, reused cached CV!');
+    } catch (error: unknown) {
+      logError('developmentSkip', error);
+      toast.error(getErrorMessage(error) || 'Failed to create development job. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignInSuccess = () => {
     console.log('HomePage: handleSignInSuccess called, closing dialog...');
     setShowSignInDialog(false);
@@ -103,6 +193,8 @@ export const HomePage = () => {
       } else if (pendingAction.type === 'url') {
         const url = pendingAction.data as string;
         handleURLSubmit(url);
+      } else if (pendingAction.type === 'development') {
+        handleDevelopmentSkip();
       }
       setPendingAction(null);
     } else {
@@ -235,6 +327,34 @@ export const HomePage = () => {
                   <p className="text-xs text-gray-500 mt-2">
                     Automatically applies all enhancements and generates all formats
                   </p>
+                </div>
+              )}
+
+              {/* Development Mode Skip Button */}
+              {isDevelopmentMode() && (
+                <div className="mt-6 text-center">
+                  <div className="border-t border-gray-600 pt-6">
+                    <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-600/30 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Code2 className="w-4 h-4 text-green-400" />
+                        <span className="text-sm font-medium text-green-300">Development Mode</span>
+                      </div>
+                      <p className="text-xs text-green-200/80 text-center">
+                        Skip authentication and CV upload - automatically use cached CV for instant development testing
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleDevelopmentSkip}
+                      disabled={isLoading}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border border-green-500/50"
+                    >
+                      <Zap className="inline-block w-4 h-4 mr-2" />
+                      Quick Dev Test - Skip All Steps
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Development only: Auto-sign in + reuse cached CV data
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import { HomePage } from './pages/HomePage';
@@ -15,7 +15,7 @@ const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ defaul
 const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
 const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
 const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
-const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then(m => ({ default: m.RoleSelectionPage })));
+// Removed - RoleSelectionPage functionality integrated into CVAnalysisPage
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const KeywordOptimization = lazy(() => import('./pages/KeywordOptimization').then(m => ({ default: m.KeywordOptimization })));
 const FinalResultsPage = lazy(() => import('./pages/FinalResultsPage').then(m => ({ default: m.FinalResultsPage })));
@@ -29,6 +29,12 @@ const PageLoader = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
   </div>
 );
+
+// Redirect component for backward compatibility
+const RoleSelectRedirect = () => {
+  const { jobId } = useParams<{ jobId: string }>();
+  return <Navigate to={`/analysis/${jobId}`} replace />;
+};
 
 const router = createBrowserRouter(
   [
@@ -60,13 +66,10 @@ const router = createBrowserRouter(
         </GlobalLayout>
       ),
     },
+    // Redirect old /role-select routes to /analysis for backward compatibility
     {
       path: '/role-select/:jobId',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <RoleSelectionPage />
-        </Suspense>
-      ),
+      element: <RoleSelectRedirect />,
     },
     {
       path: '/select-features/:jobId',
@@ -167,6 +170,10 @@ const router = createBrowserRouter(
     future: {
       v7_startTransition: true,
       v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
     },
   }
 );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CVAnalysisResults } from '../components/CVAnalysisResults';
+import { UnifiedAnalysisContainer } from '../components/analysis/unified/UnifiedAnalysisContainer';
 import { ExternalDataSources } from '../components/ExternalDataSources';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -43,7 +43,8 @@ export const CVAnalysisPage = () => {
       }
 
       // Only show analysis if CV has been processed
-      if (updatedJob.status !== 'analyzed' && updatedJob.status !== 'completed') {
+      // Accept 'parsed', 'analyzed', or 'completed' status as valid for analysis
+      if (updatedJob.status !== 'parsed' && updatedJob.status !== 'analyzed' && updatedJob.status !== 'completed') {
         // If job is still processing, redirect to processing page
         if (updatedJob.status === 'processing' || updatedJob.status === 'pending') {
           navigate(`/process/${jobId}`);
@@ -67,9 +68,8 @@ export const CVAnalysisPage = () => {
   const handleExternalDataComplete = (enrichedData?: unknown[]) => {
     console.log('External data enrichment completed:', enrichedData?.length || 0, 'items');
     
-    // Store enriched data if provided
+    // Data is already stored in Firestore by the enrichment service
     if (enrichedData && enrichedData.length > 0) {
-      sessionStorage.setItem(`external-data-enriched-${jobId}`, JSON.stringify(enrichedData));
       toast.success(`CV enriched with ${enrichedData.length} external data sources`);
     }
     
@@ -83,122 +83,39 @@ export const CVAnalysisPage = () => {
     setShowExternalData(false);
   };
   
-  const handleContinueToPreview = (selectedRecommendations: string[]) => {
-    console.log('🚀 [PARENT] handleContinueToPreview called:', {
-      selectedRecommendations: selectedRecommendations.length,
+  const handleNavigateToFeatures = (data: any) => {
+    console.log('🚀 [CVAnalysisPage] Navigate to features called:', {
       jobId,
-      currentURL: window.location.href,
-      currentPath: window.location.pathname
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data) : []
     });
     
     if (!jobId) {
-      console.error('❌ [PARENT] No jobId available, cannot navigate');
+      console.error('❌ [CVAnalysisPage] No jobId available, cannot navigate');
       toast.error('Missing job ID for navigation');
       return;
     }
 
-    const targetPath = `/role-select/${jobId}`;
-    console.log('📍 [PARENT] Navigation target:', targetPath);
+    const targetPath = `/select-features/${jobId}`;
+    console.log('📍 [CVAnalysisPage] Navigation target:', targetPath);
 
     try {
-      // Store recommendations data first (critical for preview page)
-      sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
-      console.log('💾 [PARENT] Stored recommendations in sessionStorage');
-      
-      // Store navigation timestamp for debugging
-      sessionStorage.setItem(`nav-timestamp-${jobId}`, Date.now().toString());
-      
-      // Enhanced navigation with multiple strategies
-      console.log('🔄 [PARENT] Starting enhanced navigation sequence...');
-      
-      // Strategy 1: Immediate React Router navigation
-      try {
-        console.log('🔄 [PARENT] Attempt 1 - React Router navigate');
-        navigate(targetPath, { replace: true });
-        console.log('🔄 [PARENT] React Router navigate command executed');
-      } catch (navigateError) {
-        console.error('❌ [PARENT] React Router navigate failed:', navigateError);
-        throw navigateError;
-      }
-      
-      // Strategy 2: Verification with progressive fallbacks
-      let verificationAttempt = 0;
-      const maxVerificationAttempts = 12;
-      const verificationInterval = 100;
-      
-      const verifyNavigation = () => {
-        verificationAttempt++;
-        const currentPath = window.location.pathname;
-        
-        console.log(`🔍 [PARENT] Verification ${verificationAttempt}/${maxVerificationAttempts}:`, {
-          currentPath,
-          targetPath,
-          matched: currentPath === targetPath
-        });
-        
-        if (currentPath === targetPath) {
-          console.log('✅ [PARENT] Navigation verification successful!');
-          toast.dismiss();
-          toast.success('Welcome to CV Preview!', { icon: '🎉', duration: 3000 });
-          return;
+      // All data is persisted in Firestore, no need for sessionStorage
+      // Navigate directly to feature selection with state
+      navigate(targetPath, {
+        state: {
+          jobData: data?.jobData || job,
+          roleContext: data?.roleContext,
+          selectedRecommendations: data?.selectedRecommendations || [],
+          analysisComplete: true
         }
-        
-        // Progressive fallback strategy
-        if (verificationAttempt === 4) {
-          // First fallback: Try navigate again
-          console.log('🔄 [PARENT] Fallback 1 - Retry React Router');
-          try {
-            navigate(targetPath, { replace: false }); // Try without replace
-          } catch (retryError) {
-            console.error('❌ [PARENT] Retry navigate failed:', retryError);
-          }
-        } else if (verificationAttempt === 8) {
-          // Second fallback: window.location.replace
-          console.log('🔄 [PARENT] Fallback 2 - window.location.replace');
-          try {
-            window.location.replace(targetPath);
-          } catch (replaceError) {
-            console.error('❌ [PARENT] window.location.replace failed:', replaceError);
-          }
-        } else if (verificationAttempt >= maxVerificationAttempts) {
-          // Final fallback: window.location.href
-          console.log('🚑 [PARENT] Final fallback - window.location.href');
-          toast.dismiss();
-          toast.loading('Redirecting to preview...', { duration: 3000 });
-          
-          try {
-            window.location.href = targetPath;
-          } catch (hrefError) {
-            console.error('💥 [PARENT] All navigation methods failed:', hrefError);
-            toast.error('Navigation failed. Please refresh and try again.');
-          }
-          return;
-        }
-        
-        // Continue verification
-        setTimeout(verifyNavigation, verificationInterval);
-      };
+      });
       
-      // Start verification after small delay to allow initial navigation
-      setTimeout(verifyNavigation, 50);
-      
-      // Show user feedback
-      toast.loading('Preparing CV preview...', { duration: 2000 });
+      toast.success('Analysis complete! Select your desired features.', { icon: '🚀' });
       
     } catch (error: unknown) {
-      console.error('💥 [PARENT] Critical error in handleContinueToPreview:', error);
-      toast.error('Navigation error. Attempting recovery...');
-      
-      // Emergency recovery navigation
-      setTimeout(() => {
-        try {
-          console.log('🚑 [PARENT] Emergency recovery navigation');
-          window.location.href = `/preview/${jobId}`;
-        } catch (recoveryError: unknown) {
-          console.error('💥 [PARENT] Recovery navigation failed:', recoveryError);
-          toast.error('Complete navigation failure. Please refresh the page and try again.');
-        }
-      }, 300);
+      console.error('💥 [CVAnalysisPage] Critical error in navigation:', error);
+      toast.error('Navigation error. Please try again.');
     }
   };
 
@@ -310,10 +227,10 @@ export const CVAnalysisPage = () => {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!showExternalData ? (
           <>
-            <CVAnalysisResults
-              job={job}
-              onContinue={handleContinueToPreview}
-              onBack={handleBack}
+            <UnifiedAnalysisContainer
+              jobId={jobId!}
+              jobData={job}
+              onNavigateToFeatures={handleNavigateToFeatures}
               className="animate-fade-in-up"
             />
             

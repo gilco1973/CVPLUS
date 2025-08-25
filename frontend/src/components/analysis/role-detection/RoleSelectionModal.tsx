@@ -8,6 +8,13 @@ import { X, Search, Plus, Target, Filter } from 'lucide-react';
 import type { RoleSelectionModalProps } from '../context/types';
 import type { DetectedRole } from '../../../types/role-profiles';
 
+const getEnhancementPercentage = (enhancementPotential: number | undefined | null): number => {
+  if (typeof enhancementPotential !== 'number' || isNaN(enhancementPotential)) {
+    return 0; // Safe fallback
+  }
+  return Math.round(enhancementPotential * 100);
+};
+
 const mockAdditionalRoles: DetectedRole[] = [
   {
     roleId: 'product-manager',
@@ -40,13 +47,13 @@ export const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
   
   if (!isOpen) return null;
   
-  // Combine detected roles with additional options
-  const allRoles = [...availableRoles, ...mockAdditionalRoles];
+  // Combine detected roles with additional options - with null/undefined safety
+  const allRoles = [...(availableRoles || []), ...mockAdditionalRoles];
   
   // Filter roles based on search and category
   const filteredRoles = allRoles.filter(role => {
     const matchesSearch = role.roleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         role.matchingFactors.some(factor => 
+                         (role.matchingFactors || []).some(factor => 
                            factor.toLowerCase().includes(searchQuery.toLowerCase())
                          );
     return matchesSearch;
@@ -110,6 +117,7 @@ export const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             {filteredRoles.map((role) => {
               const isSelected = selectedRole?.roleId === role.roleId;
               const confidencePercentage = Math.round(role.confidence * 100);
+              const enhancementPercentage = getEnhancementPercentage(role.enhancementPotential);
               
               return (
                 <div
@@ -140,7 +148,7 @@ export const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
                   </div>
                   
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {role.matchingFactors.slice(0, 2).map((factor, index) => (
+                    {(role.matchingFactors || []).slice(0, 2).map((factor, index) => (
                       <span key={index} className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded">
                         {factor}
                       </span>
@@ -149,7 +157,7 @@ export const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
                   
                   <div className="text-xs text-gray-400">
                     Enhancement: <span className="text-cyan-400 font-medium">
-                      +{Math.round(role.enhancementPotential * 100)}%
+                      +{enhancementPercentage}%
                     </span>
                   </div>
                 </div>
