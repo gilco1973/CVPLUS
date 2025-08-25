@@ -6,159 +6,8 @@ import { FAQCategoryGrid } from './FAQCategoryGrid';
 import { FAQAccordion } from './FAQAccordion';
 import { FAQSidebar } from './FAQSidebar';
 import { FAQQuickActions } from './FAQQuickActions';
+import { FAQ_DATA, FAQ_CATEGORIES } from '../../../data/faqData';
 
-// Mock data for demonstration - in production, this would come from your API
-const mockFAQs: FAQItem[] = [
-  {
-    id: '1',
-    question: 'How do I upload my CV to CVPlus?',
-    answer: `You can upload your CV in several ways:
-
-1. **Drag and Drop**: Simply drag your PDF, Word, or text file onto the upload area
-2. **Browse Files**: Click the "Browse Files" button and select your CV from your computer
-3. **Paste Text**: Copy and paste your CV content directly into the text area
-
-Supported formats:
-• PDF files (recommended)
-• Microsoft Word (.doc, .docx)
-• Plain text (.txt)
-• Rich text format (.rtf)
-
-Maximum file size: 10MB
-Processing time: Usually under 30 seconds
-
-Once uploaded, our AI will analyze your CV and provide personalized recommendations for improvement.`,
-    category: 'getting-started',
-    tags: ['upload', 'file formats', 'PDF', 'Word'],
-    priority: 'high',
-    lastUpdated: '2024-01-15',
-    helpfulCount: 245
-  },
-  {
-    id: '2',
-    question: 'What AI features are available in CVPlus?',
-    answer: `CVPlus offers comprehensive AI-powered features:
-
-**Content Analysis**
-• Grammar and spell checking
-• Professional tone analysis
-• Keyword optimization for ATS systems
-• Skills gap identification
-
-**Enhancement Suggestions**
-• Industry-specific recommendations
-• Achievement quantification suggestions
-• Better action verb recommendations
-• Section restructuring advice
-
-**Multimedia Integration**
-• AI-generated professional headshots
-• Video introduction creation
-• Interactive portfolio galleries
-• Personal branding consistency
-
-**Smart Templates**
-• Industry-optimized layouts
-• ATS-friendly designs
-• Mobile-responsive formats
-• Print-ready versions
-
-All powered by advanced machine learning to ensure your CV stands out from the crowd.`,
-    category: 'ai-features',
-    tags: ['AI', 'analysis', 'recommendations', 'ATS'],
-    priority: 'high',
-    lastUpdated: '2024-01-12',
-    helpfulCount: 189
-  },
-  {
-    id: '3',
-    question: 'How much does CVPlus cost?',
-    answer: `CVPlus offers flexible pricing to suit different needs:
-
-**Free Plan** - $0/month
-• Basic CV upload and analysis
-• 1 CV transformation per month
-• Standard templates
-• Community support
-
-**Professional** - $19/month
-• Unlimited CV transformations
-• Premium templates and designs
-• Advanced AI recommendations
-• Priority email support
-• Export in multiple formats
-
-**Enterprise** - $49/month
-• Everything in Professional
-• Team collaboration features
-• Custom branding options
-• Dedicated support manager
-• API access for integrations
-
-**Special Offers**
-• 50% off first month with code TRANSFORM50
-• Annual billing saves 20%
-• Student discounts available
-
-All plans include a 7-day free trial with no commitment required.`,
-    category: 'pricing',
-    tags: ['pricing', 'plans', 'cost', 'free trial'],
-    priority: 'high',
-    lastUpdated: '2024-01-10',
-    helpfulCount: 156
-  }
-];
-
-const mockCategories: FAQCategory[] = [
-  {
-    id: 'getting-started',
-    name: 'Getting Started',
-    description: 'Learn the basics of using CVPlus',
-    icon: 'zap',
-    color: '#06b6d4',
-    count: 8
-  },
-  {
-    id: 'ai-features',
-    name: 'AI Features',
-    description: 'Understanding AI-powered enhancements',
-    icon: 'brain',
-    color: '#8b5cf6',
-    count: 12
-  },
-  {
-    id: 'pricing',
-    name: 'Pricing & Plans',
-    description: 'Information about costs and subscriptions',
-    icon: 'credit-card',
-    color: '#10b981',
-    count: 6
-  },
-  {
-    id: 'account',
-    name: 'Account Management',
-    description: 'Managing your profile and settings',
-    icon: 'settings',
-    color: '#f59e0b',
-    count: 10
-  },
-  {
-    id: 'technical',
-    name: 'Technical Support',
-    description: 'Troubleshooting and technical issues',
-    icon: 'shield',
-    color: '#ef4444',
-    count: 15
-  },
-  {
-    id: 'integrations',
-    name: 'Integrations',
-    description: 'Connecting with other platforms',
-    icon: 'globe',
-    color: '#6366f1',
-    count: 7
-  }
-];
 
 export const FAQPage: React.FC<FAQPageProps> = ({
   className = '',
@@ -173,7 +22,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({
   const popularTags = ['upload', 'AI', 'pricing', 'export', 'templates', 'support'];
 
   const filteredFAQs = useMemo(() => {
-    return mockFAQs.filter(faq => {
+    return FAQ_DATA.filter(faq => {
       const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
       const matchesSearch = !searchQuery || 
         faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -264,11 +113,11 @@ export const FAQPage: React.FC<FAQPageProps> = ({
           <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-              <span>{mockFAQs.length} articles</span>
+              <span>{FAQ_DATA.length} articles</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full" />
-              <span>{mockCategories.length} categories</span>
+              <span>{FAQ_CATEGORIES.length} categories</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full" />
@@ -298,7 +147,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({
               {/* Desktop Sidebar */}
               <div className="hidden lg:block sticky top-8">
                 <FAQSidebar
-                  categories={mockCategories}
+                  categories={FAQ_CATEGORIES}
                   selectedCategory={selectedCategory}
                   popularTags={popularTags}
                   onCategorySelect={handleCategorySelect}
@@ -322,7 +171,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({
                       </div>
                       
                       <FAQSidebar
-                        categories={mockCategories}
+                        categories={FAQ_CATEGORIES}
                         selectedCategory={selectedCategory}
                         popularTags={popularTags}
                         onCategorySelect={handleCategorySelect}
@@ -341,7 +190,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({
                 <div className="mb-12">
                   <h2 className="text-2xl font-bold text-gray-100 mb-6">Browse by Category</h2>
                   <FAQCategoryGrid
-                    categories={mockCategories}
+                    categories={FAQ_CATEGORIES}
                     selectedCategory={selectedCategory}
                     onCategorySelect={handleCategorySelect}
                   />

@@ -7,8 +7,7 @@ import { StripeCheckoutSDK } from '../components/pricing/StripeCheckoutSDK';
 import { PricingHero } from './components/PricingHero';
 import { LifetimeAccessGuarantee } from './components/LifetimeAccessGuarantee';
 import { FeatureComparison } from './components/FeatureComparison';
-import { PricingFAQ } from './components/PricingFAQ';
-import { ArrowLeft, Users, Crown, CheckCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Crown, CheckCircle, Sparkles, HelpCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatFeatureName } from '../services/paymentService';
 import { 
@@ -242,7 +241,22 @@ export const PricingPage = () => {
         </div>
 
         {/* FAQ Section */}
-        <PricingFAQ />
+        <div className="bg-neutral-800 rounded-2xl p-8 text-center">
+          <div className="flex justify-center items-center gap-3 mb-4">
+            <HelpCircle className="w-8 h-8 text-cyan-400" />
+            <h2 className="text-2xl font-bold text-neutral-100">Have Questions?</h2>
+          </div>
+          <p className="text-neutral-300 mb-6 max-w-2xl mx-auto">
+            Get answers to common questions about our pricing, features, and how CVPlus can transform your career.
+          </p>
+          <button
+            onClick={() => navigate('/faq')}
+            className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 flex items-center gap-2 mx-auto"
+          >
+            <HelpCircle className="w-5 h-5" />
+            Visit FAQ Page
+          </button>
+        </div>
       </div>
     </div>
   );

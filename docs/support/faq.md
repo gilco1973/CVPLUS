@@ -25,7 +25,7 @@ Most job seekers won't need more than 3 different versions. If you do, you may r
 Because parsing and exporting CVs costs us money every time. To keep the Free Plan available for everyone, we limit exports and reserve full PDF/HTML downloads for Premium users.
 
 ### ❓ Can I upgrade from Free to Premium anytime?
-**Yes!** Your Free Plan usage history is preserved, and you immediately gain access to all Premium features with a one-time $45 payment.
+**Yes!** Your Free Plan usage history is preserved, and you immediately gain access to all Premium features with a one-time $49 payment.
 
 ### ❓ Will the Free Plan always be free?
 **Yes.** We're committed to keeping basic CV improvement tools accessible to everyone. The Free Plan will always remain free.
@@ -33,7 +33,7 @@ Because parsing and exporting CVs costs us money every time. To keep the Free Pl
 ## Premium Plan Questions
 
 ### ❓ Is there really no subscription fee?
-**Correct!** Pay once ($45), access forever. No hidden fees, no recurring charges, no subscription traps.
+**Correct!** Pay once ($49), access forever. No hidden fees, no recurring charges, no subscription traps.
 
 ### ❓ What happens if CVPlus shuts down?
 While we're committed to long-term service, Lifetime Premium users receive:
@@ -47,7 +47,7 @@ We offer a 30-day satisfaction guarantee. If you're not happy with Premium featu
 ## Technical Questions
 
 ### ❓ How does your AI compare to ChatGPT?
-**ChatGPT is general-purpose. Our AI is built for CVs:** ATS scoring, keyword optimization, tailored templates, and unlimited refinements — all in one place. One-time $45, lifetime access.
+**ChatGPT is general-purpose. Our AI is built for CVs:** ATS scoring, keyword optimization, tailored templates, and unlimited refinements — all in one place. One-time $49, lifetime access.
 
 ### ❓ Will my data be kept private?
 **Yes.** We use enterprise-grade security:
@@ -69,8 +69,8 @@ API access is planned for our upcoming Professional Plan. Contact us if you need
 ### ❓ What payment methods do you accept?
 We accept all major credit cards (Visa, MasterCard, American Express, Discover) and PayPal through Stripe's secure payment processing.
 
-### ❓ Will I be charged again after the $45 payment?
-**No.** The $45 Lifetime Premium payment is truly one-time. No recurring charges, no subscription renewals.
+### ❓ Will I be charged again after the $49 payment?
+**No.** The $49 Lifetime Premium payment is truly one-time. No recurring charges, no subscription renewals.
 
 ### ❓ Can I pay with cryptocurrency?
 Not currently, but we're exploring crypto payment options. Contact us if this is important to you.

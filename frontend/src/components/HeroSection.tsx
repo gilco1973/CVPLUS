@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Sparkles } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface HeroSectionProps {
   onScrollToUpload?: () => void;
@@ -15,53 +16,11 @@ interface FeatureHighlight {
   delay: number;
 }
 
-const features: FeatureHighlight[] = [
-  {
-    id: 'ai-powered',
-    title: 'AI-Powered Analysis',
-    description: 'Claude AI intelligently parses and enhances your CV content for maximum impact',
-    icon: '🤖',
-    gradient: 'from-blue-500 to-blue-600',
-    delay: 100
-  },
-  {
-    id: 'interactive-elements',
-    title: 'Interactive Elements', 
-    description: 'QR codes, timelines, charts, and more to make your CV memorable',
-    icon: '✨',
-    gradient: 'from-purple-500 to-pink-600',
-    delay: 200
-  },
-  {
-    id: 'multiple-formats',
-    title: 'Multiple Export Formats',
-    description: 'Export to PDF, DOCX, or share online with a single click',
-    icon: '📄',
-    gradient: 'from-orange-500 to-red-600',
-    delay: 300
-  },
-  {
-    id: 'ats-optimization',
-    title: 'ATS Optimization',
-    description: 'Optimized for Applicant Tracking Systems to pass initial screenings',
-    icon: '🎯',
-    gradient: 'from-green-500 to-emerald-600',
-    delay: 400
-  },
-  {
-    id: 'real-time-processing',
-    title: 'Real-time Processing',
-    description: 'Watch your CV transform in real-time with instant preview updates',
-    icon: '⚡',
-    gradient: 'from-yellow-500 to-orange-500',
-    delay: 500
-  }
-];
-
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onScrollToUpload,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [showVideoControls, setShowVideoControls] = useState(false);
@@ -71,6 +30,50 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLElement>(null);
+
+  // Define features with translations
+  const features: FeatureHighlight[] = [
+    {
+      id: 'ai-powered',
+      title: t('features.items.aiPowered.title'),
+      description: t('features.items.aiPowered.description'),
+      icon: '🤖',
+      gradient: 'from-blue-500 to-blue-600',
+      delay: 100
+    },
+    {
+      id: 'interactive-elements',
+      title: t('features.items.interactiveElements.title'),
+      description: t('features.items.interactiveElements.description'),
+      icon: '✨',
+      gradient: 'from-purple-500 to-pink-600',
+      delay: 200
+    },
+    {
+      id: 'multiple-formats',
+      title: t('features.items.multipleFormats.title'),
+      description: t('features.items.multipleFormats.description'),
+      icon: '📄',
+      gradient: 'from-orange-500 to-red-600',
+      delay: 300
+    },
+    {
+      id: 'ats-optimization',
+      title: t('features.items.atsOptimization.title'),
+      description: t('features.items.atsOptimization.description'),
+      icon: '🎯',
+      gradient: 'from-green-500 to-emerald-600',
+      delay: 400
+    },
+    {
+      id: 'real-time-processing',
+      title: t('features.items.realTimeProcessing.title'),
+      description: t('features.items.realTimeProcessing.description'),
+      icon: '⚡',
+      gradient: 'from-yellow-500 to-orange-500',
+      delay: 500
+    }
+  ];
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -176,39 +179,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Left Column - Text Content */}
           <div className="text-center lg:text-left">
             <h1 className="animate-fade-in text-4xl md:text-6xl lg:text-7xl font-bold text-gray-100 mb-6 leading-tight">
-              From Paper to{' '}
+              {t('hero.title')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-400">
-                Powerful
+                {t('hero.titleHighlight')}
               </span>
             </h1>
             
             <p className="animate-fade-in text-2xl md:text-3xl font-light text-gray-300 mb-6">
-              Your CV, Reinvented
+              {t('hero.subtitle')}
             </p>
             
             <p className="animate-fade-in text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Transform your traditional CV into an interactive masterpiece with AI-powered features, stunning templates, and one-click magic
+              {t('hero.description')}
             </p>
             
             <div className="animate-fade-in flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <button 
                 onClick={handleGetStartedClick}
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 hover-glow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-                aria-label="Get started with CV transformation"
+                aria-label={t('hero.cta.getStartedAria')}
               >
                 <Sparkles className="inline-block w-5 h-5 mr-2" />
-                Get Started Free
+                {t('hero.cta.getStarted')}
               </button>
               
               <button 
                 onClick={handlePlayPause}
                 className="px-6 py-4 border-2 border-blue-500 text-blue-400 font-semibold rounded-lg hover:bg-blue-500 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-                aria-label={isVideoPlaying ? 'Pause demo video' : 'Play demo video'}
+                aria-label={isVideoPlaying ? t('hero.cta.pauseDemoAria') : t('hero.cta.playDemoAria')}
               >
                 {isVideoPlaying ? (
-                  <><Pause className="inline-block w-5 h-5 mr-2" />Pause Demo</>
+                  <><Pause className="inline-block w-5 h-5 mr-2" />{t('hero.cta.pauseDemo')}</>
                 ) : (
-                  <><Play className="inline-block w-5 h-5 mr-2" />Watch Demo</>
+                  <><Play className="inline-block w-5 h-5 mr-2" />{t('hero.cta.watchDemo')}</>
                 )}
               </button>
             </div>
@@ -217,15 +220,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="animate-fade-in flex flex-wrap justify-center lg:justify-start gap-8 mb-8">
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-blue-400">10,000+</div>
-                <div className="text-sm text-gray-400">CVs Transformed</div>
+                <div className="text-sm text-gray-400">{t('hero.trustIndicators.cvsTransformed')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-blue-400">4.9/5</div>
-                <div className="text-sm text-gray-400">User Rating</div>
+                <div className="text-sm text-gray-400">{t('hero.trustIndicators.userRating')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-blue-400">30 sec</div>
-                <div className="text-sm text-gray-400">Average Time</div>
+                <div className="text-sm text-gray-400">{t('hero.trustIndicators.averageTime')}</div>
               </div>
             </div>
           </div>
@@ -265,8 +268,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <div className="w-20 h-20 mx-auto mb-4 bg-blue-600/20 rounded-full flex items-center justify-center">
                       <Play className="w-10 h-10 text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">CV Generation Process</h3>
-                    <p className="text-gray-400">Watch how CVPlus transforms your CV</p>
+                    <h3 className="text-xl font-semibold mb-2">{t('hero.video.title')}</h3>
+                    <p className="text-gray-400">{t('hero.video.description')}</p>
                   </div>
                 </div>
 
@@ -335,7 +338,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               
               {/* CVPlus Branding Overlay */}
               <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-1">
-                <span className="text-white text-sm font-medium">CVPlus Demo</span>
+                <span className="text-white text-sm font-medium">{t('hero.video.brand')}</span>
               </div>
             </div>
           </div>
@@ -345,10 +348,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="animate-fade-in mt-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-100 mb-4">
-              Powerful Features at Your Fingertips
+              {t('features.title')}
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Every feature designed to make your CV stand out in today's competitive job market
+              {t('features.subtitle')}
             </p>
           </div>
 

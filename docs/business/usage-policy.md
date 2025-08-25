@@ -33,7 +33,7 @@ Our Lifetime Plan is designed for serious job seekers who want full access to al
 - Career insights & industry-specific keyword suggestions
 - Full document history & downloads
 - Export to PDF and HTML formats
-- One-time payment of $45, lifetime access
+- One-time payment of $49, lifetime access
 
 ### Fair Use Policy:
 - **Unlimited refinements** for your own CV

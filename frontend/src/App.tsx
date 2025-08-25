@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
 import { GlobalLayout } from './components/layout/GlobalLayout';
 import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowLayout';
+import './i18n/config';
 
 // Lazy load heavy components to reduce initial bundle size
 const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));

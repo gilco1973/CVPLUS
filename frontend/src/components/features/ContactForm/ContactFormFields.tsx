@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Mail, Building, Phone, MessageSquare } from 'lucide-react';
 import { ContactFormData, ContactFormErrors, SubjectOption } from './types';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface ContactFormFieldsProps {
   formData: ContactFormData;
@@ -11,14 +12,6 @@ interface ContactFormFieldsProps {
   showPhoneField?: boolean;
 }
 
-const SUBJECT_OPTIONS: SubjectOption[] = [
-  { value: 'job-opportunity', label: 'Job Opportunity' },
-  { value: 'collaboration', label: 'Collaboration' },
-  { value: 'consultation', label: 'Consultation' },
-  { value: 'general-inquiry', label: 'General Inquiry' },
-  { value: 'other', label: 'Other' }
-];
-
 export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
   formData,
   errors,
@@ -27,6 +20,15 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
   showCompanyField = true,
   showPhoneField = true
 }) => {
+  const { t } = useTranslation();
+
+  const SUBJECT_OPTIONS: SubjectOption[] = [
+    { value: 'job-opportunity', label: t('forms.contactForm.fields.subject.options.jobOpportunity') },
+    { value: 'collaboration', label: t('forms.contactForm.fields.subject.options.collaboration') },
+    { value: 'consultation', label: t('forms.contactForm.fields.subject.options.consultation') },
+    { value: 'general-inquiry', label: t('forms.contactForm.fields.subject.options.generalInquiry') },
+    { value: 'other', label: t('forms.contactForm.fields.subject.options.other') }
+  ];
   const handleInputChange = (field: keyof ContactFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     onChange(field, e.target.value);
     if (errors[field]) {
@@ -39,7 +41,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {/* Name Field */}
       <div>
         <label htmlFor="senderName" className="block text-sm font-medium text-gray-700 mb-1">
-          Your Name *
+          {t('forms.contactForm.fields.name.label')} *
         </label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -51,7 +53,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               errors.senderName ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Enter your full name"
+            placeholder={t('forms.contactForm.fields.name.placeholder')}
             aria-describedby={errors.senderName ? 'name-error' : undefined}
           />
         </div>

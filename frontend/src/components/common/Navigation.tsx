@@ -5,6 +5,8 @@ import { Logo } from '../Logo';
 import { UserMenu } from '../UserMenu';
 import { useAuth } from '../../contexts/AuthContext';
 import { designSystem } from '../../config/designSystem';
+import { useTranslation } from '../../hooks/useTranslation';
+import { LanguageSelector, LanguageSelectorCompact } from '../LanguageSelector';
 import toast from 'react-hot-toast';
 
 interface NavigationProps {
@@ -18,21 +20,22 @@ interface NavLink {
   external?: boolean;
 }
 
-const navLinks: NavLink[] = [
-  { href: '/', label: 'Home' },
-  { href: '/features', label: 'Features' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/about', label: 'About' },
-  { href: '/faq', label: 'FAQ' },
-];
-
 export const Navigation: React.FC<NavigationProps> = ({
   variant = 'default',
   className = ''
 }) => {
   const location = useLocation();
   const { user, signInWithGoogle } = useAuth();
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks: NavLink[] = [
+    { href: '/', label: t('navigation.home') },
+    { href: '/features', label: t('navigation.features') },
+    { href: '/pricing', label: t('navigation.pricing') },
+    { href: '/about', label: t('footer.about') },
+    { href: '/faq', label: t('footer.faq') },
+  ];
 
   // Debug user state
   console.log('🧭 Navigation component - user state:', user ? {
@@ -129,6 +132,9 @@ export const Navigation: React.FC<NavigationProps> = ({
               );
             })}
             
+            {/* Language Selector */}
+            <LanguageSelector />
+            
             {/* User Authentication */}
             {user ? (
               <UserMenu variant="white" size="default" />
@@ -136,7 +142,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 onClick={handleSignIn}
                 className="flex items-center gap-3 bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                aria-label="Sign in with Google"
+                aria-label={t('auth.continueWith').replace('{{provider}}', 'Google')}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -144,7 +150,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Sign in with Google
+                {t('auth.continueWith').replace('{{provider}}', 'Google')}
               </button>
             )}
           </nav>
@@ -202,6 +208,11 @@ export const Navigation: React.FC<NavigationProps> = ({
                 );
               })}
               
+              {/* Language Selector - Mobile */}
+              <div className="px-4 py-2">
+                <LanguageSelectorCompact />
+              </div>
+              
               {/* Mobile User Authentication */}
               <div className="pt-4 border-t border-neutral-700">
                 {user ? (
@@ -222,7 +233,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
-                    Sign in with Google
+                    {t('auth.continueWith').replace('{{provider}}', 'Google')}
                   </button>
                 )}
               </div>

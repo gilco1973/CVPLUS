@@ -53,7 +53,7 @@ export const FAQ_CATEGORIES: FAQCategory[] = [
     description: 'Subscription plans, billing information, and premium features',
     icon: 'dollar-sign',
     color: 'yellow',
-    count: 6
+    count: 9
   },
   {
     id: createCategoryId('integrations'),
@@ -499,6 +499,126 @@ If you need to create CVs for clients, please contact us about our Professional 
     tags: ['export limitations', 'free plan', 'premium features', 'sustainability'],
     priority: 'medium',
     lastUpdated: '2024-08-24',
+  },
+  {
+    id: createFAQId('pricing-billing-007'),
+    question: 'What does "lifetime access" mean?',
+    answer: `Pay once, own forever. Your premium features are permanently tied to your Google account. No recurring charges, no expiration dates, no subscriptions to manage.
+
+**Lifetime Access Benefits:**
+• **One-Time Payment** - Single $49 payment, no recurring charges
+• **Permanent Access** - Features never expire or get revoked
+• **Account Binding** - Tied to your Google account for security
+• **No Subscription Management** - Set it and forget it
+• **Future Updates Included** - New premium features added automatically
+
+**What's Guaranteed:**
+✅ All current premium features forever
+✅ New premium features as we add them
+✅ No surprise billing or renewals
+✅ Access from any device with your Google account
+✅ Data preserved indefinitely
+
+**Account Security:**
+• Tied specifically to your Google account
+• Cannot be transferred to different accounts
+• Secure authentication prevents unauthorized access
+• Account recovery through Google's systems
+
+**Future-Proof Investment:**
+As CVPlus grows and adds new premium features, your lifetime access automatically includes them. This means your $49 investment continues to provide more value over time without additional costs.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['lifetime access', 'one-time payment', 'no subscription', 'Google account', 'permanent'],
+    priority: 'high',
+    lastUpdated: '2024-08-25',
+  },
+  {
+    id: createFAQId('pricing-billing-008'),
+    question: 'Can I access premium features on multiple devices?',
+    answer: `Yes! Once you upgrade, simply sign in with your Google account on any device to instantly access all premium features. Works on desktop, tablet, and mobile.
+
+**Multi-Device Access:**
+• **Desktop Computers** - Windows, Mac, Linux support
+• **Tablets** - iPad, Android tablets with full functionality
+• **Mobile Phones** - iOS and Android mobile optimization
+• **Web Browsers** - Chrome, Firefox, Safari, Edge compatibility
+• **Operating Systems** - Platform independent, works everywhere
+
+**Seamless Synchronization:**
+• **Cloud Storage** - All your CVs and data sync automatically
+• **Real-Time Updates** - Changes on one device appear instantly on others
+• **Progress Preservation** - Never lose work when switching devices
+• **Settings Sync** - Preferences and customizations carry over
+• **Download History** - Access all your exports from any device
+
+**Device Management:**
+• **Unlimited Devices** - No limit on number of devices
+• **Automatic Sign-In** - Stay logged in across trusted devices
+• **Security Controls** - Secure Google authentication on each device
+• **Remote Access** - Work on your CV from anywhere with internet
+
+**Technical Requirements:**
+• Modern web browser (Chrome, Firefox, Safari, Edge)
+• Internet connection for cloud sync
+• JavaScript enabled
+• Minimum screen resolution: 768px width
+
+**Privacy & Security:**
+• Each device uses secure Google authentication
+• No device-specific data storage of sensitive information
+• End-to-end encryption for data transmission
+• Easy remote logout from compromised devices
+
+Perfect for professionals who work across multiple devices or travel frequently.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['multi-device', 'mobile access', 'synchronization', 'cloud storage', 'Google account'],
+    priority: 'high',
+    lastUpdated: '2024-08-25',
+  },
+  {
+    id: createFAQId('pricing-billing-009'),
+    question: 'What payment methods do you accept?',
+    answer: `We accept all major credit cards (Visa, Mastercard, American Express) and debit cards. All payments are processed securely through Stripe.
+
+**Accepted Payment Methods:**
+• **Credit Cards** - Visa, Mastercard, American Express, Discover
+• **Debit Cards** - Visa Debit, Mastercard Debit, international debit cards
+• **Digital Wallets** - Apple Pay, Google Pay, PayPal (coming soon)
+• **Bank Transfers** - Available for enterprise customers
+• **International Cards** - Accepted from 195+ countries
+
+**Payment Security:**
+• **Stripe Processing** - Industry-leading payment security (PCI DSS Level 1)
+• **SSL Encryption** - 256-bit encryption for all payment data
+• **Zero Data Storage** - We never store your payment information
+• **Fraud Protection** - Advanced fraud detection and prevention
+• **3D Secure** - Additional security layer for supported cards
+
+**Payment Process:**
+1. **Select Plan** - Choose Lifetime Premium ($49)
+2. **Secure Checkout** - Stripe-powered payment form
+3. **Payment Verification** - Real-time card verification
+4. **Instant Activation** - Premium features activate immediately
+5. **Email Confirmation** - Receipt and activation confirmation sent
+
+**International Support:**
+• **Currency Conversion** - Automatic conversion to local currency
+• **Tax Handling** - VAT/GST calculated automatically where applicable
+• **Global Support** - 24/7 payment support in multiple languages
+• **Regional Compliance** - Meets local payment regulations
+
+**Refund Policy:**
+• **30-Day Money-Back Guarantee** - Full refund if not satisfied
+• **Instant Refund Processing** - Refunds processed within 1-2 business days
+• **No Questions Asked** - Simple refund request process
+• **Partial Usage OK** - Refund available even after using premium features
+
+**Payment Support:**
+If you encounter any payment issues, our support team can assist with alternative payment arrangements or troubleshoot declined transactions.`,
+    category: createCategoryId('pricing-billing'),
+    tags: ['payment methods', 'credit cards', 'Stripe', 'payment security', 'international payments'],
+    priority: 'medium',
+    lastUpdated: '2024-08-25',
   },
 
   // Integrations Category

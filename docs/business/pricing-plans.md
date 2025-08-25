@@ -12,7 +12,7 @@
 | **Document History** | Not saved | Full history + download anytime |
 | **Career Insights** | Not included | Industry-specific tailoring & keyword suggestions |
 | **Exports** | Plain text or watermarked | Full PDF & HTML exports |
-| **Cost** | Always free | $45 one-time, lifetime access |
+| **Cost** | Always free | $49 one-time, lifetime access |
 
 ## Free Plan Details
 
@@ -32,7 +32,7 @@
 ## Lifetime Premium Plan Details
 
 ### Comprehensive CV Transformation
-- **$45 one-time payment** - No subscriptions, no recurring fees
+- **$49 one-time payment** - No subscriptions, no recurring fees
 - **Unlimited refinements** - Perfect your CV with endless iterations
 - **3 unique CVs monthly** - Different career paths or major revisions
 - **Advanced AI features** - Deep analysis and professional optimization
@@ -56,7 +56,7 @@
 - **Lifetime access** - No expiration, no renewals
 
 ### Cost Comparison
-- **CVPlus Lifetime**: $45 one-time
+- **CVPlus Lifetime**: $49 one-time
 - **Typical CV services**: $100-500 per consultation
 - **Other AI platforms**: $20-50/month subscriptions
 - **Professional CV writers**: $200-800 per CV
@@ -80,10 +80,10 @@ For career coaches, recruiters, and agencies:
 This means you can work on up to 3 completely different CV versions per month. For example, one tailored for marketing roles, one for project management, and one for tech roles. Within each, you can make unlimited refinements.
 
 ### ❓ Can I upgrade from Free to Premium anytime?
-Yes! Your Free Plan usage history is preserved, and you immediately gain access to all Premium features with a one-time $45 payment.
+Yes! Your Free Plan usage history is preserved, and you immediately gain access to all Premium features with a one-time $49 payment.
 
 ### ❓ Is there really no subscription fee?
-Correct! Pay once ($45), access forever. No hidden fees, no recurring charges, no subscription traps.
+Correct! Pay once ($49), access forever. No hidden fees, no recurring charges, no subscription traps.
 
 ### ❓ What if I need more than 3 unique CVs per month?
 Most job seekers won't need more than 3 different versions. If you do, you may request an upgrade or check our upcoming Professional Plan for high-volume needs.

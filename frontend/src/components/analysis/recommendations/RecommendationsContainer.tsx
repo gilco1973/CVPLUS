@@ -42,14 +42,32 @@ export const RecommendationsContainer: React.FC<RecommendationsContainerProps> =
       setError(null);
 
       try {
-        const response = await CVServiceCore.getRecommendations(jobData.id, {
-          targetRole: state.selectedRole?.roleName,
-          roleContext: state.selectedRole ? {
-            industry: state.selectedRole.industry,
-            level: state.selectedRole.level,
-            skills: state.selectedRole.keySkills
-          } : undefined
+        // Extract parameters for correct API signature
+        const targetRole = state.selectedRole?.roleName;
+        const industryKeywords = state.selectedRole?.matchingFactors || [];
+        
+        // Validate parameters
+        if (!targetRole) {
+          console.warn('[RecommendationsContainer] No target role selected, using generic recommendations');
+        }
+        
+        if (industryKeywords.length === 0) {
+          console.warn('[RecommendationsContainer] No industry keywords found, recommendations may be generic');
+        }
+        
+        console.log('[RecommendationsContainer] API Parameters Validated:', {
+          jobId: jobData.id,
+          hasTargetRole: !!targetRole,
+          industryKeywordsCount: industryKeywords.length,
+          environment: process.env.NODE_ENV
         });
+        
+        const response = await CVServiceCore.getRecommendations(
+          jobData.id,
+          targetRole,
+          industryKeywords,
+          false // forceRegenerate
+        );
 
         console.log('[RecommendationsContainer] Recommendations loaded:', response);
         
