@@ -16,8 +16,7 @@ import type {
   FeatureSpecification,
   StylingSystem,
   ATSCompatibility
-} from '../types/cv-templates';
-import {
+,
   INDUSTRY_COLOR_SCHEMES,
   PROFESSIONAL_TYPOGRAPHY
 } from '../types/cv-templates';
@@ -1348,7 +1347,7 @@ export function getTemplatesByExperienceLevel(level: ExperienceLevel): CVTemplat
     .filter(template => template.experienceLevel.includes(level));
 }
 
-export function getPopularTemplates(limit: number = 5): CVTemplate[] {
+export function getPopularTemplates(limit = 5): CVTemplate[] {
   return Object.values(PROFESSIONAL_TEMPLATES)
     .sort((a, b) => b.metadata.popularity - a.metadata.popularity)
     .slice(0, limit);

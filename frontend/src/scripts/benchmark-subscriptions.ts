@@ -60,8 +60,8 @@ class SubscriptionBenchmark {
    * Benchmark a specific scenario
    */
   async benchmarkScenario(scenario: BenchmarkScenario): Promise<BenchmarkResult> {
-    console.log(`\n🧪 Benchmarking: ${scenario.name}`);
-    console.log(`   Jobs: ${scenario.jobCount}, Subscribers per job: ${scenario.subscribersPerJob}`);
+    console.warn(`\n🧪 Benchmarking: ${scenario.name}`);
+    console.warn(`   Jobs: ${scenario.jobCount}, Subscribers per job: ${scenario.subscribersPerJob}`);
     
     const startTime = Date.now();
     const startMemory = this.getMemoryUsage();
@@ -117,7 +117,7 @@ class SubscriptionBenchmark {
    * Run comprehensive benchmark suite
    */
   async runBenchmarkSuite(): Promise<BenchmarkResult[]> {
-    console.log('🚀 Starting Subscription Performance Benchmark Suite\n');
+    console.warn('🚀 Starting Subscription Performance Benchmark Suite\n');
 
     const scenarios: BenchmarkScenario[] = [
       {
@@ -175,7 +175,7 @@ class SubscriptionBenchmark {
     allowedSubscriptions: number;
     rateLimitHits: number;
   }> {
-    console.log('\n⚡ Testing Rate Limiting');
+    console.warn('\n⚡ Testing Rate Limiting');
 
     const jobId = 'rate-limit-test';
     let attemptedSubscriptions = 0;
@@ -214,7 +214,7 @@ class SubscriptionBenchmark {
     finalMemory: number;
     memoryLeakPrevented: boolean;
   }> {
-    console.log('\n🧠 Testing Memory Management');
+    console.warn('\n🧠 Testing Memory Management');
 
     const initialMemory = this.getMemoryUsage();
     let peakMemory = initialMemory;
@@ -337,15 +337,15 @@ if (require.main === module) {
 
       // Test rate limiting
       const rateLimitResults = await benchmark.testRateLimiting();
-      console.log('\n⚡ Rate Limiting Results:', rateLimitResults);
+      console.warn('\n⚡ Rate Limiting Results:', rateLimitResults);
 
       // Test memory management
       const memoryResults = await benchmark.testMemoryManagement();
-      console.log('\n🧠 Memory Management Results:', memoryResults);
+      console.warn('\n🧠 Memory Management Results:', memoryResults);
 
       // Generate and print report
       const report = benchmark.generateReport();
-      console.log(report);
+      console.warn(report);
 
       // Cleanup
       benchmark.cleanup();

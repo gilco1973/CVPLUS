@@ -100,13 +100,13 @@ export class TemplateSelectionService {
     preferences?: string[];
   }): void {
     this.userProfile = { ...profile };
-    console.log('📋 User profile updated for template recommendations:', profile);
+    console.warn('📋 User profile updated for template recommendations:', profile);
   }
 
   /**
    * Get recommended templates based on user profile
    */
-  getRecommendations(limit: number = 3): CVTemplate[] {
+  getRecommendations(limit = 3): CVTemplate[] {
     return getRecommendedTemplates(this.userProfile).slice(0, limit);
   }
 
@@ -198,7 +198,7 @@ export class TemplateSelectionService {
     trackTemplateUsage(templateId);
     
     // Additional tracking logic can be added here
-    console.log('📊 Template selection tracked:', {
+    console.warn('📊 Template selection tracked:', {
       templateId,
       timestamp: new Date().toISOString(),
       userProfile: this.userProfile,
@@ -279,9 +279,9 @@ export class EnhancedCVGenerationService {
       // Here would be the actual CV generation logic
       // For now, we'll simulate the process
       
-      console.log('🎨 Generating CV with template:', template.name);
-      console.log('📊 Template features:', template.features);
-      console.log('🎯 ATS compatibility:', template.ats.formats.ats.compatibility.score);
+      console.warn('🎨 Generating CV with template:', template.name);
+      console.warn('📊 Template features:', template.features);
+      console.warn('🎯 ATS compatibility:', template.ats.formats.ats.compatibility.score);
       
       // Simulate generation time
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -539,6 +539,6 @@ export function getTemplateCapabilities(templateId: string) {
   return enhancedCVGenerationService.getTemplateCapabilities(templateId);
 }
 
-console.log('🔗 Template Integration Service initialized');
-console.log('📋 Available templates:', getAllTemplates().length);
-console.log('🎨 Template categories:', Object.keys(templateRegistry.categories));
+console.warn('🔗 Template Integration Service initialized');
+console.warn('📋 Available templates:', getAllTemplates().length);
+console.warn('🎨 Template categories:', Object.keys(templateRegistry.categories));

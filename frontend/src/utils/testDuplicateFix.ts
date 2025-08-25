@@ -9,12 +9,12 @@ export const testDuplicateFix = {
   // Clear previous test data
   reset() {
     recommendationsDebugger.clearHistory();
-    console.log('🧹 Cleared recommendations debug history');
+    console.warn('🧹 Cleared recommendations debug history');
   },
   
   // Simulate multiple rapid calls (this should be prevented by our fix)
-  async simulateRapidCalls(jobId: string = 'test-job-123') {
-    console.log('🧪 Testing rapid successive calls...');
+  async simulateRapidCalls(jobId = 'test-job-123') {
+    console.warn('🧪 Testing rapid successive calls...');
     
     // These would normally cause duplicates
     const promises = [
@@ -27,7 +27,7 @@ export const testDuplicateFix = {
     try {
       await Promise.all(promises);
     } catch (error) {
-      console.log('Expected error from duplicate prevention:', error);
+      console.warn('Expected error from duplicate prevention:', error);
     }
     
     this.showResults(jobId);
@@ -35,28 +35,28 @@ export const testDuplicateFix = {
   
   // Helper to call getRecommendations (mocked for testing)
   async callGetRecommendations(jobId: string, label: string) {
-    console.log(`📞 ${label}: Calling getRecommendations for ${jobId}`);
+    console.warn(`📞 ${label}: Calling getRecommendations for ${jobId}`);
     recommendationsDebugger.trackCall(jobId, `testDuplicateFix.${label}`);
     
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
     
-    console.log(`✅ ${label}: getRecommendations completed for ${jobId}`);
+    console.warn(`✅ ${label}: getRecommendations completed for ${jobId}`);
   },
   
   // Show test results
   showResults(jobId?: string) {
-    console.log('\n📊 Test Results:');
+    console.warn('\n📊 Test Results:');
     const stats = recommendationsDebugger.getStats(jobId);
     const history = recommendationsDebugger.getCallHistory(jobId);
     
-    console.log('Stats:', stats);
-    console.log('Call History:', history);
+    console.warn('Stats:', stats);
+    console.warn('Call History:', history);
     
     if (stats.duplicateCalls > 0) {
       console.error(`❌ TEST FAILED: ${stats.duplicateCalls} duplicate calls detected!`);
     } else {
-      console.log('✅ TEST PASSED: No duplicate calls detected');
+      console.warn('✅ TEST PASSED: No duplicate calls detected');
     }
     
     return stats;
@@ -64,13 +64,13 @@ export const testDuplicateFix = {
   
   // Monitor live calls
   startMonitoring() {
-    console.log('🔍 Starting live monitoring. Open CVAnalysisResults component to see live tracking...');
+    console.warn('🔍 Starting live monitoring. Open CVAnalysisResults component to see live tracking...');
     
     // Add periodic stats logging
     const interval = setInterval(() => {
       const stats = recommendationsDebugger.getStats();
       if (stats.totalCalls > 0) {
-        console.log('📈 Live Stats:', stats);
+        console.warn('📈 Live Stats:', stats);
         if (stats.duplicateCalls > 0) {
           console.warn(`⚠️ ${stats.duplicateCalls} duplicate calls detected in live monitoring!`);
         }
@@ -79,7 +79,7 @@ export const testDuplicateFix = {
     
     return () => {
       clearInterval(interval);
-      console.log('🔍 Stopped monitoring');
+      console.warn('🔍 Stopped monitoring');
     };
   }
 };

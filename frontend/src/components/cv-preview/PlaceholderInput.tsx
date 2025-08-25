@@ -27,15 +27,17 @@ export const PlaceholderInput: React.FC<PlaceholderInputProps> = ({
     if (!inputValue) return inputValue;
 
     switch (placeholder.type) {
-      case 'number':
+      case 'number': {
         // Remove non-digits and add commas
         const numValue = inputValue.replace(/[^\d]/g, '');
         return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
       
-      case 'currency':
+      case 'currency': {
         // Handle various currency formats
         const cleanValue = inputValue.replace(/[^\d.,kmb]/gi, '');
         return cleanValue;
+      }
       
       case 'percentage':
         // Remove % symbol, keep only digits
@@ -67,14 +69,15 @@ export const PlaceholderInput: React.FC<PlaceholderInputProps> = ({
 
     // Type-specific validation
     switch (placeholder.type) {
-      case 'number':
+      case 'number': {
         const numValue = inputValue.replace(/,/g, '');
         if (!/^\d+$/.test(numValue)) {
           return { isValid: false, error: `${placeholder.label} must be a valid number` };
         }
         return { isValid: true, formattedValue: formatValue(inputValue) };
+      }
 
-      case 'percentage':
+      case 'percentage': {
         if (!/^\d+$/.test(inputValue)) {
           return { isValid: false, error: `${placeholder.label} must be a number (without % symbol)` };
         }
@@ -83,12 +86,14 @@ export const PlaceholderInput: React.FC<PlaceholderInputProps> = ({
           return { isValid: false, error: `${placeholder.label} must be between 0 and 100` };
         }
         return { isValid: true, formattedValue: inputValue };
+      }
 
-      case 'currency':
-        if (!/^[\d,$kmb\.]+$/i.test(inputValue)) {
+      case 'currency': {
+        if (!/^[\d,$kmb.]+$/i.test(inputValue)) {
           return { isValid: false, error: `${placeholder.label} must be a valid amount (e.g., 1000, $1.5M, 500K)` };
         }
         return { isValid: true, formattedValue: inputValue };
+      }
 
       case 'text':
       case 'timeframe':

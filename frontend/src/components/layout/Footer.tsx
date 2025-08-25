@@ -80,6 +80,12 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   Contact
                 </Link>
+                <Link 
+                  to="/fair-use-policy" 
+                  className={designSystem.components.navigation.link.base + ' ' + designSystem.components.navigation.link.default + ' block'}
+                >
+                  Fair Use Policy
+                </Link>
               </nav>
             </div>
           </div>

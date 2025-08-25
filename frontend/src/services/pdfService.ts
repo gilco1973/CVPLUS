@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export class PDFService {
-  static async generatePDFFromHTML(htmlContent: string, _fileName: string = 'cv.pdf'): Promise<Blob> {
+  static async generatePDFFromHTML(htmlContent: string, _fileName = 'cv.pdf'): Promise<Blob> {
     // Create a temporary container
     const container = document.createElement('div');
     container.style.position = 'absolute';
@@ -77,7 +77,7 @@ export class PDFService {
     }
   }
 
-  static downloadPDF(blob: Blob, fileName: string = 'cv.pdf') {
+  static downloadPDF(blob: Blob, fileName = 'cv.pdf') {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

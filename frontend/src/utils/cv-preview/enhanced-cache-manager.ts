@@ -78,7 +78,7 @@ export class EnhancedCacheManager {
     }
     
     this.isInitialized = true;
-    console.log('Enhanced cache manager initialized');
+    console.warn('Enhanced cache manager initialized');
   }
 
   /**
@@ -200,7 +200,7 @@ export class EnhancedCacheManager {
     }
     
     if (invalidatedCount > 0) {
-      console.log(`Invalidated ${invalidatedCount} cache entries matching pattern: ${pattern}`);
+      console.warn(`Invalidated ${invalidatedCount} cache entries matching pattern: ${pattern}`);
     }
     
     return invalidatedCount;
@@ -234,7 +234,7 @@ export class EnhancedCacheManager {
    * Warm cache with frequently used templates
    */
   async warmCache(templateIds: string[]): Promise<void> {
-    console.log(`Warming cache for ${templateIds.length} templates...`);
+    console.warn(`Warming cache for ${templateIds.length} templates...`);
     
     const warmPromises = templateIds.map(async (templateId) => {
       try {
@@ -255,7 +255,7 @@ export class EnhancedCacheManager {
     });
     
     await Promise.allSettled(warmPromises);
-    console.log('Cache warming completed');
+    console.warn('Cache warming completed');
   }
 
   /**
@@ -283,7 +283,7 @@ export class EnhancedCacheManager {
       memoryReleased
     };
     
-    console.log('Cache cleanup completed:', result);
+    console.warn('Cache cleanup completed:', result);
     return result;
   }
 
@@ -312,7 +312,7 @@ export class EnhancedCacheManager {
       totalMemoryReleased
     };
     
-    console.log('Memory pressure relief completed:', result);
+    console.warn('Memory pressure relief completed:', result);
     return result;
   }
 
@@ -324,7 +324,7 @@ export class EnhancedCacheManager {
     this.templateCache.clear();
     this.metadataCache.clear();
     
-    console.log('All caches cleared');
+    console.warn('All caches cleared');
   }
 
   /**
@@ -355,7 +355,7 @@ export class EnhancedCacheManager {
     this.clearAll();
     this.isInitialized = false;
     
-    console.log('Enhanced cache manager destroyed');
+    console.warn('Enhanced cache manager destroyed');
   }
 
   private setupCleanup(): void {
@@ -432,7 +432,7 @@ export function initializeEnhancedCaching(config?: Partial<CacheConfig>): void {
     // Replace global instance (in production, use dependency injection)
   }
   
-  console.log('Enhanced caching system initialized');
+  console.warn('Enhanced caching system initialized');
 }
 
 /**

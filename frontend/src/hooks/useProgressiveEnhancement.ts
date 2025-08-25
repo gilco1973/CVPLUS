@@ -126,8 +126,8 @@ export function useProgressiveEnhancement({
     // Log filtered features for debugging
     if (SERVER_SIDE_FEATURES.some(f => memoizedSelectedFeatures.includes(f))) {
       const serverSideSelected = memoizedSelectedFeatures.filter(f => SERVER_SIDE_FEATURES.includes(f));
-      console.log(`🏗️ Server-side features detected and excluded from progressive enhancement: ${serverSideSelected.join(', ')}`);
-      console.log(`🔄 Client-side features for progressive enhancement: ${clientSideFeatures.map(id => FEATURE_NAMES[id] || id).join(', ')}`);
+      console.warn(`🏗️ Server-side features detected and excluded from progressive enhancement: ${serverSideSelected.join(', ')}`);
+      console.warn(`🔄 Client-side features for progressive enhancement: ${clientSideFeatures.map(id => FEATURE_NAMES[id] || id).join(', ')}`);
     }
 
     setState(prev => ({
@@ -152,7 +152,7 @@ export function useProgressiveEnhancement({
       }
       
       const html = await response.text();
-      console.log('✅ Base HTML fetched successfully');
+      console.warn('✅ Base HTML fetched successfully');
       
       return html;
     } catch (error) {
@@ -169,7 +169,7 @@ export function useProgressiveEnhancement({
     }
 
     try {
-      console.log(`🚀 Calling ${functionName} for feature: ${featureId}`);
+      console.warn(`🚀 Calling ${functionName} for feature: ${featureId}`);
       
       const callable = httpsCallable(functions, functionName);
       
@@ -196,7 +196,7 @@ export function useProgressiveEnhancement({
         throw new Error(data.error || `${functionName} failed`);
       }
 
-      console.log(`✅ ${functionName} completed successfully`);
+      console.warn(`✅ ${functionName} completed successfully`);
       
       // For QR code generation, we need to create HTML from the response
       if (featureId === 'embed-qr-code' && data.qrCode) {
@@ -250,7 +250,7 @@ export function useProgressiveEnhancement({
       
       // For availability calendar generation, extract featureData (React component data)
       if (featureId === 'availability-calendar' && data.featureData) {
-        console.log(`🔧 [availability-calendar] Extracted feature data:`, data.featureData);
+        console.warn(`🔧 [availability-calendar] Extracted feature data:`, data.featureData);
         // Return a placeholder that will be replaced by React component
         return `<div id="availability-calendar-placeholder" data-feature="availability-calendar" data-professional-name="${data.featureData.professionalName}" data-professional-email="${data.featureData.professionalEmail}"></div>`;
       }
@@ -515,7 +515,7 @@ export function useProgressiveEnhancement({
       );
 
       // Log validation results
-      console.log(`🔍 HTML validation for ${featureName}: ${validationResult.score}/100`);
+      console.warn(`🔍 HTML validation for ${featureName}: ${validationResult.score}/100`);
       
       // Store validation results in performance monitoring
       if (user) {
@@ -619,13 +619,13 @@ export function useProgressiveEnhancement({
       if (recoveryResult.shouldRetry && retryCountRef.current[retryKey] < retryAttempts) {
         retryCountRef.current[retryKey] = currentAttempt;
         
-        console.log(`🔄 Enhanced retry for ${featureName} (attempt ${currentAttempt}/${retryAttempts})`);
-        console.log(`📊 Recovery strategy: ${recoveryResult.strategy}`);
-        console.log(`🎯 Success probability: ${(recoveryResult.estimatedSuccessProbability * 100).toFixed(1)}%`);
-        console.log(`⚡ Recovery actions: ${recoveryResult.recoveryActions.join(', ')}`);
+        console.warn(`🔄 Enhanced retry for ${featureName} (attempt ${currentAttempt}/${retryAttempts})`);
+        console.warn(`📊 Recovery strategy: ${recoveryResult.strategy}`);
+        console.warn(`🎯 Success probability: ${(recoveryResult.estimatedSuccessProbability * 100).toFixed(1)}%`);
+        console.warn(`⚡ Recovery actions: ${recoveryResult.recoveryActions.join(', ')}`);
         
         if (recoveryResult.alternativeApproach) {
-          console.log(`🔀 Alternative approach available: ${recoveryResult.alternativeApproach}`);
+          console.warn(`🔀 Alternative approach available: ${recoveryResult.alternativeApproach}`);
         }
 
         // Show user-friendly retry message with strategy info
@@ -678,7 +678,7 @@ export function useProgressiveEnhancement({
     );
     
     if (clientSideFeatures.length === 0) {
-      console.log('🏗️ [useProgressiveEnhancement] All selected features are server-side generated, skipping progressive enhancement');
+      console.warn('🏗️ [useProgressiveEnhancement] All selected features are server-side generated, skipping progressive enhancement');
       
       // Still fetch and display the base HTML which already contains the server-side features
       try {
@@ -691,7 +691,7 @@ export function useProgressiveEnhancement({
           isComplete: true,
           overallProgress: 100
         }));
-        console.log('✅ [useProgressiveEnhancement] Server-side generated CV loaded successfully');
+        console.warn('✅ [useProgressiveEnhancement] Server-side generated CV loaded successfully');
       } catch (error) {
         console.error('❌ Error loading base HTML:', error);
         setState(prev => ({
@@ -703,7 +703,7 @@ export function useProgressiveEnhancement({
       return;
     }
     
-    console.log('🔥 [useProgressiveEnhancement] startEnhancement called for job:', jobId);
+    console.warn('🔥 [useProgressiveEnhancement] startEnhancement called for job:', jobId);
 
     try {
       setState(prev => {
@@ -722,7 +722,7 @@ export function useProgressiveEnhancement({
       const features = initializeFeatures();
       
       // Fetch and display base HTML immediately
-      console.log('📄 Fetching base HTML...');
+      console.warn('📄 Fetching base HTML...');
       const baseHtml = await fetchBaseHtml();
       setState(prev => ({
         ...prev,
@@ -736,7 +736,7 @@ export function useProgressiveEnhancement({
       let prioritizedFeatures: FeaturePriority[] = [];
       
       try {
-        console.log('🧠 Calculating optimal feature priorities...');
+        console.warn('🧠 Calculating optimal feature priorities...');
         const priorityContext = {
           userId: user.uid,
           jobId,
@@ -755,15 +755,15 @@ export function useProgressiveEnhancement({
           
           // Log priority analysis
           const analysis = featurePriorityService.getPriorityAnalysis(prioritizedFeatures);
-          console.log('📊 Priority Analysis:', analysis);
-          console.log('🎯 Recommendations:', analysis.recommendations);
+          console.warn('📊 Priority Analysis:', analysis);
+          console.warn('🎯 Recommendations:', analysis.recommendations);
           
           // Show priority recommendations to user
           if (analysis.recommendations.length > 0) {
             toast.success(`Smart ordering applied: ${analysis.recommendations[0]}`, { duration: 4000 });
           }
           
-          console.log('🚀 Processing features in optimized order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
+          console.warn('🚀 Processing features in optimized order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
         } else {
           throw new Error('Priority service returned empty results');
         }
@@ -772,7 +772,7 @@ export function useProgressiveEnhancement({
         console.warn('⚠️ Priority calculation failed, falling back to original order:', priorityError.message);
         // Fallback to original order when priority service fails  
         orderedFeatureIds = [...clientSideFeatures]; // Use filtered client-side features
-        console.log('🚀 Processing features in original order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
+        console.warn('🚀 Processing features in original order:', orderedFeatureIds.map(id => FEATURE_NAMES[id] || id));
         toast('Processing features in default order', { duration: 3000 });
       }
 
@@ -789,7 +789,7 @@ export function useProgressiveEnhancement({
         const featureName = FEATURE_NAMES[featureId] || featureId;
         const progress = ((i + 1) / orderedFeatureIds.length) * 100;
         
-        console.log(`🔄 Processing feature ${i + 1}/${orderedFeatureIds.length}: ${featureName} (${progress.toFixed(1)}% complete)`);
+        console.warn(`🔄 Processing feature ${i + 1}/${orderedFeatureIds.length}: ${featureName} (${progress.toFixed(1)}% complete)`);
         
         // Show progress toast for each feature
         toast.loading(`Processing ${featureName}... (${i + 1}/${orderedFeatureIds.length})`, {
@@ -827,18 +827,18 @@ export function useProgressiveEnhancement({
             delay = nextFeature?.technicalComplexity ? Math.min(1000, nextFeature.technicalComplexity * 100) : 500;
           }
           
-          console.log(`⏱️ Waiting ${delay}ms before next feature...`);
+          console.warn(`⏱️ Waiting ${delay}ms before next feature...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 
-      console.log('🎉 All features processed successfully!');
+      console.warn('🎉 All features processed successfully!');
 
       // Generate performance report when all features are complete
       if (user) {
         try {
           await performanceMonitorService.generatePerformanceReport(jobId, user.uid);
-          console.log('📊 Performance report generated successfully');
+          console.warn('📊 Performance report generated successfully');
         } catch (reportError) {
           console.error('❌ Error generating performance report:', reportError);
         }
@@ -851,7 +851,7 @@ export function useProgressiveEnhancement({
             
             // Update preferences asynchronously without blocking
             featurePriorityService.updateUserPreferences(user.uid, completedFeatures, failedFeatures)
-              .then(() => console.log('👤 User preferences updated based on session results'))
+              .then(() => console.warn('👤 User preferences updated based on session results'))
               .catch(prefsError => console.error('❌ Error updating user preferences:', prefsError));
             
             return currentState;
@@ -897,7 +897,7 @@ export function useProgressiveEnhancement({
         return;
       }
 
-      console.log('📊 Job update received via JobSubscriptionManager for job:', jobId);
+      console.warn('📊 Job update received via JobSubscriptionManager for job:', jobId);
       
       // Update progress based on job enhancedFeatures data
       if (job.enhancedFeatures) {
@@ -911,7 +911,7 @@ export function useProgressiveEnhancement({
       }
     };
 
-    console.log('🔔 [useProgressiveEnhancement] Setting up job subscription for:', jobId);
+    console.warn('🔔 [useProgressiveEnhancement] Setting up job subscription for:', jobId);
     
     // Subscribe to job updates via JobSubscriptionManager
     const unsubscribeFromJob = jobSubscriptionManager.subscribeToJob(jobId, handleJobUpdate, {
@@ -924,7 +924,7 @@ export function useProgressiveEnhancement({
     unsubscribeRef.current = unsubscribeFromJob;
 
     return () => {
-      console.log('🧹 [useProgressiveEnhancement] Cleaning up job subscription for:', jobId);
+      console.warn('🧹 [useProgressiveEnhancement] Cleaning up job subscription for:', jobId);
       unsubscribeFromJob();
       unsubscribeRef.current = null;
     };
@@ -946,7 +946,7 @@ export function useProgressiveEnhancement({
   }, [jobId, memoizedSelectedFeatures]);
   
   useEffect(() => {
-    console.log('🚀 [useProgressiveEnhancement] Auto-start check:', {
+    console.warn('🚀 [useProgressiveEnhancement] Auto-start check:', {
       autoStart,
       featuresCount: memoizedSelectedFeatures.length,
       hasStarted: hasStartedRef.current,
@@ -954,7 +954,7 @@ export function useProgressiveEnhancement({
     });
     
     if (autoStart && memoizedSelectedFeatures.length > 0 && !hasStartedRef.current) {
-      console.log('✅ [useProgressiveEnhancement] Starting enhancement for job:', jobId);
+      console.warn('✅ [useProgressiveEnhancement] Starting enhancement for job:', jobId);
       hasStartedRef.current = true;
       startEnhancement();
     }

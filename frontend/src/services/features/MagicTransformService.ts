@@ -90,7 +90,7 @@ export class MagicTransformService {
       
       // Get user tier
       const userTier = await this.determineUserTier();
-      console.log(`[MagicTransform] User tier: ${userTier}`);
+      console.warn(`[MagicTransform] User tier: ${userTier}`);
       
       // Plan features based on user tier
       const plannedFeatures = this.planFeaturesForTier(userTier);
@@ -124,7 +124,7 @@ export class MagicTransformService {
         result.results.improvements = improvementsResult;
         result.appliedImprovements = selectedRecommendationIds.length;
         progress.completedTasks.push('CV Improvements Applied');
-        console.log(`[MagicTransform] Applied ${selectedRecommendationIds.length} improvements`);
+        console.warn(`[MagicTransform] Applied ${selectedRecommendationIds.length} improvements`);
       } catch (error) {
         console.error('[MagicTransform] Failed to apply improvements:', error);
         progress.failedTasks.push({
@@ -152,7 +152,7 @@ export class MagicTransformService {
           result.results[feature as keyof typeof result.results] = featureResult;
           result.generatedFeatures.push(feature);
           progress.completedTasks.push(this.getFeatureDisplayName(feature));
-          console.log(`[MagicTransform] Generated feature: ${feature}`);
+          console.warn(`[MagicTransform] Generated feature: ${feature}`);
         } catch (error) {
           console.error(`[MagicTransform] Failed to generate ${feature}:`, error);
           result.failedFeatures.push(feature);
@@ -183,7 +183,7 @@ export class MagicTransformService {
             result.results[feature as keyof typeof result.results] = featureResult;
             result.generatedFeatures.push(feature);
             progress.completedTasks.push(`Premium ${this.getFeatureDisplayName(feature)}`);
-            console.log(`[MagicTransform] Generated premium feature: ${feature}`);
+            console.warn(`[MagicTransform] Generated premium feature: ${feature}`);
           } catch (error) {
             console.error(`[MagicTransform] Failed to generate premium ${feature}:`, error);
             result.failedFeatures.push(feature);
@@ -217,7 +217,7 @@ export class MagicTransformService {
       progress.progress = 100;
       onProgress?.(progress);
       
-      console.log(`[MagicTransform] Completed in ${result.totalProcessingTime}s:`, {
+      console.warn(`[MagicTransform] Completed in ${result.totalProcessingTime}s:`, {
         improvements: result.appliedImprovements,
         features: result.generatedFeatures.length,
         failed: result.failedFeatures.length,
@@ -458,7 +458,7 @@ export class MagicTransformService {
       };
     } catch (error) {
       // If profile doesn't exist, return configuration that will be applied when profile is created
-      console.log('[MagicTransform] Privacy settings will be applied when public profile is created');
+      console.warn('[MagicTransform] Privacy settings will be applied when public profile is created');
       return {
         type: 'privacy-mode',
         settings: privacySettings,

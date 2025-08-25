@@ -66,10 +66,10 @@ class Logger {
   // Test-specific logger
   test(testName: string) {
     return {
-      start: (message: string) => this.isDevelopment && console.log(`🧪 [TEST:${testName}] ${message}`),
-      success: (message: string) => this.isDevelopment && console.log(`✅ [TEST:${testName}] ${message}`),
+      start: (message: string) => this.isDevelopment && console.warn(`🧪 [TEST:${testName}] ${message}`),
+      success: (message: string) => this.isDevelopment && console.warn(`✅ [TEST:${testName}] ${message}`),
       error: (message: string, ...args: any[]) => console.error(`❌ [TEST:${testName}] ${message}`, ...args),
-      info: (message: string) => this.isDevelopment && console.log(`📝 [TEST:${testName}] ${message}`)
+      info: (message: string) => this.isDevelopment && console.warn(`📝 [TEST:${testName}] ${message}`)
     };
   }
 }

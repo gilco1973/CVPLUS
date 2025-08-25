@@ -168,7 +168,7 @@ class FirestoreDebuggingSuite {
       this.listeners.delete(id);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ [FirestoreDebugger] Listener unregistered: ${id} (${listener.path})`);
+        console.warn(`✅ [FirestoreDebugger] Listener unregistered: ${id} (${listener.path})`);
       }
     }
   }
@@ -303,7 +303,7 @@ class FirestoreDebuggingSuite {
     const keepCount = severity === 'critical' ? 1 : severity === 'high' ? 1 : 2;
     const toCleanup = duplicates.slice(keepCount);
 
-    console.log(`🧹 [FirestoreDebugger] Cleaning up ${toCleanup.length} duplicate listeners for path: ${path}`);
+    console.warn(`🧹 [FirestoreDebugger] Cleaning up ${toCleanup.length} duplicate listeners for path: ${path}`);
 
     for (const listener of toCleanup) {
       try {
@@ -317,7 +317,7 @@ class FirestoreDebuggingSuite {
         this.listeners.delete(listener.id);
         cleanedCount++;
         
-        console.log(`  ✅ Cleaned up listener: ${listener.id} (source: ${listener.componentSource || 'unknown'})`);
+        console.warn(`  ✅ Cleaned up listener: ${listener.id} (source: ${listener.componentSource || 'unknown'})`);
       } catch (error) {
         console.error(`  ❌ Error cleaning up listener ${listener.id}:`, error);
       }
@@ -335,7 +335,7 @@ class FirestoreDebuggingSuite {
     errorsCleared: number;
     memoryFreed: number;
   } {
-    console.log('🧽 [FirestoreDebugger] Starting comprehensive cleanup...');
+    console.warn('🧽 [FirestoreDebugger] Starting comprehensive cleanup...');
     
     const startTime = Date.now();
     let listenersRemoved = 0;
@@ -388,7 +388,7 @@ class FirestoreDebuggingSuite {
       memoryFreed
     };
 
-    console.log('✅ [FirestoreDebugger] Comprehensive cleanup completed:', results);
+    console.warn('✅ [FirestoreDebugger] Comprehensive cleanup completed:', results);
     return results;
   }
 
@@ -396,7 +396,7 @@ class FirestoreDebuggingSuite {
    * Attempt automatic recovery from assertion errors
    */
   private async attemptAutomaticRecovery(error: AssertionError): Promise<boolean> {
-    console.log(`🔧 [FirestoreDebugger] Attempting automatic recovery for ${error.errorType} error...`);
+    console.warn(`🔧 [FirestoreDebugger] Attempting automatic recovery for ${error.errorType} error...`);
     
     const strategies = this.RECOVERY_STRATEGIES[error.errorType];
     
@@ -404,7 +404,7 @@ class FirestoreDebuggingSuite {
       try {
         const success = await this.executeRecoveryStrategy(strategy, error);
         if (success) {
-          console.log(`✅ [FirestoreDebugger] Recovery successful using strategy: ${strategy}`);
+          console.warn(`✅ [FirestoreDebugger] Recovery successful using strategy: ${strategy}`);
           error.recovery = strategy;
           return true;
         }
@@ -422,13 +422,14 @@ class FirestoreDebuggingSuite {
    */
   private async executeRecoveryStrategy(strategy: string, error: AssertionError): Promise<boolean> {
     switch (strategy) {
-      case 'cleanup_duplicate_listeners':
+      case 'cleanup_duplicate_listeners': {
         const duplicates = this.detectDuplicateGroups();
         let totalCleaned = 0;
         for (const group of duplicates) {
           totalCleaned += this.cleanupDuplicateListeners(group.path, 'high');
         }
         return totalCleaned > 0;
+      }
 
       case 'reset_subscription_manager':
         try {
@@ -587,7 +588,7 @@ class FirestoreDebuggingSuite {
       this.performHealthCheck();
     }, 30000); // Check every 30 seconds
 
-    console.log('🔍 [FirestoreDebugger] Started monitoring Firestore listeners');
+    console.warn('🔍 [FirestoreDebugger] Started monitoring Firestore listeners');
   }
 
   /**
@@ -599,7 +600,7 @@ class FirestoreDebuggingSuite {
       this.monitoringInterval = undefined;
     }
     this.isMonitoring = false;
-    console.log('⏹️ [FirestoreDebugger] Stopped monitoring');
+    console.warn('⏹️ [FirestoreDebugger] Stopped monitoring');
   }
 
   /**
@@ -610,7 +611,7 @@ class FirestoreDebuggingSuite {
     
     // Log stats in development mode
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 [FirestoreDebugger] Health Check:', {
+      console.warn('📊 [FirestoreDebugger] Health Check:', {
         listeners: `${stats.activeListeners}/${stats.totalListeners}`,
         duplicates: stats.duplicateListeners,
         errors: stats.errorCount,
@@ -632,7 +633,7 @@ class FirestoreDebuggingSuite {
    */
   private logListenerRegistration(listener: FirestoreListener): void {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📝 [FirestoreDebugger] Listener registered:`, {
+      console.warn(`📝 [FirestoreDebugger] Listener registered:`, {
         id: listener.id,
         path: listener.path,
         source: listener.componentSource,
@@ -742,7 +743,7 @@ Generated: ${new Date().toISOString()}
     this.assertionErrors = [];
     this.errorPatterns.clear();
     
-    console.log('🔚 [FirestoreDebugger] Shutdown completed');
+    console.warn('🔚 [FirestoreDebugger] Shutdown completed');
   }
 }
 
@@ -762,8 +763,8 @@ if (process.env.NODE_ENV === 'development') {
   // Make debugger available globally for console access
   if (typeof window !== 'undefined') {
     (window as any).firestoreDebugger = firestoreDebugger;
-    console.log('🛠️ [FirestoreDebugger] Available globally as window.firestoreDebugger');
-    console.log('Commands: .getDebugStats(), .performComprehensiveCleanup(), .generateDiagnosticReport()');
+    console.warn('🛠️ [FirestoreDebugger] Available globally as window.firestoreDebugger');
+    console.warn('Commands: .getDebugStats(), .performComprehensiveCleanup(), .generateDiagnosticReport()');
   }
 }
 

@@ -52,7 +52,7 @@ export const detectPlaceholdersInText = (text: string): string[] => {
  */
 export const detectPlaceholdersInObject = (
   obj: unknown, 
-  section: string = 'unknown'
+  section = 'unknown'
 ): PlaceholderMatch[] => {
   const matches: PlaceholderMatch[] = [];
   

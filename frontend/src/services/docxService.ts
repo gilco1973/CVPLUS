@@ -209,7 +209,7 @@ export class DOCXService {
     return blob;
   }
 
-  static downloadDOCX(blob: Blob, fileName: string = 'cv.docx') {
+  static downloadDOCX(blob: Blob, fileName = 'cv.docx') {
     saveAs(blob, fileName);
   }
 }

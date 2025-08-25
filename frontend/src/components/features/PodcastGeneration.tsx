@@ -1,5 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Play, Pause, SkipBack, SkipForward, Download, Loader2, Sparkles, Volume2 } from 'lucide-react';
+import { 
+  Mic, 
+  Play, 
+  Pause, 
+  SkipBack, 
+  SkipForward, 
+  Download, 
+  Loader2, 
+  Sparkles, 
+  Volume2,
+  FileText,
+  Share2,
+  ChevronDown
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface PodcastGenerationProps {
@@ -401,4 +414,3 @@ export const PodcastGeneration = ({
 };
 
 // Add missing imports
-import { FileText, Share2, ChevronDown } from 'lucide-react';

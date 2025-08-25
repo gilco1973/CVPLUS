@@ -2,8 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import ATSOptimization from '../AI-Powered/ATSOptimization';
-import type { ATSOptimizationProps } from '../AI-Powered/ATSOptimization';
+import ATSOptimization, { type ATSOptimizationProps } from '../AI-Powered/ATSOptimization';
 import type { EnhancedATSResult } from '../../../types/ats';
 
 // Mock Firebase hooks

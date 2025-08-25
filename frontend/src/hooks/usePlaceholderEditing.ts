@@ -122,14 +122,15 @@ export const usePlaceholderEditing = (): UsePlaceholderEditingResult => {
 
     // Type-specific validation (only if no custom regex is provided)
     switch (placeholder.type) {
-      case 'number':
+      case 'number': {
         const numValue = value.replace(/,/g, '');
         if (!/^\d+$/.test(numValue)) {
           return { isValid: false, error: `${placeholder.label} must be a valid number` };
         }
         return { isValid: true, formattedValue: formatPlaceholderValue(placeholder, value) };
+      }
 
-      case 'percentage':
+      case 'percentage': {
         if (!/^\d+$/.test(value)) {
           return { isValid: false, error: `${placeholder.label} must be a number (without % symbol)` };
         }
@@ -138,6 +139,7 @@ export const usePlaceholderEditing = (): UsePlaceholderEditingResult => {
           return { isValid: false, error: `${placeholder.label} must be between 0 and 100` };
         }
         return { isValid: true, formattedValue: value };
+      }
 
       case 'currency':
         if (!/^[\d,$kmb\.]+$/i.test(value)) {
@@ -162,13 +164,14 @@ export const usePlaceholderEditing = (): UsePlaceholderEditingResult => {
     if (!value) return value;
 
     switch (placeholder.type) {
-      case 'number':
+      case 'number': {
         // Add commas for large numbers
         const numValue = value.replace(/,/g, '');
         if (/^\d+$/.test(numValue)) {
           return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
         return value;
+      }
 
       case 'percentage':
         // Ensure no % symbol (will be added by display)
@@ -179,10 +182,11 @@ export const usePlaceholderEditing = (): UsePlaceholderEditingResult => {
         return value.replace(/^\$/, ''); // Remove leading $ if present
 
       case 'text':
-      case 'timeframe':
+      case 'timeframe': {
         // Trim whitespace and capitalize first letter
         const trimmed = value.trim();
         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+      }
 
       default:
         return value;

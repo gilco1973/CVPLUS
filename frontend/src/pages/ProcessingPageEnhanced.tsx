@@ -8,17 +8,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
-import { processCV } from '../services/cvService';
+import { processCV, type Job } from '../services/cvService';
 import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorRecoveryDialog } from '../components/error-recovery/ErrorRecoveryDialog';
 import { CheckpointProgressIndicator } from '../components/error-recovery/CheckpointProgressIndicator';
 import ErrorRecoveryManager from '../services/error-recovery/ErrorRecoveryManager';
-import { CheckpointType } from '../services/error-recovery/CheckpointManager';
-import type { Job } from '../services/cvService';
+import { CheckpointType, type ProcessingCheckpoint } from '../services/error-recovery/CheckpointManager';
 import type { ClassifiedError } from '../services/error-recovery/ErrorClassification';
-import type { ProcessingCheckpoint } from '../services/error-recovery/CheckpointManager';
 
 interface ProcessingStepEnhanced {
   id: string;

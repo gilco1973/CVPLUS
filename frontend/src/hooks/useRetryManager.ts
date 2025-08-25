@@ -158,7 +158,7 @@ export const useRetryManager = ({
     }
 
     try {
-      console.log(`🔄 [RETRY] Attempting to retry feature: ${featureId}`);
+      console.warn(`🔄 [RETRY] Attempting to retry feature: ${featureId}`);
       
       // Mark as active retry
       setActiveRetries(prev => new Set(prev).add(featureId));
@@ -177,7 +177,7 @@ export const useRetryManager = ({
         features: [featureId]
       });
       
-      console.log(`✅ [RETRY] Feature ${featureId} retry initiated successfully`);
+      console.warn(`✅ [RETRY] Feature ${featureId} retry initiated successfully`);
       
       // Add successful retry attempt
       addRetryAttempt(featureId, true);
@@ -223,14 +223,14 @@ export const useRetryManager = ({
     const retryCount = getRetryCount(featureId);
     const delay = calculateBackoffDelay(retryCount, config.backoffStrategy, config.retryDelay);
 
-    console.log(`⏳ [AUTO-RETRY] Scheduling auto-retry for ${featureId} in ${delay}ms`);
+    console.warn(`⏳ [AUTO-RETRY] Scheduling auto-retry for ${featureId} in ${delay}ms`);
     
     setTimeout(async () => {
       const success = await retryFeature(featureId);
       if (success) {
-        console.log(`✅ [AUTO-RETRY] Auto-retry successful for ${featureId}`);
+        console.warn(`✅ [AUTO-RETRY] Auto-retry successful for ${featureId}`);
       } else {
-        console.log(`❌ [AUTO-RETRY] Auto-retry failed for ${featureId}`);
+        console.warn(`❌ [AUTO-RETRY] Auto-retry failed for ${featureId}`);
       }
     }, delay);
   }, [shouldAutoRetry, getRetryConfig, getRetryCount, calculateBackoffDelay, retryFeature]);

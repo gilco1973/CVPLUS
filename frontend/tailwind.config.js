@@ -242,5 +242,55 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // RTL support plugin
+    function({ addUtilities, addBase, theme }) {
+      // Add RTL base styles
+      addBase({
+        '[dir="rtl"]': {
+          textAlign: 'right',
+        },
+        '[dir="rtl"] .rtl\\:text-left': {
+          textAlign: 'left',
+        },
+        '[dir="rtl"] .rtl\\:text-right': {
+          textAlign: 'right',
+        },
+      });
+
+      // Add RTL-specific utilities
+      addUtilities({
+        // RTL margin and padding utilities
+        '.rtl\\:ml-0': { '[dir="rtl"] &': { marginLeft: '0' } },
+        '.rtl\\:mr-0': { '[dir="rtl"] &': { marginRight: '0' } },
+        '.rtl\\:ml-auto': { '[dir="rtl"] &': { marginLeft: 'auto' } },
+        '.rtl\\:mr-auto': { '[dir="rtl"] &': { marginRight: 'auto' } },
+        '.rtl\\:pl-0': { '[dir="rtl"] &': { paddingLeft: '0' } },
+        '.rtl\\:pr-0': { '[dir="rtl"] &': { paddingRight: '0' } },
+        
+        // RTL flex direction utilities
+        '.rtl\\:flex-row-reverse': { '[dir="rtl"] &': { flexDirection: 'row-reverse' } },
+        
+        // RTL text alignment
+        '.rtl\\:text-left': { '[dir="rtl"] &': { textAlign: 'left' } },
+        '.rtl\\:text-right': { '[dir="rtl"] &': { textAlign: 'right' } },
+        
+        // RTL border utilities
+        '.rtl\\:border-l-0': { '[dir="rtl"] &': { borderLeftWidth: '0' } },
+        '.rtl\\:border-r': { '[dir="rtl"] &': { borderRightWidth: '1px' } },
+        '.rtl\\:border-l': { '[dir="rtl"] &': { borderLeftWidth: '1px' } },
+        '.rtl\\:border-r-0': { '[dir="rtl"] &': { borderRightWidth: '0' } },
+        
+        // RTL positioning
+        '.rtl\\:left-0': { '[dir="rtl"] &': { left: '0' } },
+        '.rtl\\:right-0': { '[dir="rtl"] &': { right: '0' } },
+        '.rtl\\:left-auto': { '[dir="rtl"] &': { left: 'auto' } },
+        '.rtl\\:right-auto': { '[dir="rtl"] &': { right: 'auto' } },
+        
+        // RTL transform utilities for icons and elements
+        '.rtl\\:scale-x-flip': { '[dir="rtl"] &': { transform: 'scaleX(-1)' } },
+      });
+    }
+  ],
 }

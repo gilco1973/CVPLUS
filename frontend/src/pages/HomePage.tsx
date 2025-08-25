@@ -24,7 +24,7 @@ export const HomePage = () => {
   const [pendingAction, setPendingAction] = useState<{ type: 'file' | 'url' | 'development', data: unknown } | null>(null);
   const [userInstructions, setUserInstructions] = useState<string>('');
 
-  const handleFileUpload = async (file: File, quickCreate: boolean = false) => {
+  const handleFileUpload = async (file: File, quickCreate = false) => {
     try {
       setIsLoading(true);
       

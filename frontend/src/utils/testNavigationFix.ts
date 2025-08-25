@@ -172,7 +172,7 @@ class NavigationFixTester {
    * Run all navigation fix tests
    */
   runAllTests(): NavigationTestResult[] {
-    console.log('🧪 Running Navigation Fix Tests...');
+    console.warn('🧪 Running Navigation Fix Tests...');
     
     this.results = [];
     
@@ -189,10 +189,10 @@ class NavigationFixTester {
     const passedTests = this.results.filter(r => r.success).length;
     const totalTests = this.results.length;
     
-    console.log(`🧪 Navigation Fix Tests Complete: ${passedTests}/${totalTests} passed`);
+    console.warn(`🧪 Navigation Fix Tests Complete: ${passedTests}/${totalTests} passed`);
     this.results.forEach(result => {
       const icon = result.success ? '✅' : '❌';
-      console.log(`${icon} ${result.testType}: ${result.message}`);
+      console.warn(`${icon} ${result.testType}: ${result.message}`);
     });
     
     return this.results;

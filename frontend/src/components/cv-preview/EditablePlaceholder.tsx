@@ -172,7 +172,7 @@ const CurrencyPlaceholderInput: React.FC<PlaceholderInputProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     // Allow currency formats: numbers, commas, K, M, B suffixes, $ prefix
-    if (newValue === '' || /^[\d$,kmb\.]+$/i.test(newValue)) {
+    if (newValue === '' || /^[\d$,kmb.]+$/i.test(newValue)) {
       onChange(newValue);
     }
   };
@@ -345,7 +345,7 @@ export const EditablePlaceholder: React.FC<EditablePlaceholderProps> = ({
         }
         break;
       case 'currency':
-        if (val && !/^[\d$,kmb\.]+$/i.test(val)) {
+        if (val && !/^[\d$,kmb.]+$/i.test(val)) {
           return 'Please enter a valid amount (e.g., 1000, $1.5M, 500K)';
         }
         break;

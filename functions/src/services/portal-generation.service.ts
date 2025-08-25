@@ -151,7 +151,12 @@ export class PortalGenerationService {
     this.claudeService = new VerifiedClaudeService({
       service: 'portal-generation',
       context: 'web-portal-generation',
-      enableVerification: true
+      enableVerification: true,
+      fallbackToOriginal: true,
+      maxRetries: 3,
+      confidenceThreshold: 0.7,
+      qualityThreshold: 75,
+      timeout: 30000
     });
     this.qrService = new EnhancedQRService();
     this.validationService = new ValidationService();

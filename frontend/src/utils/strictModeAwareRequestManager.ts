@@ -23,7 +23,7 @@ export class StrictModeAwareRequestManager {
   
   private constructor() {
     this.startCleanupInterval();
-    console.log(`[StrictModeAwareRequestManager] Initialized - StrictMode: ${this.isStrictMode}`);
+    console.warn(`[StrictModeAwareRequestManager] Initialized - StrictMode: ${this.isStrictMode}`);
   }
   
   static getInstance(): StrictModeAwareRequestManager {
@@ -57,7 +57,7 @@ export class StrictModeAwareRequestManager {
     // Update call tracking
     this.strictModeCallCounts.set(key, callCount);
     
-    console.log(`[StrictModeAware] Request #${callCount} for key: ${key}`, {
+    console.warn(`[StrictModeAware] Request #${callCount} for key: ${key}`, {
       context,
       isStrictMode: this.isStrictMode,
       timestamp: now,
@@ -69,7 +69,7 @@ export class StrictModeAwareRequestManager {
       const cached = this.requestResults.get(key)!;
       
       if (now - cached.timestamp < this.CACHE_DURATION) {
-        console.log(`[StrictModeAware] Returning cached result for ${key}`, {
+        console.warn(`[StrictModeAware] Returning cached result for ${key}`, {
           cacheAge: now - cached.timestamp,
           callCount
         });
@@ -92,7 +92,7 @@ export class StrictModeAwareRequestManager {
       (now - lastRequestTime) < this.strictModeThreshold;
     
     if (isLikelyStrictModeDuplicate) {
-      console.log(`[StrictModeAware] 🚨 STRICTMODE DUPLICATE DETECTED for ${key}`, {
+      console.warn(`[StrictModeAware] 🚨 STRICTMODE DUPLICATE DETECTED for ${key}`, {
         timeSinceLastRequest: now - lastRequestTime!,
         callCount,
         threshold: this.strictModeThreshold
@@ -100,7 +100,7 @@ export class StrictModeAwareRequestManager {
       
       // Check if there's an active request to wait for
       if (this.activeRequests.has(key)) {
-        console.log(`[StrictModeAware] Waiting for active request to complete...`);
+        console.warn(`[StrictModeAware] Waiting for active request to complete...`);
         try {
           const result = await this.activeRequests.get(key)!;
           return {
@@ -111,18 +111,18 @@ export class StrictModeAwareRequestManager {
         } catch {
           // If active request failed, clean up and continue
           this.activeRequests.delete(key);
-          console.log(`[StrictModeAware] Active request failed, proceeding with new request`);
+          console.warn(`[StrictModeAware] Active request failed, proceeding with new request`);
         }
       } else {
         // No active request, but this is likely a duplicate
         // In StrictMode, we still proceed but log it
-        console.log(`[StrictModeAware] StrictMode duplicate but no active request, proceeding`);
+        console.warn(`[StrictModeAware] StrictMode duplicate but no active request, proceeding`);
       }
     }
     
     // Check for active request (non-StrictMode or non-duplicate case)
     if (this.activeRequests.has(key) && !isLikelyStrictModeDuplicate) {
-      console.log(`[StrictModeAware] Active request exists, waiting for completion`);
+      console.warn(`[StrictModeAware] Active request exists, waiting for completion`);
       try {
         const result = await this.activeRequests.get(key)!;
         return {
@@ -141,7 +141,7 @@ export class StrictModeAwareRequestManager {
     this.requestTimestamps.set(key, now);
     
     // Create new request
-    console.log(`[StrictModeAware] Starting new request for ${key}`);
+    console.warn(`[StrictModeAware] Starting new request for ${key}`);
     
     const requestPromise = this.createTimeoutPromise(executor(), timeout, key);
     this.activeRequests.set(key, requestPromise);
@@ -152,7 +152,7 @@ export class StrictModeAwareRequestManager {
       // Cache the result
       this.requestResults.set(key, { result, timestamp: now });
       
-      console.log(`[StrictModeAware] Request completed successfully for ${key}`, {
+      console.warn(`[StrictModeAware] Request completed successfully for ${key}`, {
         duration: Date.now() - now,
         callCount
       });
@@ -218,7 +218,7 @@ export class StrictModeAwareRequestManager {
     }
     
     if (cleanedCount > 0) {
-      console.log(`[StrictModeAware] Cleaned up ${cleanedCount} expired cache entries`);
+      console.warn(`[StrictModeAware] Cleaned up ${cleanedCount} expired cache entries`);
     }
   }
   
@@ -238,7 +238,7 @@ export class StrictModeAwareRequestManager {
     }
     
     if (cleanedCount > 0) {
-      console.log(`[StrictModeAware] Cleaned up ${cleanedCount} old timestamps`);
+      console.warn(`[StrictModeAware] Cleaned up ${cleanedCount} old timestamps`);
     }
   }
   
@@ -251,7 +251,7 @@ export class StrictModeAwareRequestManager {
     this.requestResults.delete(key);
     this.strictModeCallCounts.delete(key);
     
-    console.log(`[StrictModeAware] Cleared all caches for key: ${key}`);
+    console.warn(`[StrictModeAware] Cleared all caches for key: ${key}`);
   }
   
   /**

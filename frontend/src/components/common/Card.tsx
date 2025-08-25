@@ -1,1 +1,155 @@
-import React from 'react';\nimport { designSystem } from '../../config/designSystem';\n\ninterface CardProps {\n  children: React.ReactNode;\n  variant?: 'default' | 'elevated' | 'interactive' | 'glass';\n  padding?: 'sm' | 'md' | 'lg';\n  className?: string;\n  onClick?: () => void;\n  hover?: boolean;\n  'aria-label'?: string;\n}\n\nexport const Card: React.FC<CardProps> = ({\n  children,\n  variant = 'default',\n  padding = 'md',\n  className = '',\n  onClick,\n  hover = false,\n  'aria-label': ariaLabel,\n  ...props\n}) => {\n  // Get component classes from design system\n  const baseClasses = designSystem.components.card.base;\n  const variantClasses = designSystem.components.card.variants[variant];\n  const paddingClasses = designSystem.components.card.padding[padding];\n  \n  // Add hover effects if specified\n  const hoverClasses = hover ? designSystem.animations.classes.hoverLift : '';\n  \n  // Determine if card should be interactive\n  const isInteractive = onClick || variant === 'interactive';\n  const interactiveClasses = isInteractive ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500' : '';\n  \n  const Component = isInteractive ? 'button' : 'div';\n  \n  return (\n    <Component\n      onClick={onClick}\n      className={`\n        ${baseClasses}\n        ${variantClasses}\n        ${paddingClasses}\n        ${hoverClasses}\n        ${interactiveClasses}\n        ${className}\n      `.trim()}\n      aria-label={ariaLabel}\n      {...props}\n    >\n      {children}\n    </Component>\n  );\n};\n\n// Card Header Component\ninterface CardHeaderProps {\n  children: React.ReactNode;\n  className?: string;\n}\n\nexport const CardHeader: React.FC<CardHeaderProps> = ({ \n  children, \n  className = '' \n}) => (\n  <div className={`mb-4 ${className}`}>\n    {children}\n  </div>\n);\n\n// Card Content Component\ninterface CardContentProps {\n  children: React.ReactNode;\n  className?: string;\n}\n\nexport const CardContent: React.FC<CardContentProps> = ({ \n  children, \n  className = '' \n}) => (\n  <div className={`${className}`}>\n    {children}\n  </div>\n);\n\n// Card Footer Component\ninterface CardFooterProps {\n  children: React.ReactNode;\n  className?: string;\n}\n\nexport const CardFooter: React.FC<CardFooterProps> = ({ \n  children, \n  className = '' \n}) => (\n  <div className={`mt-4 pt-4 border-t border-neutral-700 ${className}`}>\n    {children}\n  </div>\n);\n\n// Card Title Component\ninterface CardTitleProps {\n  children: React.ReactNode;\n  className?: string;\n  level?: 1 | 2 | 3;\n}\n\nexport const CardTitle: React.FC<CardTitleProps> = ({ \n  children, \n  className = '',\n  level = 2\n}) => {\n  const Component = `h${level}` as keyof JSX.IntrinsicElements;\n  \n  const getLevelClasses = () => {\n    switch (level) {\n      case 1: return 'text-2xl font-bold text-neutral-100';\n      case 2: return 'text-xl font-semibold text-neutral-100';\n      case 3: return 'text-lg font-semibold text-neutral-100';\n      default: return 'text-xl font-semibold text-neutral-100';\n    }\n  };\n  \n  return (\n    <Component className={`${getLevelClasses()} ${className}`}>\n      {children}\n    </Component>\n  );\n};\n\n// Card Description Component\ninterface CardDescriptionProps {\n  children: React.ReactNode;\n  className?: string;\n}\n\nexport const CardDescription: React.FC<CardDescriptionProps> = ({ \n  children, \n  className = '' \n}) => (\n  <p className={`text-neutral-400 ${className}`}>\n    {children}\n  </p>\n);\n\n// Export all components\nexport {\n  Card as default,\n  CardHeader,\n  CardContent,\n  CardFooter,\n  CardTitle,\n  CardDescription,\n};
+import React from 'react';
+import { designSystem } from '../../config/designSystem';
+
+interface CardProps {
+  children: React.ReactNode;
+  variant?: 'default' | 'elevated' | 'interactive' | 'glass';
+  padding?: 'sm' | 'md' | 'lg';
+  className?: string;
+  onClick?: () => void;
+  hover?: boolean;
+  'aria-label'?: string;
+}
+
+export const Card: React.FC<CardProps> = ({
+  children,
+  variant = 'default',
+  padding = 'md',
+  className = '',
+  onClick,
+  hover = false,
+  'aria-label': ariaLabel,
+  ...props
+}) => {
+  // Get component classes from design system
+  const baseClasses = designSystem.components.card.base;
+  const variantClasses = designSystem.components.card.variants[variant];
+  const paddingClasses = designSystem.components.card.padding[padding];
+  
+  // Add hover effects if specified
+  const hoverClasses = hover ? designSystem.animations.classes.hoverLift : '';
+  
+  // Determine if card should be interactive
+  const isInteractive = onClick || variant === 'interactive';
+  const interactiveClasses = isInteractive ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500' : '';
+  
+  const Component = isInteractive ? 'button' : 'div';
+  
+  return (
+    <Component
+      onClick={onClick}
+      className={`
+        ${baseClasses}
+        ${variantClasses}
+        ${paddingClasses}
+        ${hoverClasses}
+        ${interactiveClasses}
+        ${className}
+      `.trim()}
+      aria-label={ariaLabel}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+};
+
+// Card Header Component
+interface CardHeaderProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardHeader: React.FC<CardHeaderProps> = ({ 
+  children, 
+  className = '' 
+}) => (
+  <div className={`mb-4 ${className}`}>
+    {children}
+  </div>
+);
+
+// Card Content Component
+interface CardContentProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardContent: React.FC<CardContentProps> = ({ 
+  children, 
+  className = '' 
+}) => (
+  <div className={`${className}`}>
+    {children}
+  </div>
+);
+
+// Card Footer Component
+interface CardFooterProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardFooter: React.FC<CardFooterProps> = ({ 
+  children, 
+  className = '' 
+}) => (
+  <div className={`mt-4 pt-4 border-t border-neutral-700 ${className}`}>
+    {children}
+  </div>
+);
+
+// Card Title Component
+interface CardTitleProps {
+  children: React.ReactNode;
+  className?: string;
+  level?: 1 | 2 | 3;
+}
+
+export const CardTitle: React.FC<CardTitleProps> = ({ 
+  children, 
+  className = '',
+  level = 2
+}) => {
+  const Component = `h${level}` as keyof JSX.IntrinsicElements;
+  
+  const getLevelClasses = () => {
+    switch (level) {
+      case 1: return 'text-2xl font-bold text-neutral-100';
+      case 2: return 'text-xl font-semibold text-neutral-100';
+      case 3: return 'text-lg font-semibold text-neutral-100';
+      default: return 'text-xl font-semibold text-neutral-100';
+    }
+  };
+  
+  return (
+    <Component className={`${getLevelClasses()} ${className}`}>
+      {children}
+    </Component>
+  );
+};
+
+// Card Description Component
+interface CardDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardDescription: React.FC<CardDescriptionProps> = ({ 
+  children, 
+  className = '' 
+}) => (
+  <p className={`text-neutral-400 ${className}`}>
+    {children}
+  </p>
+);
+
+// Export all components
+export {
+  Card as default,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+};

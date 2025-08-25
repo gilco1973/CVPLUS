@@ -55,7 +55,7 @@ export * from './portal-api-types';
 /**
  * Type guard to check if a value is a valid portal configuration
  */
-import { PortalConfig } from './portal-types';
+import { PortalConfig, DeploymentResult } from './portal-types';
 
 export function isPortalConfig(value: unknown): value is PortalConfig {
   return (
@@ -76,7 +76,7 @@ export function isPortalConfig(value: unknown): value is PortalConfig {
 /**
  * Type guard to check if a value is a valid CV feature props
  */
-import { CVFeatureProps } from './cv-features';
+import { CVFeatureProps, PortalEnabledCVFeatureProps } from './cv-features';
 
 export function isCVFeatureProps(value: unknown): value is CVFeatureProps {
   return (
@@ -92,7 +92,6 @@ export function isCVFeatureProps(value: unknown): value is CVFeatureProps {
 /**
  * Type guard to check if a value is a portal-enabled CV feature props
  */
-import { PortalEnabledCVFeatureProps } from './cv-features';
 
 export function isPortalEnabledCVFeatureProps(value: unknown): value is PortalEnabledCVFeatureProps {
   return (
@@ -105,7 +104,6 @@ export function isPortalEnabledCVFeatureProps(value: unknown): value is PortalEn
 /**
  * Type guard to check if a deployment result is successful
  */
-import { DeploymentResult } from './portal-types';
 
 export function isSuccessfulDeployment(result: DeploymentResult): boolean {
   return result.success && !!result.spaceUrl;

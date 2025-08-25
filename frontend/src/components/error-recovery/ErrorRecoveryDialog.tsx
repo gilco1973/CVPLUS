@@ -17,8 +17,7 @@ import {
   Shield,
   Zap
 } from 'lucide-react';
-import type { ClassifiedError } from '../../services/error-recovery/ErrorClassification';
-import { ErrorType, ErrorSeverity } from '../../services/error-recovery/ErrorClassification';
+import { ErrorType, ErrorSeverity, type ClassifiedError } from '../../services/error-recovery/ErrorClassification';
 import type { ProcessingCheckpoint } from '../../services/error-recovery/CheckpointManager';
 import type { RetryResult } from '../../services/error-recovery/RetryMechanism';
 

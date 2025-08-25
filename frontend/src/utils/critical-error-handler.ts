@@ -222,7 +222,7 @@ export function setupCriticalErrorHandling(): void {
     }
   });
 
-  console.log('🛡️ Critical error handling initialized');
+  console.warn('🛡️ Critical error handling initialized');
 }
 
 export default CriticalErrorHandler;

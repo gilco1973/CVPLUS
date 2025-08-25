@@ -104,12 +104,12 @@ export class CVAnalyzer {
     const currentCount = (requestCounts.get(requestKey) || 0) + 1;
     requestCounts.set(requestKey, currentCount);
     
-    console.log(`[CVAnalyzer] LEGACY getRecommendations called for jobId: ${jobId} (request #${currentCount})`);
+    console.warn(`[CVAnalyzer] LEGACY getRecommendations called for jobId: ${jobId} (request #${currentCount})`);
     
     // IMMEDIATE BLOCKING: Check if request is already active
     if (activeRequests.has(requestKey)) {
-      console.log(`[CVAnalyzer] BLOCKING duplicate legacy request for job: ${jobId} (request #${currentCount})`);
-      console.log(`[CVAnalyzer] Active request key: ${requestKey}`);
+      console.warn(`[CVAnalyzer] BLOCKING duplicate legacy request for job: ${jobId} (request #${currentCount})`);
+      console.warn(`[CVAnalyzer] Active request key: ${requestKey}`);
       
       // Track as blocked request
       recommendationsDebugger.trackCall(jobId, `CVAnalyzer.getRecommendations-legacy-${currentCount}`, true, requestKey);
@@ -117,7 +117,7 @@ export class CVAnalyzer {
       // Return existing promise if available
       const existingPromise = cachedPromises.get(requestKey);
       if (existingPromise) {
-        console.log(`[CVAnalyzer] Returning cached promise for legacy job: ${jobId}`);
+        console.warn(`[CVAnalyzer] Returning cached promise for legacy job: ${jobId}`);
         return existingPromise;
       }
       
@@ -131,16 +131,16 @@ export class CVAnalyzer {
     
     // Mark request as active IMMEDIATELY (synchronously)
     activeRequests.add(requestKey);
-    console.log(`[CVAnalyzer] Starting new legacy request for job: ${jobId} (request #${currentCount})`);
-    console.log(`[CVAnalyzer] Request key: ${requestKey}`);
-    console.log(`[CVAnalyzer] Active requests count: ${activeRequests.size}`);
-    console.log(`[CVAnalyzer] Cached promises count: ${cachedPromises.size}`);
+    console.warn(`[CVAnalyzer] Starting new legacy request for job: ${jobId} (request #${currentCount})`);
+    console.warn(`[CVAnalyzer] Request key: ${requestKey}`);
+    console.warn(`[CVAnalyzer] Active requests count: ${activeRequests.size}`);
+    console.warn(`[CVAnalyzer] Cached promises count: ${cachedPromises.size}`);
     
     // Create the actual request promise
     const requestPromise = this._executeGetRecommendations(jobId, targetRole, industryKeywords, forceRegenerate)
       .finally(() => {
         // Clean up tracking when request completes
-        console.log(`[CVAnalyzer] Cleaning up legacy request tracking for job: ${jobId}`);
+        console.warn(`[CVAnalyzer] Cleaning up legacy request tracking for job: ${jobId}`);
         activeRequests.delete(requestKey);
         // Keep cached promise for a short time in case of immediate subsequent calls
         setTimeout(() => {
@@ -163,7 +163,7 @@ export class CVAnalyzer {
     industryKeywords?: string[], 
     forceRegenerate?: boolean
   ) {
-    console.log(`[CVAnalyzer] _executeGetRecommendationsDirectly called for job: ${jobId}`);
+    console.warn(`[CVAnalyzer] _executeGetRecommendationsDirectly called for job: ${jobId}`);
     return this._executeGetRecommendations(jobId, targetRole, industryKeywords, forceRegenerate);
   }
 
@@ -176,7 +176,7 @@ export class CVAnalyzer {
     industryKeywords?: string[], 
     forceRegenerate?: boolean
   ) {
-    console.log(`[CVAnalyzer] Executing actual Firebase request for job: ${jobId}`);
+    console.warn(`[CVAnalyzer] Executing actual Firebase request for job: ${jobId}`);
     
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
@@ -185,7 +185,7 @@ export class CVAnalyzer {
     
     try {
       // First try the callable function
-      console.log(`[CVAnalyzer] Attempting callable function for job: ${jobId}`);
+      console.warn(`[CVAnalyzer] Attempting callable function for job: ${jobId}`);
       const getRecommendationsFunction = httpsCallable(functions, 'getRecommendations');
       const result = await getRecommendationsFunction({
         jobId,
@@ -193,7 +193,7 @@ export class CVAnalyzer {
         industryKeywords,
         forceRegenerate
       });
-      console.log(`[CVAnalyzer] Callable function succeeded for job: ${jobId}`);
+      console.warn(`[CVAnalyzer] Callable function succeeded for job: ${jobId}`);
       return result.data;
     } catch (error: unknown) {
       console.warn(`[CVAnalyzer] Callable function failed for job: ${jobId}, trying direct HTTP call:`, error);
@@ -223,8 +223,8 @@ export class CVAnalyzer {
       }
       
       const result = await response.json();
-      console.log(`[CVAnalyzer] Direct HTTP call succeeded for job: ${jobId}`);
-      console.log(`[CVAnalyzer] HTTP response structure:`, result);
+      console.warn(`[CVAnalyzer] Direct HTTP call succeeded for job: ${jobId}`);
+      console.warn(`[CVAnalyzer] HTTP response structure:`, result);
       
       // The HTTP endpoint returns the response in result.data format
       // But we need to match the callable function format
@@ -256,7 +256,7 @@ export class CVAnalyzer {
     activeRequests.clear();
     cachedPromises.clear();
     requestCounts.clear();
-    console.log('[CVAnalyzer] Request tracking cleared');
+    console.warn('[CVAnalyzer] Request tracking cleared');
   }
 
   /**
@@ -283,7 +283,7 @@ export class CVAnalyzer {
   /**
    * Generate achievement showcase
    */
-  static async generateAchievementShowcase(jobId: string, maxAchievements: number = 6) {
+  static async generateAchievementShowcase(jobId: string, maxAchievements = 6) {
     const showcaseFunction = httpsCallable(functions, 'generateAchievementShowcase');
     const result = await showcaseFunction({ jobId, maxAchievements });
     return result.data;

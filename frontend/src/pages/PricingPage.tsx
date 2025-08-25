@@ -7,6 +7,8 @@ import { StripeCheckoutSDK } from '../components/pricing/StripeCheckoutSDK';
 import { PricingHero } from './components/PricingHero';
 import { LifetimeAccessGuarantee } from './components/LifetimeAccessGuarantee';
 import { FeatureComparison } from './components/FeatureComparison';
+import { UsageLimitsDisplay } from '../components/policy/UsageLimitsDisplay';
+import { ProfessionalPlanContact } from '../components/pricing/ProfessionalPlanContact';
 import { ArrowLeft, Users, Crown, CheckCircle, Sparkles, HelpCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatFeatureName } from '../services/paymentService';
@@ -189,7 +191,7 @@ export const PricingPage = () => {
         <PricingHero />
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
           {/* Free Tier */}
           <PricingCard
             title={freeConfig.name}
@@ -219,6 +221,14 @@ export const PricingPage = () => {
             badge={isLifetimePremium ? "ACTIVE" : premiumConfig.ui.badge}
             disabled={isLifetimePremium}
           />
+
+          {/* Professional Tier */}
+          <ProfessionalPlanContact />
+        </div>
+
+        {/* Usage Limits Display */}
+        <div className="mt-16 mb-12">
+          <UsageLimitsDisplay variant="detailed" showTitle={true} />
         </div>
 
         {/* Lifetime Access Guarantee */}

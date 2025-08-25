@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { CheckCircle, Crown, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const PaymentSuccessPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { subscription, isLifetimePremium, refreshSubscription } = useSubscription();
@@ -22,13 +24,13 @@ export const PaymentSuccessPage = () => {
   useEffect(() => {
     const verifyPayment = async () => {
       if (canceled) {
-        toast.error('Payment was canceled');
+        toast.error(t('paymentSuccess.error.paymentCanceled'));
         navigate('/pricing');
         return;
       }
 
       if (!user) {
-        toast.error('Please sign in to complete verification');
+        toast.error(t('paymentSuccess.error.authRequired'));
         navigate('/pricing');
         return;
       }
@@ -45,23 +47,23 @@ export const PaymentSuccessPage = () => {
           setVerificationComplete(true);
           
           if (isLifetimePremium) {
-            toast.success('Payment successful! Welcome to CVPlus Premium!');
+            toast.success(t('paymentSuccess.success.welcomePremium'));
           } else {
             // If premium status not updated yet, check again in a few seconds
             setTimeout(async () => {
               await refreshSubscription();
               if (isLifetimePremium) {
-                toast.success('Premium access activated successfully!');
+                toast.success(t('paymentSuccess.success.premiumActivated'));
               }
             }, 3000);
           }
         } catch (error) {
           console.error('Error verifying payment:', error);
-          setError('Unable to verify payment status. Please contact support if this persists.');
+          setError(t('paymentSuccess.error.verificationFailed'));
           setIsVerifying(false);
         }
       } else {
-        setError('Invalid payment verification parameters');
+        setError(t('paymentSuccess.error.invalidParameters'));
         setIsVerifying(false);
       }
     };
@@ -84,13 +86,13 @@ export const PaymentSuccessPage = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-100 mb-4">Authentication Required</h1>
-          <p className="text-gray-300 mb-6">Please sign in to verify your payment.</p>
+          <h1 className="text-2xl font-bold text-gray-100 mb-4">{t('paymentSuccess.authRequired.title')}</h1>
+          <p className="text-gray-300 mb-6">{t('paymentSuccess.authRequired.description')}</p>
           <button
             onClick={() => navigate('/pricing')}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
-            Go to Pricing
+            {t('paymentSuccess.authRequired.goToPricing')}
           </button>
         </div>
       </div>
@@ -102,20 +104,20 @@ export const PaymentSuccessPage = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-100 mb-4">Verification Error</h1>
+          <h1 className="text-2xl font-bold text-gray-100 mb-4">{t('paymentSuccess.error.title')}</h1>
           <p className="text-gray-300 mb-6">{error}</p>
           <div className="space-y-3">
             <button
               onClick={handleContactSupport}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
-              Contact Support
+              {t('paymentSuccess.actions.contactSupport')}
             </button>
             <button
               onClick={() => navigate('/pricing')}
               className="w-full text-gray-400 hover:text-gray-200 transition-colors py-2"
             >
-              Back to Pricing
+              {t('paymentSuccess.actions.backToPricing')}
             </button>
           </div>
         </div>
@@ -128,12 +130,12 @@ export const PaymentSuccessPage = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center">
           <Loader2 className="w-16 h-16 text-cyan-400 animate-spin mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-100 mb-4">Verifying Payment</h1>
+          <h1 className="text-2xl font-bold text-gray-100 mb-4">{t('paymentSuccess.verification.title')}</h1>
           <p className="text-gray-300 mb-4">
-            Please wait while we verify your payment and activate your premium access.
+            {t('paymentSuccess.verification.description')}
           </p>
           <p className="text-sm text-gray-400">
-            This may take a few moments...
+            {t('paymentSuccess.verification.pleaseWait')}
           </p>
         </div>
       </div>
@@ -149,24 +151,24 @@ export const PaymentSuccessPage = () => {
         </div>
         
         <h1 className="text-2xl font-bold text-gray-100 mb-4">
-          Welcome to CVPlus Premium!
+          {t('paymentSuccess.success.title')}
         </h1>
         
         <div className="space-y-4 mb-6">
           <p className="text-gray-300">
-            Your payment was successful and your premium access has been activated.
+            {t('paymentSuccess.success.description')}
           </p>
           
           {isLifetimePremium ? (
             <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
               <p className="text-green-200 text-sm">
-                ✅ Premium status confirmed! You now have lifetime access to all premium features.
+                ✅ {t('paymentSuccess.success.statusConfirmed')}
               </p>
             </div>
           ) : (
             <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
               <p className="text-yellow-200 text-sm">
-                ⏳ Premium access is being activated. This may take a few more moments.
+                ⏳ {t('paymentSuccess.success.statusPending')}
               </p>
             </div>
           )}
@@ -174,25 +176,25 @@ export const PaymentSuccessPage = () => {
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-100">
-            What's Next?
+            {t('paymentSuccess.success.whatsNext')}
           </h3>
           
           <div className="text-left space-y-2 text-sm text-gray-300">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Access your personal web portal</span>
+              <span>{t('paymentSuccess.benefits.webPortal')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Generate AI career podcasts</span>
+              <span>{t('paymentSuccess.benefits.aiPodcasts')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Use advanced analytics dashboard</span>
+              <span>{t('paymentSuccess.benefits.analytics')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Remove CVPlus branding</span>
+              <span>{t('paymentSuccess.benefits.removeBranding')}</span>
             </div>
           </div>
         </div>
@@ -202,17 +204,17 @@ export const PaymentSuccessPage = () => {
             onClick={handleContinue}
             className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
           >
-            <span>Start Using Premium Features</span>
+            <span>{t('paymentSuccess.actions.startUsing')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           
           <p className="text-xs text-gray-400">
-            If you have any questions, visit our{' '}
+            {t('paymentSuccess.support.questionsPrefix')}{' '}
             <button
               onClick={handleContactSupport}
               className="text-cyan-400 hover:text-cyan-300 underline"
             >
-              support page
+              {t('paymentSuccess.support.supportPage')}
             </button>
           </p>
         </div>

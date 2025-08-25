@@ -63,7 +63,7 @@ export class TemplateCompatibility {
   ): Promise<string> {
     const generatorType = await this.getTemplateGenerator(templateId);
     
-    console.log(`🔄 [TEMPLATE COMPATIBILITY] Using ${generatorType} generator for template: ${templateId}`);
+    console.warn(`🔄 [TEMPLATE COMPATIBILITY] Using ${generatorType} generator for template: ${templateId}`);
     
     if (generatorType === 'enhanced') {
       return EnhancedTemplateGenerator.generateHTML(
@@ -94,7 +94,7 @@ export class TemplateCompatibility {
    * Migrate a legacy template to the enhanced format
    */
   static migrateLegacyTemplate(legacyTemplate: LegacyTemplate): CVTemplate {
-    console.log(`🔄 [TEMPLATE MIGRATION] Migrating legacy template: ${legacyTemplate.id}`);
+    console.warn(`🔄 [TEMPLATE MIGRATION] Migrating legacy template: ${legacyTemplate.id}`);
     
     const category = this.mapLegacyTemplateToCategory(legacyTemplate.id);
     const enhancedTemplate = this.createEnhancedFromLegacy(legacyTemplate, category);
@@ -106,7 +106,7 @@ export class TemplateCompatibility {
       migrated: new Date()
     });
     
-    console.log(`✅ [TEMPLATE MIGRATION] Successfully migrated ${legacyTemplate.id} to ${category} template`);
+    console.warn(`✅ [TEMPLATE MIGRATION] Successfully migrated ${legacyTemplate.id} to ${category} template`);
     
     return enhancedTemplate;
   }
@@ -641,7 +641,7 @@ export class TemplateCompatibility {
   static clearCompatibilityData(): void {
     this.migrationLog.clear();
     this.compatibilityWarnings.clear();
-    console.log('🧹 Template compatibility data cleared');
+    console.warn('🧹 Template compatibility data cleared');
   }
 }
 
@@ -714,4 +714,4 @@ export function applyCompatibilityFixes(
   return fixedHtml;
 }
 
-console.log('🔄 Template Compatibility Layer loaded');
+console.warn('🔄 Template Compatibility Layer loaded');

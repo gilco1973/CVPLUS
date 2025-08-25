@@ -571,10 +571,32 @@ expect.extend({
   },
 });
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeOneOf(expected: any[]): R;
-    }
-  }
+import { expect } from 'vitest';
+
+interface CustomMatchers<R = unknown> {
+  toBeOneOf(expected: any[]): R;
 }
+
+declare module 'vitest' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}
+
+expect.extend({
+  toBeOneOf(received: any, expectedArray: any[]) {
+    const pass = expectedArray.includes(received);
+    if (pass) {
+      return {
+        message: () => `expected ${received} not to be one of ${expectedArray.join(', ')}`,
+        pass: true,
+      };
+    } else {
+      return {
+        message: () => `expected ${received} to be one of ${expectedArray.join(', ')}`,
+        pass: false,
+      };
+    }
+  },
+});

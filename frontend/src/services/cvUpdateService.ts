@@ -129,7 +129,7 @@ export class CVUpdateService {
   static async updateCVData(
     jobId: string,
     updateData: CVUpdateData,
-    updateType: string = 'general'
+    updateType = 'general'
   ): Promise<CVUpdateResponse> {
     try {
       const updateCVDataFunction = httpsCallable(functions, 'updateCVData');
@@ -412,14 +412,15 @@ export class CVUpdateService {
             errors.push('Invalid number format');
           }
           break;
-        case 'percentage':
+        case 'percentage': {
           const percentValue = parseInt(request.value, 10);
           if (isNaN(percentValue) || percentValue < 0 || percentValue > 100) {
             errors.push('Percentage must be between 0 and 100');
           }
           break;
+        }
         case 'currency':
-          if (!/^[\d$,kmb\.]+$/i.test(request.value)) {
+          if (!/^[\d$,kmb.]+$/i.test(request.value)) {
             errors.push('Invalid currency format');
           }
           break;

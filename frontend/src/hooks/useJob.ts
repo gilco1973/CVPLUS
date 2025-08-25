@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getJob } from '../services/cvService';
+import { getJob, type Job } from '../services/cvService';
 import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
-import type { Job } from '../services/cvService';
 
 export const useJob = (jobId: string) => {
   const [job, setJob] = useState<Job | null>(null);

@@ -14,9 +14,9 @@ import {
   DeploymentStatus,
   DeploymentPhase,
   PortalConfig,
-  PortalError
+  PortalError,
+  PortalOperationResult
 } from '../../../types/portal-types';
-import { PortalOperationResult } from '../../../types/portal-types';
 
 /**
  * Example portal configuration

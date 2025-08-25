@@ -33,7 +33,7 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
   } = state;
   
   const startDetection = useCallback(async (jobData: Job) => {
-    console.log('[useRoleDetection] startDetection called with jobData:', {
+    console.warn('[useRoleDetection] startDetection called with jobData:', {
       id: jobData?.id,
       status: jobData?.status,
       hasParsedData: !!jobData?.parsedData
@@ -48,7 +48,7 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
     }
 
     try {
-      console.log('[useRoleDetection] Starting role detection for job:', jobData.id);
+      console.warn('[useRoleDetection] Starting role detection for job:', jobData.id);
       setLocalError(null);
       dispatch(unifiedAnalysisActions.setRoleDetectionStatus('analyzing'));
       
@@ -77,8 +77,8 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
       });
       
       // Race the API call against the timeout
-      console.log('[useRoleDetection] About to call roleProfileService.detectRole with jobId:', jobData.id);
-      console.log(`[useRoleDetection] Timeout set to ${Math.round(baseTimeout / 1000)} seconds (retry attempt: ${retryCount})`);
+      console.warn('[useRoleDetection] About to call roleProfileService.detectRole with jobId:', jobData.id);
+      console.warn(`[useRoleDetection] Timeout set to ${Math.round(baseTimeout / 1000)} seconds (retry attempt: ${retryCount})`);
       
       const detectionResponse = await Promise.race([
         roleProfileService.detectRole(jobData.id),
@@ -91,7 +91,7 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
         timeoutRef.current = null;
       }
       
-      console.log('[useRoleDetection] Received response from detectRole:', detectionResponse);
+      console.warn('[useRoleDetection] Received response from detectRole:', detectionResponse);
       setProgressMessage('');
       
       if (!detectionResponse.success || !detectionResponse.data) {
@@ -167,7 +167,7 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
       
       // Auto-provide fallback roles on timeout
       if (shouldProvideFallbacks) {
-        console.log('[useRoleDetection] Auto-providing fallback roles due to timeout/error');
+        console.warn('[useRoleDetection] Auto-providing fallback roles due to timeout/error');
         setTimeout(() => {
           provideFallbackRoles();
         }, 1000); // Small delay to let user see the error message first
@@ -185,13 +185,13 @@ export const useRoleDetection = (): UseRoleDetectionReturn => {
       setRetryCount(prev => prev + 1);
       setLocalError(null);
       setProgressMessage('');
-      console.log(`[useRoleDetection] Retrying detection (attempt ${retryCount + 2})`);
+      console.warn(`[useRoleDetection] Retrying detection (attempt ${retryCount + 2})`);
       startDetection(state.jobData);
     }
   }, [state.jobData, startDetection, retryCount]);
   
   const provideFallbackRoles = useCallback(() => {
-    console.log('[useRoleDetection] Providing fallback roles');
+    console.warn('[useRoleDetection] Providing fallback roles');
     
     // Enhanced fallback roles with better descriptions and guidance
     const fallbackRoles: DetectedRole[] = [

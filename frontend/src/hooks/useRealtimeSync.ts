@@ -263,7 +263,7 @@ export const useRealtimeSync = (options: UseRealtimeSyncOptions): UseRealtimeSyn
     
     // Update presence via the sync service
     // This would typically update the user's status and broadcast it
-    console.log('Updating presence status:', status);
+    console.warn('Updating presence status:', status);
   }, [options.enablePresenceTracking]);
 
   // Computed values

@@ -80,7 +80,7 @@ export class CVServiceEnhanced {
    * Creates a new job with error recovery
    */
   // @withRetry({ maxRetries: 2 }, 'create_job') // Disabled for TypeScript compatibility
-  public async createJob(url?: string, quickCreate: boolean = false, userInstructions?: string): Promise<string> {
+  public async createJob(url?: string, quickCreate = false, userInstructions?: string): Promise<string> {
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
 
@@ -167,7 +167,7 @@ export class CVServiceEnhanced {
   /**
    * Processes CV with comprehensive error recovery
    */
-  public async processCV(jobId: string, fileUrl: string, mimeType: string, isUrl: boolean = false): Promise<unknown> {
+  public async processCV(jobId: string, fileUrl: string, mimeType: string, isUrl = false): Promise<unknown> {
     return this.recoveryManager.executeWithRecovery(
       async () => {
         const processCVFunction = httpsCallable(functions, 'processCV');

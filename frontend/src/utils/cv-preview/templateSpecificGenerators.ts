@@ -44,7 +44,7 @@ export class TemplateSpecificGenerators {
     collapsedSections: Record<string, boolean>,
     generateFeaturePreview: (featureId: string, isEnabled: boolean, isCollapsed: boolean) => string
   ): Promise<Record<string, string>> {
-    console.log(`🏗️ [TEMPLATE GENERATORS] Generating sections for ${template.name}`);
+    console.warn(`🏗️ [TEMPLATE GENERATORS] Generating sections for ${template.name}`);
 
     return {
       header: await this.generateTemplateHeader(template, previewData),
@@ -391,7 +391,7 @@ export class TemplateSpecificGenerators {
   private static generateContactItem(
     type: string,
     value?: string,
-    showIcons: boolean = true
+    showIcons = true
   ): string {
     if (!value) return '';
     
@@ -685,10 +685,11 @@ export class TemplateSpecificGenerators {
     const end = endDate || 'Present';
     
     switch (format) {
-      case 'year-only':
+      case 'year-only': {
         const startYear = start.split('-')[0] || start.split('/')[2] || start.substring(0, 4);
         const endYear = end === 'Present' ? 'Present' : (end.split('-')[0] || end.split('/')[2] || end.substring(0, 4));
         return `${startYear} - ${endYear}`;
+      }
       case 'short':
         return `${start.substring(0, 7)} - ${end.substring(0, 7)}`;
       default:
@@ -1058,4 +1059,4 @@ export class TemplateSpecificGenerators {
   }
 }
 
-console.log('🏗️ Template-Specific Generators loaded');
+console.warn('🏗️ Template-Specific Generators loaded');

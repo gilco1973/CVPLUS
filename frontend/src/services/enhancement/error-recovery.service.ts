@@ -138,7 +138,7 @@ export class ErrorRecoveryService {
     featureName: string,
     jobId: string,
     userId: string,
-    attemptNumber: number = 1
+    attemptNumber = 1
   ): ErrorContext {
     const errorMessage = typeof error === 'string' ? error : error.message;
     const errorType = this.classifyError(errorMessage, error);
@@ -575,7 +575,7 @@ export class ErrorRecoveryService {
     this.errorHistory.clear();
     this.retryAttempts.clear();
     this.errorPatterns.clear();
-    console.log('🧹 Error recovery history cleared');
+    console.warn('🧹 Error recovery history cleared');
   }
 }
 

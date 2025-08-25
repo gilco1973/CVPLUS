@@ -44,7 +44,7 @@ export function debugContactFormRendering(container?: Element): DebugInfo {
     const placeholders = searchScope.querySelectorAll('.react-component-placeholder');
     debugInfo.placeholdersFound = placeholders.length;
 
-    console.log(`🔍 [DEBUG] Found ${placeholders.length} placeholders in ${container ? 'container' : 'document'}`);
+    console.warn(`🔍 [DEBUG] Found ${placeholders.length} placeholders in ${container ? 'container' : 'document'}`);
 
     placeholders.forEach((placeholder, index) => {
       const componentName = placeholder.getAttribute('data-component');
@@ -70,7 +70,7 @@ export function debugContactFormRendering(container?: Element): DebugInfo {
 
       debugInfo.placeholders.push(placeholderInfo);
 
-      console.log(`📦 [DEBUG] Placeholder ${index + 1}:`, {
+      console.warn(`📦 [DEBUG] Placeholder ${index + 1}:`, {
         componentName,
         hasProps: !!propsAttr,
         propsLength: propsAttr?.length || 0,
@@ -80,7 +80,7 @@ export function debugContactFormRendering(container?: Element): DebugInfo {
 
       // Special check for ContactForm
       if (componentName === 'ContactForm') {
-        console.log(`🎯 [DEBUG] ContactForm placeholder found:`, {
+        console.warn(`🎯 [DEBUG] ContactForm placeholder found:`, {
           parsedProps,
           elementId: placeholder.id,
           classes: Array.from(placeholder.classList)
@@ -92,7 +92,7 @@ export function debugContactFormRendering(container?: Element): DebugInfo {
     const loadingSpinners = searchScope.querySelectorAll('.component-loading');
     if (loadingSpinners.length > 0) {
       debugInfo.warnings.push(`${loadingSpinners.length} loading spinners still present`);
-      console.log(`⏳ [DEBUG] Found ${loadingSpinners.length} loading spinners`);
+      console.warn(`⏳ [DEBUG] Found ${loadingSpinners.length} loading spinners`);
     }
 
   } catch (error) {
@@ -107,7 +107,7 @@ export function debugContactFormRendering(container?: Element): DebugInfo {
  * Force initialize React components with enhanced debugging
  */
 export function forceInitializeWithDebug(container?: Element): void {
-  console.log('🚀 [DEBUG] Force initializing React components...');
+  console.warn('🚀 [DEBUG] Force initializing React components...');
   
   const debugInfo = debugContactFormRendering(container);
   
@@ -116,7 +116,7 @@ export function forceInitializeWithDebug(container?: Element): void {
       if (container) {
         // If container is provided, initialize components within that container
         const placeholders = container.querySelectorAll('.react-component-placeholder');
-        console.log(`🎯 [DEBUG] Manually rendering ${placeholders.length} components in container`);
+        console.warn(`🎯 [DEBUG] Manually rendering ${placeholders.length} components in container`);
         
         placeholders.forEach((placeholder) => {
           const componentName = placeholder.getAttribute('data-component');
@@ -133,7 +133,7 @@ export function forceInitializeWithDebug(container?: Element): void {
               }
             }
             
-            console.log(`🔄 [DEBUG] Rendering ${componentName} with props:`, props);
+            console.warn(`🔄 [DEBUG] Rendering ${componentName} with props:`, props);
             (window as any).renderReactComponent(componentName, props, placeholder);
           }
         });
@@ -155,7 +155,7 @@ export function forceInitializeWithDebug(container?: Element): void {
 export function initializeWithDebug(container?: Element, retryCount = 0): void {
   const maxRetries = 3;
   
-  console.log(`🔄 [DEBUG] Initialize attempt ${retryCount + 1}/${maxRetries + 1}`);
+  console.warn(`🔄 [DEBUG] Initialize attempt ${retryCount + 1}/${maxRetries + 1}`);
   
   if (retryCount === 0) {
     // First attempt - immediate
@@ -164,14 +164,14 @@ export function initializeWithDebug(container?: Element, retryCount = 0): void {
     // Retry with increasing delays
     const delay = retryCount * 500; // 500ms, 1000ms, 1500ms
     setTimeout(() => {
-      console.log(`🔄 [DEBUG] Retry ${retryCount} after ${delay}ms delay`);
+      console.warn(`🔄 [DEBUG] Retry ${retryCount} after ${delay}ms delay`);
       forceInitializeWithDebug(container);
       
       // Check if components were rendered
       setTimeout(() => {
         const remainingPlaceholders = (container || document).querySelectorAll('.react-component-placeholder .component-loading');
         if (remainingPlaceholders.length > 0 && retryCount < maxRetries) {
-          console.log(`⚠️ [DEBUG] Still ${remainingPlaceholders.length} loading placeholders, retrying...`);
+          console.warn(`⚠️ [DEBUG] Still ${remainingPlaceholders.length} loading placeholders, retrying...`);
           initializeWithDebug(container, retryCount + 1);
         }
       }, 100);

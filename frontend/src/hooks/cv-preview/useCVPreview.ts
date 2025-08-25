@@ -17,7 +17,7 @@ export const useCVPreview = (
   const [editingSection, setEditingSection] = useState<string | null>(null);
   
   // Debug logging for feature previews state
-  console.log(`🔍 [CV PREVIEW STATE] showFeaturePreviews: ${showFeaturePreviews}, jobId: ${job.id}`);
+  console.warn(`🔍 [CV PREVIEW STATE] showFeaturePreviews: ${showFeaturePreviews}, jobId: ${job.id}`);
   const [isEditingQRCode, setIsEditingQRCode] = useState(false);
   const [showPreviewBanner, setShowPreviewBanner] = useState(true);
   const [showPlaceholderBanner, setShowPlaceholderBanner] = useState(true);
@@ -122,7 +122,7 @@ export const useCVPreview = (
     const updatedData = { ...previewData };
     
     switch (section) {
-      case 'personalInfo':
+      case 'personalInfo': {
         // Safe spreading with type checks
         const currentPersonalInfo = (updatedData.personalInfo && typeof updatedData.personalInfo === 'object') 
           ? updatedData.personalInfo as Record<string, any> 
@@ -132,6 +132,7 @@ export const useCVPreview = (
           : {};
         updatedData.personalInfo = { ...currentPersonalInfo, ...newPersonalInfo };
         break;
+      }
       case 'summary':
         updatedData.summary = newValue;
         break;
@@ -141,7 +142,7 @@ export const useCVPreview = (
       case 'education':
         updatedData.education = newValue;
         break;
-      case 'skills':
+      case 'skills': {
         // Safe spreading with type checks for skills data
         const currentSkills = (updatedData.skills && typeof updatedData.skills === 'object') 
           ? updatedData.skills as Record<string, any> 
@@ -151,6 +152,7 @@ export const useCVPreview = (
           : {};
         updatedData.skills = { ...currentSkills, ...newSkills };
         break;
+      }
     }
     
     setPreviewData(updatedData);

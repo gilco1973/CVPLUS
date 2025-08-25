@@ -1,4 +1,33 @@
-/**\n * CVPlus Design System - Common Components\n * Unified component library with consistent styling\n */\n\n// Navigation\nexport { Navigation } from './Navigation';\nexport { default as NavigationDefault } from './Navigation';\n\n// Buttons\nexport { Button } from './Button';\nexport { default as ButtonDefault } from './Button';\n\n// Cards\nexport {\n  Card,\n  CardHeader,\n  CardContent,\n  CardFooter,\n  CardTitle,\n  CardDescription,\n} from './Card';\nexport { default as CardDefault } from './Card';\n\n// Forms\nexport { Input } from './Input';\nexport { default as InputDefault } from './Input';\n\n// Export design system\n// Premium Components
+/**
+ * CVPlus Design System - Common Components
+ * Unified component library with consistent styling
+ */
+
+// Navigation
+export { Navigation } from './Navigation';
+export { default as NavigationDefault } from './Navigation';
+
+// Buttons
+export { Button } from './Button';
+export { default as ButtonDefault } from './Button';
+
+// Cards
+export {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+} from './Card';
+export { default as CardDefault } from './Card';
+
+// Forms
+export { Input } from './Input';
+export { default as InputDefault } from './Input';
+
+// Export design system
+// Premium Components
 export { PremiumUpgradePrompt, InlinePremiumPrompt, PremiumPromptCard } from './PremiumUpgradePrompt';
 export { PremiumStatusBadge } from './PremiumStatusBadge';
 

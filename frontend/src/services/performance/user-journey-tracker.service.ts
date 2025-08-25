@@ -155,7 +155,7 @@ class UserJourneyTrackerService {
   public async completeStep(
     journeyId: string,
     stepId: string,
-    success: boolean = true,
+    success = true,
     error?: string
   ): Promise<void> {
     const journey = this.activeJourneys.get(journeyId);
@@ -190,7 +190,7 @@ class UserJourneyTrackerService {
    */
   public async completeJourney(
     journeyId: string,
-    success: boolean = true,
+    success = true,
     businessMetrics?: Partial<UserJourney['businessMetrics']>
   ): Promise<void> {
     const journey = this.activeJourneys.get(journeyId);

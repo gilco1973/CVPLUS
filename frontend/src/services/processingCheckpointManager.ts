@@ -428,50 +428,50 @@ export class ProcessingCheckpointManager {
   // Job execution implementations
   private async executeCVProcessingJob(job: ProcessingJob): Promise<unknown> {
     // Placeholder for CV processing logic
-    console.log('Executing CV processing job:', job.id);
+    console.warn('Executing CV processing job:', job.id);
     return { status: 'completed', jobId: job.id };
   }
 
   private async executeFeatureGenerationJob(job: ProcessingJob): Promise<unknown> {
     // Placeholder for feature generation logic
-    console.log('Executing feature generation job:', job.id);
+    console.warn('Executing feature generation job:', job.id);
     return { status: 'completed', jobId: job.id };
   }
 
   private async executeTemplateApplicationJob(job: ProcessingJob): Promise<unknown> {
     // Placeholder for template application logic
-    console.log('Executing template application job:', job.id);
+    console.warn('Executing template application job:', job.id);
     return { status: 'completed', jobId: job.id };
   }
 
   private async executeDataExtractionJob(job: ProcessingJob): Promise<unknown> {
     // Placeholder for data extraction logic
-    console.log('Executing data extraction job:', job.id);
+    console.warn('Executing data extraction job:', job.id);
     return { status: 'completed', jobId: job.id };
   }
 
   private async executeAnalysisJob(job: ProcessingJob): Promise<unknown> {
     // Placeholder for analysis logic
-    console.log('Executing analysis job:', job.id);
+    console.warn('Executing analysis job:', job.id);
     return { status: 'completed', jobId: job.id };
   }
 
   // Resume function implementations
   private async executeProcessCV(parameters: Record<string, unknown>, context: any): Promise<unknown> {
     // Placeholder for resumable CV processing
-    console.log('Resuming CV processing from checkpoint:', context.checkpointId);
+    console.warn('Resuming CV processing from checkpoint:', context.checkpointId);
     return { status: 'resumed', context };
   }
 
   private async executeGenerateFeature(parameters: Record<string, unknown>, context: any): Promise<unknown> {
     // Placeholder for resumable feature generation
-    console.log('Resuming feature generation from checkpoint:', context.checkpointId);
+    console.warn('Resuming feature generation from checkpoint:', context.checkpointId);
     return { status: 'resumed', context };
   }
 
   private async executeAnalyzeCV(parameters: Record<string, unknown>, context: any): Promise<unknown> {
     // Placeholder for resumable CV analysis
-    console.log('Resuming CV analysis from checkpoint:', context.checkpointId);
+    console.warn('Resuming CV analysis from checkpoint:', context.checkpointId);
     return { status: 'resumed', context };
   }
 

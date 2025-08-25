@@ -218,15 +218,15 @@ export class SectionGenerators {
     // All available features that support preview generation
     const features = Object.keys(featureMapping);
 
-    console.log('🔍 [FEATURE PREVIEW GENERATION] Processing features:', features);
-    console.log('🔍 [FEATURE PREVIEW GENERATION] Selected features:', selectedFeatures);
+    console.warn('🔍 [FEATURE PREVIEW GENERATION] Processing features:', features);
+    console.warn('🔍 [FEATURE PREVIEW GENERATION] Selected features:', selectedFeatures);
 
     return features
       .map(featureId => {
         const camelCaseKey = featureMapping[featureId];
         const isEnabled = selectedFeatures[camelCaseKey] || false;
         
-        console.log(`🔍 [FEATURE PREVIEW] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);
+        console.warn(`🔍 [FEATURE PREVIEW] Feature: ${featureId}, CamelCase: ${camelCaseKey}, Enabled: ${isEnabled}`);
         
         return generateFeaturePreview(
           featureId, 

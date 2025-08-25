@@ -143,7 +143,10 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
               showSkills: true,
               showProjects: true,
               passwordProtected: false,
-              allowedDomains: []>)
+              allowedDomains: []
+            }
+          }
+        })
       });
 
       if (response.ok) {
@@ -364,9 +367,9 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
 
             {/* Tab Content */}
             <div>
-              <div className="animate-fade-in"
-                key={activeTab}>
-                className="min-h-[400px]"
+              <div 
+                key={activeTab}
+                className="animate-fade-in min-h-[400px]"
               >
                 {activeTab === 'overview' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -753,10 +756,7 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
         {/* QR Code Modal */}
         <div>
           {showQRCode && profile && (
-            <div className="animate-fade-in">
-              }
-              }
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            <div className="animate-fade-in fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               onClick={() => setShowQRCode(false)}
             >
               <div className="animate-fade-in">

@@ -31,7 +31,7 @@ export const useFeaturePreviews = (previewData: unknown) => {
           }
         };
         
-      case 'achievements-showcase':
+      case 'achievements-showcase': {
         // Use real achievements from experience data
         const realAchievements = previewData?.experience?.flatMap((exp: unknown) => 
           exp.achievements?.map((achievement: string) => ({
@@ -46,6 +46,7 @@ export const useFeaturePreviews = (previewData: unknown) => {
             { title: 'Real achievements will be extracted from your experience', category: 'Info', impact: 'Preview' }
           ]
         };
+      }
         
       default:
         return {};
@@ -292,7 +293,7 @@ export const useFeaturePreviews = (previewData: unknown) => {
           </div>
         `;
 
-      case 'availability-calendar':
+      case 'availability-calendar': {
         // Return a placeholder that the ProgressiveEnhancementRenderer can replace with the React component
         // Extract professional name and email from preview data if available
         const personalInfo = previewData?.personalInfo || previewData?.personalInformation || {};
@@ -316,6 +317,7 @@ export const useFeaturePreviews = (previewData: unknown) => {
             </div>
           </div>
         `;
+      }
 
       case 'embed-qr-code':
         return `

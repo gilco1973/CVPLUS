@@ -4,8 +4,7 @@ import { CVPreview } from '../components/CVPreview';
 import { MobileFeatureSelection } from '../components/MobileFeatureSelection';
 import { CVPreviewPageLayout } from '../components/MobilePageLayout';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToJob, applyImprovements } from '../services/cvService';
-import type { Job } from '../services/cvService';
+import { subscribeToJob, applyImprovements, type Job } from '../services/cvService';
 import { ArrowLeft, Loader2, CheckCircle, Eye, Settings, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

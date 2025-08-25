@@ -23,7 +23,7 @@ vi.mock('../config/firebase-optimized', () => ({
       uid: 'test-user-id',
       getIdToken: () => Promise.resolve('mock-token')
     },
-    onAuthStateChanged: (callback: Function) => {
+    onAuthStateChanged: (callback: (user: any) => void) => {
       callback({
         uid: 'test-user-id',
         getIdToken: () => Promise.resolve('mock-token')

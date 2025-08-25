@@ -137,7 +137,7 @@ export class CVValidator {
       // Call the secure Firebase Function with premium validation
       const updateJobFeaturesFunction = httpsCallable(functions, 'updateJobFeatures');
       
-      console.log('🔒 Calling secure updateJobFeatures function:', { jobId, selectedFeatures });
+      console.warn('🔒 Calling secure updateJobFeatures function:', { jobId, selectedFeatures });
       
       const result = await updateJobFeaturesFunction({
         jobId,
@@ -155,7 +155,7 @@ export class CVValidator {
         throw new Error('Server rejected feature update');
       }
 
-      console.log('✅ Server validation completed:', {
+      console.warn('✅ Server validation completed:', {
         validatedFeatures: data.validatedFeatures.length,
         removedFeatures: data.removedFeatures.length,
         message: data.message

@@ -6,10 +6,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import ErrorRecoveryManager from '../services/error-recovery/ErrorRecoveryManager';
+import ErrorRecoveryManager, { RecoveryResult, ErrorRecoveryOptions } from '../services/error-recovery/ErrorRecoveryManager';
 import { CheckpointType, ProcessingCheckpoint } from '../services/error-recovery/CheckpointManager';
 import { ClassifiedError } from '../services/error-recovery/ErrorClassification';
-import { RecoveryResult, ErrorRecoveryOptions } from '../services/error-recovery/ErrorRecoveryManager';
 
 export interface UseErrorRecoveryOptions extends ErrorRecoveryOptions {
   jobId?: string;
@@ -313,7 +312,7 @@ export function useSimpleErrorRecovery() {
   const executeWithRetry = useCallback(async <T>(
     operation: () => Promise<T>,
     operationName: string,
-    maxRetries: number = 3
+    maxRetries = 3
   ): Promise<T> => {
     setState(prev => ({ ...prev, isRetrying: true, lastError: null }));
 

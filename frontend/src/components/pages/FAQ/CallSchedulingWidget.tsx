@@ -63,8 +63,8 @@ export const CallSchedulingWidget: React.FC<CallSchedulingWidgetProps> = ({
 
   const validatePhone = (phone: string): string => {
     if (!phone.trim()) return 'Phone number is required';
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
+    const cleanPhone = phone.replace(/[\s\-()]/g, '');
     if (!phoneRegex.test(cleanPhone)) return 'Please enter a valid phone number';
     if (cleanPhone.length < 10) return 'Phone number must be at least 10 digits';
     return '';

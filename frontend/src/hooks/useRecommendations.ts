@@ -87,13 +87,13 @@ export function useRecommendations(
       if (cached) {
         // Return cached data if it's recent
         if (now - cached.timestamp < CACHE_DURATION && cached.data.length > 0) {
-          console.log(`[useRecommendations] Using cached data for job ${jobId}`);
+          console.warn(`[useRecommendations] Using cached data for job ${jobId}`);
           return cached.data;
         }
         
         // Return existing loading promise if one is in progress
         if (cached.loading) {
-          console.log(`[useRecommendations] Joining existing load for job ${jobId}`);
+          console.warn(`[useRecommendations] Joining existing load for job ${jobId}`);
           return cached.loading;
         }
       }
@@ -102,7 +102,7 @@ export function useRecommendations(
     // Create new loading promise
     const loadingPromise = (async (): Promise<RecommendationItem[]> => {
       try {
-        console.log(`[useRecommendations] Loading recommendations for job ${jobId}`);
+        console.warn(`[useRecommendations] Loading recommendations for job ${jobId}`);
         recommendationsDebugger.trackCall(jobId, 'useRecommendations.loadRecommendations');
         
         const { targetRole, industryKeywords, forceRegenerate } = optionsRef.current;
@@ -149,7 +149,7 @@ export function useRecommendations(
           loading: null
         });
         
-        console.log(`[useRecommendations] Loaded ${transformedRecommendations.length} recommendations for job ${jobId}`);
+        console.warn(`[useRecommendations] Loaded ${transformedRecommendations.length} recommendations for job ${jobId}`);
         return transformedRecommendations;
         
       } catch (err: unknown) {

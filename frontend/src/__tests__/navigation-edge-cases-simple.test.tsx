@@ -49,7 +49,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 // Create mock session data
-const createMockSession = (sessionId: string = 'test-session'): EnhancedSessionState => ({
+const createMockSession = (sessionId = 'test-session'): EnhancedSessionState => ({
   sessionId,
   userId: 'user-123',
   jobId: 'job-123',
@@ -75,7 +75,7 @@ const createMockSession = (sessionId: string = 'test-session'): EnhancedSessionS
   offlineCapability: {} as any
 });
 
-const createMockContext = (sessionId: string = 'test-session'): NavigationContext => ({
+const createMockContext = (sessionId = 'test-session'): NavigationContext => ({
   sessionId,
   currentPath: '/analysis',
   availablePaths: [],

@@ -24,11 +24,11 @@ export class SchedulingService {
 
   static async submitSchedulingRequest(data: SchedulingRequestData): Promise<SchedulingResponse> {
     try {
-      console.log('Submitting scheduling request:', data);
+      console.warn('Submitting scheduling request:', data);
       
       const result = await this.sendSchedulingEmailFunction(data);
       
-      console.log('Scheduling request submitted successfully:', result.data);
+      console.warn('Scheduling request submitted successfully:', result.data);
       return result.data;
       
     } catch (error: any) {
@@ -73,7 +73,7 @@ export class SchedulingService {
     if (!data.phone?.trim()) {
       errors.push('Phone number is required');
     } else {
-      const cleanPhone = data.phone.replace(/[\s\-\(\)]/g, '');
+      const cleanPhone = data.phone.replace(/[\s\-()]/g, '');
       if (cleanPhone.length < 10) {
         errors.push('Phone number must be at least 10 digits');
       }

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
-import { subscribeToJob, processCV } from '../services/cvService';
+import { subscribeToJob, processCV, type Job } from '../services/cvService';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { designSystem } from '../config/designSystem';
-import type { Job } from '../services/cvService';
 
 const PROCESSING_STEPS = [
   { id: 'upload', label: 'File Uploaded', status: 'pending' },

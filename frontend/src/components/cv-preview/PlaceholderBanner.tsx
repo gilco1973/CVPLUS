@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, X, Edit3, Eye, EyeOff, Info } from 'lucide-react';
-import type { PlaceholderMatch } from '../../utils/placeholderDetection';
 import { 
   detectPlaceholdersInCV, 
   getPlaceholderSummary, 
-  groupPlaceholdersBySection 
+  groupPlaceholdersBySection,
+  type PlaceholderMatch 
 } from '../../utils/placeholderDetection';
 
 export interface PlaceholderBannerProps {

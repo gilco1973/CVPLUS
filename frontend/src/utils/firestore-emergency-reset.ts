@@ -50,7 +50,7 @@ export const emergencyFirestoreReset = async (
     try {
       await disableNetwork(db);
       steps.push('Network disabled - stopping active operations');
-      console.log('[EmergencyReset] Network disabled successfully');
+      console.warn('[EmergencyReset] Network disabled successfully');
     } catch (error) {
       console.warn('[EmergencyReset] Network disable failed:', error);
       steps.push('Network disable failed (non-critical)');
@@ -68,7 +68,7 @@ export const emergencyFirestoreReset = async (
         
         await clearIndexedDbPersistence(db);
         steps.push('IndexedDB cache cleared');
-        console.log('[EmergencyReset] Cache cleared successfully');
+        console.warn('[EmergencyReset] Cache cleared successfully');
       } catch (error) {
         console.warn('[EmergencyReset] Cache clear failed:', error);
         steps.push('Cache clear failed (may not be critical)');
@@ -80,7 +80,7 @@ export const emergencyFirestoreReset = async (
       try {
         await enableNetwork(db);
         steps.push('Network re-enabled');
-        console.log('[EmergencyReset] Network re-enabled successfully');
+        console.warn('[EmergencyReset] Network re-enabled successfully');
         
         // Wait for connection to stabilize
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -93,7 +93,7 @@ export const emergencyFirestoreReset = async (
     }
     
     const recoveryTime = Date.now() - startTime;
-    console.log(`[EmergencyReset] Reset completed successfully in ${recoveryTime}ms`);
+    console.warn(`[EmergencyReset] Reset completed successfully in ${recoveryTime}ms`);
     
     return {
       success: true,
@@ -178,7 +178,7 @@ export class FirestoreHealthMonitor {
       });
       
       if (result.success) {
-        console.log('[HealthMonitor] Emergency reset successful, resetting error count');
+        console.warn('[HealthMonitor] Emergency reset successful, resetting error count');
         this.errorCount = 0;
         this.onHealthChanged?.(true);
       } else {
@@ -207,7 +207,7 @@ export class FirestoreHealthMonitor {
 // Global health monitor instance
 export const firestoreHealthMonitor = new FirestoreHealthMonitor(
   (healthy) => {
-    console.log(`[HealthMonitor] Firestore health status: ${healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+    console.warn(`[HealthMonitor] Firestore health status: ${healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
     
     // Optional: Show user notification
     if (!healthy) {

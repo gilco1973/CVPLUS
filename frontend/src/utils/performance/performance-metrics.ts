@@ -365,7 +365,7 @@ export class PerformanceTracker {
   /**
    * Complete tracking and record metrics
    */
-  complete(templateSize: number = 0): void {
+  complete(templateSize = 0): void {
     const endTime = performance.now();
     const generationTime = endTime - this.startTime;
     const renderTime = this.renderStartTime ? endTime - this.renderStartTime : 0;
@@ -427,7 +427,7 @@ export function initializePerformanceMonitoring(): void {
   performanceMetrics.onMetrics((type, metrics) => {
     // Log important metrics
     if (type === 'template') {
-      console.log(`Template ${metrics.templateId} generated in ${metrics.generationTime}ms`);
+      console.warn(`Template ${metrics.templateId} generated in ${metrics.generationTime}ms`);
     }
     
     // Send to analytics if available
@@ -441,7 +441,7 @@ export function initializePerformanceMonitoring(): void {
     }
   });
   
-  console.log('Performance monitoring initialized');
+  console.warn('Performance monitoring initialized');
 }
 
 /**
@@ -462,7 +462,7 @@ export async function measureAsync<T>(
     performance.mark(`${name}-end`);
     performance.measure(name, `${name}-start`, `${name}-end`);
     
-    console.log(`${name} completed in ${duration.toFixed(2)}ms`);
+    console.warn(`${name} completed in ${duration.toFixed(2)}ms`);
     return result;
   } catch (error) {
     const end = performance.now();

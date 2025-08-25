@@ -111,7 +111,7 @@ export class PreviewService {
         currentHtml: baseHtml 
       });
 
-      console.log('✅ Base HTML loaded for preview');
+      console.warn('✅ Base HTML loaded for preview');
     } catch (error: unknown) {
       console.error('❌ Error loading base HTML:', error);
       throw new Error('Failed to load base CV content');
@@ -189,7 +189,7 @@ export class PreviewService {
       }
     );
 
-    console.log('📡 Started real-time preview monitoring via JobSubscriptionManager');
+    console.warn('📡 Started real-time preview monitoring via JobSubscriptionManager');
   }
 
   /**
@@ -482,7 +482,7 @@ export class PreviewService {
   toggleFeatureHighlight(featureId: string, highlight: boolean): void {
     // This would be implemented to communicate with the iframe
     // to highlight specific features in the preview
-    console.log(`${highlight ? 'Highlighting' : 'Unhighlighting'} feature: ${featureId}`);
+    console.warn(`${highlight ? 'Highlighting' : 'Unhighlighting'} feature: ${featureId}`);
   }
 
   /**
@@ -504,7 +504,7 @@ export class PreviewService {
       lastUpdated: Date.now()
     };
 
-    console.log('🧹 Preview service cleaned up');
+    console.warn('🧹 Preview service cleaned up');
   }
 }
 

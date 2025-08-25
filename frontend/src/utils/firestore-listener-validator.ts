@@ -77,12 +77,12 @@ export class FirestoreListenerValidator {
   /**
    * Start monitoring for duplicate listeners
    */
-  startMonitoring(intervalMs: number = 10000): void {
+  startMonitoring(intervalMs = 10000): void {
     if (this.validationInterval) {
       clearInterval(this.validationInterval);
     }
 
-    console.log('🔍 [FirestoreValidator] Starting listener monitoring...');
+    console.warn('🔍 [FirestoreValidator] Starting listener monitoring...');
     
     this.validationInterval = setInterval(() => {
       this.validateListeners();
@@ -100,7 +100,7 @@ export class FirestoreListenerValidator {
       clearInterval(this.validationInterval);
       this.validationInterval = undefined;
     }
-    console.log('🔍 [FirestoreValidator] Stopped listener monitoring');
+    console.warn('🔍 [FirestoreValidator] Stopped listener monitoring');
   }
 
   /**
@@ -371,10 +371,10 @@ export class FirestoreListenerValidator {
         }
       });
     } else {
-      console.log(`🔍 [FirestoreValidator] ✅ All listeners healthy (Score: ${healthScore}/100)`);
+      console.warn(`🔍 [FirestoreValidator] ✅ All listeners healthy (Score: ${healthScore}/100)`);
     }
 
-    console.log('🔍 [FirestoreValidator] System Stats:', {
+    console.warn('🔍 [FirestoreValidator] System Stats:', {
       activeListeners: activeListeners.length,
       totalCallbacks: memoryStats.callbacksCount,
       memoryUsage: `${memoryStats.memoryUsageKB}KB`,
@@ -474,15 +474,15 @@ export class FirestoreListenerValidator {
         const postCleanupReport = this.generateCleanupReport('post-cleanup');
         
         console.warn('🔍 [FirestoreValidator] 🚨 EMERGENCY CLEANUP COMPLETED');
-        console.log('🔍 [FirestoreValidator] Pre-cleanup:', preCleanupReport);
-        console.log('🔍 [FirestoreValidator] Post-cleanup:', postCleanupReport);
+        console.warn('🔍 [FirestoreValidator] Pre-cleanup:', preCleanupReport);
+        console.warn('🔍 [FirestoreValidator] Post-cleanup:', postCleanupReport);
 
         // Step 7: Reset emergency flag
         this.emergencyCleanupInProgress = false;
 
         // Step 8: Optionally restart monitoring with reduced frequency
         setTimeout(() => {
-          console.log('🔍 [FirestoreValidator] Restarting monitoring after cleanup...');
+          console.warn('🔍 [FirestoreValidator] Restarting monitoring after cleanup...');
           this.startMonitoring(30000); // 30 second interval after cleanup
         }, 5000);
 
@@ -568,7 +568,7 @@ export class FirestoreListenerValidator {
    */
   clearIssueHistory(): void {
     this.issueHistory = [];
-    console.log('🔍 [FirestoreValidator] Issue history cleared');
+    console.warn('🔍 [FirestoreValidator] Issue history cleared');
   }
 
   /**
@@ -576,7 +576,7 @@ export class FirestoreListenerValidator {
    */
   updateThresholds(newThresholds: Partial<typeof this.alertThresholds>): void {
     this.alertThresholds = { ...this.alertThresholds, ...newThresholds };
-    console.log('🔍 [FirestoreValidator] Alert thresholds updated:', this.alertThresholds);
+    console.warn('🔍 [FirestoreValidator] Alert thresholds updated:', this.alertThresholds);
   }
 
   /**
@@ -672,12 +672,12 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     validator,
     quickCheck: () => {
       const result = validator.quickHealthCheck();
-      console.log('🔍 Quick Health Check:', result);
+      console.warn('🔍 Quick Health Check:', result);
       return result;
     },
     fullReport: () => {
       const report = validator.getValidationReport();
-      console.log('🔍 Full Validation Report:', report);
+      console.warn('🔍 Full Validation Report:', report);
       return report;
     },
     cleanup: () => {
@@ -686,17 +686,17 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     },
     issues: () => {
       const issues = validator.getIssueHistory(10);
-      console.log('🔍 Recent Issues:', issues);
+      console.warn('🔍 Recent Issues:', issues);
       return issues;
     }
   };
   
-  console.log('🔍 [FirestoreValidator] Enhanced debugging available:');
-  console.log('  - window.firestoreValidator (full API)');
-  console.log('  - window._firestoreDebug.quickCheck() (health summary)');
-  console.log('  - window._firestoreDebug.fullReport() (detailed report)');
-  console.log('  - window._firestoreDebug.cleanup() (emergency cleanup)');
-  console.log('  - window._firestoreDebug.issues() (recent issues)');
+  console.warn('🔍 [FirestoreValidator] Enhanced debugging available:');
+  console.warn('  - window.firestoreValidator (full API)');
+  console.warn('  - window._firestoreDebug.quickCheck() (health summary)');
+  console.warn('  - window._firestoreDebug.fullReport() (detailed report)');
+  console.warn('  - window._firestoreDebug.cleanup() (emergency cleanup)');
+  console.warn('  - window._firestoreDebug.issues() (recent issues)');
 }
 
 // Export types for external use

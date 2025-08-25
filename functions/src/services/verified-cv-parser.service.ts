@@ -125,7 +125,8 @@ export class VerifiedCVParsingService {
       confidenceThreshold: this.config.confidenceThreshold,
       qualityThreshold: this.config.qualityThreshold,
       maxRetries: this.config.maxRetries,
-      fallbackToOriginal: this.config.fallbackToOriginal
+      fallbackToOriginal: this.config.fallbackToOriginal,
+      timeout: 30000
     });
 
     this.piiDetector = new PIIDetector(process.env.ANTHROPIC_API_KEY || '');

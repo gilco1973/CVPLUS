@@ -165,7 +165,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     <section 
       ref={heroRef}
       className={`relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden ${className}`}
-      aria-label="Hero section"
+      aria-label={t('hero.accessibility.sectionLabel')}
     >
       {/* Background decoration */}
       <div className="absolute inset-0 z-0" aria-hidden="true">
@@ -259,7 +259,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   {/* Placeholder - Replace with actual video source */}
                   <source src="/videos/cv-generation-demo.mp4" type="video/mp4" />
                   <source src="/videos/cv-generation-demo.webm" type="video/webm" />
-                  Your browser does not support the video tag.
+                  {t('hero.accessibility.browserNotSupported')}
                 </video>
                 
                 {/* Video Placeholder Content */}
@@ -281,7 +281,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <button
                           onClick={handlePlayPause}
                           className="bg-white/20 backdrop-blur-sm rounded-full p-4 hover:bg-white/30 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-                          aria-label={isVideoPlaying ? 'Pause video' : 'Play video'}
+                          aria-label={isVideoPlaying ? t('hero.accessibility.videoControls.pauseVideo') : t('hero.accessibility.videoControls.playVideo')}
                         >
                           {isVideoPlaying ? (
                             <Pause className="w-6 h-6 text-white" />
@@ -293,7 +293,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <button
                           onClick={handleMuteToggle}
                           className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-                          aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
+                          aria-label={isVideoMuted ? t('hero.accessibility.videoControls.unmuteVideo') : t('hero.accessibility.videoControls.muteVideo')}
                         >
                           {isVideoMuted ? (
                             <VolumeX className="w-5 h-5 text-white" />
@@ -305,7 +305,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <button
                           onClick={handleFullscreen}
                           className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-                          aria-label="Enter fullscreen"
+                          aria-label={t('hero.accessibility.videoControls.enterFullscreen')}
                         >
                           <Maximize className="w-5 h-5 text-white" />
                         </button>
@@ -330,7 +330,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       value={videoCurrentTime}
                       onChange={(e) => handleVideoSeek(Number(e.target.value))}
                       className="absolute inset-0 w-full h-1 opacity-0 cursor-pointer"
-                      aria-label="Video progress"
+                      aria-label={t('hero.accessibility.videoControls.videoProgress')}
                     />
                   </div>
                 )}

@@ -5,8 +5,7 @@
  * and error-specific retry strategies.
  */
 
-import { ErrorClassifier, ErrorType } from './ErrorClassification';
-import type { ClassifiedError } from './ErrorClassification';
+import { ErrorClassifier, ErrorType, type ClassifiedError } from './ErrorClassification';
 import { CheckpointManager, CheckpointType } from './CheckpointManager';
 
 export interface RetryConfig {
@@ -114,7 +113,7 @@ export class RetryMechanism {
           const restoreResult = await this.tryCheckpointRestore(operationContext.jobId, operationContext.checkpointType);
           if (restoreResult.success) {
             recoveredFromCheckpoint = true;
-            console.log(`Recovered from checkpoint: ${restoreResult.message}`);
+            console.warn(`Recovered from checkpoint: ${restoreResult.message}`);
           }
         }
 
@@ -181,7 +180,7 @@ export class RetryMechanism {
         attempt.delay = delay;
         attempts.push(attempt);
 
-        console.log(
+        console.warn(
           `Attempt ${attemptNumber} failed for ${operationContext.operationName}. ` +
           `Retrying in ${delay}ms. Error: ${classifiedError.message}`
         );
@@ -382,7 +381,7 @@ export class RetryMechanism {
    */
   public resetAllCircuitBreakers(): void {
     this.circuitBreakers.clear();
-    console.log('All circuit breakers reset');
+    console.warn('All circuit breakers reset');
   }
 
   /**

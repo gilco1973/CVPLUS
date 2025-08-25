@@ -4,10 +4,9 @@ import { ArrowLeft, ArrowRight, Target, Crown, Sparkles, CheckCircle, AlertCircl
 import { Header } from '../components/Header';
 import { Section } from '../components/layout/Section';
 import { RoleProfileIntegration } from '../components/role-profiles/RoleProfileIntegration';
-import { getJob } from '../services/cvService';
+import { getJob, type Job } from '../services/cvService';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import type { Job } from '../services/cvService';
 import { designSystem } from '../config/designSystem';
 
 export const RoleSelectionPage: React.FC = () => {

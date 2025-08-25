@@ -4,6 +4,7 @@ import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
 import { usePremiumStatus, useFeatureAccess } from '../hooks/usePremiumStatus';
 import { InlinePremiumPrompt } from '../components/common/PremiumUpgradePrompt';
+import { UsageLimitsDisplay } from '../components/policy/UsageLimitsDisplay';
 
 interface Feature {
   id: string;
@@ -423,6 +424,13 @@ export const CVFeaturesPage = () => {
               </div>
             </div>
           ))}
+        </div>
+      </Section>
+
+      {/* Usage Limits Section */}
+      <Section variant="content" background="transparent" spacing="md">
+        <div className="max-w-4xl mx-auto">
+          <UsageLimitsDisplay variant="detailed" showTitle={true} />
         </div>
       </Section>
 

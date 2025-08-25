@@ -46,7 +46,7 @@ export class TemplateCSSGenerator {
         return cached;
       }
       
-      console.log(`🎨 [TEMPLATE CSS] Generating CSS for ${template.name}`);
+      console.warn(`🎨 [TEMPLATE CSS] Generating CSS for ${template.name}`);
       
       // Generate CSS components
       const cssComponents = await this.generateCSSComponents(template);

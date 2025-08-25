@@ -102,7 +102,7 @@ export class RealtimeSessionSync {
       this.websocket = new WebSocket(wsUrl);
 
       this.websocket.onopen = () => {
-        console.log('WebSocket connected for session sync');
+        console.warn('WebSocket connected for session sync');
         this.reconnectAttempts = 0;
         
         // Join session room
@@ -125,7 +125,7 @@ export class RealtimeSessionSync {
       };
 
       this.websocket.onclose = () => {
-        console.log('WebSocket connection closed');
+        console.warn('WebSocket connection closed');
         this.websocket = null;
         this.attemptReconnect(sessionId);
       };
@@ -148,7 +148,7 @@ export class RealtimeSessionSync {
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff
     
     this.reconnectInterval = setTimeout(() => {
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      console.warn(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       this.connectWebSocket(sessionId).catch(() => {
         this.attemptReconnect(sessionId);
       });
@@ -448,7 +448,7 @@ export class RealtimeSessionSync {
 
     // Apply update immediately
     // In a real implementation, this would update the local session state
-    console.log('Applied optimistic update:', updateId, update);
+    console.warn('Applied optimistic update:', updateId, update);
 
     // Broadcast the change
     const change: StateChange = {
@@ -472,7 +472,7 @@ export class RealtimeSessionSync {
     if (!update) return false;
 
     // Restore original state
-    console.log('Rolling back optimistic update:', updateId);
+    console.warn('Rolling back optimistic update:', updateId);
 
     // Remove from optimistic updates
     this.optimisticUpdates.delete(updateId);
@@ -567,7 +567,7 @@ export class RealtimeSessionSync {
 
   private applyRemoteChanges(sessionId: string, changes: StateChange[]): void {
     // Apply changes to local state
-    console.log('Applying remote changes:', sessionId, changes);
+    console.warn('Applying remote changes:', sessionId, changes);
     
     // Update sync status
     this.updateSyncStatus(sessionId, { status: 'synced' });
@@ -578,7 +578,7 @@ export class RealtimeSessionSync {
   }
 
   private handleConflicts(sessionId: string, conflicts: StateChange[]): void {
-    console.log('Handling conflicts for session:', sessionId, conflicts);
+    console.warn('Handling conflicts for session:', sessionId, conflicts);
     
     // Update sync status
     this.updateSyncStatus(sessionId, { status: 'conflicted' });
@@ -684,19 +684,19 @@ export class RealtimeSessionSync {
 
   // Placeholder methods for cross-tab conflict handling
   private handleCrossTabConflict(message: any): void {
-    console.log('Handling cross-tab conflict:', message);
+    console.warn('Handling cross-tab conflict:', message);
   }
 
   private handleCrossTabPresence(message: any): void {
-    console.log('Handling cross-tab presence:', message);
+    console.warn('Handling cross-tab presence:', message);
   }
 
   private handleRemoteConflict(message: any): void {
-    console.log('Handling remote conflict:', message);
+    console.warn('Handling remote conflict:', message);
   }
 
   private handleRemotePresence(message: any): void {
-    console.log('Handling remote presence:', message);
+    console.warn('Handling remote presence:', message);
   }
 
   private broadcastToOtherTabs(message: any): void {

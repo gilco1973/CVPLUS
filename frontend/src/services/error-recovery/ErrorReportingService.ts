@@ -165,7 +165,7 @@ export class ErrorReportingService {
       // Also save to localStorage as backup
       this.saveReportLocally(report);
 
-      console.log(`Error reported with ID: ${reportId}`);
+      console.warn(`Error reported with ID: ${reportId}`);
       return reportId;
 
     } catch (reportingError: unknown) {
@@ -208,7 +208,7 @@ export class ErrorReportingService {
   /**
    * Gets error reports for the current user
    */
-  public async getUserReports(limitCount: number = 10): Promise<ErrorReport[]> {
+  public async getUserReports(limitCount = 10): Promise<ErrorReport[]> {
     try {
       const user = auth.currentUser;
       if (!user) return [];
@@ -361,7 +361,7 @@ export class ErrorReportingService {
     };
   }
 
-  private getRecentUserActions(count: number = 20): UserAction[] {
+  private getRecentUserActions(count = 20): UserAction[] {
     return this.userActions.slice(-count);
   }
 

@@ -88,11 +88,12 @@ export const EnhancedFeatureProgressCard: React.FC<EnhancedFeatureProgressCardPr
     }
     
     switch (progress.status) {
-      case 'completed':
+      case 'completed': {
         const completedClasses = 'border-green-500 bg-green-500/10';
         return `${baseClasses} ${completedClasses} ${
           progress.htmlFragmentAvailable ? 'ring-1 ring-cyan-400/20' : ''
         }`;
+      }
       case 'processing':
       case 'retrying':
         return `${baseClasses} border-blue-500 bg-blue-500/10`;

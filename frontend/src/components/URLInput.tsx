@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Globe, ArrowRight, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface URLInputProps {
   onSubmit: (url: string) => void;
@@ -8,6 +9,7 @@ interface URLInputProps {
 }
 
 export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false }) => {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -25,12 +27,12 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
     setError(null);
 
     if (!url.trim()) {
-      setError('Please enter a URL');
+      setError(t('forms.urlInput.validation.required'));
       return;
     }
 
     if (!validateURL(url)) {
-      setError('Please enter a valid URL starting with http:// or https://');
+      setError(t('forms.urlInput.validation.invalid'));
       return;
     }
 
@@ -48,7 +50,7 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com/my-cv"
+            placeholder={t('forms.urlInput.placeholder')}
             className={cn(
               "w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-gray-800 text-gray-100 placeholder-gray-500",
               error 
@@ -79,11 +81,11 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Processing...
+              {t('forms.urlInput.button.processing')}
             </>
           ) : (
             <>
-              Start Processing
+              {t('forms.urlInput.button.submit')}
               <ArrowRight className="w-5 h-5" />
             </>
           )}
@@ -91,7 +93,7 @@ export const URLInput: React.FC<URLInputProps> = ({ onSubmit, isLoading = false 
 
         <div className="text-center">
           <p className="text-sm text-gray-400">
-            Enter the URL of your online CV or LinkedIn profile
+            {t('forms.urlInput.help')}
           </p>
         </div>
       </div>

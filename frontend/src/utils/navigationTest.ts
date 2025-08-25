@@ -5,12 +5,12 @@ export const navigationTest = {
   // Test if the preview route exists in the current router
   testPreviewRoute: (jobId: string) => {
     const testPath = `/preview/${jobId}`;
-    console.log('🧪 [TEST] Testing preview route:', testPath);
+    console.warn('🧪 [TEST] Testing preview route:', testPath);
     
     // Try to create a URL object to validate the path
     try {
       const url = new URL(testPath, window.location.origin);
-      console.log('✅ [TEST] Preview route URL is valid:', url.href);
+      console.warn('✅ [TEST] Preview route URL is valid:', url.href);
       return true;
     } catch (error) {
       console.error('❌ [TEST] Preview route URL is invalid:', error);
@@ -20,7 +20,7 @@ export const navigationTest = {
 
   // Test sessionStorage operations
   testSessionStorage: (jobId: string) => {
-    console.log('🧪 [TEST] Testing sessionStorage operations');
+    console.warn('🧪 [TEST] Testing sessionStorage operations');
     
     try {
       // Test storing recommendations
@@ -31,9 +31,9 @@ export const navigationTest = {
       const retrieved = sessionStorage.getItem(`recommendations-${jobId}`);
       const parsed = JSON.parse(retrieved || '[]');
       
-      console.log('✅ [TEST] SessionStorage test successful');
-      console.log('✅ [TEST] Stored:', testRecommendations);
-      console.log('✅ [TEST] Retrieved:', parsed);
+      console.warn('✅ [TEST] SessionStorage test successful');
+      console.warn('✅ [TEST] Stored:', testRecommendations);
+      console.warn('✅ [TEST] Retrieved:', parsed);
       
       // Clean up test data
       sessionStorage.removeItem(`recommendations-${jobId}`);
@@ -47,21 +47,21 @@ export const navigationTest = {
 
   // Test React Router navigation programmatically
   testNavigation: (navigate: (path: string) => void, jobId: string) => {
-    console.log('🧪 [TEST] Testing programmatic navigation');
+    console.warn('🧪 [TEST] Testing programmatic navigation');
     
     try {
       const testPath = `/preview/${jobId}`;
-      console.log('🧪 [TEST] Attempting navigation to:', testPath);
+      console.warn('🧪 [TEST] Attempting navigation to:', testPath);
       
       // Store current path for comparison
       const currentPath = window.location.pathname;
-      console.log('🧪 [TEST] Current path:', currentPath);
+      console.warn('🧪 [TEST] Current path:', currentPath);
       
       // Attempt navigation
       navigate(testPath);
       
       // Since navigation is async, we'll log success immediately
-      console.log('✅ [TEST] Navigation call completed without throwing');
+      console.warn('✅ [TEST] Navigation call completed without throwing');
       return true;
     } catch (error) {
       console.error('❌ [TEST] Navigation test failed:', error);
@@ -71,9 +71,9 @@ export const navigationTest = {
 
   // Enhanced navigation with multiple fallback strategies
   performEnhancedNavigation: (navigate: (path: string) => void, jobId: string, selectedRecommendations: string[] = []) => {
-    console.log('🚀 [NAV] Enhanced navigation initiated');
-    console.log('🚀 [NAV] Target jobId:', jobId);
-    console.log('🚀 [NAV] Recommendations:', selectedRecommendations);
+    console.warn('🚀 [NAV] Enhanced navigation initiated');
+    console.warn('🚀 [NAV] Target jobId:', jobId);
+    console.warn('🚀 [NAV] Recommendations:', selectedRecommendations);
     
     const targetPath = `/preview/${jobId}`;
     const currentPath = window.location.pathname;
@@ -81,29 +81,29 @@ export const navigationTest = {
     // Store data first
     try {
       sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
-      console.log('💾 [NAV] Stored recommendations in sessionStorage');
+      console.warn('💾 [NAV] Stored recommendations in sessionStorage');
     } catch (storageError) {
       console.warn('⚠️ [NAV] Failed to store recommendations:', storageError);
     }
     
-    console.log('🚀 [NAV] Current path:', currentPath);
-    console.log('🚀 [NAV] Target path:', targetPath);
+    console.warn('🚀 [NAV] Current path:', currentPath);
+    console.warn('🚀 [NAV] Target path:', targetPath);
     
     // Strategy 1: React Router navigate
     try {
-      console.log('🔄 [NAV] Strategy 1: React Router navigate');
+      console.warn('🔄 [NAV] Strategy 1: React Router navigate');
       navigate(targetPath);
       
       // Check if navigation happened after a short delay
       setTimeout(() => {
         const newPath = window.location.pathname;
-        console.log('🔄 [NAV] Path after React Router navigate:', newPath);
+        console.warn('🔄 [NAV] Path after React Router navigate:', newPath);
         
         if (newPath === currentPath) {
           console.warn('⚠️ [NAV] React Router navigation may have failed, trying fallback');
           navigationTest.performFallbackNavigation(jobId);
         } else {
-          console.log('✅ [NAV] React Router navigation successful');
+          console.warn('✅ [NAV] React Router navigation successful');
         }
       }, 200);
       
@@ -115,21 +115,21 @@ export const navigationTest = {
   
   // Fallback navigation strategies
   performFallbackNavigation: (jobId: string) => {
-    console.log('🔄 [NAV] Performing fallback navigation');
+    console.warn('🔄 [NAV] Performing fallback navigation');
     
     const targetPath = `/preview/${jobId}`;
     
     // Strategy 2: Direct window.location assignment
     setTimeout(() => {
       try {
-        console.log('🔄 [NAV] Strategy 2: window.location assignment');
+        console.warn('🔄 [NAV] Strategy 2: window.location assignment');
         window.location.assign(targetPath);
       } catch (windowError) {
         console.error('❌ [NAV] Window location assignment failed:', windowError);
         
         // Strategy 3: Window.location.href as last resort
         setTimeout(() => {
-          console.log('🚑 [NAV] Strategy 3: Last resort window.location.href');
+          console.warn('🚑 [NAV] Strategy 3: Last resort window.location.href');
           window.location.href = targetPath;
         }, 300);
       }
@@ -138,7 +138,7 @@ export const navigationTest = {
 
   // Run all tests
   runAllTests: (navigate: (path: string) => void, jobId: string) => {
-    console.log('🧪 [TEST] Running comprehensive navigation tests...');
+    console.warn('🧪 [TEST] Running comprehensive navigation tests...');
     
     const results = {
       previewRoute: navigationTest.testPreviewRoute(jobId),
@@ -146,12 +146,12 @@ export const navigationTest = {
       navigation: navigationTest.testNavigation(navigate, jobId)
     };
     
-    console.log('🧪 [TEST] Test results:', results);
+    console.warn('🧪 [TEST] Test results:', results);
     
     const allPassed = Object.values(results).every(result => result === true);
     
     if (allPassed) {
-      console.log('✅ [TEST] All navigation tests passed!');
+      console.warn('✅ [TEST] All navigation tests passed!');
     } else {
       console.error('❌ [TEST] Some navigation tests failed. Check the results above.');
     }

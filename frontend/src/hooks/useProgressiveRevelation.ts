@@ -163,7 +163,7 @@ export const useProgressiveRevelation = (featureName: string) => {
   }, [user]);
   
   // Track feature interaction
-  const trackInteraction = useCallback((interactionType: string = 'view') => {
+  const trackInteraction = useCallback((interactionType = 'view') => {
     if (isPremium) return; // Don't track premium users
     
     setState(prevState => {

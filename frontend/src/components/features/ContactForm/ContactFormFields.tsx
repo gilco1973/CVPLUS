@@ -122,7 +122,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {showCompanyField && (
         <div>
           <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
-            Company
+            {t('forms.contactForm.fields.company.label')}
           </label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -132,7 +132,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
               value={formData.company || ''}
               onChange={handleInputChange('company')}
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your company name (optional)"
+              placeholder={t('forms.contactForm.fields.company.placeholder')}
             />
           </div>
         </div>
@@ -141,7 +141,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {/* Subject Field */}
       <div>
         <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-          Subject *
+          {t('forms.contactForm.fields.subject.label')} *
         </label>
         <select
           id="subject"
@@ -152,7 +152,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           }`}
           aria-describedby={errors.subject ? 'subject-error' : undefined}
         >
-          <option value="">Select a subject</option>
+          <option value="">{t('forms.contactForm.fields.subject.placeholder')}</option>
           {SUBJECT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -169,7 +169,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
       {/* Message Field */}
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-          Message *
+          {t('forms.contactForm.fields.message.label')} *
         </label>
         <div className="relative">
           <MessageSquare className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
@@ -182,7 +182,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y ${
               errors.message ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Enter your message..."
+            placeholder={t('forms.contactForm.fields.message.placeholder')}
             aria-describedby={errors.message ? 'message-error' : 'message-counter'}
           />
         </div>
@@ -195,7 +195,7 @@ export const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             <div />
           )}
           <p id="message-counter" className="text-sm text-gray-500">
-            {formData.message.length}/1000 characters
+            {t('forms.contactForm.fields.message.counter', { current: formData.message.length, max: 1000 })}
           </p>
         </div>
       </div>

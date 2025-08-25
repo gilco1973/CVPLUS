@@ -182,12 +182,12 @@ export const safeConsole = {
   log: (message: string, obj?: unknown): void => {
     if (obj !== undefined) {
       try {
-        console.log(message, JSON.stringify(obj, null, 2));
+        console.warn(message, JSON.stringify(obj, null, 2));
       } catch (error) {
-        console.log(message, '[Object could not be serialized]', obj);
+        console.warn(message, '[Object could not be serialized]', obj);
       }
     } else {
-      console.log(message);
+      console.warn(message);
     }
   },
   

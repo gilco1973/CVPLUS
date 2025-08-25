@@ -9,7 +9,7 @@ export const testNavigationFix = {
   /**
    * Run comprehensive navigation tests
    */
-  runTests: (jobId: string = 'test-job-123') => {
+  runTests: (jobId = 'test-job-123') => {
     if (process.env.NODE_ENV === 'development') {
       console.group('🧪 Navigation Fix Test Suite');
       console.warn('🧪 Current URL:', window.location.href);

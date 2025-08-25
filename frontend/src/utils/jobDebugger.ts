@@ -3,9 +3,9 @@
  */
 import type { Job } from '../types/cv';
 
-export const debugJobState = (job: Job | null, context: string = 'UNKNOWN') => {
+export const debugJobState = (job: Job | null, context = 'UNKNOWN') => {
   if (!job) {
-    console.log(`🐛 [${context}] No job data available`);
+    console.warn(`🐛 [${context}] No job data available`);
     return;
   }
 
@@ -41,7 +41,7 @@ export const debugJobState = (job: Job | null, context: string = 'UNKNOWN') => {
     allKeys: Object.keys(job)
   };
 
-  console.log(`🐛 [${context}] Job Debug Info:`, debugInfo);
+  console.warn(`🐛 [${context}] Job Debug Info:`, debugInfo);
   
   // Detect potential issues
   const issues = [];
@@ -66,7 +66,7 @@ export const debugJobState = (job: Job | null, context: string = 'UNKNOWN') => {
   if (issues.length > 0) {
     console.warn(`⚠️ [${context}] Potential issues detected:`, issues);
   } else {
-    console.log(`✅ [${context}] Job state looks healthy`);
+    console.warn(`✅ [${context}] Job state looks healthy`);
   }
   
   return debugInfo;
@@ -79,7 +79,7 @@ export const shouldDisplayCV = (job: Job | null): boolean => {
   const isCompleted = job.status === 'completed';
   const hasGeneratedCV = !!job.generatedCV;
   
-  console.log(`🤔 [CV-DISPLAY-CHECK] Should display CV?`, {
+  console.warn(`🤔 [CV-DISPLAY-CHECK] Should display CV?`, {
     hasContent,
     isCompleted,
     hasGeneratedCV,

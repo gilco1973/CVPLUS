@@ -436,7 +436,7 @@ export class CSSOptimizerService {
     this.globalCSS.clear();
     this.duplicateSelectors.clear();
     this.cssStats.clear();
-    console.log('🧹 CSS optimization cache cleared');
+    console.warn('🧹 CSS optimization cache cleared');
   }
 
   /**

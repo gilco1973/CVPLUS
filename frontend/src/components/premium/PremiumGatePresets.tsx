@@ -1,6 +1,5 @@
 import React from 'react';
-import { PremiumGate } from './PremiumGateCore';
-import type { PremiumGateProps } from './PremiumGateCore';
+import { PremiumGate, type PremiumGateProps } from './PremiumGateCore';
 
 /**
  * Utility function to create feature-specific PremiumGate components

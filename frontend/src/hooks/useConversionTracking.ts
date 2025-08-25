@@ -82,9 +82,9 @@ export const useConversionTracking = () => {
     // Send to analytics service in production
     if (process.env.NODE_ENV === 'production') {
       // TODO: Send to analytics service (Google Analytics, Mixpanel, etc.)
-      console.log('Analytics Event:', event);
+      console.warn('Analytics Event:', event);
     } else {
-      console.log('Conversion Event Tracked:', event);
+      console.warn('Conversion Event Tracked:', event);
     }
   }, [user, isPremium, saveEvents]);
   

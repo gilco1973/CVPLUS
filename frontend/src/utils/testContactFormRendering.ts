@@ -25,61 +25,61 @@ export function testContactFormRendering(): void {
   
   // Append to body
   document.body.appendChild(testContainer);
-  console.log('📦 [TEST] Test container added to DOM');
+  console.warn('📦 [TEST] Test container added to DOM');
   
   // Test 1: Check if component renderer is available
   const rendererAvailable = typeof (window as any).initializeReactComponents === 'function';
-  console.log('🔧 [TEST] Component renderer available:', rendererAvailable);
+  console.warn('🔧 [TEST] Component renderer available:', rendererAvailable);
   
   if (rendererAvailable) {
     // Test 2: Try to render the component
     setTimeout(() => {
-      console.log('🚀 [TEST] Calling initializeReactComponents...');
+      console.warn('🚀 [TEST] Calling initializeReactComponents...');
       (window as any).initializeReactComponents();
       
       // Test 3: Check if component was rendered
       setTimeout(() => {
         const loadingDiv = testContainer.querySelector('.component-loading');
         const hasLoadingDiv = !!loadingDiv;
-        console.log('⏳ [TEST] Loading div still present:', hasLoadingDiv);
+        console.warn('⏳ [TEST] Loading div still present:', hasLoadingDiv);
         
         if (hasLoadingDiv) {
-          console.log('❌ [TEST] Component rendering FAILED - loading div still present');
+          console.warn('❌ [TEST] Component rendering FAILED - loading div still present');
           
           // Debug the placeholder
           const placeholder = testContainer.querySelector('.react-component-placeholder');
           if (placeholder) {
-            console.log('📋 [TEST] Placeholder details:', {
+            console.warn('📋 [TEST] Placeholder details:', {
               componentName: placeholder.getAttribute('data-component'),
               propsLength: placeholder.getAttribute('data-props')?.length,
               innerHTML: placeholder.innerHTML.substring(0, 200)
             });
           }
         } else {
-          console.log('✅ [TEST] Component rendering SUCCESS - loading div removed');
+          console.warn('✅ [TEST] Component rendering SUCCESS - loading div removed');
         }
         
         // Clean up test
         setTimeout(() => {
           document.body.removeChild(testContainer);
-          console.log('🧹 [TEST] Test container cleaned up');
+          console.warn('🧹 [TEST] Test container cleaned up');
         }, 2000);
         
       }, 1000);
     }, 500);
   } else {
-    console.log('❌ [TEST] Component renderer not available - cannot test rendering');
+    console.warn('❌ [TEST] Component renderer not available - cannot test rendering');
     document.body.removeChild(testContainer);
   }
 }
 
 // Test contact form component import
 export async function testContactFormImport(): Promise<void> {
-  console.log('📦 [TEST] Testing ContactForm import...');
+  console.warn('📦 [TEST] Testing ContactForm import...');
   
   try {
     const { ContactForm } = await import('../components/features/ContactForm');
-    console.log('✅ [TEST] ContactForm import SUCCESS:', !!ContactForm);
+    console.warn('✅ [TEST] ContactForm import SUCCESS:', !!ContactForm);
     
     // Test if we can create a React element
     const React = await import('react');
@@ -91,10 +91,10 @@ export async function testContactFormImport(): Promise<void> {
         isEnabled: true,
         mode: 'public'
       });
-      console.log('✅ [TEST] ContactForm React element creation SUCCESS:', !!element);
+      console.warn('✅ [TEST] ContactForm React element creation SUCCESS:', !!element);
     }
   } catch (error) {
-    console.log('❌ [TEST] ContactForm import FAILED:', error);
+    console.warn('❌ [TEST] ContactForm import FAILED:', error);
   }
 }
 
@@ -107,7 +107,7 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
   // Uncomment the lines below to enable auto-testing
   /*
   setTimeout(() => {
-    console.log('🧪 [AUTO-TEST] Running contact form tests...');
+    console.warn('🧪 [AUTO-TEST] Running contact form tests...');
     testContactFormImport();
     testContactFormRendering();
   }, 2000);

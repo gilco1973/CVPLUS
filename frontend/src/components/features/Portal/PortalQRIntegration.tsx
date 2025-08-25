@@ -546,7 +546,7 @@ export const PortalQRIntegration: React.FC<PortalQRIntegrationProps> = ({
   // ACTION HANDLERS
   // ========================================================================
   
-  const handleDownload = useCallback(async (format: string = 'png') => {
+  const handleDownload = useCallback(async (format = 'png') => {
     if (!qrDataUrl) return;
     
     try {
@@ -615,28 +615,31 @@ export const PortalQRIntegration: React.FC<PortalQRIntegrationProps> = ({
           toast.success('Portal URL copied to clipboard!');
           break;
           
-        case 'email':
+        case 'email': {
           const emailBody = `Check out my professional portal: ${finalQRUrl}`;
           window.open(`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(emailBody)}`);
           break;
+        }
           
         case 'facebook':
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(finalQRUrl)}`);
           break;
           
-        case 'twitter':
+        case 'twitter': {
           const tweetText = `${shareData.text} ${sharingOptions.hashtags.map(h => `#${h}`).join(' ')}`;
           window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(finalQRUrl)}`);
           break;
+        }
           
         case 'linkedin':
           window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(finalQRUrl)}`);
           break;
           
-        case 'whatsapp':
+        case 'whatsapp': {
           const whatsappText = `${shareData.text} ${finalQRUrl}`;
           window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`);
           break;
+        }
           
         default:
           if (navigator.share) {

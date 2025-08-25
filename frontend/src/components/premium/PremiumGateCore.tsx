@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useFeatureAccess } from '../../hooks/usePremiumStatus';
-import { LoadingState } from './PremiumGateComponents';
-import { PreviewOverlay } from './PremiumGateComponents';
-import { DefaultUpgradePrompt } from './PremiumGateComponents';
+import { LoadingState, PreviewOverlay, DefaultUpgradePrompt } from './PremiumGateComponents';
 import { PremiumGateErrorBoundary } from './PremiumGateErrorBoundary';
 
 /**

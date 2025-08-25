@@ -13,6 +13,15 @@ import { SmartIncentiveManager } from './premium/SmartIncentiveManager';
 import { FeatureEngagementTracker } from './premium/ProgressiveRevelationManager';
 import { useProgressiveRevelation } from '../hooks/useProgressiveRevelation';
 
+// Type for incentive objects
+interface IncentiveData {
+  id: string;
+  type: string;
+  message: string;
+  action?: string;
+  metadata?: Record<string, unknown>;
+}
+
 interface ExternalDataSourcesProps {
   jobId: string;
   onDataEnriched?: (data: unknown[]) => void;
@@ -170,35 +179,35 @@ export const ExternalDataSources: React.FC<ExternalDataSourcesProps> = (props) =
   const { 
     trackInteraction,
     shouldShowUpgradePrompt,
-    personalizedMessage 
+    personalizedMessage: _personalizedMessage 
   } = useProgressiveRevelation('externalDataSources');
   
-  const handleAnalyticsEvent = (event: string, data?: Record<string, any>) => {
+  const handleAnalyticsEvent = (event: string, data?: Record<string, unknown>) => {
     // Track premium upgrade interactions
     if (process.env.NODE_ENV === 'development') {
-      console.log('ExternalDataSources Analytics:', { event, data });
+      console.warn('ExternalDataSources Analytics:', { event, data });
     }
     // TODO: Integrate with actual analytics service
   };
   
-  const handleIncentiveShown = (incentive: any) => {
+  const handleIncentiveShown = (incentive: IncentiveData) => {
     trackInteraction('incentive_view');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Smart Incentive Shown:', incentive);
+      console.warn('Smart Incentive Shown:', incentive);
     }
   };
   
-  const handleIncentiveClicked = (incentive: any) => {
+  const handleIncentiveClicked = (incentive: IncentiveData) => {
     trackInteraction('incentive_click');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Smart Incentive Clicked:', incentive);
+      console.warn('Smart Incentive Clicked:', incentive);
     }
   };
   
-  const handleIncentiveDismissed = (incentive: any) => {
+  const handleIncentiveDismissed = (incentive: IncentiveData) => {
     trackInteraction('incentive_dismiss');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Smart Incentive Dismissed:', incentive);
+      console.warn('Smart Incentive Dismissed:', incentive);
     }
   };
 

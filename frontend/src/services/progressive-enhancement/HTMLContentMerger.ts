@@ -303,7 +303,7 @@ ${content}
       const uniqueScripts = Array.from(new Set(scriptBlocks));
       
       if (scriptBlocks.length !== uniqueScripts.length) {
-        console.log('Removed duplicate scripts');
+        console.warn('Removed duplicate scripts');
         // Remove all scripts and re-add unique ones
         const cleanHtml = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
         const bodyCloseIndex = cleanHtml.lastIndexOf('</body>');

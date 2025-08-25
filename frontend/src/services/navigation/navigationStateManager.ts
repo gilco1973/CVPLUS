@@ -646,13 +646,13 @@ export class NavigationStateManager {
   // Network Status Monitoring
   private setupNetworkListener(): void {
     const onlineHandler = () => {
-      console.log('🌐 Network connection restored');
+      console.warn('🌐 Network connection restored');
       // Retry queued operations
       this.retryQueuedOperations();
     };
 
     const offlineHandler = () => {
-      console.log('🌐 Network connection lost - switching to cached mode');
+      console.warn('🌐 Network connection lost - switching to cached mode');
     };
 
     window.addEventListener('online', onlineHandler);
@@ -666,7 +666,7 @@ export class NavigationStateManager {
     // Retry any operations that were queued during network outage
     for (const [operationId, promise] of this.networkRetryQueue.entries()) {
       // Operations will retry automatically when called again
-      console.log(`Retrying queued operation: ${operationId}`);
+      console.warn(`Retrying queued operation: ${operationId}`);
     }
   }
 
@@ -737,7 +737,7 @@ export class NavigationStateManager {
       }
     }
 
-    console.log('🧹 NavigationStateManager cleanup completed');
+    console.warn('🧹 NavigationStateManager cleanup completed');
   }
 }
 

@@ -228,7 +228,7 @@ export class RequestManager {
       ...data
     };
     
-    console.log(`[RequestManager] ${message}`, logData);
+    console.warn(`[RequestManager] ${message}`, logData);
   }
 
   /**
@@ -383,5 +383,5 @@ if (typeof window !== 'undefined') {
     getCacheAge: (key: string) => requestManager.getCacheAge(key)
   };
   
-  console.log('[RequestManager] Debug methods available at window.requestManagerDebug');
+  console.warn('[RequestManager] Debug methods available at window.requestManagerDebug');
 }

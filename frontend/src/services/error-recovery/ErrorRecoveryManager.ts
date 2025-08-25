@@ -310,7 +310,7 @@ export class ErrorRecoveryManager {
   /**
    * Gets user error reports
    */
-  public async getUserErrorReports(limit: number = 10) {
+  public async getUserErrorReports(limit = 10) {
     return this.errorReporting.getUserReports(limit);
   }
 

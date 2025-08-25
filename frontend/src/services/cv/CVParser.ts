@@ -32,8 +32,8 @@ export class CVParser {
    */
   private static async retryOperation<T>(
     operation: () => Promise<T>,
-    maxRetries: number = 3,
-    delayMs: number = 1000
+    maxRetries = 3,
+    delayMs = 1000
   ): Promise<T> {
     for (let i = 0; i <= maxRetries; i++) {
       try {
@@ -59,7 +59,7 @@ export class CVParser {
         
         // Exponential backoff
         const delay = delayMs * Math.pow(2, i);
-        console.log(`Retrying in ${delay}ms...`);
+        console.warn(`Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -94,9 +94,9 @@ export class CVParser {
         updatedAt: serverTimestamp()
       };
 
-      console.log('🔄 Creating job with ID:', jobId);
+      console.warn('🔄 Creating job with ID:', jobId);
       await setDoc(doc(db, 'jobs', jobId), jobData);
-      console.log('✅ Job created successfully:', jobId);
+      console.warn('✅ Job created successfully:', jobId);
       return jobId;
     });
   }
@@ -110,7 +110,7 @@ export class CVParser {
     if (!user) throw new Error('User not authenticated');
 
     return this.retryOperation(async () => {
-      console.log('🔄 Uploading file:', file.name, 'for job:', jobId);
+      console.warn('🔄 Uploading file:', file.name, 'for job:', jobId);
       
       // Create storage reference
       const storageRef = ref(storage, `users/${user.uid}/uploads/${jobId}/${file.name}`);
@@ -119,7 +119,7 @@ export class CVParser {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       
-      console.log('✅ File uploaded successfully, updating job...');
+      console.warn('✅ File uploaded successfully, updating job...');
 
       // Update job with file info
       await setDoc(doc(db, 'jobs', jobId), {
@@ -129,7 +129,7 @@ export class CVParser {
         updatedAt: serverTimestamp()
       }, { merge: true });
 
-      console.log('✅ Job updated with file info');
+      console.warn('✅ Job updated with file info');
       return downloadURL;
     });
   }
@@ -146,13 +146,13 @@ export class CVParser {
       throw new Error('User must be authenticated to process CV. Please sign in and try again.');
     }
 
-    console.log('ProcessCV called with:', { 
+    console.warn('ProcessCV called with:', { 
       jobId, 
       fileUrl: fileUrl.substring(0, 100) + '...', 
       mimeType, 
       isUrl 
     });
-    console.log('User authenticated:', currentUser.uid);
+    console.warn('User authenticated:', currentUser.uid);
     
     const processCVFunction = httpsCallable(functions, 'processCV');
     
@@ -210,7 +210,7 @@ export class CVParser {
     const initiateCVGenerationFunction = httpsCallable(functions, 'initiateCVGeneration');
     
     try {
-      console.log('🚀 Calling Firebase initiateCVGeneration function with:', {
+      console.warn('🚀 Calling Firebase initiateCVGeneration function with:', {
         jobId,
         templateId,
         originalFeatures: features,
@@ -224,7 +224,7 @@ export class CVParser {
         features: kebabCaseFeatures
       }) as unknown;
       
-      console.log('✅ Firebase initiateCVGeneration function completed:', {
+      console.warn('✅ Firebase initiateCVGeneration function completed:', {
         hasResult: !!result,
         hasData: !!(result as any)?.data,
         timestamp: new Date().toISOString()
@@ -280,7 +280,7 @@ export class CVParser {
     // Check if async mode is enabled
     const isAsyncEnabled = this.isAsyncCVGenerationEnabled();
     
-    console.log(`🎯 CV Generation Mode: ${isAsyncEnabled ? 'ASYNC' : 'SYNC'}`, {
+    console.warn(`🎯 CV Generation Mode: ${isAsyncEnabled ? 'ASYNC' : 'SYNC'}`, {
       envVar: import.meta.env.VITE_ENABLE_ASYNC_CV_GENERATION,
       isAsyncEnabled,
       jobId,
@@ -323,7 +323,7 @@ export class CVParser {
     });
 
     try {
-      console.log('🚀 Calling Firebase generateCV function (SYNC) with:', {
+      console.warn('🚀 Calling Firebase generateCV function (SYNC) with:', {
         jobId,
         templateId,
         originalFeatures: features,
@@ -341,7 +341,7 @@ export class CVParser {
         timeoutPromise
       ]) as unknown;
       
-      console.log('✅ Firebase generateCV function (SYNC) completed:', {
+      console.warn('✅ Firebase generateCV function (SYNC) completed:', {
         hasResult: !!result,
         hasData: !!(result as any)?.data,
         timestamp: new Date().toISOString()
@@ -413,12 +413,12 @@ export class CVParser {
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
 
-    console.log('🚫 Calling skipFeature function:', { jobId, featureId });
+    console.warn('🚫 Calling skipFeature function:', { jobId, featureId });
 
     const skipFeatureFunction = httpsCallable(functions, 'skipFeature');
     const result = await skipFeatureFunction({ jobId, featureId });
 
-    console.log('✅ Feature skipped successfully:', result.data);
+    console.warn('✅ Feature skipped successfully:', result.data);
     return result.data;
   }
 }

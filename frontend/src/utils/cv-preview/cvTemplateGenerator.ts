@@ -17,7 +17,7 @@ export class CVTemplateGenerator {
     collapsedSections: Record<string, boolean>,
     generateFeaturePreview: (featureId: string, isEnabled: boolean, isCollapsed: boolean) => string
   ): Promise<string> {
-    console.log('🎨 [CV TEMPLATE GENERATOR] Generating template:', selectedTemplate);
+    console.warn('🎨 [CV TEMPLATE GENERATOR] Generating template:', selectedTemplate);
     
     // Check if we should use the compatibility layer
     try {
@@ -69,7 +69,7 @@ export class CVTemplateGenerator {
       languages: []
     };
 
-    console.log('🔧 [LEGACY GENERATOR] Generating legacy template HTML');
+    console.warn('🔧 [LEGACY GENERATOR] Generating legacy template HTML');
     
     const html = `
       <div class="cv-preview-container ${selectedTemplate} legacy-template" data-template-id="${selectedTemplate}">

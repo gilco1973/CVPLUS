@@ -110,7 +110,7 @@ class PerformanceIntegrationService {
     // Start insight generation
     this.startInsightGeneration();
 
-    console.log('Performance Integration Service initialized', {
+    console.warn('Performance Integration Service initialized', {
       userId,
       config: this.config
     });
@@ -153,7 +153,7 @@ class PerformanceIntegrationService {
   public async completeJourneyStep(
     journeyId: string,
     stepId: string,
-    success: boolean = true,
+    success = true,
     error?: string
   ): Promise<void> {
     if (!this.config.enableJourneyTracking) {
@@ -168,7 +168,7 @@ class PerformanceIntegrationService {
    */
   public async completeJourney(
     journeyId: string,
-    success: boolean = true,
+    success = true,
     businessMetrics?: any
   ): Promise<void> {
     if (!this.config.enableJourneyTracking) {
@@ -231,7 +231,7 @@ class PerformanceIntegrationService {
       // Update in Firestore
       try {
         // Implementation would update alert status in Firestore
-        console.log(`Alert ${alertId} acknowledged`);
+        console.warn(`Alert ${alertId} acknowledged`);
       } catch (error) {
         console.error('Error acknowledging alert:', error);
       }
@@ -241,7 +241,7 @@ class PerformanceIntegrationService {
   /**
    * Get performance recommendations
    */
-  public async getRecommendations(limit: number = 10): Promise<any[]> {
+  public async getRecommendations(limit = 10): Promise<any[]> {
     try {
       // This would query the optimization engine for recommendations
       // For now, return mock recommendations
@@ -275,7 +275,7 @@ class PerformanceIntegrationService {
   public async applyOptimization(recommendationId: string): Promise<boolean> {
     try {
       // This would trigger the optimization engine
-      console.log(`Applying optimization: ${recommendationId}`);
+      console.warn(`Applying optimization: ${recommendationId}`);
       
       // Mock success
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -594,7 +594,7 @@ class PerformanceIntegrationService {
     // Stop Web Vitals tracking
     this.webVitalsService.stopTracking();
 
-    console.log('Performance Integration Service cleaned up');
+    console.warn('Performance Integration Service cleaned up');
   }
 }
 

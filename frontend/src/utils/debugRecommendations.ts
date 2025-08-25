@@ -13,9 +13,9 @@ interface CallInfo {
 
 class RecommendationsDebugger {
   private calls: CallInfo[] = [];
-  private lastCallTime: number = 0;
+  private lastCallTime = 0;
   
-  trackCall(jobId: string, caller: string = 'unknown', blocked: boolean = false, requestKey?: string): void {
+  trackCall(jobId: string, caller = 'unknown', blocked = false, requestKey?: string): void {
     const now = Date.now();
     const stackTrace = new Error().stack || 'No stack trace available';
     
@@ -30,11 +30,11 @@ class RecommendationsDebugger {
     
     // Enhanced logging for blocked vs actual requests
     if (blocked) {
-      console.log(`🚫 [RecommendationsDebugger] BLOCKED request for job ${jobId} from ${caller}`);
-      console.log(`🚫 [RecommendationsDebugger] Request key: ${requestKey}`);
+      console.warn(`🚫 [RecommendationsDebugger] BLOCKED request for job ${jobId} from ${caller}`);
+      console.warn(`🚫 [RecommendationsDebugger] Request key: ${requestKey}`);
     } else {
-      console.log(`✅ [RecommendationsDebugger] EXECUTING request for job ${jobId} from ${caller}`);
-      console.log(`✅ [RecommendationsDebugger] Request key: ${requestKey}`);
+      console.warn(`✅ [RecommendationsDebugger] EXECUTING request for job ${jobId} from ${caller}`);
+      console.warn(`✅ [RecommendationsDebugger] Request key: ${requestKey}`);
     }
     
     // Check for rapid successive calls (within 1 second)
@@ -64,7 +64,7 @@ class RecommendationsDebugger {
         console.group('🔍 Stack traces for actual (non-blocked) calls:');
         actualCallsForTrace.forEach((call, index) => {
           console.group(`Actual Call ${index + 1}:`);
-          console.log(call.stackTrace);
+          console.warn(call.stackTrace);
           console.groupEnd();
         });
         console.groupEnd();
@@ -163,10 +163,10 @@ if (typeof window !== 'undefined') {
     // Import CVAnalyzer dynamically to avoid circular dependency
     import('../services/cv/CVAnalyzer').then(({ CVAnalyzer }) => {
       const debugInfo = CVAnalyzer.getRequestDebugInfo();
-      console.log('🔍 Current Request Debug Info:', debugInfo);
+      console.warn('🔍 Current Request Debug Info:', debugInfo);
       
       const stats = recommendationsDebugger.getStats();
-      console.log('📊 Call Statistics:', stats);
+      console.warn('📊 Call Statistics:', stats);
       
       return { debugInfo, stats };
     }).catch(console.error);
@@ -177,7 +177,7 @@ if (typeof window !== 'undefined') {
     recommendationsDebugger.clearHistory();
     import('../services/cv/CVAnalyzer').then(({ CVAnalyzer }) => {
       CVAnalyzer.clearRequestTracking();
-      console.log('🧹 All request tracking cleared');
+      console.warn('🧹 All request tracking cleared');
     }).catch(console.error);
   };
 }

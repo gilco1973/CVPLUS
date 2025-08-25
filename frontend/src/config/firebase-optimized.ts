@@ -24,11 +24,11 @@ try {
   if (existingApps.length === 0) {
     // No app exists, safe to initialize
     app = initializeApp(firebaseConfig);
-    console.log('[Firebase] App initialized successfully');
+    console.warn('[Firebase] App initialized successfully');
   } else {
     // App already exists, use the existing one
     app = getApp();
-    console.log('[Firebase] Using existing app instance');
+    console.warn('[Firebase] Using existing app instance');
   }
 } catch (error) {
   console.error('[Firebase] Error during app initialization:', error);
@@ -46,7 +46,7 @@ let firestore: ReturnType<typeof getFirestore> | null = null;
 let functions: ReturnType<typeof getFunctions> | null = null;
 
 // Track emulator connections to prevent duplicate connections during HMR
-let emulatorConnections = {
+const emulatorConnections = {
   auth: false,
   firestore: false,
   functions: false,
@@ -61,7 +61,7 @@ export const getAuthInstance = () => {
       try {
         connectAuthEmulator(auth, 'http://localhost:9099');
         emulatorConnections.auth = true;
-        console.log('[Firebase] Connected to Auth emulator on localhost:9099');
+        console.warn('[Firebase] Connected to Auth emulator on localhost:9099');
       } catch (error) {
         // Emulator might already be connected
         if (error instanceof Error && !error.message.includes('already')) {
@@ -83,7 +83,7 @@ export const getFirestoreInstance = () => {
       try {
         connectFirestoreEmulator(firestore, 'localhost', 8090);
         emulatorConnections.firestore = true;
-        console.log('[Firebase] Connected to Firestore emulator on localhost:8090');
+        console.warn('[Firebase] Connected to Firestore emulator on localhost:8090');
       } catch (error) {
         // Emulator might already be connected
         if (error instanceof Error && !error.message.includes('already')) {
@@ -105,7 +105,7 @@ export const getFunctionsInstance = () => {
       try {
         connectFunctionsEmulator(functions, 'localhost', 5001);
         emulatorConnections.functions = true;
-        console.log('[Firebase] Connected to Functions emulator on localhost:5001');
+        console.warn('[Firebase] Connected to Functions emulator on localhost:5001');
       } catch (error) {
         // Emulator might already be connected
         if (error instanceof Error && !error.message.includes('already')) {

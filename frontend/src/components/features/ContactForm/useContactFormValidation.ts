@@ -27,7 +27,7 @@ export const useContactFormValidation = () => {
 
     // Phone validation (optional but if provided, should be valid)
     if (formData.senderPhone && formData.senderPhone.trim() && 
-        !/^[\+]?[\d\s\(\)\-\.]{10,}$/.test(formData.senderPhone.trim())) {
+        !/^[+]?[\d\s()\-.]{10,}$/.test(formData.senderPhone.trim())) {
       newErrors.senderPhone = 'Please enter a valid phone number';
     }
 

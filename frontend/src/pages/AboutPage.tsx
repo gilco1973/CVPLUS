@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Section } from '../components/layout/Section';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -18,6 +19,7 @@ import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
 export const AboutPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, signInWithGoogle } = useAuth();
 
@@ -27,10 +29,10 @@ export const AboutPage = () => {
       <Section variant="hero" background="gradient">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-neutral-100 mb-6">
-            About CVPlus
+            {t('aboutPage.title')}
           </h1>
           <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
-            An open-source project dedicated to transforming how professionals present themselves
+            {t('aboutPage.subtitle')}
           </p>
         </div>
       </Section>
@@ -44,20 +46,16 @@ export const AboutPage = () => {
               <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg">
                 <Code2 className="w-8 h-8 text-cyan-400" />
               </div>
-              <h2 className="text-3xl font-bold text-neutral-100">Created by Gil Klainert</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">{t('aboutPage.creator.title')}</h2>
             </div>
             
             <div className="space-y-4 text-neutral-300">
               <p className="text-lg leading-relaxed">
-                Hi! I'm Gil Klainert, a Software Engineering Leader and AI Expert passionate about leveraging 
-                technology to solve real-world problems. I created CVPlus as an open-source gift to 
-                the community, believing that everyone deserves access to powerful tools that can help 
-                them advance their careers.
+                {t('aboutPage.creator.description1')}
               </p>
               
               <p className="text-lg leading-relaxed">
-                This project combines my expertise in AI, web development, and user experience design 
-                to create something that makes a real difference in people's professional lives.
+                {t('aboutPage.creator.description2')}
               </p>
 
               <div className="flex items-center gap-4 mt-6">
@@ -68,7 +66,7 @@ export const AboutPage = () => {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
                 >
                   <Globe className="w-4 h-4" />
-                  Visit Klainert.com
+                  {t('aboutPage.creator.visitWebsite')}
                   <ExternalLink className="w-4 h-4" />
                 </a>
                 <a 
@@ -78,7 +76,7 @@ export const AboutPage = () => {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
                 >
                   <Github className="w-4 h-4" />
-                  View on GitHub
+                  {t('aboutPage.creator.viewGitHub')}
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </div>
@@ -91,14 +89,11 @@ export const AboutPage = () => {
               <div className="p-3 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
                 <Heart className="w-8 h-8 text-purple-400" />
               </div>
-              <h2 className="text-3xl font-bold text-neutral-100">Our Mission</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">{t('aboutPage.mission.title')}</h2>
             </div>
             
             <p className="text-lg text-neutral-300 leading-relaxed">
-              CVPlus was born from a simple belief: your professional story deserves to be told 
-              in the most compelling way possible. We're here to democratize access to AI-powered 
-              career tools, making them free and accessible to everyone, regardless of their 
-              background or financial situation.
+              {t('aboutPage.mission.description')}
             </p>
           </div>
 
@@ -110,10 +105,9 @@ export const AboutPage = () => {
                   <BookOpen className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Open Source</h3>
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">{t('aboutPage.values.openSource.title')}</h3>
                   <p className="text-neutral-400">
-                    Released under the MIT License, CVPlus is free to use, modify, and distribute. 
-                    We believe in the power of community-driven development.
+                    {t('aboutPage.values.openSource.description')}
                   </p>
                 </div>
               </div>
@@ -125,10 +119,9 @@ export const AboutPage = () => {
                   <Brain className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">AI-Powered</h3>
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">{t('aboutPage.values.aiPowered.title')}</h3>
                   <p className="text-neutral-400">
-                    Leveraging Claude AI's advanced capabilities to understand, analyze, and enhance 
-                    your professional profile with intelligent insights.
+                    {t('aboutPage.values.aiPowered.description')}
                   </p>
                 </div>
               </div>
@@ -140,10 +133,9 @@ export const AboutPage = () => {
                   <Lightbulb className="w-6 h-6 text-yellow-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Innovation First</h3>
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">{t('aboutPage.values.innovation.title')}</h3>
                   <p className="text-neutral-400">
-                    Constantly pushing boundaries with features like AI career podcasts, interactive 
-                    timelines, and dynamic QR codes that bring CVs to life.
+                    {t('aboutPage.values.innovation.description')}
                   </p>
                 </div>
               </div>
@@ -155,10 +147,9 @@ export const AboutPage = () => {
                   <Users className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">Community Driven</h3>
+                  <h3 className="text-xl font-semibold text-neutral-100 mb-2">{t('aboutPage.values.community.title')}</h3>
                   <p className="text-neutral-400">
-                    Built for the community, by the community. We welcome contributions, feedback, 
-                    and ideas from users worldwide.
+                    {t('aboutPage.values.community.description')}
                   </p>
                 </div>
               </div>
@@ -171,13 +162,11 @@ export const AboutPage = () => {
               <div className="p-3 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg">
                 <Sparkles className="w-8 h-8 text-cyan-400" />
               </div>
-              <h2 className="text-3xl font-bold text-neutral-100">Want to Contribute?</h2>
+              <h2 className="text-3xl font-bold text-neutral-100">{t('aboutPage.contributing.title')}</h2>
             </div>
             
             <p className="text-lg text-neutral-300 leading-relaxed mb-6">
-              CVPlus is open to contributions! Whether you're a developer, designer, or just 
-              someone with great ideas, we'd love to have you join our mission to revolutionize 
-              how people present their professional stories.
+              {t('aboutPage.contributing.description')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -188,7 +177,7 @@ export const AboutPage = () => {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors font-medium"
               >
                 <Github className="w-5 h-5" />
-                Contribute on GitHub
+                {t('aboutPage.contributing.contributeGitHub')}
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a 
@@ -197,7 +186,7 @@ export const AboutPage = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors font-medium"
               >
-                Report Issues & Ideas
+                {t('aboutPage.contributing.reportIssues')}
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
@@ -205,7 +194,7 @@ export const AboutPage = () => {
 
           {/* Tech Stack */}
           <div className="bg-neutral-800 rounded-2xl p-8 border border-neutral-700">
-            <h2 className="text-2xl font-bold text-neutral-100 mb-6">Built With Modern Technology</h2>
+            <h2 className="text-2xl font-bold text-neutral-100 mb-6">{t('aboutPage.techStack.title')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 'React', 'TypeScript', 'Tailwind CSS', 'Firebase',
@@ -224,24 +213,24 @@ export const AboutPage = () => {
       <Section variant="content" background="neutral-800">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-neutral-100 mb-4">
-            Ready to Transform Your CV?
+            {t('aboutPage.cta.title')}
           </h2>
           <p className="text-xl text-neutral-300 mb-8">
-            Start your career transformation journey today
+            {t('aboutPage.cta.description')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               onClick={() => navigate('/')}
               className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
             >
-              Get Started Now
+              {t('aboutPage.cta.getStarted')}
             </button>
             <button 
               onClick={() => navigate('/')}
               className="px-8 py-4 bg-neutral-700 text-neutral-100 font-semibold rounded-lg shadow-lg hover:shadow-xl border border-neutral-600 transform hover:-translate-y-1 transition-all duration-200 hover:bg-neutral-600"
             >
               <Home className="inline w-5 h-5 mr-2" />
-              Back to Home
+              {t('aboutPage.cta.backToHome')}
             </button>
           </div>
         </div>

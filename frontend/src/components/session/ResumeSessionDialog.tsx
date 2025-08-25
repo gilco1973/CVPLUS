@@ -1,7 +1,6 @@
 // ResumeSessionDialog - UI component for resuming sessions
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { 
   Clock, 
   Play, 

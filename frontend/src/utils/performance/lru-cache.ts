@@ -36,7 +36,7 @@ export class LRUCache<K, V> {
   private evictionCount = 0;
   
   constructor(
-    maxSize: number = 1000,
+    maxSize = 1000,
     maxMemory: number = 50 * 1024 * 1024, // 50MB
     ttl: number = 30 * 60 * 1000 // 30 minutes
   ) {
@@ -296,7 +296,7 @@ export class CSSLRUCache extends LRUCache<string, string> {
   /**
    * Store CSS with optional compression
    */
-  setCSS(key: string, css: string, compress: boolean = true): boolean {
+  setCSS(key: string, css: string, compress = true): boolean {
     const processedCSS = compress ? this.compressCSS(css) : css;
     return this.set(key, processedCSS);
   }

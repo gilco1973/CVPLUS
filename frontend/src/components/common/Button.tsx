@@ -1,1 +1,129 @@
-import React from 'react';\nimport { LucideIcon } from 'lucide-react';\nimport { designSystem } from '../../config/designSystem';\n\ninterface ButtonProps {\n  children: React.ReactNode;\n  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';\n  size?: 'sm' | 'md' | 'lg' | 'xl';\n  disabled?: boolean;\n  loading?: boolean;\n  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;\n  type?: 'button' | 'submit' | 'reset';\n  className?: string;\n  icon?: LucideIcon;\n  iconPosition?: 'left' | 'right';\n  fullWidth?: boolean;\n  'aria-label'?: string;\n}\n\n// Loading spinner component\nconst LoadingSpinner: React.FC<{ size: string }> = ({ size }) => (\n  <svg\n    className={`animate-spin ${size} text-current`}\n    fill=\"none\"\n    viewBox=\"0 0 24 24\"\n  >\n    <circle\n      className=\"opacity-25\"\n      cx=\"12\"\n      cy=\"12\"\n      r=\"10\"\n      stroke=\"currentColor\"\n      strokeWidth=\"4\"\n    />\n    <path\n      className=\"opacity-75\"\n      fill=\"currentColor\"\n      d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"\n    />\n  </svg>\n);\n\nexport const Button: React.FC<ButtonProps> = ({\n  children,\n  variant = 'primary',\n  size = 'md',\n  disabled = false,\n  loading = false,\n  onClick,\n  type = 'button',\n  className = '',\n  icon: Icon,\n  iconPosition = 'left',\n  fullWidth = false,\n  'aria-label': ariaLabel,\n  ...props\n}) => {\n  // Get component classes from design system\n  const baseClasses = designSystem.components.button.base;\n  const sizeClasses = designSystem.components.button.sizes[size];\n  const variantClasses = loading \n    ? designSystem.components.button.variants[variant].loading\n    : disabled \n    ? designSystem.components.button.variants[variant].disabled\n    : designSystem.components.button.variants[variant].default;\n\n  // Determine icon size based on button size\n  const getIconSize = () => {\n    switch (size) {\n      case 'sm': return 'w-4 h-4';\n      case 'lg': return 'w-5 h-5';\n      case 'xl': return 'w-6 h-6';\n      default: return 'w-4 h-4';\n    }\n  };\n\n  const iconSize = getIconSize();\n  const spinnerSize = getIconSize();\n\n  // Handle click events\n  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {\n    if (disabled || loading) return;\n    onClick?.(e);\n  };\n\n  return (\n    <button\n      type={type}\n      onClick={handleClick}\n      disabled={disabled || loading}\n      aria-label={ariaLabel}\n      aria-disabled={disabled || loading}\n      className={`\n        ${baseClasses}\n        ${sizeClasses}\n        ${variantClasses}\n        ${fullWidth ? 'w-full' : ''}\n        ${className}\n      `.trim()}\n      {...props}\n    >\n      {/* Loading state */}\n      {loading ? (\n        <>\n          <LoadingSpinner size={spinnerSize} />\n          <span className=\"ml-2\">Loading...</span>\n        </>\n      ) : (\n        <>\n          {/* Left icon */}\n          {Icon && iconPosition === 'left' && (\n            <Icon className={`${iconSize} ${children ? 'mr-2' : ''}`} aria-hidden=\"true\" />\n          )}\n          \n          {/* Button content */}\n          {children}\n          \n          {/* Right icon */}\n          {Icon && iconPosition === 'right' && (\n            <Icon className={`${iconSize} ${children ? 'ml-2' : ''}`} aria-hidden=\"true\" />\n          )}\n        </>\n      )}\n    </button>\n  );\n};\n\n// Export as default\nexport default Button;
+import React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { designSystem } from '../../config/designSystem';
+
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  type?: 'button' | 'submit' | 'reset';
+  className?: string;
+  icon?: LucideIcon;
+  iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
+  'aria-label'?: string;
+}
+
+// Loading spinner component
+const LoadingSpinner: React.FC<{ size: string }> = ({ size }) => (
+  <svg
+    className={`animate-spin ${size} text-current`}
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    />
+  </svg>
+);
+
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  onClick,
+  type = 'button',
+  className = '',
+  icon: Icon,
+  iconPosition = 'left',
+  fullWidth = false,
+  'aria-label': ariaLabel,
+  ...props
+}) => {
+  // Get component classes from design system
+  const baseClasses = designSystem.components.button.base;
+  const sizeClasses = designSystem.components.button.sizes[size];
+  const variantClasses = loading 
+    ? designSystem.components.button.variants[variant].loading
+    : disabled 
+    ? designSystem.components.button.variants[variant].disabled
+    : designSystem.components.button.variants[variant].default;
+
+  // Determine icon size based on button size
+  const getIconSize = () => {
+    switch (size) {
+      case 'sm': return 'w-4 h-4';
+      case 'lg': return 'w-5 h-5';
+      case 'xl': return 'w-6 h-6';
+      default: return 'w-4 h-4';
+    }
+  };
+
+  const iconSize = getIconSize();
+  const spinnerSize = getIconSize();
+
+  // Handle click events
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled || loading) return;
+    onClick?.(e);
+  };
+
+  return (
+    <button
+      type={type}
+      onClick={handleClick}
+      disabled={disabled || loading}
+      aria-label={ariaLabel}
+      aria-disabled={disabled || loading}
+      className={`
+        ${baseClasses}
+        ${sizeClasses}
+        ${variantClasses}
+        ${fullWidth ? 'w-full' : ''}
+        ${className}
+      `.trim()}
+      {...props}
+    >
+      {/* Loading state */}
+      {loading ? (
+        <>
+          <LoadingSpinner size={spinnerSize} />
+          <span className="ml-2">Loading...</span>
+        </>
+      ) : (
+        <>
+          {/* Left icon */}
+          {Icon && iconPosition === 'left' && (
+            <Icon className={`${iconSize} ${children ? 'mr-2' : ''}`} aria-hidden="true" />
+          )}
+          
+          {/* Button content */}
+          {children}
+          
+          {/* Right icon */}
+          {Icon && iconPosition === 'right' && (
+            <Icon className={`${iconSize} ${children ? 'ml-2' : ''}`} aria-hidden="true" />
+          )}
+        </>
+      )}
+    </button>
+  );
+};
+
+// Export as default
+export default Button;

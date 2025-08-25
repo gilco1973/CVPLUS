@@ -15,8 +15,7 @@ import {
   AlertCircle,
   Zap
 } from 'lucide-react';
-import type { ProcessingCheckpoint } from '../../services/error-recovery/CheckpointManager';
-import { CheckpointType } from '../../services/error-recovery/CheckpointManager';
+import { CheckpointType, type ProcessingCheckpoint } from '../../services/error-recovery/CheckpointManager';
 
 interface ProcessingStep {
   id: string;

@@ -19,7 +19,7 @@ export const useCVGeneration = (jobId: string) => {
   const isMountedRef = useRef(true);
 
   const triggerCVGeneration = async (jobData: Job, generationConfig?: CVGenerationConfig) => {
-    console.log('🎯 [DEBUG] triggerCVGeneration started');
+    console.warn('🎯 [DEBUG] triggerCVGeneration started');
     
     if (!isMountedRef.current || hasTriggeredGeneration.current) {
       return;
@@ -60,7 +60,7 @@ export const useCVGeneration = (jobId: string) => {
         selectedFeatures.push('privacy-mode');
       }
 
-      console.log('🔥 [DEBUG] Calling generateCV service with features:', selectedFeatures);
+      console.warn('🔥 [DEBUG] Calling generateCV service with features:', selectedFeatures);
       const result = await generateCV(jobData.id, selectedTemplate, selectedFeatures);
       
       // Generate podcast separately if selected
@@ -95,7 +95,7 @@ export const useCVGeneration = (jobId: string) => {
   };
 
   const triggerQuickCreateWorkflow = async (jobData: Job) => {
-    console.log('🎯 [DEBUG] triggerQuickCreateWorkflow started - generating with ALL features');
+    console.warn('🎯 [DEBUG] triggerQuickCreateWorkflow started - generating with ALL features');
     
     if (!isMountedRef.current) {
       return;
@@ -118,13 +118,13 @@ export const useCVGeneration = (jobId: string) => {
         'language-proficiency'
       ];
       
-      console.log('🔥 [DEBUG] Quick Create: Calling generateCV with ALL features:', allFeatures);
+      console.warn('🔥 [DEBUG] Quick Create: Calling generateCV with ALL features:', allFeatures);
       const result = await generateCV(jobData.id, 'modern', allFeatures);
       
       // Generate podcast for quick create
       if (isMountedRef.current) {
         try {
-          console.log('🎙️ Quick Create: Generating podcast');
+          console.warn('🎙️ Quick Create: Generating podcast');
           await generateEnhancedPodcast(jobData.id, 'professional');
           toast.success('Full CV with podcast generation completed!');
         } catch (podcastError) {
@@ -156,7 +156,7 @@ export const useCVGeneration = (jobId: string) => {
     }
   };
 
-  const pollForCVCompletion = async (asyncMode: boolean = false) => {
+  const pollForCVCompletion = async (asyncMode = false) => {
     const maxAttempts = asyncMode ? 120 : 60; // 4 minutes async, 2 minutes sync
     const pollInterval = asyncMode ? 3000 : 2000; // 3s async, 2s sync
     let attempts = 0;
@@ -167,7 +167,7 @@ export const useCVGeneration = (jobId: string) => {
         try {
           const updatedJob = await getJob(jobId);
           if (updatedJob?.generatedCV?.html || updatedJob?.generatedCV?.htmlUrl) {
-            console.log('✅ [DEBUG] CV generation completed');
+            console.warn('✅ [DEBUG] CV generation completed');
             resolve(updatedJob);
           } else if (attempts < maxAttempts) {
             setTimeout(poll, pollInterval);

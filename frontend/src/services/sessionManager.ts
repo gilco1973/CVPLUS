@@ -8,14 +8,14 @@ import {
 } from 'firebase/firestore';
 // Unsubscribe type removed as it was unused
 import { db, auth } from '../lib/firebase';
-import type {
-  SessionState,
-  SessionStorageConfig,
-  SessionEvent,
-  CVStep,
-  SessionFormData
+import {
+  type SessionState,
+  type SessionStorageConfig,
+  type SessionEvent,
+  type CVStep,
+  type SessionFormData,
+  SessionError
 } from '../types/session';
-import { SessionError } from '../types/session';
 
 class SessionManager {
   private static instance: SessionManager;

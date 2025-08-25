@@ -7,7 +7,7 @@
 
 // Test function to verify the fix
 export function testContactFormIntegration(): void {
-  console.log('🧪 Testing Contact Form React Integration Fix...');
+  console.warn('🧪 Testing Contact Form React Integration Fix...');
 
   // Simulate HTML with React component placeholder (like what backend generates)
   const mockCVHTML = `
@@ -37,11 +37,11 @@ export function testContactFormIntegration(): void {
   testContainer.innerHTML = mockCVHTML;
   document.body.appendChild(testContainer);
 
-  console.log('✅ Created test container with React placeholder');
+  console.warn('✅ Created test container with React placeholder');
 
   // Test that the placeholder exists
   const placeholders = testContainer.querySelectorAll('.react-component-placeholder[data-component="ContactForm"]');
-  console.log(`🔍 Found ${placeholders.length} ContactForm placeholders`);
+  console.warn(`🔍 Found ${placeholders.length} ContactForm placeholders`);
 
   if (placeholders.length === 0) {
     console.error('❌ No ContactForm placeholders found in test HTML');
@@ -51,30 +51,30 @@ export function testContactFormIntegration(): void {
   // Test that the component renderer is available
   const windowWithRenderer = window as any;
   if (typeof windowWithRenderer.initializeReactComponents === 'function') {
-    console.log('✅ Global initializeReactComponents function is available');
+    console.warn('✅ Global initializeReactComponents function is available');
     
     // Call the initialization function
     try {
       windowWithRenderer.initializeReactComponents();
-      console.log('✅ Successfully called initializeReactComponents()');
+      console.warn('✅ Successfully called initializeReactComponents()');
 
       // Check if the placeholder was replaced with React component
       setTimeout(() => {
         const updatedPlaceholders = testContainer.querySelectorAll('.react-component-placeholder[data-component="ContactForm"]');
         const loadingMessages = testContainer.querySelectorAll('.component-loading');
         
-        console.log(`🔍 After initialization: ${updatedPlaceholders.length} placeholders remaining`);
-        console.log(`🔍 After initialization: ${loadingMessages.length} loading messages remaining`);
+        console.warn(`🔍 After initialization: ${updatedPlaceholders.length} placeholders remaining`);
+        console.warn(`🔍 After initialization: ${loadingMessages.length} loading messages remaining`);
 
         if (updatedPlaceholders.length === 0 || loadingMessages.length === 0) {
-          console.log('✅ SUCCESS: React component appears to have been rendered!');
+          console.warn('✅ SUCCESS: React component appears to have been rendered!');
         } else {
-          console.log('⚠️  React component may not have rendered - check console for errors');
+          console.warn('⚠️  React component may not have rendered - check console for errors');
         }
 
         // Cleanup
         document.body.removeChild(testContainer);
-        console.log('🧹 Cleaned up test container');
+        console.warn('🧹 Cleaned up test container');
 
       }, 200); // Small delay to allow React rendering
 
@@ -84,13 +84,13 @@ export function testContactFormIntegration(): void {
 
   } else {
     console.error('❌ Global initializeReactComponents function not available');
-    console.log('💡 This may mean the componentRenderer.ts is not loaded yet');
+    console.warn('💡 This may mean the componentRenderer.ts is not loaded yet');
   }
 }
 
 // Test function to simulate what happens in GeneratedCVDisplay
 export function simulateGeneratedCVDisplay(): void {
-  console.log('🎭 Simulating GeneratedCVDisplay component behavior...');
+  console.warn('🎭 Simulating GeneratedCVDisplay component behavior...');
 
   // This simulates what our fixed GeneratedCVDisplay does
   const mockJobData = {
@@ -120,25 +120,25 @@ export function simulateGeneratedCVDisplay(): void {
   container.innerHTML = mockJobData.generatedCV.html;
   document.body.appendChild(container);
 
-  console.log('✅ Created simulated CV container');
+  console.warn('✅ Created simulated CV container');
 
   // Simulate the useEffect behavior from our fix
   setTimeout(() => {
-    console.log('🔄 Simulating useEffect trigger (after HTML render)...');
+    console.warn('🔄 Simulating useEffect trigger (after HTML render)...');
     
     // This is what our fix does
     if (typeof window !== 'undefined' && (window as any).initializeReactComponents) {
-      console.log('🚀 Calling initializeReactComponents from simulated useEffect...');
+      console.warn('🚀 Calling initializeReactComponents from simulated useEffect...');
       (window as any).initializeReactComponents();
       
       // Check results
       setTimeout(() => {
         const remaining = container.querySelectorAll('.component-loading');
-        console.log(`🔍 Components still loading: ${remaining.length}`);
+        console.warn(`🔍 Components still loading: ${remaining.length}`);
         
         // Cleanup
         document.body.removeChild(container);
-        console.log('🧹 Cleaned up simulation');
+        console.warn('🧹 Cleaned up simulation');
       }, 200);
       
     } else {

@@ -185,7 +185,7 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
   const filteredAndSortedAchievements = useMemo(() => {
     if (!achievementData?.achievements) return [];
 
-    let filtered = achievementData.achievements.filter(achievement => {
+    const filtered = achievementData.achievements.filter(achievement => {
       const categoryMatch = selectedCategory === 'all' || achievement.category === selectedCategory;
       const importanceMatch = selectedImportance === 'all' || achievement.importance === selectedImportance;
       return categoryMatch && importanceMatch;
@@ -199,10 +199,11 @@ export const AchievementCards: React.FC<AchievementCardsProps> = ({
         case 'date':
           comparison = (new Date(a.date || '').getTime()) - (new Date(b.date || '').getTime());
           break;
-        case 'importance':
+        case 'importance': {
           const importanceOrder = { high: 3, medium: 2, low: 1 };
           comparison = importanceOrder[a.importance] - importanceOrder[b.importance];
           break;
+        }
         case 'title':
           comparison = a.title.localeCompare(b.title);
           break;

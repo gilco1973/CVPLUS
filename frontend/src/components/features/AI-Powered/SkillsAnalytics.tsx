@@ -238,7 +238,7 @@ export const SkillsAnalytics: React.FC<SkillsAnalyticsProps> = ({
 
   // Filtered and sorted skills
   const filteredSkills = useMemo(() => {
-    let filtered = skills.filter(skill => {
+    const filtered = skills.filter(skill => {
       const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !selectedCategory || skill.category === selectedCategory;
       const matchesGaps = !showOnlyGaps || skillGaps.some(gap => gap.skill === skill.name);
@@ -254,10 +254,11 @@ export const SkillsAnalytics: React.FC<SkillsAnalyticsProps> = ({
           return b.level - a.level;
         case 'category':
           return a.category.localeCompare(b.category);
-        case 'marketDemand':
+        case 'marketDemand': {
           const demandA = marketDemand.find(d => d.skill === a.name)?.demand || 0;
           const demandB = marketDemand.find(d => d.skill === b.name)?.demand || 0;
           return demandB - demandA;
+        }
         default:
           return b.level - a.level;
       }

@@ -137,7 +137,7 @@ export const sanitizeHTML = (
  */
 export const sanitizeText = (
   content: string,
-  maxLength: number = 1000
+  maxLength = 1000
 ): string => {
   if (!content || typeof content !== 'string') {
     return '';
@@ -364,7 +364,7 @@ export const auditCVSecurity = (data: any): {
   const recommendations: string[] = [];
 
   // Check for XSS patterns
-  const checkContent = (obj: any, path: string = ''): void => {
+  const checkContent = (obj: any, path = ''): void => {
     if (typeof obj === 'string') {
       if (containsXSS(obj)) {
         violations.push(`XSS pattern detected in ${path}`);

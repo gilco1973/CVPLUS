@@ -55,7 +55,7 @@ export class OptimizedTemplateGenerator {
       await this.preloadCriticalTemplates();
       
       this.initialized = true;
-      console.log('🚀 Optimized Template Generator initialized');
+      console.warn('🚀 Optimized Template Generator initialized');
     } catch (error) {
       console.error('Failed to initialize optimized template generator:', error);
       throw error;
@@ -84,14 +84,14 @@ export class OptimizedTemplateGenerator {
         };
         
         this.workerPool.push(worker);
-        console.log(`🧵 Worker ${i + 1}/${this.MAX_WORKERS} initialized`);
+        console.warn(`🧵 Worker ${i + 1}/${this.MAX_WORKERS} initialized`);
       } catch (error) {
         console.warn('Web Workers not supported, falling back to main thread:', error);
         break;
       }
     }
 
-    console.log(`🧵 Worker pool initialized with ${this.workerPool.length} workers`);
+    console.warn(`🧵 Worker pool initialized with ${this.workerPool.length} workers`);
   }
 
   /**
@@ -111,14 +111,14 @@ export class OptimizedTemplateGenerator {
       this.pendingOperations.delete(response.id);
     } else if (response.type === 'progress') {
       // Emit progress event if needed
-      console.log(`Progress: ${response.progress}%`);
+      console.warn(`Progress: ${response.progress}%`);
     }
   }
 
   /**
    * Send task to worker with load balancing
    */
-  private static async sendToWorker<T>(message: WorkerMessage, timeoutMs: number = 30000): Promise<T> {
+  private static async sendToWorker<T>(message: WorkerMessage, timeoutMs = 30000): Promise<T> {
     if (this.workerPool.length === 0) {
       // Fallback to main thread if workers not available
       return this.processOnMainThread<T>(message);
@@ -204,11 +204,11 @@ export class OptimizedTemplateGenerator {
       if (cached) {
         tracker.markCacheHit();
         tracker.complete(cached.length);
-        console.log(`💨 [CACHE] Retrieved cached template for ${template.name}`);
+        console.warn(`💨 [CACHE] Retrieved cached template for ${template.name}`);
         return cached;
       }
 
-      console.log(`🎨 [TEMPLATE] Generating optimized HTML for ${template.name}`);
+      console.warn(`🎨 [TEMPLATE] Generating optimized HTML for ${template.name}`);
       
       // Start render tracking
       tracker.markRenderStart();
@@ -225,7 +225,7 @@ export class OptimizedTemplateGenerator {
       });
 
       tracker.complete(html.length);
-      console.log(`✅ [TEMPLATE] Generated ${html.length} characters for ${template.name}`);
+      console.warn(`✅ [TEMPLATE] Generated ${html.length} characters for ${template.name}`);
       
       // Check memory usage after generation
       this.checkMemoryUsage();
@@ -316,7 +316,7 @@ export class OptimizedTemplateGenerator {
     previewData: CVParsedData,
     options: TemplateGenerationOptions
   ): Promise<string> {
-    console.log(`🔧 [WORKERS] Processing template ${template.name} with Web Workers`);
+    console.warn(`🔧 [WORKERS] Processing template ${template.name} with Web Workers`);
     
     const message: WorkerMessage = {
       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -334,7 +334,7 @@ export class OptimizedTemplateGenerator {
 
     const result = await this.sendToWorker<{ html: string; size: number }>(message);
     
-    console.log(`✅ [WORKERS] Generated ${result.size} characters using Web Workers`);
+    console.warn(`✅ [WORKERS] Generated ${result.size} characters using Web Workers`);
     return result.html;
   }
 
@@ -466,7 +466,7 @@ export class OptimizedTemplateGenerator {
 
     try {
       await enhancedCacheManager.warmCache(criticalTemplates);
-      console.log('🔥 Critical templates preloaded');
+      console.warn('🔥 Critical templates preloaded');
     } catch (error) {
       console.warn('Failed to preload critical templates:', error);
     }
@@ -498,7 +498,7 @@ export class OptimizedTemplateGenerator {
   static clearCache(): void {
     enhancedCacheManager.clearAll();
     templateCSSGenerator.clearCache();
-    console.log('🗑️ All caches cleared');
+    console.warn('🗑️ All caches cleared');
   }
 
   /**
@@ -517,7 +517,7 @@ export class OptimizedTemplateGenerator {
     memoryMonitor.stop();
 
     this.initialized = false;
-    console.log('🧹 Optimized Template Generator cleanup completed');
+    console.warn('🧹 Optimized Template Generator cleanup completed');
   }
 
   /**

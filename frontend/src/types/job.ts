@@ -196,7 +196,7 @@ export class JobError extends Error {
     code: JobErrorCode,
     jobId?: string,
     step?: CVStep,
-    retryable: boolean = false
+    retryable = false
   ) {
     super(message);
     this.name = 'JobError';
@@ -289,7 +289,7 @@ export const jobUtils = {
     return '< 1m';
   },
 
-  isStale: (job: Job, thresholdHours: number = 24): boolean => {
+  isStale: (job: Job, thresholdHours = 24): boolean => {
     if (!job.session?.lastActiveAt) return false;
     
     const now = new Date();

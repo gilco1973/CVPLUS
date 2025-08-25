@@ -32,7 +32,7 @@ export class EnhancedTemplateStyles {
     const cached = this.getCachedCSS(cacheKey);
     if (cached) return cached;
 
-    console.log(`🎨 [TEMPLATE STYLES] Generating CSS for ${template.name}`);
+    console.warn(`🎨 [TEMPLATE STYLES] Generating CSS for ${template.name}`);
 
     const css = `
       /* Template: ${template.name} (${template.category}) */
@@ -1010,7 +1010,7 @@ export class EnhancedTemplateStyles {
   static clearCache(): void {
     this.cssPropertiesCache.clear();
     this.lastCacheUpdate.clear();
-    console.log('🧹 Template styles cache cleared');
+    console.warn('🧹 Template styles cache cleared');
   }
 
   /**
@@ -1079,7 +1079,7 @@ export function applyTemplateTheme(template: CVTemplate, element?: HTMLElement):
     root.style.setProperty(property, value);
   });
   
-  console.log(`🎨 Applied ${template.name} theme with ${Object.keys(properties).length} CSS properties`);
+  console.warn(`🎨 Applied ${template.name} theme with ${Object.keys(properties).length} CSS properties`);
 }
 
 /**
@@ -1093,7 +1093,7 @@ export function removeTemplateTheme(template: CVTemplate, element?: HTMLElement)
     root.style.removeProperty(property);
   });
   
-  console.log(`🧹 Removed ${template.name} theme`);
+  console.warn(`🧹 Removed ${template.name} theme`);
 }
 
-console.log('🎨 Enhanced Template Styles system loaded');
+console.warn('🎨 Enhanced Template Styles system loaded');

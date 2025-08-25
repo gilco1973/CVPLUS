@@ -173,7 +173,7 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
         setSelectedTemplateId(templateDisplayData[0].id);
       }
 
-      console.log('✅ Templates loaded successfully:', templateDisplayData.length);
+      console.warn('✅ Templates loaded successfully:', templateDisplayData.length);
     } catch (err) {
       console.error('❌ Failed to load templates:', err);
       setError(err instanceof Error ? err.message : 'Failed to load templates');
@@ -191,7 +191,7 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
       const recommended = templateSelectionService.getRecommendations(5);
       setRecommendedTemplateIds(recommended.map(t => t.id));
       
-      console.log('🎯 Template recommendations updated:', recommended.length);
+      console.warn('🎯 Template recommendations updated:', recommended.length);
     } catch (err) {
       console.warn('⚠️ Failed to load recommendations:', err);
     }
@@ -262,7 +262,7 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
     const template = templates.find(t => t.id === templateId);
     if (template) {
       setSelectedTemplateId(templateId);
-      console.log('🎨 Template selected:', template.name);
+      console.warn('🎨 Template selected:', template.name);
     } else {
       console.warn('⚠️ Template not found:', templateId);
     }
@@ -270,13 +270,13 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
 
   const setCategory = useCallback((category: TemplateCategory | 'all') => {
     setActiveCategory(category);
-    console.log('📂 Category changed:', category);
+    console.warn('📂 Category changed:', category);
   }, []);
 
   const trackTemplateUsage = useCallback((templateId: string, metadata?: Record<string, any>) => {
     if (enableAnalytics) {
       trackSelection(templateId, metadata?.jobId);
-      console.log('📊 Template usage tracked:', templateId, metadata);
+      console.warn('📊 Template usage tracked:', templateId, metadata);
     }
   }, [enableAnalytics]);
 
@@ -288,7 +288,7 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
     customization?: Record<string, any>;
   }) => {
     try {
-      console.log('🚀 Starting enhanced CV generation:', params.templateId);
+      console.warn('🚀 Starting enhanced CV generation:', params.templateId);
       
       // Track template usage
       if (enableAnalytics) {
@@ -304,7 +304,7 @@ export function useEnhancedTemplates(options: TemplateHookOptions = {}): UseEnha
       });
 
       if (result.success) {
-        console.log('✅ CV generation completed:', result.metadata);
+        console.warn('✅ CV generation completed:', result.metadata);
         return {
           success: true,
           data: {
@@ -465,4 +465,4 @@ export function useTemplateRecommendations(userContext: {
   return { recommendations, isLoading };
 }
 
-console.log('🪝 Enhanced Templates Hooks initialized');
+console.warn('🪝 Enhanced Templates Hooks initialized');

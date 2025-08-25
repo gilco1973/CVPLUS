@@ -35,15 +35,15 @@ export const robustNavigation = {
     
     const targetPath = `/preview/${jobId}`;
     
-    console.log('🚀 [ROBUST-NAV] Starting navigation to:', targetPath);
-    console.log('🚀 [ROBUST-NAV] Options:', { replace, timeout, maxRetries });
+    console.warn('🚀 [ROBUST-NAV] Starting navigation to:', targetPath);
+    console.warn('🚀 [ROBUST-NAV] Options:', { replace, timeout, maxRetries });
     
     navigationDebugger.trackNavigationAttempt('robustNavigation', jobId, targetPath);
     
     // Store data first to ensure it's available regardless of navigation method
     try {
       sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
-      console.log('💾 [ROBUST-NAV] Stored recommendations in sessionStorage');
+      console.warn('💾 [ROBUST-NAV] Stored recommendations in sessionStorage');
     } catch (storageError) {
       console.warn('⚠️ [ROBUST-NAV] Failed to store recommendations:', storageError);
     }
@@ -52,11 +52,11 @@ export const robustNavigation = {
     
     while (attempt < maxRetries) {
       attempt++;
-      console.log(`🔄 [ROBUST-NAV] Navigation attempt ${attempt}/${maxRetries}`);
+      console.warn(`🔄 [ROBUST-NAV] Navigation attempt ${attempt}/${maxRetries}`);
       
       try {
         // Strategy 1: React Router navigate with replace option
-        console.log('📍 [ROBUST-NAV] Trying React Router navigate...');
+        console.warn('📍 [ROBUST-NAV] Trying React Router navigate...');
         navigate(targetPath, { replace });
         
         // Wait for navigation to complete
@@ -64,10 +64,10 @@ export const robustNavigation = {
         
         // Check if navigation was successful
         const currentPath = window.location.pathname;
-        console.log('📍 [ROBUST-NAV] Current path after navigate:', currentPath);
+        console.warn('📍 [ROBUST-NAV] Current path after navigate:', currentPath);
         
         if (currentPath === targetPath) {
-          console.log('✅ [ROBUST-NAV] React Router navigation successful!');
+          console.warn('✅ [ROBUST-NAV] React Router navigation successful!');
           navigationDebugger.trackNavigationResult('robustNavigation', jobId, true);
           onSuccess?.();
           return true;
@@ -82,11 +82,11 @@ export const robustNavigation = {
         
         if (attempt === maxRetries) {
           // Final fallback: window.location
-          console.log('🔄 [ROBUST-NAV] All React Router attempts failed, using window.location');
+          console.warn('🔄 [ROBUST-NAV] All React Router attempts failed, using window.location');
           try {
             navigationDebugger.trackNavigationAttempt('window.location', jobId, targetPath);
             window.location.href = targetPath;
-            console.log('✅ [ROBUST-NAV] Fallback navigation initiated');
+            console.warn('✅ [ROBUST-NAV] Fallback navigation initiated');
             navigationDebugger.trackNavigationResult('window.location', jobId, true);
             return true;
           } catch (fallbackError) {
@@ -113,9 +113,9 @@ export const robustNavigation = {
       const targetPath = `/preview/${jobId}`;
       const originalPath = window.location.pathname;
       
-      console.log('🧪 [ROBUST-NAV] Testing navigation...');
-      console.log('🧪 [ROBUST-NAV] From:', originalPath);
-      console.log('🧪 [ROBUST-NAV] To:', targetPath);
+      console.warn('🧪 [ROBUST-NAV] Testing navigation...');
+      console.warn('🧪 [ROBUST-NAV] From:', originalPath);
+      console.warn('🧪 [ROBUST-NAV] To:', targetPath);
       
       try {
         navigate(targetPath);
@@ -124,7 +124,7 @@ export const robustNavigation = {
           const newPath = window.location.pathname;
           const success = newPath === targetPath;
           
-          console.log('🧪 [ROBUST-NAV] Test result:', {
+          console.warn('🧪 [ROBUST-NAV] Test result:', {
             originalPath,
             targetPath,
             newPath,
@@ -145,13 +145,13 @@ export const robustNavigation = {
    * Emergency navigation when all else fails
    */
   emergencyNavigate: (jobId: string): void => {
-    console.log('🚑 [ROBUST-NAV] Emergency navigation initiated');
+    console.warn('🚑 [ROBUST-NAV] Emergency navigation initiated');
     const targetPath = `/preview/${jobId}`;
     
     try {
       // Force page reload to target
       window.location.href = targetPath;
-      console.log('🚑 [ROBUST-NAV] Emergency navigation completed');
+      console.warn('🚑 [ROBUST-NAV] Emergency navigation completed');
     } catch (error) {
       console.error('💥 [ROBUST-NAV] Emergency navigation failed:', error);
       // Last resort: manual reload
@@ -168,7 +168,7 @@ export const robustNavigation = {
     try {
       // Check if path is valid
       const url = new URL(targetPath, window.location.origin);
-      console.log('✅ [ROBUST-NAV] Route validation passed:', url.href);
+      console.warn('✅ [ROBUST-NAV] Route validation passed:', url.href);
       return true;
     } catch (error) {
       console.error('❌ [ROBUST-NAV] Route validation failed:', error);

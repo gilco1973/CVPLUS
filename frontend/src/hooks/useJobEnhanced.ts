@@ -6,10 +6,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getJob } from '../services/cvService';
+import { getJob, type Job } from '../services/cvService';
 import { jobSubscriptionManager } from '../services/JobSubscriptionManager';
 import { logger } from '../utils/logger';
-import type { Job } from '../services/cvService';
 
 interface UseJobEnhancedOptions {
   enableRetry?: boolean;

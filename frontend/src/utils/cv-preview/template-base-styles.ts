@@ -229,11 +229,11 @@ export class TemplateBaseStylesGenerator {
       /* Width utilities */
       .template-${template.id} .w-full { width: 100%; }
       .template-${template.id} .w-auto { width: auto; }
-      .template-${template.id} .w-1\/2 { width: 50%; }
-      .template-${template.id} .w-1\/3 { width: 33.333333%; }
-      .template-${template.id} .w-2\/3 { width: 66.666667%; }
-      .template-${template.id} .w-1\/4 { width: 25%; }
-      .template-${template.id} .w-3\/4 { width: 75%; }
+      .template-${template.id} .w-1/2 { width: 50%; }
+      .template-${template.id} .w-1/3 { width: 33.333333%; }
+      .template-${template.id} .w-2/3 { width: 66.666667%; }
+      .template-${template.id} .w-1/4 { width: 25%; }
+      .template-${template.id} .w-3/4 { width: 75%; }
       
       /* Height utilities */
       .template-${template.id} .h-full { height: 100%; }

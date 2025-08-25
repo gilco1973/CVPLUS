@@ -446,7 +446,8 @@ export class LLMMonitoringService {
           timeWindow: 5
         },
         severity: 'critical',
-        enabled: true,
+        // Fix: Disable alert until verification service is properly configured
+        enabled: false,
         recipients: []
       }
     ];

@@ -1,5 +1,4 @@
-import i18n from '../i18n/config';
-import { SupportedLanguage } from '../i18n/config';
+import i18n, { SupportedLanguage } from '../i18n/config';
 
 /**
  * Translation Service for Dynamic Content

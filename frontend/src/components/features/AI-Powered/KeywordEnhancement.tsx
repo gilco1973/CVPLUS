@@ -67,8 +67,11 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
   useEffect(() => {
     if (keywordData) {
       setAnalysis(keywordData);
-      if (data) {
-        setSelectedKeywords(data.selectedKeywords || []);>, [keywordData, data]);
+    }
+    if (data) {
+      setSelectedKeywords(data.selectedKeywords || []);
+    }
+  }, [keywordData, data]);
 
   const handleKeywordToggle = (keyword: string) => {
     const newSelection = selectedKeywords.includes(keyword)
@@ -113,7 +116,10 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
               isApplied: selectedKeywords.includes(s.keyword)
             }))
           };
-          setAnalysis(updatedAnalysis);> catch (err) {
+          setAnalysis(updatedAnalysis);
+        }
+      }
+    } catch (err) {
       onError?.(err as Error);
     } finally {
       setIsApplying(false);
@@ -205,9 +211,7 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
 
         {/* Missing Critical Keywords Alert */}
         {analysis.missingCritical.length > 0 && (
-          <div className="animate-fade-in">
-            }
-            className="bg-red-50 border border-red-200 rounded-lg p-4"
+          <div className="animate-fade-in bg-red-50 border border-red-200 rounded-lg p-4"
           >
             <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
               🚨 Critical Keywords Missing
@@ -284,10 +288,9 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
                 const isSelected = selectedKeywords.includes(suggestion.keyword);
                 
                 return (
-                  <div className="animate-fade-in"
-                    key={suggestion.keyword}>
-                    }
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  <div 
+                    key={suggestion.keyword}
+                    className={`animate-fade-in p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
                         : suggestion.isApplied
@@ -353,9 +356,9 @@ export const KeywordEnhancement: React.FC<KeywordEnhancementProps> = ({
         {/* Preview Panel */}
         <div>
           {showPreview && selectedCount > 0 && (
-            <div className="animate-fade-in"
-              ref={previewRef}>
-              className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+            <div 
+              ref={previewRef}
+              className="animate-fade-in bg-gray-50 border border-gray-200 rounded-lg p-4"
             >
               <h4 className="font-medium text-gray-900 mb-3">Enhancement Preview</h4>
               <div className="space-y-3">

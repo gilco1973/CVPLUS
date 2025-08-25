@@ -177,10 +177,10 @@ export const getExampleForType = (type: PlaceholderInfo['type']): string => {
 const createPlaceholderMatch = (
   placeholderKey: string,
   placeholderInfo: PlaceholderInfo,
-  fieldPath: string = 'unknown',
-  section: string = 'general',
-  startIndex: number = 0,
-  endIndex: number = 0
+  fieldPath = 'unknown',
+  section = 'general',
+  startIndex = 0,
+  endIndex = 0
 ): PlaceholderMatch => {
   return {
     id: `${section}::${fieldPath}::${placeholderKey}`,
@@ -205,8 +205,8 @@ const createPlaceholderMatch = (
 export const highlightEditablePlaceholders = (
   text: string, 
   onContentUpdate?: (newContent: string) => void,
-  fieldPath: string = 'unknown',
-  section: string = 'general',
+  fieldPath = 'unknown',
+  section = 'general',
   className?: string
 ): React.ReactNode[] => {
   if (!text) return [text];

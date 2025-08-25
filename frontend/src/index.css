@@ -361,3 +361,165 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500;
 }
+
+/* RTL Support Styles */
+[dir="rtl"] {
+  text-align: right;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+[dir="rtl"] * {
+  direction: rtl;
+}
+
+/* RTL-specific input styles */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] input::placeholder,
+[dir="rtl"] textarea::placeholder {
+  text-align: right;
+}
+
+/* RTL-specific button styles */
+[dir="rtl"] .inline-flex {
+  flex-direction: row-reverse;
+}
+
+/* RTL-specific navigation styles */
+[dir="rtl"] nav ul {
+  direction: rtl;
+}
+
+[dir="rtl"] nav .flex {
+  flex-direction: row-reverse;
+}
+
+/* RTL-specific form styles */
+[dir="rtl"] .form-field {
+  direction: rtl;
+}
+
+[dir="rtl"] .relative .absolute {
+  left: auto;
+  right: 0.75rem;
+}
+
+[dir="rtl"] .pl-10 {
+  padding-left: 0.75rem;
+  padding-right: 2.5rem;
+}
+
+[dir="rtl"] .pr-3 {
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+/* RTL-specific icon positioning */
+[dir="rtl"] .lucide {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .lucide.no-flip {
+  transform: none;
+}
+
+/* RTL-specific modal and dialog styles */
+[dir="rtl"] .modal-content,
+[dir="rtl"] .dialog-content {
+  text-align: right;
+}
+
+/* RTL-specific grid and flex layouts */
+[dir="rtl"] .grid {
+  direction: rtl;
+}
+
+[dir="rtl"] .flex {
+  direction: rtl;
+}
+
+[dir="rtl"] .justify-start {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .justify-end {
+  justify-content: flex-start;
+}
+
+/* RTL-specific animation adjustments */
+[dir="rtl"] @keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[dir="rtl"] @keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[dir="rtl"] @keyframes slideInRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+[dir="rtl"] @keyframes slideInLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* RTL-specific text direction fixes for mixed content */
+[dir="rtl"] .ltr-text {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] .rtl-text {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL-specific positioning utilities */
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}

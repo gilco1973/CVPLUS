@@ -22,7 +22,35 @@
       "learnMore": "Más información",
       "demo": "Ver demostración",
       "upload": "Sube tu CV",
-      "signIn": "Inicia sesión para continuar"
+      "signIn": "Inicia sesión para continuar",
+      "getStarted": "Comenzar",
+      "getStartedAria": "Comenzar con la transformación CVPlus",
+      "watchDemo": "Ver demostración",
+      "pauseDemo": "Pausar demostración",
+      "playDemoAria": "Reproducir video de demostración",
+      "pauseDemoAria": "Pausar video de demostración"
+    },
+    "video": {
+      "brand": "CVPlus",
+      "title": "Ve CVPlus en acción",
+      "description": "Observa cómo transformamos CVs tradicionales en perfiles profesionales poderosos e interactivos"
+    },
+    "trustIndicators": {
+      "cvsTransformed": "CVs Transformados",
+      "userRating": "Calificación de Usuario",
+      "averageTime": "Tiempo Promedio de Proceso"
+    },
+    "accessibility": {
+      "sectionLabel": "Sección hero",
+      "videoControls": {
+        "playVideo": "Reproducir video",
+        "pauseVideo": "Pausar video",
+        "muteVideo": "Silenciar video",
+        "unmuteVideo": "Activar sonido del video",
+        "enterFullscreen": "Pantalla completa",
+        "videoProgress": "Progreso del video"
+      },
+      "browserNotSupported": "Tu navegador no admite la etiqueta de video."
     }
   },
   "upload": {
@@ -208,6 +236,54 @@
     "copied": "¡Copiado al portapapeles!",
     "downloaded": "¡Descarga iniciada!"
   },
+  "aboutPage": {
+    "title": "Acerca de CVPlus",
+    "subtitle": "Un proyecto de código abierto dedicado a transformar cómo los profesionales se presentan",
+    "creator": {
+      "title": "Creado por Gil Klainert",
+      "description1": "¡Hola! Soy Gil Klainert, un Líder de Ingeniería de Software y Experto en IA apasionado por aprovechar la tecnología para resolver problemas del mundo real. Creé CVPlus como un regalo de código abierto para la comunidad, creyendo que todos merecen acceso a herramientas poderosas que pueden ayudarles a avanzar en sus carreras.",
+      "description2": "Este proyecto combina mi experiencia en IA, desarrollo web y diseño de experiencia de usuario para crear algo que marque una diferencia real en la vida profesional de las personas.",
+      "visitWebsite": "Visitar Klainert.com",
+      "viewGitHub": "Ver en GitHub"
+    },
+    "mission": {
+      "title": "Nuestra Misión",
+      "description": "CVPlus nació de una creencia simple: tu historia profesional merece ser contada de la manera más convincente posible. Estamos aquí para democratizar el acceso a las herramientas de carrera impulsadas por IA, haciéndolas gratuitas y accesibles para todos, independientemente de su origen o situación financiera."
+    },
+    "values": {
+      "openSource": {
+        "title": "Código Abierto",
+        "description": "Publicado bajo la Licencia MIT, CVPlus es gratuito para usar, modificar y distribuir. Creemos en el poder del desarrollo impulsado por la comunidad."
+      },
+      "aiPowered": {
+        "title": "Impulsado por IA",
+        "description": "Aprovechando las capacidades avanzadas de Claude AI para entender, analizar y mejorar tu perfil profesional con insights inteligentes."
+      },
+      "innovation": {
+        "title": "Innovación Primero",
+        "description": "Empujando constantemente los límites con características como podcasts de carrera con IA, líneas de tiempo interactivas y códigos QR dinámicos que dan vida a los CVs."
+      },
+      "community": {
+        "title": "Impulsado por la Comunidad",
+        "description": "Construido para la comunidad, por la comunidad. Damos la bienvenida a contribuciones, comentarios e ideas de usuarios de todo el mundo."
+      }
+    },
+    "contributing": {
+      "title": "¿Quieres Contribuir?",
+      "description": "¡CVPlus está abierto a contribuciones! Ya seas desarrollador, diseñador o simplemente alguien con grandes ideas, nos encantaría tenerte en nuestra misión de revolucionar cómo las personas presentan sus historias profesionales.",
+      "contributeGitHub": "Contribuir en GitHub",
+      "reportIssues": "Reportar Problemas e Ideas"
+    },
+    "techStack": {
+      "title": "Construido con Tecnología Moderna"
+    },
+    "cta": {
+      "title": "¿Listo para Transformar tu CV?",
+      "description": "Comienza tu viaje de transformación profesional hoy",
+      "getStarted": "Comenzar Ahora",
+      "backToHome": "Volver al Inicio"
+    }
+  },
   "footer": {
     "company": "Empresa",
     "about": "Acerca de",
@@ -224,5 +300,48 @@
     "documentation": "Documentación",
     "social": "Síguenos",
     "copyright": "© {{year}} CVPlus. Todos los derechos reservados."
+  },
+  "paymentSuccess": {
+    "authRequired": {
+      "title": "Autenticación Requerida",
+      "description": "Por favor, inicia sesión para verificar tu pago.",
+      "goToPricing": "Ir a Precios"
+    },
+    "verification": {
+      "title": "Verificando Pago",
+      "description": "Por favor espera mientras verificamos tu pago y activamos tu acceso premium.",
+      "pleaseWait": "Esto puede tomar unos momentos..."
+    },
+    "error": {
+      "title": "Error de Verificación",
+      "paymentCanceled": "El pago fue cancelado",
+      "authRequired": "Por favor inicia sesión para completar la verificación",
+      "verificationFailed": "No se pudo verificar el estado del pago. Por favor contacta al soporte si esto persiste.",
+      "invalidParameters": "Parámetros de verificación de pago inválidos"
+    },
+    "success": {
+      "title": "¡Bienvenido a CVPlus Premium!",
+      "description": "Tu pago fue exitoso y tu acceso premium ha sido activado.",
+      "welcomePremium": "¡Pago exitoso! ¡Bienvenido a CVPlus Premium!",
+      "premiumActivated": "¡Acceso premium activado exitosamente!",
+      "statusConfirmed": "¡Estado premium confirmado! Ahora tienes acceso de por vida a todas las funciones premium.",
+      "statusPending": "El acceso premium se está activando. Esto puede tomar unos momentos más.",
+      "whatsNext": "¿Qué Sigue?"
+    },
+    "benefits": {
+      "webPortal": "Accede a tu portal web personal",
+      "aiPodcasts": "Genera podcasts de carrera con IA",
+      "analytics": "Usa el panel de análisis avanzado",
+      "removeBranding": "Elimina la marca CVPlus"
+    },
+    "actions": {
+      "contactSupport": "Contactar Soporte",
+      "backToPricing": "Volver a Precios",
+      "startUsing": "Comenzar a Usar Funciones Premium"
+    },
+    "support": {
+      "questionsPrefix": "Si tienes alguna pregunta, visita nuestra",
+      "supportPage": "página de soporte"
+    }
   }
 }

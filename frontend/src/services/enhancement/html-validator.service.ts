@@ -181,7 +181,7 @@ export class HTMLValidatorService {
       // Cache result
       this.validationCache.set(cacheKey, result);
 
-      console.log(`✅ HTML validation completed for ${featureId}: ${score}/100`);
+      console.warn(`✅ HTML validation completed for ${featureId}: ${score}/100`);
       return result;
 
     } catch (error) {
@@ -216,7 +216,7 @@ export class HTMLValidatorService {
    */
   private validateSyntax(html: string, errors: ValidationError[]): void {
     // Check for unclosed tags
-    const openTags = html.match(/<[^\/!][^>]*>/g) || [];
+    const openTags = html.match(/<[^/!][^>]*>/g) || [];
     const closeTags = html.match(/<\/[^>]*>/g) || [];
     
     if (openTags.length !== closeTags.length) {
@@ -743,7 +743,7 @@ export class HTMLValidatorService {
    */
   clearCache(): void {
     this.validationCache.clear();
-    console.log('🧹 HTML validation cache cleared');
+    console.warn('🧹 HTML validation cache cleared');
   }
 
   /**

@@ -87,7 +87,7 @@ export class PerformanceMonitorService {
     this.activeMetrics.set(featureId, metrics);
     this.recordMemoryUsage(metrics);
     
-    console.log(`📊 Started monitoring: ${featureName}`);
+    console.warn(`📊 Started monitoring: ${featureName}`);
   }
 
   /**
@@ -121,7 +121,7 @@ export class PerformanceMonitorService {
     // Store in Firestore
     this.storePerformanceMetric(completedMetrics);
 
-    console.log(`📈 Completed monitoring: ${metrics.featureName} (${completedMetrics.duration?.toFixed(2)}ms)`);
+    console.warn(`📈 Completed monitoring: ${metrics.featureName} (${completedMetrics.duration?.toFixed(2)}ms)`);
     return completedMetrics;
   }
 
@@ -132,7 +132,7 @@ export class PerformanceMonitorService {
     const metrics = this.activeMetrics.get(featureId);
     if (metrics) {
       metrics.retryCount = (metrics.retryCount || 0) + 1;
-      console.log(`🔄 Retry recorded for ${metrics.featureName}: ${metrics.retryCount}`);
+      console.warn(`🔄 Retry recorded for ${metrics.featureName}: ${metrics.retryCount}`);
     }
   }
 
@@ -282,7 +282,7 @@ export class PerformanceMonitorService {
       this.recordSystemMetrics();
     }, 5000); // Every 5 seconds
 
-    console.log('🖥️ Started system performance monitoring');
+    console.warn('🖥️ Started system performance monitoring');
   }
 
   /**
@@ -294,7 +294,7 @@ export class PerformanceMonitorService {
       this.systemMonitorInterval = undefined;
     }
 
-    console.log('🛑 Stopped system performance monitoring');
+    console.warn('🛑 Stopped system performance monitoring');
   }
 
   /**
@@ -433,7 +433,7 @@ export class PerformanceMonitorService {
   /**
    * Get historical performance data
    */
-  async getHistoricalPerformance(userId: string, days: number = 30): Promise<PerformanceMetrics[]> {
+  async getHistoricalPerformance(userId: string, days = 30): Promise<PerformanceMetrics[]> {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -460,7 +460,7 @@ export class PerformanceMonitorService {
   clearHistory(): void {
     this.performanceHistory = [];
     this.activeMetrics.clear();
-    console.log('🧹 Performance history cleared');
+    console.warn('🧹 Performance history cleared');
   }
 
   /**

@@ -52,7 +52,7 @@ class CoreWebVitalsService {
   private sessionId: string;
   private userId?: string;
   private budgets: Map<string, PerformanceBudget> = new Map();
-  private isTracking: boolean = false;
+  private isTracking = false;
 
   private constructor() {
     this.sessionId = this.generateSessionId();

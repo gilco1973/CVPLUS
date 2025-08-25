@@ -156,7 +156,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for AchievementCards specifically
     if (componentName === 'AchievementCards') {
-      console.log('🏆 Initializing AchievementCards component with props:', props);
+      console.warn('🏆 Initializing AchievementCards component with props:', props);
       
       // Ensure the achievements component has proper configuration
       props = {
@@ -167,7 +167,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for AIPodcastPlayer specifically
     if (componentName === 'AIPodcastPlayer') {
-      console.log('🎙️ Initializing AIPodcastPlayer component with props:', props);
+      console.warn('🎙️ Initializing AIPodcastPlayer component with props:', props);
       
       // Ensure the podcast component has proper configuration
       props = {
@@ -178,8 +178,8 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for DynamicQRCode specifically
     if (componentName === 'DynamicQRCode') {
-      console.log('📱 Initializing DynamicQRCode component with props:', props);
-      console.log('📱 QRCode Component from registry:', COMPONENT_REGISTRY[componentName]);
+      console.warn('📱 Initializing DynamicQRCode component with props:', props);
+      console.warn('📱 QRCode Component from registry:', COMPONENT_REGISTRY[componentName]);
       
       // Ensure the QR code component has proper configuration
       props = {
@@ -190,7 +190,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging and props for VideoIntroduction specifically
     if (componentName === 'VideoIntroduction') {
-      console.log('🎥 Initializing VideoIntroduction component with props:', props);
+      console.warn('🎥 Initializing VideoIntroduction component with props:', props);
       
       // Ensure VideoIntroduction has required functions
       props = {
@@ -262,7 +262,7 @@ export function initializeReactComponents(): void {
     
     // Add debug logging for other key components
     if (['PortfolioGallery', 'TestimonialsCarousel', 'CertificationBadges', 'PersonalityInsights'].includes(componentName)) {
-      console.log(`🎯 Initializing ${componentName} component with props:`, props);
+      console.warn(`🎯 Initializing ${componentName} component with props:`, props);
       
       // Ensure all components have proper configuration
       props = {

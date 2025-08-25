@@ -15,7 +15,7 @@ export const useAsyncMode = (jobId?: string) => {
       try {
         const config = JSON.parse(storedConfig);
         if (config.asyncMode && config.initResponse) {
-          console.log('🚀 [ASYNC DETECTION] Detected async CV generation initialization');
+          console.warn('🚀 [ASYNC DETECTION] Detected async CV generation initialization');
           setIsAsyncInitialization(true);
         }
       } catch (error) {

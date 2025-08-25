@@ -6,9 +6,9 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithRedirect,
-  getRedirectResult
+  getRedirectResult,
+  type User
 } from 'firebase/auth';
-import type { User } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { isFirebaseError, getErrorMessage, logError } from '../utils/errorHandling';

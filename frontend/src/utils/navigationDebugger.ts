@@ -35,7 +35,7 @@ class NavigationDebugger {
       this.logs = this.logs.slice(-this.maxLogs);
     }
 
-    console.log(`🔍 [NAV-DEBUG] ${action}:`, debugInfo);
+    console.warn(`🔍 [NAV-DEBUG] ${action}:`, debugInfo);
   }
 
   getLogs(): NavigationDebugInfo[] {
@@ -44,25 +44,25 @@ class NavigationDebugger {
 
   clearLogs(): void {
     this.logs = [];
-    console.log('🗑️ [NAV-DEBUG] Logs cleared');
+    console.warn('🗑️ [NAV-DEBUG] Logs cleared');
   }
 
   printReport(): void {
     console.group('📊 [NAV-DEBUG] Navigation Report');
-    console.log(`Total navigation events: ${this.logs.length}`);
+    console.warn(`Total navigation events: ${this.logs.length}`);
     
     const successful = this.logs.filter(log => log.success === true).length;
     const failed = this.logs.filter(log => log.success === false).length;
     const pending = this.logs.filter(log => log.success === undefined).length;
     
-    console.log(`✅ Successful: ${successful}`);
-    console.log(`❌ Failed: ${failed}`);
-    console.log(`⏳ Pending: ${pending}`);
+    console.warn(`✅ Successful: ${successful}`);
+    console.warn(`❌ Failed: ${failed}`);
+    console.warn(`⏳ Pending: ${pending}`);
     
-    console.log('\n📝 Recent events:');
+    console.warn('\n📝 Recent events:');
     this.logs.slice(-10).forEach((log, index) => {
       const status = log.success === true ? '✅' : log.success === false ? '❌' : '⏳';
-      console.log(`${status} ${log.timestamp} - ${log.action}`, {
+      console.warn(`${status} ${log.timestamp} - ${log.action}`, {
         from: log.fromPath,
         to: log.toPath,
         jobId: log.jobId,

@@ -19,7 +19,7 @@ export class NavigationAndDuplicateFixTester {
    * Run all tests
    */
   async runAllTests(): Promise<TestResult[]> {
-    console.log('🧪 [TEST] Starting comprehensive navigation and duplicate prevention tests...');
+    console.warn('🧪 [TEST] Starting comprehensive navigation and duplicate prevention tests...');
     
     // Reset test results
     this.testResults = [];
@@ -397,8 +397,8 @@ export class NavigationAndDuplicateFixTester {
    * Display test results
    */
   private displayTestResults(): void {
-    console.log('\n📄 [TEST RESULTS] Navigation and Duplicate Prevention Fix Tests');
-    console.log('='.repeat(60));
+    console.warn('\n📄 [TEST RESULTS] Navigation and Duplicate Prevention Fix Tests');
+    console.warn('='.repeat(60));
     
     let passedCount = 0;
     const totalCount = this.testResults.length;
@@ -407,22 +407,22 @@ export class NavigationAndDuplicateFixTester {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       const errorInfo = result.error ? ` (${result.error})` : '';
       
-      console.log(`${index + 1}. ${status} ${result.testName}${errorInfo}`);
+      console.warn(`${index + 1}. ${status} ${result.testName}${errorInfo}`);
       
       if (result.details) {
-        console.log('   Details:', result.details);
+        console.warn('   Details:', result.details);
       }
       
       if (result.passed) passedCount++;
     });
     
-    console.log('='.repeat(60));
-    console.log(`📈 Summary: ${passedCount}/${totalCount} tests passed (${Math.round(passedCount/totalCount*100)}%)`);
+    console.warn('='.repeat(60));
+    console.warn(`📈 Summary: ${passedCount}/${totalCount} tests passed (${Math.round(passedCount/totalCount*100)}%)`);
     
     if (passedCount === totalCount) {
-      console.log('🎉 All tests passed! Navigation and duplicate prevention fixes are working correctly.');
+      console.warn('🎉 All tests passed! Navigation and duplicate prevention fixes are working correctly.');
     } else {
-      console.log('⚠️ Some tests failed. Review the results above.');
+      console.warn('⚠️ Some tests failed. Review the results above.');
     }
   }
   
@@ -447,7 +447,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     quickValidation: () => NavigationAndDuplicateFixTester.quickValidation()
   };
   
-  console.log('🧪 [AUTO-TEST] Navigation and duplicate fix tests available at:');
-  console.log('  window.testNavigationAndDuplicateFix.runTests()');
-  console.log('  window.testNavigationAndDuplicateFix.quickValidation()');
+  console.warn('🧪 [AUTO-TEST] Navigation and duplicate fix tests available at:');
+  console.warn('  window.testNavigationAndDuplicateFix.runTests()');
+  console.warn('  window.testNavigationAndDuplicateFix.quickValidation()');
 }

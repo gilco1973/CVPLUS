@@ -213,7 +213,7 @@ export class JobSubscriptionManager {
     // Check if shutting down - prevent new subscriptions
     if (this.isShuttingDown) {
       if (opts.enableLogging) {
-        console.log(`[JobSubscriptionManager] Ignoring subscription to ${jobId} - shutting down`);
+        console.warn(`[JobSubscriptionManager] Ignoring subscription to ${jobId} - shutting down`);
       }
       // Return a no-op unsubscribe function
       return () => {};
@@ -229,7 +229,7 @@ export class JobSubscriptionManager {
     }
     
     if (opts.enableLogging) {
-      console.log(`[JobSubscriptionManager] Subscribing to job: ${jobId}`);
+      console.warn(`[JobSubscriptionManager] Subscribing to job: ${jobId}`);
     }
     
     // Record subscription attempt
@@ -357,7 +357,7 @@ export class JobSubscriptionManager {
   public forceRefresh(jobId: string): void {
     const subscription = this.subscriptions.get(jobId);
     if (subscription) {
-      console.log(`[JobSubscriptionManager] Force refreshing job: ${jobId}`);
+      console.warn(`[JobSubscriptionManager] Force refreshing job: ${jobId}`);
       subscription.errorCount = 0;
       // The onSnapshot listener will automatically fetch latest data
     }
@@ -400,7 +400,7 @@ export class JobSubscriptionManager {
     
     // Log memory stats in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[JobSubscriptionManager] Memory Stats:', stats);
+      console.warn('[JobSubscriptionManager] Memory Stats:', stats);
     }
     
     // Warn about potential memory issues
@@ -472,7 +472,7 @@ export class JobSubscriptionManager {
    * Comprehensive cleanup with memory leak prevention
    */
   public cleanup(): void {
-    console.log(`[JobSubscriptionManager] Starting comprehensive cleanup of ${this.subscriptions.size} subscriptions`);
+    console.warn(`[JobSubscriptionManager] Starting comprehensive cleanup of ${this.subscriptions.size} subscriptions`);
     
     // Mark as shutting down to prevent new operations
     this.isShuttingDown = true;
@@ -530,7 +530,7 @@ export class JobSubscriptionManager {
       this.cleanupTimers.clear();
       this.intervals.length = 0;
       
-      console.log('[JobSubscriptionManager] Comprehensive cleanup completed successfully');
+      console.warn('[JobSubscriptionManager] Comprehensive cleanup completed successfully');
     } catch (error) {
       console.error('[JobSubscriptionManager] Error during cleanup:', error);
     }
@@ -544,11 +544,11 @@ export class JobSubscriptionManager {
       return; // Already shutting down
     }
     
-    console.log('[JobSubscriptionManager] Initiating graceful shutdown');
+    console.warn('[JobSubscriptionManager] Initiating graceful shutdown');
     
     // Log final memory stats before shutdown
     const finalStats = this.getMemoryStats();
-    console.log('[JobSubscriptionManager] Final memory stats before shutdown:', finalStats);
+    console.warn('[JobSubscriptionManager] Final memory stats before shutdown:', finalStats);
     
     this.cleanup();
     
@@ -559,7 +559,7 @@ export class JobSubscriptionManager {
 
   private createNewSubscription(jobId: string, options: Required<SubscriptionOptions>): JobSubscription {
     if (options.enableLogging) {
-      console.log(`[JobSubscriptionManager] Creating new Firestore subscription for job: ${jobId}`);
+      console.warn(`[JobSubscriptionManager] Creating new Firestore subscription for job: ${jobId}`);
     }
 
     const subscription: JobSubscription = {
@@ -594,7 +594,7 @@ export class JobSubscriptionManager {
 
           // Only log when there's an actual change in meaningful data
           if (options.enableLogging && docSnapshot.exists() && hasActualChange) {
-            console.log(`[JobSubscriptionManager] Job update for ${jobId}:`, docSnapshot.data()?.status);
+            console.warn(`[JobSubscriptionManager] Job update for ${jobId}:`, docSnapshot.data()?.status);
           }
 
           // For progress tracking, we want more frequent updates during processing
@@ -664,7 +664,7 @@ export class JobSubscriptionManager {
     subscription.callbacks.delete(callback);
 
     if (enableLogging) {
-      console.log(`[JobSubscriptionManager] Unsubscribed from job: ${jobId}, remaining callbacks: ${subscription.callbacks.size}`);
+      console.warn(`[JobSubscriptionManager] Unsubscribed from job: ${jobId}, remaining callbacks: ${subscription.callbacks.size}`);
     }
 
     // If no more callbacks, cleanup the subscription after a delay
@@ -685,7 +685,7 @@ export class JobSubscriptionManager {
           const currentSubscription = this.subscriptions.get(jobId);
           if (currentSubscription && currentSubscription.callbacks.size === 0) {
             if (enableLogging) {
-              console.log(`[JobSubscriptionManager] Cleaning up unused subscription for job: ${jobId}`);
+              console.warn(`[JobSubscriptionManager] Cleaning up unused subscription for job: ${jobId}`);
             }
             
             // Clean up subscription
@@ -790,7 +790,7 @@ export class JobSubscriptionManager {
       try {
         const subscription = this.subscriptions.get(jobId);
         if (subscription) {
-          console.log(`[JobSubscriptionManager] Cleaning up inactive subscription for job: ${jobId}`);
+          console.warn(`[JobSubscriptionManager] Cleaning up inactive subscription for job: ${jobId}`);
           
           // Clean up Firestore subscription
           try {
@@ -836,12 +836,12 @@ export class JobSubscriptionManager {
     }
 
     if (cleanedCount > 0) {
-      console.log(`[JobSubscriptionManager] Cleaned up ${cleanedCount} inactive subscriptions`);
+      console.warn(`[JobSubscriptionManager] Cleaned up ${cleanedCount} inactive subscriptions`);
       
       // Log memory stats after cleanup in development
       if (process.env.NODE_ENV === 'development') {
         const memStats = this.getMemoryStats();
-        console.log('[JobSubscriptionManager] Memory stats after cleanup:', memStats);
+        console.warn('[JobSubscriptionManager] Memory stats after cleanup:', memStats);
       }
     }
     
@@ -876,13 +876,13 @@ export class JobSubscriptionManager {
     }
     
     if (timersToRemove.length > 0) {
-      console.log(`[JobSubscriptionManager] Cleaned up ${timersToRemove.length} orphaned cleanup timers`);
+      console.warn(`[JobSubscriptionManager] Cleaned up ${timersToRemove.length} orphaned cleanup timers`);
     }
   }
 
   private logSubscriptionStats(): void {
     const stats = this.getStats();
-    console.log('[JobSubscriptionManager] Stats:', {
+    console.warn('[JobSubscriptionManager] Stats:', {
       total: stats.totalSubscriptions,
       active: stats.activeSubscriptions,
       callbacks: stats.totalCallbacks,

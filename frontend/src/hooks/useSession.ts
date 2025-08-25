@@ -272,7 +272,7 @@ export const useSession = (options: UseSessionOptions = {}): UseSessionReturn =>
   }, [session]);
 
   // Auto-save functionality
-  const enableAutoSave = useCallback((intervalMs: number = 30000) => {
+  const enableAutoSave = useCallback((intervalMs = 30000) => {
     // Clear existing interval
     if (autoSaveIntervalRef.current) {
       clearInterval(autoSaveIntervalRef.current);

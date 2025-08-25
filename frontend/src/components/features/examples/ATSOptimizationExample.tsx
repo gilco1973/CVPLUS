@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import ATSOptimization from '../AI-Powered/ATSOptimization';
-import type { ATSOptimizationProps } from '../AI-Powered/ATSOptimization';
+import ATSOptimization, { type ATSOptimizationProps } from '../AI-Powered/ATSOptimization';
 import type { EnhancedATSResult } from '../../../types/ats';
 import { Settings, Play, RotateCcw } from 'lucide-react';
 

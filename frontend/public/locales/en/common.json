@@ -15,6 +15,7 @@
   },
   "hero": {
     "title": "Transform Your CV",
+    "titleHighlight": "From Paper to Powerful",
     "subtitle": "From Paper to Powerful",
     "description": "Turn your traditional CV into an interactive, AI-powered professional profile that stands out in today's competitive job market",
     "cta": {
@@ -22,7 +23,35 @@
       "learnMore": "Learn More",
       "demo": "View Demo",
       "upload": "Upload Your CV",
-      "signIn": "Sign In to Continue"
+      "signIn": "Sign In to Continue",
+      "getStarted": "Get Started",
+      "getStartedAria": "Get started with CVPlus transformation",
+      "watchDemo": "Watch Demo",
+      "pauseDemo": "Pause Demo",
+      "playDemoAria": "Play demo video",
+      "pauseDemoAria": "Pause demo video"
+    },
+    "video": {
+      "brand": "CVPlus",
+      "title": "See CVPlus in Action",
+      "description": "Watch how we transform traditional CVs into powerful, interactive professional profiles"
+    },
+    "trustIndicators": {
+      "cvsTransformed": "CVs Transformed",
+      "userRating": "User Rating",
+      "averageTime": "Average Process Time"
+    },
+    "accessibility": {
+      "sectionLabel": "Hero section",
+      "videoControls": {
+        "playVideo": "Play video",
+        "pauseVideo": "Pause video",
+        "muteVideo": "Mute video",
+        "unmuteVideo": "Unmute video",
+        "enterFullscreen": "Enter fullscreen",
+        "videoProgress": "Video progress"
+      },
+      "browserNotSupported": "Your browser does not support the video tag."
     }
   },
   "upload": {
@@ -57,8 +86,30 @@
     "applyRecommendations": "Apply Recommendations"
   },
   "features": {
-    "title": "Select Features",
-    "subtitle": "Customize your interactive CV",
+    "title": "Powerful Features",
+    "subtitle": "Everything you need to create an outstanding professional profile",
+    "items": {
+      "aiPowered": {
+        "title": "AI-Powered Analysis",
+        "description": "Advanced AI analyzes your CV and provides personalized recommendations for maximum impact"
+      },
+      "interactiveElements": {
+        "title": "Interactive Elements",
+        "description": "Add clickable portfolios, video introductions, and dynamic content that engages recruiters"
+      },
+      "multipleFormats": {
+        "title": "Multiple Formats",
+        "description": "Generate your CV in PDF, web portal, and interactive formats for different use cases"
+      },
+      "atsOptimization": {
+        "title": "ATS Optimization",
+        "description": "Ensure your CV passes Applicant Tracking Systems with optimized keywords and formatting"
+      },
+      "realTimeProcessing": {
+        "title": "Real-Time Processing",
+        "description": "Get instant results with our lightning-fast AI processing and live status updates"
+      }
+    },
     "categories": {
       "aiPowered": "AI-Powered",
       "interactive": "Interactive",
@@ -311,6 +362,54 @@
       "retry": "Retry"
     }
   },
+  "aboutPage": {
+    "title": "About CVPlus",
+    "subtitle": "An open-source project dedicated to transforming how professionals present themselves",
+    "creator": {
+      "title": "Created by Gil Klainert",
+      "description1": "Hi! I'm Gil Klainert, a Software Engineering Leader and AI Expert passionate about leveraging technology to solve real-world problems. I created CVPlus as an open-source gift to the community, believing that everyone deserves access to powerful tools that can help them advance their careers.",
+      "description2": "This project combines my expertise in AI, web development, and user experience design to create something that makes a real difference in people's professional lives.",
+      "visitWebsite": "Visit Klainert.com",
+      "viewGitHub": "View on GitHub"
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description": "CVPlus was born from a simple belief: your professional story deserves to be told in the most compelling way possible. We're here to democratize access to AI-powered career tools, making them free and accessible to everyone, regardless of their background or financial situation."
+    },
+    "values": {
+      "openSource": {
+        "title": "Open Source",
+        "description": "Released under the MIT License, CVPlus is free to use, modify, and distribute. We believe in the power of community-driven development."
+      },
+      "aiPowered": {
+        "title": "AI-Powered",
+        "description": "Leveraging Claude AI's advanced capabilities to understand, analyze, and enhance your professional profile with intelligent insights."
+      },
+      "innovation": {
+        "title": "Innovation First",
+        "description": "Constantly pushing boundaries with features like AI career podcasts, interactive timelines, and dynamic QR codes that bring CVs to life."
+      },
+      "community": {
+        "title": "Community Driven",
+        "description": "Built for the community, by the community. We welcome contributions, feedback, and ideas from users worldwide."
+      }
+    },
+    "contributing": {
+      "title": "Want to Contribute?",
+      "description": "CVPlus is open to contributions! Whether you're a developer, designer, or just someone with great ideas, we'd love to have you join our mission to revolutionize how people present their professional stories.",
+      "contributeGitHub": "Contribute on GitHub",
+      "reportIssues": "Report Issues & Ideas"
+    },
+    "techStack": {
+      "title": "Built With Modern Technology"
+    },
+    "cta": {
+      "title": "Ready to Transform Your CV?",
+      "description": "Start your career transformation journey today",
+      "getStarted": "Get Started Now",
+      "backToHome": "Back to Home"
+    }
+  },
   "footer": {
     "company": "Company",
     "about": "About",
@@ -327,5 +426,48 @@
     "documentation": "Documentation",
     "social": "Follow Us",
     "copyright": "© {{year}} CVPlus. All rights reserved."
+  },
+  "paymentSuccess": {
+    "authRequired": {
+      "title": "Authentication Required",
+      "description": "Please sign in to verify your payment.",
+      "goToPricing": "Go to Pricing"
+    },
+    "verification": {
+      "title": "Verifying Payment",
+      "description": "Please wait while we verify your payment and activate your premium access.",
+      "pleaseWait": "This may take a few moments..."
+    },
+    "error": {
+      "title": "Verification Error",
+      "paymentCanceled": "Payment was canceled",
+      "authRequired": "Please sign in to complete verification",
+      "verificationFailed": "Unable to verify payment status. Please contact support if this persists.",
+      "invalidParameters": "Invalid payment verification parameters"
+    },
+    "success": {
+      "title": "Welcome to CVPlus Premium!",
+      "description": "Your payment was successful and your premium access has been activated.",
+      "welcomePremium": "Payment successful! Welcome to CVPlus Premium!",
+      "premiumActivated": "Premium access activated successfully!",
+      "statusConfirmed": "Premium status confirmed! You now have lifetime access to all premium features.",
+      "statusPending": "Premium access is being activated. This may take a few more moments.",
+      "whatsNext": "What's Next?"
+    },
+    "benefits": {
+      "webPortal": "Access your personal web portal",
+      "aiPodcasts": "Generate AI career podcasts",
+      "analytics": "Use advanced analytics dashboard",
+      "removeBranding": "Remove CVPlus branding"
+    },
+    "actions": {
+      "contactSupport": "Contact Support",
+      "backToPricing": "Back to Pricing",
+      "startUsing": "Start Using Premium Features"
+    },
+    "support": {
+      "questionsPrefix": "If you have any questions, visit our",
+      "supportPage": "support page"
+    }
   }
 }

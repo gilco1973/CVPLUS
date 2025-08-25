@@ -93,15 +93,15 @@ export const useEnhancedProgressTracking = ({
   const setupProgressTracking = useCallback((trackingJobId: string) => {
     if (!trackingJobId || !trackingFeatures.length) return;
 
-    console.log('🔄 [ENHANCED] Setting up progress tracking for job:', trackingJobId);
-    console.log('📊 [ENHANCED] Tracking features:', trackingFeatures.map(f => f.name));
+    console.warn('🔄 [ENHANCED] Setting up progress tracking for job:', trackingJobId);
+    console.warn('📊 [ENHANCED] Tracking features:', trackingFeatures.map(f => f.name));
     
     const jobSubscriptionManager = JobSubscriptionManager.getInstance();
     const unsubscribe = jobSubscriptionManager.subscribeToProgress(
       trackingJobId,
       (job: Job | null) => {
         if (!job || !isMountedRef.current) {
-          console.log('📊 [ENHANCED] No job data or component unmounted');
+          console.warn('📊 [ENHANCED] No job data or component unmounted');
           return;
         }
         
@@ -114,7 +114,7 @@ export const useEnhancedProgressTracking = ({
       }
       lastUpdateTime.current = now;
       
-      console.log('📊 [ENHANCED] Real-time update received:', {
+      console.warn('📊 [ENHANCED] Real-time update received:', {
         status: data.status,
         currentProgress: data.currentProgress,
         currentStage: data.currentStage,
@@ -170,7 +170,7 @@ export const useEnhancedProgressTracking = ({
             processingCount++;
           }
           
-          console.log(`📊 [ENHANCED] Feature ${feature.id}:`, {
+          console.warn(`📊 [ENHANCED] Feature ${feature.id}:`, {
             status: enhancedProgress.status,
             progress: enhancedProgress.progress,
             hasHtml: enhancedProgress.htmlFragmentAvailable,
@@ -202,7 +202,7 @@ export const useEnhancedProgressTracking = ({
       setIsProcessingFeatures(!allCompleted);
       
       if (allCompleted) {
-        console.log('🎉 [ENHANCED] All features completed!');
+        console.warn('🎉 [ENHANCED] All features completed!');
         if (onAllFeaturesComplete) {
           onAllFeaturesComplete();
         }
@@ -214,7 +214,7 @@ export const useEnhancedProgressTracking = ({
         }
       }
       
-      console.log(`📊 [ENHANCED] Progress summary: ${completedCount}/${trackingFeatures.length} completed, ${failedCount} failed, ${processingCount} processing`);
+      console.warn(`📊 [ENHANCED] Progress summary: ${completedCount}/${trackingFeatures.length} completed, ${failedCount} failed, ${processingCount} processing`);
       },
       {
         enableLogging: true,

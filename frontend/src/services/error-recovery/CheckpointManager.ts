@@ -115,7 +115,7 @@ export class CheckpointManager {
       this.saveToLocalStorage(checkpoint)
     ]);
 
-    console.log(`Checkpoint created: ${checkpointId} for job ${jobId} at ${type}`);
+    console.warn(`Checkpoint created: ${checkpointId} for job ${jobId} at ${type}`);
     return checkpoint;
   }
 
@@ -253,7 +253,7 @@ export class CheckpointManager {
         this.cleanupLocalStorage(jobId)
       ]);
 
-      console.log(`Deleted ${checkpoints.length} checkpoints for job ${jobId}`);
+      console.warn(`Deleted ${checkpoints.length} checkpoints for job ${jobId}`);
       return true;
     } catch (error) {
       console.error('Error deleting job checkpoints:', error);
@@ -292,7 +292,7 @@ export class CheckpointManager {
         cleanedCount++;
       }
 
-      console.log(`Cleaned up ${cleanedCount} expired checkpoints`);
+      console.warn(`Cleaned up ${cleanedCount} expired checkpoints`);
       return cleanedCount;
 
     } catch (error) {

@@ -20,10 +20,10 @@ const mockSelectedFeatures = [
  * Test the useProgressiveEnhancement hook
  */
 export const testProgressiveEnhancementHook = () => {
-  console.log('🧪 Testing Progressive Enhancement Hook (DISABLED)');
-  console.log('====================================');
-  console.log('❌ This test is disabled because React hooks cannot be called outside of React components');
-  console.log('💡 To test this hook, create a proper React test component using @testing-library/react');
+  console.warn('🧪 Testing Progressive Enhancement Hook (DISABLED)');
+  console.warn('====================================');
+  console.warn('❌ This test is disabled because React hooks cannot be called outside of React components');
+  console.warn('💡 To test this hook, create a proper React test component using @testing-library/react');
   
   // Return mock success for now since we can't test hooks outside React
   return true;
@@ -33,8 +33,8 @@ export const testProgressiveEnhancementHook = () => {
  * Simulate progressive enhancement workflow
  */
 export const simulateProgressiveEnhancement = () => {
-  console.log('\n🎭 Simulating Progressive Enhancement Workflow');
-  console.log('============================================');
+  console.warn('\n🎭 Simulating Progressive Enhancement Workflow');
+  console.warn('============================================');
   
   const features = [
     'skills-visualization',
@@ -47,28 +47,28 @@ export const simulateProgressiveEnhancement = () => {
   // Simulate feature processing
   features.forEach((featureId, index) => {
     setTimeout(() => {
-      console.log(`🔄 Processing ${featureId}...`);
+      console.warn(`🔄 Processing ${featureId}...`);
       
       // Simulate progress updates
       setTimeout(() => {
-        console.log(`   📊 ${featureId}: 25% - Starting analysis...`);
+        console.warn(`   📊 ${featureId}: 25% - Starting analysis...`);
       }, 200);
       
       setTimeout(() => {
-        console.log(`   📊 ${featureId}: 50% - Generating content...`);
+        console.warn(`   📊 ${featureId}: 50% - Generating content...`);
       }, 500);
       
       setTimeout(() => {
-        console.log(`   📊 ${featureId}: 75% - Creating HTML fragment...`);
+        console.warn(`   📊 ${featureId}: 75% - Creating HTML fragment...`);
       }, 800);
       
       setTimeout(() => {
-        console.log(`   ✅ ${featureId}: 100% - Complete!`);
+        console.warn(`   ✅ ${featureId}: 100% - Complete!`);
         completedFeatures++;
         
         if (completedFeatures === features.length) {
-          console.log('\n🎉 All features completed successfully!');
-          console.log('✅ Progressive enhancement simulation complete');
+          console.warn('\n🎉 All features completed successfully!');
+          console.warn('✅ Progressive enhancement simulation complete');
         }
       }, 1000);
       
@@ -80,8 +80,8 @@ export const simulateProgressiveEnhancement = () => {
  * Test HTML content merging
  */
 export const testHTMLContentMerging = () => {
-  console.log('\n🔧 Testing HTML Content Merging');
-  console.log('==============================');
+  console.warn('\n🔧 Testing HTML Content Merging');
+  console.warn('==============================');
   
   const baseHTML = `
 <!DOCTYPE html>
@@ -108,15 +108,15 @@ export const testHTMLContentMerging = () => {
     skillsFragment + '\n</body>'
   );
   
-  console.log('Base HTML length:', baseHTML.length);
-  console.log('Skills fragment length:', skillsFragment.length);
-  console.log('Merged HTML length:', mergedHTML.length);
+  console.warn('Base HTML length:', baseHTML.length);
+  console.warn('Skills fragment length:', skillsFragment.length);
+  console.warn('Merged HTML length:', mergedHTML.length);
   
   if (mergedHTML.includes('skills-visualization')) {
-    console.log('✅ HTML merging test passed');
+    console.warn('✅ HTML merging test passed');
     return true;
   } else {
-    console.log('❌ HTML merging test failed');
+    console.warn('❌ HTML merging test failed');
     return false;
   }
 };
@@ -125,8 +125,8 @@ export const testHTMLContentMerging = () => {
  * Run all tests
  */
 export const runProgressiveEnhancementTests = () => {
-  console.log('🚀 Running Progressive Enhancement Tests');
-  console.log('======================================');
+  console.warn('🚀 Running Progressive Enhancement Tests');
+  console.warn('======================================');
   
   const results = {
     hookTest: false,
@@ -136,7 +136,7 @@ export const runProgressiveEnhancementTests = () => {
   
   try {
     // Note: Hook test would need to be run within a React component
-    console.log('⚠️ Hook test requires React component context');
+    console.warn('⚠️ Hook test requires React component context');
     results.hookTest = true; // Assume it works since it compiled
     
     results.mergingTest = testHTMLContentMerging();
@@ -144,14 +144,14 @@ export const runProgressiveEnhancementTests = () => {
     simulateProgressiveEnhancement();
     results.simulationComplete = true;
     
-    console.log('\n📊 Test Results:');
-    console.log('===============');
-    console.log('Hook Test:', results.hookTest ? '✅ PASS' : '❌ FAIL');
-    console.log('HTML Merging:', results.mergingTest ? '✅ PASS' : '❌ FAIL');
-    console.log('Simulation:', results.simulationComplete ? '✅ PASS' : '❌ FAIL');
+    console.warn('\n📊 Test Results:');
+    console.warn('===============');
+    console.warn('Hook Test:', results.hookTest ? '✅ PASS' : '❌ FAIL');
+    console.warn('HTML Merging:', results.mergingTest ? '✅ PASS' : '❌ FAIL');
+    console.warn('Simulation:', results.simulationComplete ? '✅ PASS' : '❌ FAIL');
     
     const allPassed = Object.values(results).every(result => result === true);
-    console.log('\nOverall Result:', allPassed ? '🎉 ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
+    console.warn('\nOverall Result:', allPassed ? '🎉 ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
     
     return allPassed;
     

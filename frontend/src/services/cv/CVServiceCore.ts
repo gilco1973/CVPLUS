@@ -128,7 +128,7 @@ export class CVServiceCore {
     const userId = auth.currentUser?.uid || 'anonymous';
     const requestKey = `getRecommendations-${userId}-${jobId}-${targetRole || 'default'}-${(industryKeywords || []).join(',')}-${forceRegenerate || false}`;
     
-    console.log(`[CVServiceCore] getRecommendations called for jobId: ${jobId}`, {
+    console.warn(`[CVServiceCore] getRecommendations called for jobId: ${jobId}`, {
       requestKey,
       forceRegenerate,
       strictMode: process.env.NODE_ENV === 'development'
@@ -138,7 +138,7 @@ export class CVServiceCore {
     const result = await strictModeAwareRequestManager.executeOnce(
       requestKey,
       async () => {
-        console.log(`[CVServiceCore] Executing actual request for jobId: ${jobId}`);
+        console.warn(`[CVServiceCore] Executing actual request for jobId: ${jobId}`);
         recommendationsDebugger.trackCall(jobId, 'CVServiceCore.getRecommendations', false, requestKey);
         return CVAnalyzer._executeGetRecommendationsDirectly(jobId, targetRole, industryKeywords, forceRegenerate);
       },
@@ -154,12 +154,12 @@ export class CVServiceCore {
       const cacheType = result.wasStrictModeDuplicate ? 'strictmode-duplicate' : 'cached';
       recommendationsDebugger.trackCall(jobId, `CVServiceCore.getRecommendations-${cacheType}`, true, requestKey);
       
-      console.log(`[CVServiceCore] Returned ${cacheType} result for jobId: ${jobId}`, {
+      console.warn(`[CVServiceCore] Returned ${cacheType} result for jobId: ${jobId}`, {
         wasStrictModeDuplicate: result.wasStrictModeDuplicate,
         wasFromCache: result.wasFromCache
       });
     } else {
-      console.log(`[CVServiceCore] Returned fresh result for jobId: ${jobId}`);
+      console.warn(`[CVServiceCore] Returned fresh result for jobId: ${jobId}`);
     }
     
     return result.data;

@@ -182,7 +182,7 @@ export class SessionError extends Error {
     message: string,
     code: SessionErrorCode,
     sessionId?: string,
-    retryable: boolean = false
+    retryable = false
   ) {
     super(message);
     this.name = 'SessionError';

@@ -188,10 +188,8 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
           
           <div>
             {showAnalysisMethod && (
-              <div className="animate-fade-in">
-                }
-                }
-                className="mt-4 p-4 bg-white rounded border text-sm text-gray-600"
+              <div 
+                className="animate-fade-in mt-4 p-4 bg-white rounded border text-sm text-gray-600"
               >
                 <p>
                   This analysis uses AI to examine patterns in your work experience, 
@@ -223,9 +221,9 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
 
         {/* Tab Content */}
         <div>
-          <div className="animate-fade-in"
-            key={activeTab}>
-            className="min-h-[400px]"
+          <div 
+            key={activeTab}
+            className="animate-fade-in min-h-[400px]"
           >
             {activeTab === 'overview' && (
               <div className="space-y-6">
@@ -296,9 +294,9 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
             {activeTab === 'traits' && (
               <div className="space-y-4">
                 {profile.primaryTraits.map((trait, index) => (
-                  <div className="animate-fade-in"
-                    key={trait.name}>
-                    className="bg-white p-6 rounded-lg border"
+                  <div 
+                    key={trait.name}
+                    className="animate-fade-in bg-white p-6 rounded-lg border"
                   >
                     <div
                       className="cursor-pointer"
@@ -334,10 +332,7 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({
 
                     <div>
                       {expandedTrait === trait.name && (
-                        <div className="animate-fade-in">
-                          }
-                          }
-                          className="mt-4 pt-4 border-t border-gray-200"
+                        <div className="animate-fade-in mt-4 pt-4 border-t border-gray-200"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>

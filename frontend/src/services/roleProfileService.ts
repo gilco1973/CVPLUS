@@ -40,33 +40,33 @@ export class RoleProfileService {
       const auth = getAuthInstance();
       let currentUser = auth.currentUser;
       
-      console.log('[RoleProfileService] Detecting role for job:', jobId);
-      console.log('[RoleProfileService] Initial auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
-      console.log('[RoleProfileService] Functions instance:', this.functions);
-      console.log('[RoleProfileService] Using force regenerate:', forceRegenerate);
+      console.warn('[RoleProfileService] Detecting role for job:', jobId);
+      console.warn('[RoleProfileService] Initial auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
+      console.warn('[RoleProfileService] Functions instance:', this.functions);
+      console.warn('[RoleProfileService] Using force regenerate:', forceRegenerate);
       
       // If no current user, wait for auth state to settle
       if (!currentUser) {
-        console.log('[RoleProfileService] No current user, waiting for auth state...');
+        console.warn('[RoleProfileService] No current user, waiting for auth state...');
         
         // Wait for auth state with timeout
         currentUser = await new Promise((resolve) => {
           const unsubscribe = auth.onAuthStateChanged((user) => {
-            console.log('[RoleProfileService] Auth state changed:', user ? user.uid : 'null');
+            console.warn('[RoleProfileService] Auth state changed:', user ? user.uid : 'null');
             unsubscribe();
             resolve(user);
           });
           
           // Timeout after 5 seconds
           setTimeout(() => {
-            console.log('[RoleProfileService] Auth state timeout after 5 seconds');
+            console.warn('[RoleProfileService] Auth state timeout after 5 seconds');
             unsubscribe();
             resolve(null);
           }, 5000);
         });
       }
       
-      console.log('[RoleProfileService] Final auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
+      console.warn('[RoleProfileService] Final auth check - Current user:', currentUser ? currentUser.uid : 'NOT AUTHENTICATED');
       
       if (!currentUser) {
         throw new Error('User must be authenticated to detect role profiles');
@@ -79,7 +79,7 @@ export class RoleProfileService {
       const requestKey = `detectRole:${jobId}:${forceRegenerate}`;
       const cachedRequest = this.activeRequests.get(requestKey);
       if (cachedRequest) {
-        console.log('[RoleProfileService] Returning existing request for:', requestKey);
+        console.warn('[RoleProfileService] Returning existing request for:', requestKey);
         return cachedRequest.promise;
       }
       
@@ -88,20 +88,20 @@ export class RoleProfileService {
         forceRegenerate
       };
       
-      console.log('[RoleProfileService] Calling detectRoleProfile with data:', requestData);
+      console.warn('[RoleProfileService] Calling detectRoleProfile with data:', requestData);
       
       // Create and cache the request promise
       const requestPromise = (async (): Promise<RoleDetectionResponse> => {
         try {
           const result = await this.detectRoleProfile(requestData) as FirebaseFunctionResponse<RoleDetectionResponse['data']>;
 
-          console.log('[RoleProfileService] Raw result from detectRoleProfile:', result);
+          console.warn('[RoleProfileService] Raw result from detectRoleProfile:', result);
 
           if (!result.data?.success) {
             throw new Error(result.data?.error || 'Role detection failed');
           }
 
-          console.log('[RoleProfileService] Successful detection result:', result.data.data);
+          console.warn('[RoleProfileService] Successful detection result:', result.data.data);
 
           return {
             success: true,
@@ -153,7 +153,7 @@ export class RoleProfileService {
     }
     
     if (expiredKeys.length > 0) {
-      console.log(`[RoleProfileService] Cleaned up ${expiredKeys.length} expired requests`);
+      console.warn(`[RoleProfileService] Cleaned up ${expiredKeys.length} expired requests`);
     }
   }
 
@@ -162,7 +162,7 @@ export class RoleProfileService {
    */
   async getAllRoleProfiles(): Promise<RoleProfile[]> {
     try {
-      console.log('[RoleProfileService] Fetching all role profiles');
+      console.warn('[RoleProfileService] Fetching all role profiles');
       
       const result = await this.getRoleProfiles({}) as FirebaseFunctionResponse<RoleProfilesResponse['data']>;
 
@@ -183,7 +183,7 @@ export class RoleProfileService {
    */
   async getRoleProfilesByCategory(category: string): Promise<RoleProfile[]> {
     try {
-      console.log('[RoleProfileService] Fetching role profiles for category:', category);
+      console.warn('[RoleProfileService] Fetching role profiles for category:', category);
       
       const result = await this.getRoleProfiles({
         category
@@ -209,7 +209,7 @@ export class RoleProfileService {
     limit = 20
   ): Promise<RoleProfile[]> {
     try {
-      console.log('[RoleProfileService] Searching role profiles:', searchQuery);
+      console.warn('[RoleProfileService] Searching role profiles:', searchQuery);
       
       const result = await this.getRoleProfiles({
         searchQuery,
@@ -237,7 +237,7 @@ export class RoleProfileService {
     customizationOptions?: any
   ): Promise<RoleApplicationResult> {
     try {
-      console.log('[RoleProfileService] Applying role profile:', { jobId, roleProfileId });
+      console.warn('[RoleProfileService] Applying role profile:', { jobId, roleProfileId });
       
       const result = await this.applyRoleProfile({
         jobId,
@@ -268,7 +268,7 @@ export class RoleProfileService {
     forceRegenerate = false
   ): Promise<RoleBasedRecommendation[]> {
     try {
-      console.log('[RoleProfileService] Getting role-based recommendations:', {
+      console.warn('[RoleProfileService] Getting role-based recommendations:', {
         jobId,
         roleProfileId,
         targetRole
@@ -316,7 +316,7 @@ export class RoleProfileService {
     application: RoleApplicationResult;
   }> {
     try {
-      console.log('[RoleProfileService] Auto-detecting and applying role for job:', jobId);
+      console.warn('[RoleProfileService] Auto-detecting and applying role for job:', jobId);
       
       // First, detect the role
       const detection = await this.detectRole(jobId);
@@ -355,7 +355,7 @@ export class RoleProfileService {
     recommendations: RoleBasedRecommendation[];
   }> {
     try {
-      console.log('[RoleProfileService] Getting enhanced recommendations for job:', jobId);
+      console.warn('[RoleProfileService] Getting enhanced recommendations for job:', jobId);
       
       let role: DetectedRole | null = null;
       let analysis: RoleProfileAnalysis | null = null;
@@ -401,7 +401,7 @@ export class RoleProfileService {
     recommendations: string[];
   }> {
     try {
-      console.log('[RoleProfileService] Validating role compatibility:', { jobId, roleProfileId });
+      console.warn('[RoleProfileService] Validating role compatibility:', { jobId, roleProfileId });
       
       // Get role detection to check compatibility
       const detection = await this.detectRole(jobId);

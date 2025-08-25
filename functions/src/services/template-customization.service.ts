@@ -604,7 +604,12 @@ export class TemplateCustomizationService {
     this.claudeService = new VerifiedClaudeService({
       service: 'template-customization',
       context: 'template-design-analysis',
-      enableVerification: true
+      enableVerification: true,
+      fallbackToOriginal: true,
+      maxRetries: 3,
+      confidenceThreshold: 0.7,
+      qualityThreshold: 75,
+      timeout: 30000
     });
 
     logger.info('[TEMPLATE-CUSTOMIZATION] Service initialized', {

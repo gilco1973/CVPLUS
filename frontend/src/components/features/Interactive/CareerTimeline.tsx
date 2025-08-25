@@ -47,14 +47,11 @@ const MilestonePopup: React.FC<MilestonePopupProps> = ({ item, isOpen, onClose }
 
   return (
     <div>
-      <div className="animate-fade-in">
-        }
-        }
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      <div className="animate-fade-in fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         onClick={onClose}
       >
-        <div className="animate-fade-in">>
-          className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-96 overflow-y-auto"
+        <div 
+          className="animate-fade-in bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-96 overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start gap-4 mb-4">

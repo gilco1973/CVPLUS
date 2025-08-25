@@ -48,7 +48,7 @@ class TemplateRegistryService implements TemplateRegistry {
     // Initialize with professional templates
     this.initializeTemplates();
     
-    console.log('✅ Template Registry initialized with', this._templates.size, 'professional templates');
+    console.warn('✅ Template Registry initialized with', this._templates.size, 'professional templates');
   }
 
   // ============================================================================
@@ -67,7 +67,7 @@ class TemplateRegistryService implements TemplateRegistry {
       this.analytics.performance.set(template.id, { generationTime: 0, errors: 0 });
     });
     
-    console.log('📊 Template analytics initialized for', this._templates.size, 'templates');
+    console.warn('📊 Template analytics initialized for', this._templates.size, 'templates');
   }
 
   // ============================================================================
@@ -250,7 +250,7 @@ class TemplateRegistryService implements TemplateRegistry {
         
         this.clearSearchCache();
         
-        console.log('✅ Template registered:', template.name, `(${template.id})`);
+        console.warn('✅ Template registered:', template.name, `(${template.id})`);
       },
 
       unregister: (templateId: TemplateId): void => {
@@ -269,7 +269,7 @@ class TemplateRegistryService implements TemplateRegistry {
         
         this.clearSearchCache();
         
-        console.log('🗑️ Template unregistered:', template.name, `(${templateId})`);
+        console.warn('🗑️ Template unregistered:', template.name, `(${templateId})`);
       },
 
       update: (templateId: TemplateId, updates: Partial<CVTemplate>): void => {
@@ -292,7 +292,7 @@ class TemplateRegistryService implements TemplateRegistry {
         this._templates.set(templateId, updatedTemplate);
         this.clearSearchCache();
         
-        console.log('🔄 Template updated:', updatedTemplate.name, `(${templateId})`);
+        console.warn('🔄 Template updated:', updatedTemplate.name, `(${templateId})`);
       },
 
       clone: (templateId: TemplateId, newId: TemplateId): CVTemplate => {
@@ -322,7 +322,7 @@ class TemplateRegistryService implements TemplateRegistry {
 
         this.operations.register(clonedTemplate);
         
-        console.log('📋 Template cloned:', originalTemplate.name, '->', clonedTemplate.name);
+        console.warn('📋 Template cloned:', originalTemplate.name, '->', clonedTemplate.name);
         return clonedTemplate;
       },
 
@@ -496,7 +496,7 @@ class TemplateRegistryService implements TemplateRegistry {
   private clearSearchCache(): void {
     this._searchCache.clear();
     this._lastCacheUpdate = 0;
-    console.log('🧹 Template search cache cleared');
+    console.warn('🧹 Template search cache cleared');
   }
 
   // ============================================================================
@@ -509,8 +509,8 @@ class TemplateRegistryService implements TemplateRegistry {
     experienceLevel?: ExperienceLevel;
     preferences?: string[];
   }): CVTemplate[] {
-    let candidates = Array.from(this._templates.values());
-    let score = new Map<TemplateId, number>();
+    const candidates = Array.from(this._templates.values());
+    const score = new Map<TemplateId, number>();
     
     // Initialize scores
     candidates.forEach(template => {
@@ -721,4 +721,4 @@ export const isValidTemplateId = (id: string): id is TemplateId => {
   return templateRegistry.operations.exists(id as TemplateId);
 };
 
-console.log('🚀 Template Registry Service initialized and ready');
+console.warn('🚀 Template Registry Service initialized and ready');

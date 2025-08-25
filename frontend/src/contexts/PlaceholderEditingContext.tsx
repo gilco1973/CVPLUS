@@ -63,7 +63,7 @@ const placeholderEditingReducer = (
         isEditingMode: true
       };
 
-    case 'CANCEL_EDITING':
+    case 'CANCEL_EDITING': {
       const { [action.placeholderId]: cancelled, ...restEditingStates } = state.editingStates;
       return {
         ...state,
@@ -74,6 +74,7 @@ const placeholderEditingReducer = (
         },
         isEditingMode: Object.keys(restEditingStates).length > 0
       };
+    }
 
     case 'UPDATE_VALUE':
       return {
@@ -120,7 +121,7 @@ const placeholderEditingReducer = (
         }
       };
 
-    case 'SAVE_SUCCESS':
+    case 'SAVE_SUCCESS': {
       const { [action.placeholderId]: savedState, ...restStates } = state.editingStates;
       return {
         ...state,
@@ -139,8 +140,9 @@ const placeholderEditingReducer = (
         },
         isEditingMode: Object.keys(restStates).length > 0
       };
+    }
 
-    case 'UPDATE_PROGRESS':
+    case 'UPDATE_PROGRESS': {
       const percentage = action.total > 0 ? Math.round((action.completed / action.total) * 100) : 100;
       return {
         ...state,
@@ -150,6 +152,7 @@ const placeholderEditingReducer = (
           percentage
         }
       };
+    }
 
     case 'RESET_STATE':
       return INITIAL_STATE;

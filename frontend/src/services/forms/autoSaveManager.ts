@@ -104,7 +104,7 @@ export class AutoSaveManager {
     try {
       // Simulate API call to save form data
       // In a real implementation, this would call the session manager or API
-      console.log(`Auto-saving form ${formId}:`, {
+      console.warn(`Auto-saving form ${formId}:`, {
         sessionId: activeForm.sessionId,
         formId: activeForm.formState.formId,
         changesCount: activeForm.pendingChanges.size,
@@ -136,7 +136,7 @@ export class AutoSaveManager {
           this.performSave(formId, activeForm);
         }, retryDelay);
         
-        console.log(`Retrying auto-save for form ${formId} in ${retryDelay}ms (attempt ${retryCount + 1})`);
+        console.warn(`Retrying auto-save for form ${formId} in ${retryDelay}ms (attempt ${retryCount + 1})`);
       }
       
       return false;

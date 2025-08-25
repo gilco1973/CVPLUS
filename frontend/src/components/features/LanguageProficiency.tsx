@@ -56,9 +56,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
   if (!visualization) {
     return (
-      <div className="animate-fade-in">
-        }
-        className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center"
+      <div className="animate-fade-in bg-gray-800 border border-gray-700 rounded-xl p-8 text-center"
       >
         <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <Languages className="w-12 h-12 text-white" />

@@ -7,6 +7,9 @@ import { supportedLanguages, type SupportedLanguage } from '../i18n/config';
 export function LanguageSelector() {
   const { currentLanguage, changeLanguage } = useTranslation();
   
+  // Get current language config with fallback to English
+  const currentLangConfig = supportedLanguages[currentLanguage] || supportedLanguages.en;
+  
   return (
     <div className="relative">
       <Listbox value={currentLanguage} onChange={changeLanguage}>
@@ -15,7 +18,7 @@ export function LanguageSelector() {
             <span className="flex items-center gap-2">
               <LanguageIcon className="h-4 w-4 text-gray-400" />
               <span className="block truncate text-gray-200">
-                {supportedLanguages[currentLanguage].flag} {supportedLanguages[currentLanguage].name}
+                {currentLangConfig.flag} {currentLangConfig.name}
               </span>
             </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -67,13 +70,16 @@ export function LanguageSelector() {
 export function LanguageSelectorCompact() {
   const { currentLanguage, changeLanguage } = useTranslation();
   
+  // Get current language config with fallback to English
+  const currentLangConfig = supportedLanguages[currentLanguage] || supportedLanguages.en;
+  
   return (
     <div className="relative">
       <Listbox value={currentLanguage} onChange={changeLanguage}>
         <div className="relative">
           <Listbox.Button className="relative cursor-pointer rounded-lg bg-white/10 backdrop-blur-sm border border-gray-700 hover:border-cyan-400/50 transition-colors p-2 shadow-md focus:outline-none focus-visible:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-400/20">
             <span className="flex items-center gap-1">
-              <span className="text-lg">{supportedLanguages[currentLanguage].flag}</span>
+              <span className="text-lg">{currentLangConfig.flag}</span>
               <ChevronUpDownIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </span>
           </Listbox.Button>

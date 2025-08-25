@@ -6,13 +6,12 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
-import type { HelpContextState, HelpContent, HelpTour } from '../types/help';
+import type { HelpContextState, HelpContent, HelpTour, HelpUserPreferences, HelpAnalytics } from '../types/help';
 import { 
   helpReducer, 
   initialState, 
   HelpStateUtils 
 } from '../services/help/HelpStateManager';
-import type { HelpUserPreferences, HelpAnalytics } from '../types/help';
 import { 
   HelpActionManager, 
   type HelpContextActions 

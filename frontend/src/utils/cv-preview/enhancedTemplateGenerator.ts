@@ -67,7 +67,7 @@ export class EnhancedTemplateGenerator {
       const templateConfig = await this.resolveTemplate(templateIdOrConfig);
       const isEnhanced = templateConfig !== null;
       
-      console.log('🎨 [ENHANCED GENERATOR] Processing template:', {
+      console.warn('🎨 [ENHANCED GENERATOR] Processing template:', {
         type: isEnhanced ? 'enhanced' : 'legacy',
         templateId: typeof templateIdOrConfig === 'string' ? templateIdOrConfig : templateIdOrConfig.id,
         isEnhanced
@@ -107,7 +107,7 @@ export class EnhancedTemplateGenerator {
       
       const generationTime = performance.now() - startTime;
       
-      console.log(`✅ [ENHANCED GENERATOR] Template generated successfully in ${generationTime.toFixed(2)}ms`);
+      console.warn(`✅ [ENHANCED GENERATOR] Template generated successfully in ${generationTime.toFixed(2)}ms`);
       
       // Record performance metrics
       if (templateConfig) {
@@ -229,7 +229,7 @@ export class EnhancedTemplateGenerator {
     generateFeaturePreview: (featureId: string, isEnabled: boolean, isCollapsed: boolean) => string,
     options: Partial<TemplateGenerationOptions>
   ): Promise<string> {
-    console.log(`🎨 [ENHANCED TEMPLATE] Generating ${template.name} (${template.category})`);
+    console.warn(`🎨 [ENHANCED TEMPLATE] Generating ${template.name} (${template.category})`);
 
     // Generate template-specific styles
     const templateStyles = EnhancedTemplateStyles.generateTemplateStyles(template);
@@ -624,4 +624,4 @@ export { EnhancedTemplateGenerator as CVTemplateGeneratorEnhanced };
 export * from '../cv-preview/templateCompatibility';
 export type { TemplateGenerationResult, GeneratedTemplate } from '../../types/cv-templates';
 
-console.log('🚀 Enhanced Template Generator loaded and ready');
+console.warn('🚀 Enhanced Template Generator loaded and ready');

@@ -130,7 +130,7 @@ export class PerformanceTestSuite {
    * Run complete performance test suite
    */
   async runPerformanceTests(): Promise<PerformanceTestResult[]> {
-    console.log('🧪 Starting Performance Test Suite');
+    console.warn('🧪 Starting Performance Test Suite');
     
     const results: PerformanceTestResult[] = [];
     
@@ -160,7 +160,7 @@ export class PerformanceTestSuite {
       memoryMonitor.stop();
     }
     
-    console.log('✅ Performance Test Suite Completed');
+    console.warn('✅ Performance Test Suite Completed');
     return results;
   }
 
@@ -168,7 +168,7 @@ export class PerformanceTestSuite {
    * Test for memory leaks in template generation
    */
   async testMemoryLeaks(): Promise<PerformanceTestResult> {
-    console.log('🧠 Testing Memory Leak Prevention...');
+    console.warn('🧠 Testing Memory Leak Prevention...');
     
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -271,7 +271,7 @@ export class PerformanceTestSuite {
    * Test template generation performance
    */
   async testGenerationPerformance(): Promise<PerformanceTestResult> {
-    console.log('⚡ Testing Generation Performance...');
+    console.warn('⚡ Testing Generation Performance...');
     
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -353,7 +353,7 @@ export class PerformanceTestSuite {
    * Test cache efficiency
    */
   async testCacheEfficiency(): Promise<PerformanceTestResult> {
-    console.log('💾 Testing Cache Efficiency...');
+    console.warn('💾 Testing Cache Efficiency...');
     
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -444,7 +444,7 @@ export class PerformanceTestSuite {
    * Test concurrent template generation
    */
   async testConcurrentGeneration(): Promise<PerformanceTestResult> {
-    console.log('🔄 Testing Concurrent Generation...');
+    console.warn('🔄 Testing Concurrent Generation...');
     
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -528,7 +528,7 @@ export class PerformanceTestSuite {
    * Test handling of large CV data
    */
   async testLargeDataHandling(): Promise<PerformanceTestResult> {
-    console.log('📊 Testing Large Data Handling...');
+    console.warn('📊 Testing Large Data Handling...');
     
     const issues: string[] = [];
     const recommendations: string[] = [];

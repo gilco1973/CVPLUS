@@ -22,7 +22,7 @@ export class PlaceholderService {
     placeholderValues: PlaceholderReplacementMap
   ): Promise<PlaceholderCustomizationResult> {
     try {
-      console.log(`Customizing recommendation ${recommendationId} with placeholders:`, placeholderValues);
+      console.warn(`Customizing recommendation ${recommendationId} with placeholders:`, placeholderValues);
       
       const result = await customizePlaceholders({
         jobId,
@@ -31,7 +31,7 @@ export class PlaceholderService {
       });
       
       if (result.data.success) {
-        console.log('Placeholder customization successful:', result.data.data);
+        console.warn('Placeholder customization successful:', result.data.data);
         return result.data;
       } else {
         throw new Error(result.data.error || 'Failed to customize placeholders');
@@ -117,7 +117,7 @@ export class PlaceholderService {
             break;
             
           case 'currency':
-            if (!/^[\d,$kmb\.]+$/i.test(value)) {
+            if (!/^[\d,$kmb.]+$/i.test(value)) {
               errors[placeholder.placeholder] = `${placeholder.label} must be a valid amount (e.g., 1000, $1.5M, 500K)`;
             }
             break;
@@ -138,13 +138,14 @@ export class PlaceholderService {
     if (!value) return value;
     
     switch (placeholder.type) {
-      case 'number':
+      case 'number': {
         // Add commas for large numbers
         const numValue = value.replace(/,/g, '');
         if (/^\d+$/.test(numValue)) {
           return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
         return value;
+      }
         
       case 'percentage':
         // Ensure no % symbol (will be added by display)

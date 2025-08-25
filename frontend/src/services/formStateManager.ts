@@ -368,7 +368,7 @@ export class FormStateManager {
 
     // Save session (this would trigger the enhanced session manager)
     // In a real implementation, you'd call the session manager's save method
-    console.log('Saving form state to session:', activeForm.formState.formId);
+    console.warn('Saving form state to session:', activeForm.formState.formId);
   }
 
   private initializeFields(

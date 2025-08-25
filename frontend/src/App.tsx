@@ -12,7 +12,6 @@ import './i18n/config';
 const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));
 const CVAnalysisPage = lazy(() => import('./pages/CVAnalysisPage').then(m => ({ default: m.CVAnalysisPage })));
 const CVPreviewPageNew = lazy(() => import('./pages/CVPreviewPageNew').then(m => ({ default: m.CVPreviewPageNew })));
-const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ default: m.ResultsPage })));
 const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
 const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
 const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
@@ -23,6 +22,8 @@ const FinalResultsPage = lazy(() => import('./pages/FinalResultsPage').then(m =>
 const PricingPage = lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage').then(m => ({ default: m.PaymentSuccessPage })));
 const FAQPage = lazy(() => import('./components/pages/FAQ').then(m => ({ default: m.FAQPage })));
+const FairUsePolicyPage = lazy(() => import('./pages/FairUsePolicyPage').then(m => ({ default: m.FairUsePolicyPage })));
+const I18nTestPage = lazy(() => import('./components/I18nTestPage').then(m => ({ default: m.I18nTestPage })));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -69,6 +70,16 @@ const router = createBrowserRouter(
         <GlobalLayout variant="default" showFooter={true}>
           <Suspense fallback={<PageLoader />}>
             <AboutPage />
+          </Suspense>
+        </GlobalLayout>
+      ),
+    },
+    {
+      path: '/i18n-test',
+      element: (
+        <GlobalLayout variant="default" showFooter={false}>
+          <Suspense fallback={<PageLoader />}>
+            <I18nTestPage />
           </Suspense>
         </GlobalLayout>
       ),
@@ -155,6 +166,16 @@ const router = createBrowserRouter(
         <GlobalLayout variant="default" showFooter={true}>
           <Suspense fallback={<PageLoader />}>
             <PricingPage />
+          </Suspense>
+        </GlobalLayout>
+      ),
+    },
+    {
+      path: '/fair-use-policy',
+      element: (
+        <GlobalLayout variant="default" showFooter={true}>
+          <Suspense fallback={<PageLoader />}>
+            <FairUsePolicyPage />
           </Suspense>
         </GlobalLayout>
       ),

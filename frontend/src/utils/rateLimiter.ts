@@ -60,7 +60,7 @@ export class RateLimiter {
   /**
    * Record a request attempt
    */
-  public recordRequest(key: string, success: boolean = true): void {
+  public recordRequest(key: string, success = true): void {
     const now = Date.now();
     const records = this.requests.get(key) || [];
     
@@ -76,7 +76,7 @@ export class RateLimiter {
     }
 
     if (this.options.enableLogging) {
-      console.log(`[RateLimiter] Recorded ${success ? 'successful' : 'failed'} request for key: ${key}`);
+      console.warn(`[RateLimiter] Recorded ${success ? 'successful' : 'failed'} request for key: ${key}`);
     }
   }
 
@@ -170,7 +170,7 @@ export class RateLimiter {
     }
 
     if (cleanedCount > 0 && this.options.enableLogging) {
-      console.log(`[RateLimiter] Cleaned up ${cleanedCount} expired rate limit keys`);
+      console.warn(`[RateLimiter] Cleaned up ${cleanedCount} expired rate limit keys`);
     }
   }
 }

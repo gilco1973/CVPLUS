@@ -271,7 +271,7 @@ export class OfflineSessionManager {
       const registration = await navigator.serviceWorker.register('/sw.js');
       this.serviceWorkerRegistration = registration;
       
-      console.log('Service Worker registered successfully');
+      console.warn('Service Worker registered successfully');
     } catch (error) {
       console.error('Service Worker registration failed:', error);
     }
@@ -307,7 +307,7 @@ export class OfflineSessionManager {
   private async handleFormSaveAction(action: QueuedAction): Promise<void> {
     const { sessionId, formId, formData } = action.payload;
     // Implementation would depend on form service integration
-    console.log('Executing form save action:', { sessionId, formId, formData });
+    console.warn('Executing form save action:', { sessionId, formId, formData });
   }
 
   private async handleFeatureToggleAction(action: QueuedAction): Promise<void> {

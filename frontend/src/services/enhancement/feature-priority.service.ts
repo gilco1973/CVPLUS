@@ -667,7 +667,7 @@ export class FeaturePriorityService {
   clearCache(): void {
     this.userPreferences.clear();
     this.priorityHistory.clear();
-    console.log('🧹 Feature priority cache cleared');
+    console.warn('🧹 Feature priority cache cleared');
   }
 }
 

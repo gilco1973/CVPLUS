@@ -10,13 +10,13 @@ export const testAsyncNavigationFlow = {
    * Test environment variable detection
    */
   testAsyncModeDetection() {
-    console.log('🔍 Testing Async Mode Detection');
+    console.warn('🔍 Testing Async Mode Detection');
     
     const isAsyncEnabled = CVServiceCore.isAsyncCVGenerationEnabled();
     const envVar = import.meta.env.VITE_ENABLE_ASYNC_CV_GENERATION;
     
-    console.log('Environment Variable:', envVar);
-    console.log('Is Async Enabled:', isAsyncEnabled);
+    console.warn('Environment Variable:', envVar);
+    console.warn('Is Async Enabled:', isAsyncEnabled);
     
     return {
       envVar,
@@ -29,7 +29,7 @@ export const testAsyncNavigationFlow = {
    * Test session storage persistence
    */
   testSessionStoragePersistence(jobId: string) {
-    console.log('💾 Testing Session Storage Persistence');
+    console.warn('💾 Testing Session Storage Persistence');
     
     const testConfig = {
       jobId,
@@ -56,8 +56,8 @@ export const testAsyncNavigationFlow = {
       // Test cleanup
       sessionStorage.removeItem(`generation-config-${jobId}`);
       
-      console.log('Test Config:', testConfig);
-      console.log('Retrieved Config:', parsed);
+      console.warn('Test Config:', testConfig);
+      console.warn('Retrieved Config:', parsed);
       
       return {
         stored: true,
@@ -81,7 +81,7 @@ export const testAsyncNavigationFlow = {
    * Test navigation flow simulation
    */
   simulateNavigationFlow(jobId: string) {
-    console.log('🔄 Simulating Navigation Flow');
+    console.warn('🔄 Simulating Navigation Flow');
     
     const steps = [];
     
@@ -155,7 +155,7 @@ export const testAsyncNavigationFlow = {
       });
     }
     
-    console.log('Navigation Flow Steps:', steps);
+    console.warn('Navigation Flow Steps:', steps);
     return steps;
   },
 
@@ -163,7 +163,7 @@ export const testAsyncNavigationFlow = {
    * Test error handling scenarios
    */
   testErrorScenarios() {
-    console.log('⚠️  Testing Error Scenarios');
+    console.warn('⚠️  Testing Error Scenarios');
     
     const scenarios = [
       {
@@ -188,16 +188,16 @@ export const testAsyncNavigationFlow = {
       }
     ];
     
-    console.log('Error Scenarios:', scenarios);
+    console.warn('Error Scenarios:', scenarios);
     return scenarios;
   },
 
   /**
    * Run all tests
    */
-  runAllTests(jobId: string = 'test-job-123') {
-    console.log('🧪 Running All Async Navigation Tests');
-    console.log('==========================================');
+  runAllTests(jobId = 'test-job-123') {
+    console.warn('🧪 Running All Async Navigation Tests');
+    console.warn('==========================================');
     
     const results = {
       asyncDetection: this.testAsyncModeDetection(),
@@ -207,7 +207,7 @@ export const testAsyncNavigationFlow = {
       timestamp: new Date().toISOString()
     };
     
-    console.log('Test Results:', results);
+    console.warn('Test Results:', results);
     
     // Summary
     const summary = {
@@ -217,8 +217,8 @@ export const testAsyncNavigationFlow = {
       errorScenariosIdentified: results.errorScenarios.length > 0
     };
     
-    console.log('Test Summary:', summary);
-    console.log('==========================================');
+    console.warn('Test Summary:', summary);
+    console.warn('==========================================');
     
     return {
       results,

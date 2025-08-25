@@ -67,7 +67,7 @@ export const extractPlaceholders = (content: string): string[] => {
  */
 export const createPreviewContent = (
   content: string,
-  showPlaceholderHints: boolean = true,
+  showPlaceholderHints = true,
   userReplacements: PlaceholderReplacements = {}
 ): string => {
   if (!content) return content;
@@ -133,7 +133,7 @@ export const extractPlaceholderInfo = (content: string): Array<{placeholder: str
   
   const placeholders = extractPlaceholders(content);
   return placeholders.map(placeholder => {
-    const cleanPlaceholder = placeholder.replace(/[\[\]]/g, '');
+    const cleanPlaceholder = placeholder.replace(/[[\]]/g, '');
     const type = detectPlaceholderType(placeholder);
     const label = formatPlaceholderLabel(cleanPlaceholder);
     

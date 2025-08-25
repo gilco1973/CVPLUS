@@ -9,6 +9,7 @@ import { ContactFormFields } from './ContactForm/ContactFormFields';
 import { ContactFormHeader } from './ContactForm/ContactFormHeader';
 import { ContactFormStatus } from './ContactForm/ContactFormStatus';
 import { useContactFormValidation } from './ContactForm/useContactFormValidation';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import { ContactFormProps, ContactFormData } from './ContactForm/types';
 
@@ -23,10 +24,11 @@ export const ContactForm: React.FC<ContactFormProps> = ({
   className = '',
   mode = 'private'
 }) => {
-  const contactName = data?.contactName || 'the CV owner';
+  const { t } = useTranslation();
+  const contactName = data?.contactName || t('forms.contactForm.defaultContactName', { defaultValue: 'the CV owner' });
   const {
-    title = 'Get in Touch',
-    buttonText = 'Send Message',
+    title = t('forms.contactForm.title'),
+    buttonText = t('forms.contactForm.buttons.send'),
     showCompanyField = true,
     showPhoneField = true,
     maxRetries = 3
@@ -100,13 +102,13 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         message: ''
       });
       setRetryCount(0);
-      toast.success('Message sent successfully!');
+      toast.success(t('forms.contactForm.status.success'));
       onUpdate?.(submittedData);
       
     } catch (error) {
       console.error('Contact form error:', error);
       
-      const errorMsg = error instanceof Error ? error.message : 'Failed to send message. Please try again.';
+      const errorMsg = error instanceof Error ? error.message : t('forms.contactForm.status.error');
       
       setErrorMessage(errorMsg);
       setSubmissionStatus('error');
@@ -178,7 +180,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
                       className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" 
                       aria-hidden="true"
                     />
-                    <span id="submitting-status">Sending...</span>
+                    <span id="submitting-status">{t('forms.contactForm.buttons.sending')}</span>
                   </>
                 ) : (
                   <>

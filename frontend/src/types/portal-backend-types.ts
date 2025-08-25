@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { PortalError, PortalErrorCode, RAGEmbedding, CVSection } from './portal-types';
+import { PortalError, PortalErrorCode, RAGEmbedding, CVSection, PortalConfig } from './portal-types';
 import { ServiceResult } from './service-types';
 
 // ============================================================================
@@ -751,5 +751,4 @@ export interface ServiceHealthCheck {
   };
 }
 
-// Import statement for portal-types
-import { PortalConfig } from './portal-types';
+// Portal types imported at the top of the file

@@ -69,7 +69,7 @@ export class MemoryMonitor {
       this.analyzeMemoryTrends();
     }, this.config.sampleInterval);
 
-    console.log('Memory monitoring started');
+    console.warn('Memory monitoring started');
   }
 
   /**
@@ -82,7 +82,7 @@ export class MemoryMonitor {
     }
     
     this.isMonitoring = false;
-    console.log('Memory monitoring stopped');
+    console.warn('Memory monitoring stopped');
   }
 
   /**
@@ -356,7 +356,7 @@ export function initializeMemoryMonitoring(): void {
     memoryMonitor.stop();
   });
   
-  console.log('Memory monitoring initialized');
+  console.warn('Memory monitoring initialized');
 }
 
 /**

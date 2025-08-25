@@ -26,8 +26,8 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
   }, [progressUnsubscribe]);
 
   const setupProgressTracking = (trackingFeatures: FeatureConfig[]) => {
-    console.log('📡 [DEBUG] Setting up progress tracking for job:', jobId);
-    console.log('📡 [DEBUG] Tracking features:', trackingFeatures.map(f => ({ id: f.id, name: f.name })));
+    console.warn('📡 [DEBUG] Setting up progress tracking for job:', jobId);
+    console.warn('📡 [DEBUG] Tracking features:', trackingFeatures.map(f => ({ id: f.id, name: f.name })));
     
     // Clean up existing subscription
     if (progressUnsubscribe) {
@@ -39,12 +39,12 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
       jobId,
       (job: Job | null) => {
         if (!job || !isMountedRef.current) {
-          console.log('📡 [DEBUG] No job data or component unmounted');
+          console.warn('📡 [DEBUG] No job data or component unmounted');
           return;
         }
         
         const enhancedFeatures = job.enhancedFeatures || {};
-        console.log('🗺️ [DEBUG] Enhanced features received:', enhancedFeatures);
+        console.warn('🗺️ [DEBUG] Enhanced features received:', enhancedFeatures);
         
         // Update progress state  
         const newProgressState: ProgressState = {};
@@ -62,7 +62,7 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
             const currentProgress = featureData.progress || 0;
             const currentStatus = featureData.status || 'pending';
             
-            console.log(`🔍 [DEBUG] Feature ${feature.id} progress:`, {
+            console.warn(`🔍 [DEBUG] Feature ${feature.id} progress:`, {
               status: currentStatus,
               progress: currentProgress,
               currentStep: featureData.currentStep
@@ -87,7 +87,7 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
               processingFeatures++;
             }
             
-            console.log(`✅ [DEBUG] Feature ${feature.id} mapped to:`, {
+            console.warn(`✅ [DEBUG] Feature ${feature.id} mapped to:`, {
               status: safeFeatureData.status,
               progress: safeFeatureData.progress
             });
@@ -104,9 +104,9 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
           }
         });
         
-        console.log(`📡 [DEBUG] Progress update: ${updatedFeatures}/${trackingFeatures.length} features have data`);
-        console.log(`📊 [DEBUG] Feature status summary: ${completedFeatures} completed, ${processingFeatures} processing`);
-        console.log(`📊 [DEBUG] New progress state:`, newProgressState);
+        console.warn(`📡 [DEBUG] Progress update: ${updatedFeatures}/${trackingFeatures.length} features have data`);
+        console.warn(`📊 [DEBUG] Feature status summary: ${completedFeatures} completed, ${processingFeatures} processing`);
+        console.warn(`📊 [DEBUG] New progress state:`, newProgressState);
         
         // Update progress state and trigger re-render
         setProgressState(prevState => {
@@ -121,10 +121,10 @@ export const useProgressTracking = (jobId: string, features: FeatureConfig[]) =>
           });
           
           if (hasChanges) {
-            console.log(`🔄 [DEBUG] Progress state updated with changes`);
+            console.warn(`🔄 [DEBUG] Progress state updated with changes`);
             return newProgressState;
           } else {
-            console.log(`⏭️ [DEBUG] No progress changes detected, keeping previous state`);
+            console.warn(`⏭️ [DEBUG] No progress changes detected, keeping previous state`);
             return prevState;
           }
         });

@@ -5,8 +5,7 @@ import { UnifiedAnalysisProvider, useUnifiedAnalysis } from '../components/analy
 import { ExternalDataSources } from '../components/ExternalDataSources';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToJob } from '../services/cvService';
-import type { Job } from '../services/cvService';
+import { subscribeToJob, type Job } from '../services/cvService';
 import { ArrowLeft, Loader2, Database, ChevronRight } from 'lucide-react';
 import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
