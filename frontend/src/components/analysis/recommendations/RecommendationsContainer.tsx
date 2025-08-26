@@ -4,6 +4,8 @@ import { CVServiceCore } from '../../../services/cv/CVServiceCore';
 import type { Job } from '../../../services/cvService';
 import { Loader2, CheckCircle, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { debugRecommendationsCall } from '../../../utils/api-debugging-suite';
+import { logRecommendationError, monitorRecommendationResponse } from '../../../utils/recommendations-error-monitor';
 
 interface RecommendationsContainerProps {
   jobData: Job;
@@ -62,6 +64,14 @@ export const RecommendationsContainer: React.FC<RecommendationsContainerProps> =
           environment: process.env.NODE_ENV
         });
         
+        // Add debugging before API call to diagnose failures
+        console.log('[RecommendationsContainer] Running pre-flight diagnostics...');
+        const debugResult = await debugRecommendationsCall(jobData.id);
+        if (!debugResult.success) {
+          console.error('[RecommendationsContainer] Pre-flight diagnostic failed:', debugResult);
+          throw new Error(`API diagnostic failed: ${debugResult.error}`);
+        }
+        
         const response = await CVServiceCore.getRecommendations(
           jobData.id,
           targetRole,
@@ -71,8 +81,15 @@ export const RecommendationsContainer: React.FC<RecommendationsContainerProps> =
 
         console.log('[RecommendationsContainer] Recommendations loaded:', response);
         
-        if (response.success && response.recommendations) {
-          const formattedRecs = response.recommendations.map((rec: any) => ({
+        // Monitor the response structure for debugging
+        monitorRecommendationResponse(response, jobData.id);
+        
+        // Handle the nested response structure from backend
+        // Backend returns: { success: true, data: { recommendations: [...] } }
+        const recommendations = response.success && response.data ? response.data.recommendations : response.recommendations;
+        
+        if (response.success && recommendations) {
+          const formattedRecs = recommendations.map((rec: any) => ({
             ...rec,
             isSelected: false,
             category: rec.category || 'general'
@@ -86,11 +103,34 @@ export const RecommendationsContainer: React.FC<RecommendationsContainerProps> =
           
           toast.success('Recommendations loaded successfully!');
         } else {
-          throw new Error(response.error || 'Failed to load recommendations');
+          // Enhanced error handling with more specific error messages
+          const errorMessage = response.error || response.data?.error || 'Failed to load recommendations';
+          
+          // Log the error with full context
+          logRecommendationError(new Error(errorMessage), {
+            jobId: jobData.id,
+            step: 'response_validation',
+            targetRole,
+            industryKeywords,
+            forceRegenerate: false,
+            response
+          });
+          
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('[RecommendationsContainer] Error loading recommendations:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to load recommendations';
+        
+        // Log the error with full context
+        logRecommendationError(error, {
+          jobId: jobData.id,
+          step: 'api_call',
+          targetRole: state.selectedRole?.roleName,
+          industryKeywords: state.selectedRole?.matchingFactors || [],
+          forceRegenerate: false
+        });
+        
         setError(errorMessage);
         toast.error(errorMessage);
       } finally {

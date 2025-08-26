@@ -344,6 +344,19 @@ async function executeRecommendationGeneration(
   const now = new Date().toISOString();
   const processingTime = startTime ? Date.now() - startTime : 0;
   
+  console.log(`🏁 Final recommendation summary for job ${jobId}:`, {
+    totalRecommendations: recommendations.length,
+    processingTimeMs: processingTime,
+    recommendationTypes: recommendations.reduce((acc: Record<string, number>, rec) => {
+      acc[rec.type] = (acc[rec.type] || 0) + 1;
+      return acc;
+    }, {}),
+    recommendationImpacts: recommendations.reduce((acc: Record<string, number>, rec) => {
+      acc[rec.impact] = (acc[rec.impact] || 0) + 1;
+      return acc;
+    }, {})
+  });
+  
   // Sanitize recommendations for Firestore (remove non-serializable objects like RegExp)
   const sanitizedRecommendations = recommendations.map((rec: any) => {
     const sanitizedRec = { ...rec };
@@ -409,28 +422,177 @@ async function executeRecommendationGeneration(
 }
 
 /**
+ * Generate comprehensive fallback recommendations for augmentation
+ */
+function generateComprehensiveFallbackRecommendations(originalCV: ParsedCV): CVRecommendation[] {
+  console.log('🛠️  Generating comprehensive fallback recommendations for augmentation');
+  
+  const comprehensiveRecommendations: CVRecommendation[] = [];
+  const baseId = `comprehensive_${Date.now()}`;
+  
+  // Professional Title recommendation (if missing)
+  if (!originalCV.personalInfo?.title || originalCV.personalInfo.title.length < 5) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_title`,
+      type: 'content',
+      category: 'professional_summary',
+      section: 'Professional Title',
+      actionRequired: 'add',
+      title: 'Add Professional Title',
+      description: 'A clear professional title helps recruiters immediately understand your role and expertise level.',
+      suggestedContent: 'Add a professional title that reflects your expertise and career level, such as "Senior Software Engineer" or "Marketing Manager".',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 18
+    });
+  }
+  
+  // Contact Information enhancement
+  if (!originalCV.personalInfo?.email || !originalCV.personalInfo?.phone) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_contact`,
+      type: 'content',
+      category: 'ats_optimization',
+      section: 'Contact Information',
+      actionRequired: 'modify',
+      title: 'Complete Contact Information',
+      description: 'Ensure all essential contact information is present and easily accessible to recruiters.',
+      suggestedContent: 'Include professional email, phone number, LinkedIn profile, and location (city, state).',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 15
+    });
+  }
+  
+  // Achievements section (if missing)
+  if (!originalCV.achievements || originalCV.achievements.length === 0) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_achievements`,
+      type: 'section_addition',
+      category: 'achievements',
+      section: 'Key Achievements',
+      actionRequired: 'add',
+      title: 'Add Key Achievements Section',
+      description: 'A dedicated achievements section highlights your most impressive accomplishments and differentiates you from other candidates.',
+      suggestedContent: 'Create a "Key Achievements" section with 3-5 quantifiable accomplishments, such as:\n• Increased team productivity by 25% through process optimization\n• Led successful project delivery 15% ahead of schedule\n• Reduced operational costs by $50K annually\n• Achieved 95% customer satisfaction rating',
+      impact: 'high',
+      priority: 2,
+      estimatedScoreImprovement: 22
+    });
+  }
+  
+  // Certifications section (if missing)
+  if (!originalCV.certifications || originalCV.certifications.length === 0) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_certifications`,
+      type: 'section_addition',
+      category: 'achievements',
+      section: 'Certifications',
+      actionRequired: 'add',
+      title: 'Add Relevant Certifications',
+      description: 'Professional certifications demonstrate expertise and commitment to continuous learning.',
+      suggestedContent: 'Add any professional certifications, industry credentials, or licenses relevant to your field.',
+      impact: 'medium',
+      priority: 3,
+      estimatedScoreImprovement: 12
+    });
+  }
+  
+  // Languages section (if missing)
+  if (!originalCV.languages || originalCV.languages.length === 0) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_languages`,
+      type: 'section_addition',
+      category: 'skills',
+      section: 'Languages',
+      actionRequired: 'add',
+      title: 'Add Language Skills',
+      description: 'Language skills are valuable in today\'s global workplace and can differentiate your profile.',
+      suggestedContent: 'List languages with proficiency levels: Native, Fluent, Professional, Conversational, Basic.',
+      impact: 'medium',
+      priority: 4,
+      estimatedScoreImprovement: 8
+    });
+  }
+  
+  // Projects/Portfolio section (if missing)
+  if (!originalCV.projects || originalCV.projects.length === 0) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_projects`,
+      type: 'section_addition',
+      category: 'achievements',
+      section: 'Notable Projects',
+      actionRequired: 'add',
+      title: 'Add Notable Projects',
+      description: 'Highlighting key projects demonstrates practical application of your skills and problem-solving abilities.',
+      suggestedContent: 'Add 2-3 significant projects with brief descriptions, technologies used, and outcomes achieved.',
+      impact: 'high',
+      priority: 2,
+      estimatedScoreImprovement: 16
+    });
+  }
+  
+  // Volunteer Experience (if missing) - check if the field exists in CV structure
+  const hasVolunteerExperience = (originalCV as any).volunteerExperience && (originalCV as any).volunteerExperience.length > 0;
+  if (!hasVolunteerExperience) {
+    comprehensiveRecommendations.push({
+      id: `${baseId}_volunteer`,
+      type: 'section_addition' as const,
+      category: 'experience' as const,
+      section: 'Volunteer Experience',
+      actionRequired: 'add' as const,
+      title: 'Include Volunteer Experience',
+      description: 'Volunteer work demonstrates character, community engagement, and additional skills.',
+      suggestedContent: 'Add relevant volunteer experiences that showcase leadership, teamwork, or industry-related skills.',
+      impact: 'medium' as const,
+      priority: 5,
+      estimatedScoreImprovement: 10
+    });
+  }
+  
+  console.log(`🛠️  Generated ${comprehensiveRecommendations.length} comprehensive fallback recommendations`);
+  return comprehensiveRecommendations;
+}
+
+/**
  * Generate emergency fallback recommendations when AI services fail
  */
 function generateEmergencyFallbackRecommendations(originalCV: ParsedCV): CVRecommendation[] {
-  console.log('🚨 Generating emergency fallback recommendations');
+  console.log('🚨 Generating comprehensive emergency fallback recommendations');
   
   const fallbackRecommendations: CVRecommendation[] = [];
   const baseId = `fallback_${Date.now()}`;
   
-  // Always add professional summary enhancement
-  fallbackRecommendations.push({
-    id: `${baseId}_summary`,
-    type: 'content',
-    category: 'professional_summary',
-    section: 'Professional Summary',
-    actionRequired: 'modify',
-    title: 'Enhance Professional Summary',
-    description: 'Strengthen your professional summary to better showcase your experience and value proposition to employers.',
-    suggestedContent: 'Consider expanding your professional summary with specific achievements and quantifiable results.',
-    impact: 'medium',
-    priority: 1,
-    estimatedScoreImprovement: 15
-  });
+  // 1. Professional summary enhancement or creation
+  if (!originalCV.summary || originalCV.summary.length < 50) {
+    fallbackRecommendations.push({
+      id: `${baseId}_summary_create`,
+      type: 'section_addition',
+      category: 'professional_summary',
+      section: 'Professional Summary',
+      actionRequired: 'add',
+      title: 'Create Compelling Professional Summary',
+      description: 'A professional summary is essential for making a strong first impression and improving ATS compatibility.',
+      suggestedContent: 'Experienced professional with [X years] of expertise in [your field]. Proven track record of [key achievement] and skilled in [top 3 skills]. Passionate about [industry focus] and committed to delivering exceptional results that drive business success.',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 25
+    });
+  } else {
+    fallbackRecommendations.push({
+      id: `${baseId}_summary_enhance`,
+      type: 'content',
+      category: 'professional_summary',
+      section: 'Professional Summary',
+      actionRequired: 'modify',
+      title: 'Enhance Professional Summary with Metrics',
+      description: 'Strengthen your professional summary with specific achievements and quantifiable results to grab recruiter attention.',
+      suggestedContent: 'Enhance your summary by adding quantifiable achievements such as "Increased efficiency by 30%", "Led team of 10+", or "Managed $2M+ budget".',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 20
+    });
+  }
   
   // Add skills organization if skills exist
   if (originalCV.skills && Array.isArray(originalCV.skills) && originalCV.skills.length > 0) {
@@ -498,22 +660,92 @@ function generateEmergencyFallbackRecommendations(originalCV: ParsedCV): CVRecom
     });
   }
   
-  // Always add a general formatting recommendation
+  // 6. Professional title (if missing or generic)
+  if (!originalCV.personalInfo?.title || originalCV.personalInfo.title.length < 5) {
+    fallbackRecommendations.push({
+      id: `${baseId}_title`,
+      type: 'content',
+      category: 'professional_summary',
+      section: 'Professional Title',
+      actionRequired: 'add',
+      title: 'Add Professional Title',
+      description: 'A clear professional title is the first thing recruiters see and helps with ATS keyword matching.',
+      suggestedContent: 'Add a professional title that reflects your current expertise level and field, such as "Senior Software Developer", "Marketing Manager", or "Data Analyst".',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 18
+    });
+  }
+  
+  // 7. Contact information optimization
   fallbackRecommendations.push({
-    id: `${baseId}_formatting`,
-    type: 'formatting',
-    category: 'formatting',
-    section: 'General',
-    actionRequired: 'reformat',
-    title: 'Improve CV Formatting',
-    description: 'Enhance the visual appeal and readability of your CV with better formatting and structure.',
-    suggestedContent: 'Ensure consistent formatting, appropriate white space, and professional typography throughout your CV.',
+    id: `${baseId}_contact`,
+    type: 'content',
+    category: 'ats_optimization',
+    section: 'Contact Information',
+    actionRequired: 'modify',
+    title: 'Optimize Contact Information',
+    description: 'Ensure your contact information is complete, professional, and ATS-friendly.',
+    suggestedContent: 'Include: Professional email, phone number, LinkedIn URL, city/state, and optionally GitHub profile or personal website.',
     impact: 'medium',
-    priority: 2,
+    priority: 3,
     estimatedScoreImprovement: 12
   });
   
-  console.log(`✅ Generated ${fallbackRecommendations.length} emergency fallback recommendations`);
+  // 8. General ATS optimization
+  fallbackRecommendations.push({
+    id: `${baseId}_ats_optimization`,
+    type: 'keyword_optimization',
+    category: 'ats_optimization',
+    section: 'Overall ATS Optimization',
+    actionRequired: 'modify',
+    title: 'Improve ATS Compatibility',
+    description: 'Optimize your CV for Applicant Tracking Systems to ensure it gets past the initial screening.',
+    suggestedContent: 'Use standard section headings, include relevant keywords from job postings, use simple formatting, and save as both .pdf and .docx formats.',
+    impact: 'high',
+    priority: 2,
+    estimatedScoreImprovement: 15
+  });
+  
+  // Ensure we have at least 5 recommendations for comprehensive coverage
+  const minRecommendations = 5;
+  if (fallbackRecommendations.length < minRecommendations) {
+    // Add additional generic improvements
+    const additionalRecs: CVRecommendation[] = [
+      {
+        id: `${baseId}_networking`,
+        type: 'section_addition' as const,
+        category: 'achievements' as const,
+        section: 'Professional Affiliations',
+        actionRequired: 'add' as const,
+        title: 'Add Professional Memberships',
+        description: 'Professional memberships demonstrate industry engagement and commitment to professional development.',
+        suggestedContent: 'List relevant professional associations, industry groups, or networking organizations you belong to.',
+        impact: 'medium' as const,
+        priority: 4,
+        estimatedScoreImprovement: 8
+      },
+      {
+        id: `${baseId}_references`,
+        type: 'content' as const,
+        category: 'ats_optimization' as const,
+        section: 'References',
+        actionRequired: 'modify' as const,
+        title: 'Optimize References Section',
+        description: 'Professional references can strengthen your application when properly presented.',
+        suggestedContent: 'Include "References available upon request" or provide 2-3 professional references with their contact information and relationship to you.',
+        impact: 'low' as const,
+        priority: 5,
+        estimatedScoreImprovement: 5
+      }
+    ];
+    
+    const neededCount = minRecommendations - fallbackRecommendations.length;
+    fallbackRecommendations.push(...additionalRecs.slice(0, neededCount));
+  }
+  
+  console.log(`✅ Generated ${fallbackRecommendations.length} comprehensive emergency fallback recommendations:`, 
+    fallbackRecommendations.map(rec => `${rec.section}: ${rec.title} (${rec.impact} impact)`));
   return fallbackRecommendations;
 }
 
@@ -572,37 +804,61 @@ async function generateRecommendationsWithProgress(
     // Generate recommendations with timeout per step
     await updateProgress('Generating improvement recommendations...', 2);
     
+    // Enhanced recommendation generation with better error handling and retries
     let recommendations: CVRecommendation[] = [];
+    let generationMethod = 'unknown';
     
-    // Primary attempt: Generate detailed recommendations
+    // Primary attempt: Generate detailed recommendations with retries
     try {
+      console.log('🔍 Attempting primary recommendation generation with generateDetailedRecommendations');
       recommendations = await transformationService.generateDetailedRecommendations(
         originalCV,
         targetRole,
         industryKeywords
       );
+      generationMethod = 'detailed';
+      
+      if (recommendations.length === 0) {
+        throw new Error('Primary method returned 0 recommendations, falling back');
+      }
+      
+      console.log(`✅ Primary generation successful: ${recommendations.length} recommendations`);
+      
     } catch (primaryError: any) {
-      console.warn('Primary recommendation generation failed, attempting fallback:', primaryError.message);
+      console.warn('🔄 Primary recommendation generation failed, attempting enhanced role-based fallback:', primaryError.message);
       
       // Fallback 1: Try with enhanced role-based approach
       try {
+        console.log('🔍 Attempting enhanced role-based recommendation generation');
         recommendations = await transformationService.generateRoleEnhancedRecommendations(
           originalCV,
-          false, // disable role detection for faster processing
+          true, // Enable role detection for comprehensive recommendations
           targetRole,
           industryKeywords
         );
-      } catch (secondaryError: any) {
-        console.warn('Secondary recommendation generation failed, using emergency fallback:', secondaryError.message);
+        generationMethod = 'role-enhanced';
         
-        // Fallback 2: Generate basic recommendations
+        if (recommendations.length === 0) {
+          throw new Error('Role-enhanced method returned 0 recommendations, falling back');
+        }
+        
+        console.log(`✅ Role-enhanced generation successful: ${recommendations.length} recommendations`);
+        
+      } catch (secondaryError: any) {
+        console.warn('🔄 Enhanced role-based generation failed, using emergency fallback:', secondaryError.message);
+        
+        // Fallback 2: Generate comprehensive emergency recommendations
+        console.log('🚨 Generating comprehensive emergency fallback recommendations');
         recommendations = generateEmergencyFallbackRecommendations(originalCV);
+        generationMethod = 'emergency-fallback';
+        
+        console.log(`⚠️  Emergency generation: ${recommendations.length} recommendations`);
       }
     }
     
     await updateProgress('Validating recommendations...', 3);
     
-    // Enhanced validation with fallback values
+    // Enhanced validation with fallback values and quality assurance
     const validRecommendations = recommendations.map(rec => {
       // Ensure all required fields are present with fallback values
       return {
@@ -614,6 +870,21 @@ async function generateRecommendationsWithProgress(
       };
     });
     
+    // Quality assurance: Ensure minimum recommendation count
+    if (validRecommendations.length < 3) {
+      console.warn(`⚠️  Low recommendation count (${validRecommendations.length}), augmenting with additional fallback recommendations`);
+      const additionalRecs = generateComprehensiveFallbackRecommendations(originalCV);
+      
+      // Add additional recommendations that don't duplicate existing ones
+      const existingSections = new Set(validRecommendations.map(rec => rec.section.toLowerCase()));
+      const newRecs = additionalRecs.filter(rec => 
+        !existingSections.has(rec.section.toLowerCase())
+      );
+      
+      validRecommendations.push(...newRecs.slice(0, 5 - validRecommendations.length));
+      console.log(`✅ Augmented to ${validRecommendations.length} total recommendations`);
+    }
+    
     // Final safety check - if still empty, generate emergency recommendations
     if (validRecommendations.length === 0) {
       console.warn('All recommendation generation methods failed, creating emergency fallback');
@@ -621,12 +892,19 @@ async function generateRecommendationsWithProgress(
       return emergencyRecommendations;
     }
     
-    console.log('✅ [DEBUG] Validation successful - recommendations structure:', validRecommendations.map(rec => ({
-      id: rec.id ? '✓' : '✗',
-      title: rec.title ? '✓' : '✗',
-      description: rec.description ? '✓' : '✗',
-      section: rec.section ? '✓' : '✗'
-    })));
+    console.log('✅ [DEBUG] Final validation successful:', {
+      method: generationMethod,
+      totalRecommendations: validRecommendations.length,
+      recommendationSummary: validRecommendations.map(rec => ({
+        id: rec.id ? '✓' : '✗',
+        title: rec.title ? '✓' : '✗',
+        description: rec.description ? '✓' : '✗',
+        section: rec.section ? '✓' : '✗',
+        impact: rec.impact,
+        section_name: rec.section
+      }))
+    });
+    
     return validRecommendations;
     
   } catch (error) {

@@ -89,19 +89,25 @@ export const processCV = onCall(
             console.log('🔧 Development mode: Skipping LLM CV parsing and reusing last saved CV...');
             
             try {
-              // For development, use the known real CV data (simplified query to avoid index issues)
-              const realJobId = 'uaJjVwzuzuho6Rma3FoK'; // Real job with parsed CV data
-              const realJobDoc = await admin.firestore()
+              // 🔍 DYNAMIC QUERY: Fetch the latest parsed CV from Firebase (as requested by user)
+              console.log('🔍 Searching for latest parsed CV in Firebase database...');
+              
+              const recentJobsSnapshot = await admin.firestore()
                 .collection('jobs')
-                .doc(realJobId)
+                .where('status', 'in', ['analyzed', 'completed'])
+                .where('parsedData', '!=', null)
+                .orderBy('parsedData')
+                .orderBy('updatedAt', 'desc')
+                .limit(1)
                 .get();
               
-              if (realJobDoc.exists && realJobDoc.data()?.parsedData) {
-                const lastJobData = realJobDoc.data();
+              if (!recentJobsSnapshot.empty) {
+                const lastJobDoc = recentJobsSnapshot.docs[0];
+                const lastJobData = lastJobDoc.data();
                 const reusedCV = lastJobData.parsedData;
                 
-                console.log('✅ Found real parsed CV to reuse:');
-                console.log('   - From job:', realJobDoc.id);
+                console.log('✅ Found latest parsed CV to reuse:');
+                console.log('   - From job:', lastJobDoc.id);
                 console.log('   - Name:', reusedCV?.personalInfo?.name || 'Unknown');
                 console.log('   - Updated:', lastJobData.updatedAt?.toDate?.() || 'Unknown');
                 
@@ -110,7 +116,7 @@ export const processCV = onCall(
                   ...reusedCV,
                   // Add development markers
                   _developmentMode: true,
-                  _reusedFromJob: realJobDoc.id,
+                  _reusedFromJob: lastJobDoc.id,
                   _reusedAt: new Date(),
                   // Update personal info to show this is development
                   personalInfo: {
@@ -124,7 +130,7 @@ export const processCV = onCall(
                 
                 console.log('🎯 Development optimization: LLM parsing skipped, using cached CV');
               } else {
-                console.log('❌ No previous parsed CVs found for development skip');
+                console.log('❌ No latest parsed CVs found in database for development skip');
                 
                 // Update job status to indicate no cached CV is available
                 await admin.firestore()
@@ -132,7 +138,7 @@ export const processCV = onCall(
                   .doc(jobId)
                   .set({
                     status: 'failed',
-                    error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.',
+                    error: 'Development skip requested but no parsed CV data found in Firebase database. Please upload and process a CV first to create data for development mode.',
                     errorType: 'no_cached_data',
                     developmentSkipFailed: true,
                     updatedAt: FieldValue.serverTimestamp()
@@ -141,11 +147,11 @@ export const processCV = onCall(
                 // Return immediately to prevent further execution
                 return {
                   success: false,
-                  error: 'Development skip requested but no cached CV data available. Please upload a real CV first to create cached data for development mode.'
+                  error: 'Development skip requested but no parsed CV data found in Firebase database. Please upload and process a CV first to create data for development mode.'
                 };
               }
             } catch (reuseError) {
-              console.log('❌ Failed to reuse parsed CV for development skip:', reuseError.message);
+              console.log('❌ Failed to fetch latest parsed CV for development skip:', reuseError.message);
               
               // Update job status to indicate reuse failure
               await admin.firestore()
@@ -153,7 +159,7 @@ export const processCV = onCall(
                 .doc(jobId)
                 .set({
                   status: 'failed',
-                  error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.',
+                  error: 'Development skip failed: Unable to fetch latest parsed CV from Firebase database. Please check database connectivity.',
                   errorType: 'cache_access_failed',
                   technicalError: reuseError.message,
                   developmentSkipFailed: true,
@@ -163,7 +169,7 @@ export const processCV = onCall(
               // Return immediately to prevent further execution
               return {
                 success: false,
-                error: 'Development skip failed: Unable to find or reuse cached CV data. Please upload a real CV first.'
+                error: 'Development skip failed: Unable to fetch latest parsed CV from Firebase database. Please check database connectivity.'
               };
             }
           } else {
