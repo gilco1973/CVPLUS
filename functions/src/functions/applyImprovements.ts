@@ -4,6 +4,7 @@ import { CVTransformationService, CVRecommendation } from '../services/cv-transf
 import { PlaceholderManager, PlaceholderReplacementMap } from '../services/placeholder-manager.service';
 import { ParsedCV } from '../types/job';
 import { corsOptions } from '../config/cors';
+import { getUserSubscriptionInternal } from './payments/getUserSubscription';
 
 // Request deduplication cache to prevent duplicate calls from React StrictMode
 const activeRequests = new Map<string, Promise<any>>();
@@ -307,6 +308,17 @@ async function executeRecommendationGeneration(
 
   // Generate new recommendations with progress tracking
   
+  // Check if user is premium for enhanced recommendations
+  let isPremiumUser = false;
+  try {
+    const subscriptionData = await getUserSubscriptionInternal(userId);
+    isPremiumUser = subscriptionData.subscriptionStatus === 'premium' || subscriptionData.lifetimeAccess === true;
+    console.log(`[getRecommendations] Premium status for user ${userId}: ${isPremiumUser}`);
+  } catch (error) {
+    console.warn(`[getRecommendations] Failed to check premium status for user ${userId}:`, error);
+    // Continue with free tier recommendations
+  }
+  
   // Update progress status
   await db.collection('jobs').doc(jobId).update({
     processingProgress: 'Analyzing CV content...',
@@ -323,6 +335,7 @@ async function executeRecommendationGeneration(
       originalCV,
       targetRole,
       industryKeywords,
+      isPremiumUser,
       jobId,
       db
     ),
@@ -412,7 +425,7 @@ async function executeRecommendationGeneration(
  * Generate emergency fallback recommendations when AI services fail
  */
 function generateEmergencyFallbackRecommendations(originalCV: ParsedCV): CVRecommendation[] {
-  console.log('🚨 Generating emergency fallback recommendations');
+  console.log('🚨 Generating emergency fallback recommendations (enhanced with 8+ recommendations)');
   
   const fallbackRecommendations: CVRecommendation[] = [];
   const baseId = `fallback_${Date.now()}`;
@@ -513,6 +526,53 @@ function generateEmergencyFallbackRecommendations(originalCV: ParsedCV): CVRecom
     estimatedScoreImprovement: 12
   });
   
+  // Add contact information enhancement
+  fallbackRecommendations.push({
+    id: `${baseId}_contact`,
+    type: 'content',
+    category: 'formatting',
+    section: 'Contact Information',
+    actionRequired: 'modify',
+    title: 'Optimize Contact Information',
+    description: 'Ensure all contact information is up-to-date, professional, and includes relevant links.',
+    suggestedContent: 'Include professional email, LinkedIn profile, and relevant portfolio links. Ensure phone number and location are current.',
+    impact: 'medium',
+    priority: 3,
+    estimatedScoreImprovement: 8
+  });
+  
+  // Add keyword optimization
+  fallbackRecommendations.push({
+    id: `${baseId}_keywords`,
+    type: 'keyword_optimization',
+    category: 'ats_optimization',
+    section: 'Throughout CV',
+    actionRequired: 'modify',
+    title: 'Enhance ATS Keywords',
+    description: 'Add industry-specific keywords and technical terms to improve ATS scanning and searchability.',
+    suggestedContent: 'Research and include relevant keywords from your industry and target job descriptions throughout your CV.',
+    impact: 'high',
+    priority: 1,
+    estimatedScoreImprovement: 18
+  });
+  
+  // Add achievements section if missing
+  if (!originalCV.achievements || (Array.isArray(originalCV.achievements) && originalCV.achievements.length === 0)) {
+    fallbackRecommendations.push({
+      id: `${baseId}_achievements`,
+      type: 'section_addition',
+      category: 'achievements',
+      section: 'Achievements',
+      actionRequired: 'add',
+      title: 'Add Key Achievements Section',
+      description: 'Create a dedicated achievements section to highlight your most significant professional accomplishments.',
+      suggestedContent: 'List 3-5 key achievements with quantifiable results, such as awards, recognition, or major project outcomes.',
+      impact: 'high',
+      priority: 1,
+      estimatedScoreImprovement: 16
+    });
+  }
+  
   console.log(`✅ Generated ${fallbackRecommendations.length} emergency fallback recommendations`);
   return fallbackRecommendations;
 }
@@ -549,6 +609,7 @@ async function generateRecommendationsWithProgress(
   originalCV: ParsedCV,
   targetRole?: string,
   industryKeywords?: string[],
+  isPremiumUser?: boolean,
   jobId?: string,
   db?: FirebaseFirestore.Firestore
 ): Promise<CVRecommendation[]> {
@@ -574,24 +635,49 @@ async function generateRecommendationsWithProgress(
     
     let recommendations: CVRecommendation[] = [];
     
-    // Primary attempt: Generate detailed recommendations
+    // Primary attempt: Generate recommendations based on user tier
     try {
-      recommendations = await transformationService.generateDetailedRecommendations(
-        originalCV,
-        targetRole,
-        industryKeywords
-      );
-    } catch (primaryError: any) {
-      console.warn('Primary recommendation generation failed, attempting fallback:', primaryError.message);
-      
-      // Fallback 1: Try with enhanced role-based approach
-      try {
+      if (isPremiumUser) {
+        console.log('🎖️ Generating premium role-enhanced recommendations');
+        // Premium users get role-enhanced recommendations with full detection
         recommendations = await transformationService.generateRoleEnhancedRecommendations(
           originalCV,
-          false, // disable role detection for faster processing
+          true, // enable role detection for premium users
           targetRole,
           industryKeywords
         );
+      } else {
+        console.log('📝 Generating standard detailed recommendations');
+        // Free users get standard detailed recommendations
+        recommendations = await transformationService.generateDetailedRecommendations(
+          originalCV,
+          targetRole,
+          industryKeywords
+        );
+      }
+    } catch (primaryError: any) {
+      console.warn('Primary recommendation generation failed, attempting fallback:', primaryError.message);
+      
+      // Fallback 1: Try the opposite approach
+      try {
+        if (isPremiumUser) {
+          // If premium role-enhanced failed, try standard detailed
+          console.log('🔄 Premium fallback: trying standard recommendations');
+          recommendations = await transformationService.generateDetailedRecommendations(
+            originalCV,
+            targetRole,
+            industryKeywords
+          );
+        } else {
+          // If standard failed, try basic role-enhanced without detection
+          console.log('🔄 Standard fallback: trying basic role-enhanced');
+          recommendations = await transformationService.generateRoleEnhancedRecommendations(
+            originalCV,
+            false, // disable role detection for faster processing
+            targetRole,
+            industryKeywords
+          );
+        }
       } catch (secondaryError: any) {
         console.warn('Secondary recommendation generation failed, using emergency fallback:', secondaryError.message);
         

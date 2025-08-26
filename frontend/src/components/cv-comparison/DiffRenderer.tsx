@@ -1,5 +1,6 @@
 import React from 'react';
 import { DiffResult } from '../../utils/cv-comparison/diffUtils';
+import { highlightEditablePlaceholders, hasPlaceholders } from '../../utils/editablePlaceholderUtils';
 
 export interface DiffRendererProps {
   changes: DiffResult[];
@@ -93,13 +94,20 @@ export interface SideBySideDiffProps {
   changes: DiffResult[];
   sectionName: string;
   className?: string;
+  onContentUpdate?: (newContent: string) => void;
+  fieldPath?: string;
+  section?: string;
 }
 
 export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   beforeContent,
+  afterContent,
   changes,
   sectionName,
-  className = ''
+  className = '',
+  onContentUpdate,
+  fieldPath,
+  section
 }) => {
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 ${className}`}>
@@ -132,7 +140,18 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
           )}
         </h4>
         <div className="text-sm">
-          <DiffRenderer changes={changes} showInline={false} />
+          {hasPlaceholders(afterContent) && onContentUpdate ? (
+            <div className="whitespace-pre-wrap">
+              {highlightEditablePlaceholders(
+                afterContent,
+                onContentUpdate,
+                fieldPath || sectionName.toLowerCase().replace(/\s+/g, '_'),
+                section || 'general'
+              )}
+            </div>
+          ) : (
+            <DiffRenderer changes={changes} showInline={false} />
+          )}
         </div>
       </div>
     </div>

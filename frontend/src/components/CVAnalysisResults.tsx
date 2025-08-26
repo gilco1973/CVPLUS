@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, ChevronUp, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, CheckCircle, Circle, AlertTriangle, Target, Sparkles, TrendingUp, Wand2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { applyImprovements, type Job } from '../services/cvService';
 import { MagicTransformService, type MagicTransformProgress, type MagicTransformResult } from '../services/features/MagicTransformService';
 import { CVServiceCore } from '../services/cv/CVServiceCore';
+import { CVComparisonView } from './cv-comparison/CVComparisonView';
 import toast from 'react-hot-toast';
 import { robustNavigation } from '../utils/robustNavigation';
 import type { PrioritizedRecommendation } from '../types/ats';
@@ -65,6 +66,10 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   const [magicTransformProgress, setMagicTransformProgress] = useState<MagicTransformProgress | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [loadedJobId, setLoadedJobId] = useState<string | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [originalCVData, setOriginalCVData] = useState<any>(null);
+  const [improvedCVData, setImprovedCVData] = useState<any>(null);
+  const [comparisonReport, setComparisonReport] = useState<any>(null);
   const isMountedRef = useRef(true);
   
   useEffect(() => {
@@ -87,6 +92,13 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       isMountedRef.current = false;
     };
   }, []);
+  
+  // Initialize original CV data when job is available
+  useEffect(() => {
+    if (job.parsedData && !originalCVData) {
+      setOriginalCVData(job.parsedData);
+    }
+  }, [job.parsedData, originalCVData]);
 
   // Enhanced load function with StrictMode-aware duplicate prevention
   const loadAnalysisAndRecommendations = useCallback(async () => {
@@ -671,6 +683,52 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   }
 
 
+  // Show comparison view if improvements have been applied
+  if (showComparison && originalCVData && improvedCVData) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        {/* Back to Recommendations Button */}
+        <div className="bg-gray-800 rounded-lg shadow-xl p-4 border border-gray-700">
+          <button
+            onClick={() => setShowComparison(false)}
+            className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Recommendations
+          </button>
+        </div>
+        
+        {/* Comparison View */}
+        <CVComparisonView
+          originalData={originalCVData}
+          improvedData={improvedCVData}
+          comparisonReport={comparisonReport}
+          className="bg-white rounded-lg shadow-xl"
+          jobId={job.id}
+        >
+          {/* This children prop can be used for CV preview content if needed */}
+          <div className="p-6 text-center text-gray-600">
+            Use the comparison controls above to view your CV improvements
+          </div>
+        </CVComparisonView>
+        
+        {/* Continue to Templates Button */}
+        <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700 text-center">
+          <button
+            onClick={() => {
+              // Store the improved data and continue to templates
+              sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify(improvedCVData));
+              onContinue([]);
+            }}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            Continue to Template Selection
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className={`space-y-6 ${className}`}>
       
@@ -1117,11 +1175,25 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                     try {
                       const result = await applyImprovements(job.id, selectedRecommendationIds);
                       
-                      // Store the improved content for the preview page
+                      // Store the improved content for the preview page (maintain compatibility)
                       if (result && result && typeof result === 'object' && 'data' in result) {
                         const resultData = result.data as Record<string, unknown>;
                         if (resultData && 'improvedCV' in resultData) {
                           sessionStorage.setItem(`improvements-${job.id}`, JSON.stringify(resultData.improvedCV));
+                          
+                          // Set up comparison view data
+                          setOriginalCVData(job.parsedData);
+                          setImprovedCVData(resultData.improvedCV);
+                          
+                          // Set comparison report if available
+                          if (resultData && 'comparisonReport' in resultData) {
+                            setComparisonReport(resultData.comparisonReport);
+                          }
+                          
+                          // Show the comparison view instead of navigating
+                          setShowComparison(true);
+                          toast.success(`Applied ${selectedRecommendationIds.length} improvements to your CV!`);
+                          return; // Exit early to avoid navigation
                         }
                       }
                       
@@ -1142,6 +1214,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
                   sessionStorage.setItem(`recommendations-${job.id}`, JSON.stringify(selectedRecommendationIds));
                   
                   // Enhanced navigation with multiple strategies and better error handling
+                  // NOTE: This navigation code will only execute if comparison view is not shown
                   
                   // Strategy 1: Parent callback (primary method)
                   try {

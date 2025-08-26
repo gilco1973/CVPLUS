@@ -69,7 +69,38 @@ export const processCV = onCall(
 
       let buffer: Buffer | undefined;
 
-      if (isUrl) {
+      // Check if this is a development skip request
+      const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+      
+      if (isDev && fileUrl === 'development-skip') {
+        console.log('🔧 Development skip detected - using mock CV data');
+        
+        // Use mock parsed CV data for development testing
+        parsedCV = {
+          personalInfo: {
+            name: 'Dev User (Development Mode)',
+            email: `dev-user-${user.uid}@example.com`,
+            title: 'Software Engineer',
+            phone: '+1-555-0123',
+            linkedin: 'https://linkedin.com/in/dev-user'
+          },
+          summary: 'This is a mock CV generated for development testing purposes. The CV parsing and analysis functionality is working correctly.',
+          skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Firebase', 'AI/ML'],
+          experience: [{
+            company: 'Dev Company Inc',
+            position: 'Senior Developer',
+            startDate: '2020-01-01',
+            endDate: '2023-12-31',
+            description: 'Developed and maintained web applications using modern technologies.'
+          }],
+          education: [{
+            institution: 'Dev University',
+            degree: 'Bachelor of Computer Science',
+            graduationDate: '2019-05-01'
+          }]
+        };
+        cvContent = JSON.stringify(parsedCV);
+      } else if (isUrl) {
         // Parse from URL
         parsedCV = await parser.parseFromURL(fileUrl, userInstructions);
         cvContent = JSON.stringify(parsedCV); // Use parsed data as content for policy check
@@ -100,7 +131,6 @@ export const processCV = onCall(
 
       // 🚨 POLICY ENFORCEMENT: Check upload policy before processing
       // Skip policy checks in development environment
-      const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
       
       let policyResult: any;
       
@@ -194,8 +224,28 @@ export const processCV = onCall(
       }
 
       // Detect PII
-      const piiDetector = new PIIDetector(apiKey);
-      const piiResult = await piiDetector.detectAndMaskPII(parsedCV);
+      let piiResult: any;
+      
+      if (isDev && fileUrl === 'development-skip') {
+        console.log('🔧 Development skip detected - using mock PII results');
+        // Create mock PII detection results for development
+        piiResult = {
+          hasPII: false,
+          detectedTypes: [],
+          recommendations: ['No PII detected in development mode'],
+          maskedData: {
+            ...parsedCV,
+            personalInfo: {
+              ...parsedCV.personalInfo,
+              email: `dev-user-${user.uid}@example.com`,
+              phone: '+1-555-XXXX'
+            }
+          }
+        };
+      } else {
+        const piiDetector = new PIIDetector(apiKey);
+        piiResult = await piiDetector.detectAndMaskPII(parsedCV);
+      }
 
       // Save parsed data with PII information, policy results, and user association
       await admin.firestore()

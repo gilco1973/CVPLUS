@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Eye, 
   GitCompare, 
@@ -16,6 +16,8 @@ import { SideBySideDiff, DiffStats, CompactDiff } from './DiffRenderer';
 import { MobileComparisonView, MobileComparisonToggle } from './MobileComparisonView';
 import { getSectionDisplayName, CVComparison, SectionComparison } from '../../utils/cv-comparison/diffUtils';
 import { ComparisonStats } from '../../types/cv-preview';
+import { CVUpdateService } from '../../services/cvUpdateService';
+import toast from 'react-hot-toast';
 
 // CV Data structure - using unknown for safety
 type CVData = unknown;
@@ -33,6 +35,7 @@ export interface CVComparisonViewProps {
   };
   children: React.ReactNode; // The actual CV preview content
   className?: string;
+  jobId?: string; // Optional jobId for content updates
 }
 
 /**
@@ -43,7 +46,8 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
   improvedData,
   comparisonReport,
   children,
-  className = ''
+  className = '',
+  jobId
 }) => {
   const { state, actions } = useCVComparison(originalData, improvedData, comparisonReport);
   const filteredSections = useFilteredSections(state.comparison, state.showOnlyChanged);
@@ -137,6 +141,7 @@ export const CVComparisonView: React.FC<CVComparisonViewProps> = ({
                         ? null 
                         : section.sectionName
                     )}
+                    jobId={jobId}
                   />
                 </div>
               ))}
@@ -394,15 +399,50 @@ interface SectionComparisonProps {
   section: SectionComparison;
   isSelected: boolean;
   onSelect: () => void;
+  jobId?: string;
 }
 
 const SectionComparison: React.FC<SectionComparisonProps> = ({
   section,
   isSelected,
-  onSelect
+  onSelect,
+  jobId
 }) => {
   const displayName = getSectionDisplayName(section.sectionName);
   const hasChanges = section.hasChanges;
+
+  // Handle content updates for placeholders
+  const handleContentUpdate = useCallback(async (newContent: string) => {
+    if (!jobId) {
+      console.warn('No jobId provided for content update');
+      toast.error('Unable to save changes: Job ID not available');
+      return;
+    }
+
+    try {
+      console.log('Updating content for section:', section.sectionName, 'with content:', newContent);
+      
+      // Create a generic update for the section content
+      const updateData = {
+        [section.sectionName.toLowerCase().replace(/\s+/g, '_')]: newContent
+      };
+
+      const response = await CVUpdateService.updateCVData(
+        jobId,
+        updateData,
+        `section_${section.sectionName.toLowerCase().replace(/\s+/g, '_')}`
+      );
+
+      if (response.success) {
+        toast.success(`${displayName} updated successfully`);
+      } else {
+        toast.error(`Failed to update ${displayName}: ${response.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating content:', error);
+      toast.error(`Error updating ${displayName}`);
+    }
+  }, [jobId, section.sectionName, displayName]);
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white">
@@ -444,6 +484,9 @@ const SectionComparison: React.FC<SectionComparisonProps> = ({
                 afterContent={section.after}
                 changes={section.changes}
                 sectionName={displayName}
+                onContentUpdate={handleContentUpdate}
+                fieldPath={section.sectionName.toLowerCase().replace(/\s+/g, '_')}
+                section={section.sectionName}
               />
             </div>
           </div>

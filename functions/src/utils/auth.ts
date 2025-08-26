@@ -25,6 +25,23 @@ export async function requireGoogleAuth(request: CallableRequest): Promise<Authe
 
   const { uid, token } = request.auth;
 
+  // Skip Google authentication requirement in development environment
+  const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+  
+  if (isDev && !token.email) {
+    // Allow anonymous users in development environment
+    const safeUid = uid || 'anonymous';
+    const shortUid = safeUid.length > 6 ? safeUid.substring(0, 6) : safeUid;
+    return {
+      uid: safeUid,
+      email: `dev-user-${safeUid}@example.com`,
+      emailVerified: true,
+      name: `Dev User ${shortUid}`,
+      picture: null,
+      hasCalendarPermissions: true
+    };
+  }
+
   // Verify this is a Google-authenticated user (not anonymous)
   if (!token.email) {
     throw new Error('Google authentication required. Anonymous users are no longer supported.');

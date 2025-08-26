@@ -148,23 +148,23 @@ export class CVTransformationService {
       return mergedRecommendations;
       
     } catch (error) {
+      console.error('CV role-enhanced recommendations failed:', {
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorStatus: error?.status,
+        enableRoleDetection,
+        targetRole,
+        hasExternalData: !!externalData,
+        cvComplexity: this.getCVComplexity(parsedCV)
+      });
       
-      // Try fallback to standard recommendations first
-      try {
-        return await this.generateDetailedRecommendations(parsedCV, targetRole, industryKeywords);
-      } catch (fallbackError) {
-        
-        // Final fallback to quota-aware recommendations
-        if (this.isQuotaExceededError(error) || this.isQuotaExceededError(fallbackError)) {
-          const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
-          return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
-        }
-        
-        // Ultimate fallback
-        const basicFallbackRecs = this.generateFallbackRecommendations(parsedCV);
-        const validatedRecs = this.ensureRecommendationsValid(basicFallbackRecs);
-        return this.processRecommendationsWithPlaceholders(validatedRecs);
-      }
+      // Propagate error with detailed context instead of falling back
+      throw new Error(
+        `Failed to generate role-enhanced CV recommendations: ${error?.message || 'Unknown error'}. ` +
+        `Context: Role detection ${enableRoleDetection ? 'enabled' : 'disabled'}, ` +
+        `Target role: ${targetRole || 'none'}, ` +
+        `External data: ${externalData ? 'provided' : 'none'}`
+      );
     }
   }
 
@@ -183,21 +183,23 @@ export class CVTransformationService {
       
       const response = await this.claudeService.createVerifiedMessage({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        temperature: 0.3,
-        system: `You are an expert CV transformation specialist. Analyze the provided CV and generate SUBSTANTIAL, impactful recommendations that dramatically improve the content quality and professional presentation.
+        max_tokens: 8000,
+        temperature: 0.2,
+        system: `You are an expert CV transformation specialist. Analyze the provided CV and generate 8-12 SUBSTANTIAL, impactful recommendations that dramatically improve the content quality and professional presentation.
 
 CRITICAL REQUIREMENTS:
-1. Base recommendations ONLY on the actual content provided
-2. NEVER invent specific numbers, metrics, team sizes, or financial figures
-3. For quantifiable improvements, use placeholder templates like "[INSERT TEAM SIZE]" or "[ADD PERCENTAGE IMPROVEMENT]"
-4. Make SIGNIFICANT improvements that are clearly visible when compared side-by-side
-5. Transform weak, passive descriptions into compelling, achievement-focused statements
-6. Use strong action verbs and professional language throughout
-7. Ensure ATS compatibility with relevant keywords from the actual CV
-8. When existing content lacks metrics, suggest adding them without providing fake numbers
-9. IMPORTANT: Return ONLY valid JSON - no markdown formatting, no code blocks, no explanatory text
-10. Focus on HIGH-IMPACT changes that substantially enhance the CV's professional quality
+1. Generate AT LEAST 8 recommendations, prioritized by impact (high/medium/low)
+2. Base recommendations ONLY on the actual content provided
+3. NEVER invent specific numbers, metrics, team sizes, or financial figures
+4. For quantifiable improvements, use placeholder templates like "[INSERT TEAM SIZE]" or "[ADD PERCENTAGE IMPROVEMENT]"
+5. Make SIGNIFICANT improvements that are clearly visible when compared side-by-side
+6. Transform weak, passive descriptions into compelling, achievement-focused statements
+7. Use strong action verbs and professional language throughout
+8. Ensure ATS compatibility with relevant keywords from the actual CV
+9. When existing content lacks metrics, suggest adding them without providing fake numbers
+10. IMPORTANT: Return ONLY valid JSON - no markdown formatting, no code blocks, no explanatory text
+11. Focus on HIGH-IMPACT changes that substantially enhance the CV's professional quality
+12. Distribute priorities: 3-4 high impact, 4-5 medium impact, 2-3 low impact recommendations
 
 Return a JSON array of recommendations following this exact structure:
 {
@@ -228,6 +230,23 @@ Return a JSON array of recommendations following this exact structure:
       });
 
       const content = response.content[0];
+      
+      // ADD DETAILED LOGGING TO CAPTURE ACTUAL LLM RESPONSE
+      console.log('🔍 RAW LLM RESPONSE ANALYSIS:', {
+        responseType: content.type,
+        responseLength: content.text?.length || 0,
+        rawResponseStart: content.text?.substring(0, 200) || 'NO TEXT',
+        rawResponseEnd: content.text?.substring(-200) || 'NO TEXT',
+        containsRecommendationsArray: content.text?.includes('"recommendations"') || false,
+        containsRecommendationsKeyword: content.text?.includes('recommendations') || false,
+        estimatedRecommendationCount: (content.text?.match(/"id":/g) || []).length,
+        hasMultipleRecommendations: (content.text?.match(/"id":/g) || []).length > 1,
+        containsCodeBlocks: content.text?.includes('```') || false,
+        startsWithJson: content.text?.trim().startsWith('{') || false,
+        endsWithJson: content.text?.trim().endsWith('}') || false,
+        fullRawResponse: content.text // COMPLETE RAW RESPONSE FOR DEBUGGING
+      });
+      
       if (content.type === 'text') {
         try {
           // Clean the response text to remove markdown code blocks
@@ -243,6 +262,23 @@ Return a JSON array of recommendations following this exact structure:
           const parsed = JSON.parse(cleanText);
           const recommendations = parsed.recommendations || [];
           
+          // ADD DETAILED LOGGING TO CAPTURE PARSED RECOMMENDATIONS
+          console.log('📊 PARSED RECOMMENDATIONS ANALYSIS:', {
+            parsedObjectType: typeof parsed,
+            hasRecommendationsArray: Array.isArray(parsed.recommendations),
+            recommendationsLength: recommendations.length,
+            rawRecommendationsCount: recommendations.length,
+            recommendationIds: recommendations.map(r => r.id || 'NO_ID'),
+            recommendationTitles: recommendations.map(r => r.title || 'NO_TITLE'),
+            recommendationCategories: recommendations.map(r => r.category || 'NO_CATEGORY'),
+            sampleRecommendation: recommendations.length > 0 ? {
+              id: recommendations[0].id,
+              title: recommendations[0].title,
+              category: recommendations[0].category,
+              hasAllRequiredFields: !!(recommendations[0].id && recommendations[0].title && recommendations[0].description)
+            } : 'NO_RECOMMENDATIONS',
+            fullParsedObject: parsed // COMPLETE PARSED OBJECT FOR DEBUGGING
+          });
           
           // Validate and ensure all recommendations have required fields
           const validatedRecommendations = this.ensureRecommendationsValid(recommendations);
@@ -250,34 +286,65 @@ Return a JSON array of recommendations following this exact structure:
           // Process each recommendation to detect placeholders
           return this.processRecommendationsWithPlaceholders(validatedRecommendations);
         } catch (parseError) {
+          console.error('Failed to parse LLM response as JSON:', {
+            parseError: parseError.message,
+            rawResponsePreview: content.text.substring(0, 500),
+            responseLength: content.text.length,
+            containsCodeBlocks: content.text.includes('```'),
+            containsJson: content.text.includes('{'),
+            responseStructure: {
+              startsWithJson: content.text.trim().startsWith('{'),
+              endsWithJson: content.text.trim().endsWith('}'),
+              hasRecommendationsArray: content.text.includes('"recommendations"')
+            }
+          });
           
-          // Fallback: extract recommendations from text response
-          const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
-          const validatedRecs = this.ensureRecommendationsValid(fallbackRecs);
-          return this.processRecommendationsWithPlaceholders(validatedRecs);
+          throw new Error(
+            `LLM returned invalid JSON format. Parse error: ${parseError.message}. ` +
+            `Response preview: ${content.text.substring(0, 200)}... ` +
+            `Full response length: ${content.text.length} characters. ` +
+            `This indicates the LLM is not following the JSON-only instruction properly.`
+          );
         }
       }
 
-      throw new Error('Invalid response format from Claude');
+      console.error('Claude returned non-text response format:', {
+        responseType: response.content[0]?.type,
+        responseContent: response.content[0],
+        fullResponse: response
+      });
+      
+      throw new Error(
+        `Claude returned invalid response format. Expected text content but got: ${response.content[0]?.type}. ` +
+        `This indicates a problem with the Claude API call or response handling.`
+      );
     } catch (error) {
+      console.error('CV recommendations generation failed completely:', {
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorStatus: error?.status,
+        errorResponse: error?.response?.data,
+        isQuotaError: this.isQuotaExceededError(error),
+        cvComplexity: this.getCVComplexity(parsedCV),
+        targetRole,
+        industryKeywords: industryKeywords?.length || 0,
+        promptLength: this.buildAnalysisPrompt(parsedCV, targetRole, industryKeywords).length
+      });
       
-      // Log specific error details for debugging
-      if (error?.response) {
-      }
-      
-      if (error?.message) {
-      }
-      
-      // Enhanced error handling for specific error types
+      // Throw detailed error instead of falling back
       if (this.isQuotaExceededError(error)) {
-        const quotaFallbackRecs = this.generateQuotaFallbackRecommendations(parsedCV);
-        return this.processRecommendationsWithPlaceholders(quotaFallbackRecs);
+        throw new Error(
+          `Claude API quota exceeded. Error: ${error?.message}. ` +
+          `Status: ${error?.status || error?.response?.status}. ` +
+          `This requires increasing API quota or implementing rate limiting.`
+        );
       }
       
-      // Return basic recommendations as fallback for other errors
-      const fallbackRecs = this.generateFallbackRecommendations(parsedCV);
-      const validatedFallbackRecs = this.ensureRecommendationsValid(fallbackRecs);
-      return this.processRecommendationsWithPlaceholders(validatedFallbackRecs);
+      throw new Error(
+        `Failed to generate CV recommendations. Error: ${error?.message || 'Unknown error'}. ` +
+        `Status: ${error?.status || error?.response?.status || 'unknown'}. ` +
+        `This requires investigating the Claude API call or prompt structure.`
+      );
     }
   }
 
@@ -1725,66 +1792,7 @@ Enhanced Summary:`;
     }, {} as Record<string, CVRecommendation[]>);
   }
 
-  private extractRecommendationsFromText(text: string, cv: ParsedCV): CVRecommendation[] {
-    // Fallback method to extract recommendations from non-JSON response
-    const recommendations: CVRecommendation[] = [];
-    const lines = text.split('\n');
-    
-    let currentRec: Partial<CVRecommendation> = {};
-    let recId = 1;
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (trimmedLine.match(/^\d+\./)) {
-        // New recommendation starts
-        if (currentRec.title) {
-          recommendations.push(this.completeRecommendation(currentRec, recId++));
-        }
-        currentRec = {
-          title: trimmedLine.replace(/^\d+\.\s*/, ''),
-          type: 'content',
-          category: 'experience',
-          impact: 'medium',
-          priority: 5,
-          section: 'experience',
-          actionRequired: 'modify',
-          estimatedScoreImprovement: 10
-        };
-      } else if (trimmedLine.toLowerCase().includes('current:')) {
-        currentRec.currentContent = trimmedLine.replace(/current:\s*/i, '');
-      } else if (trimmedLine.toLowerCase().includes('improved:')) {
-        currentRec.suggestedContent = trimmedLine.replace(/improved:\s*/i, '');
-      } else if (trimmedLine && currentRec.title && !currentRec.description) {
-        currentRec.description = trimmedLine;
-      }
-    }
-    
-    // Add the last recommendation
-    if (currentRec.title) {
-      recommendations.push(this.completeRecommendation(currentRec, recId));
-    }
-    
-    return recommendations.slice(0, 10); // Limit to 10 recommendations
-  }
 
-  private completeRecommendation(partial: Partial<CVRecommendation>, id: number): CVRecommendation {
-    return {
-      id: `rec_${id}`,
-      type: partial.type || 'content',
-      category: partial.category || 'experience',
-      title: partial.title || 'CV Improvement',
-      description: partial.description || 'Improve CV content',
-      currentContent: partial.currentContent,
-      suggestedContent: partial.suggestedContent,
-      impact: partial.impact || 'medium',
-      priority: partial.priority || 5,
-      section: partial.section || 'experience',
-      actionRequired: partial.actionRequired || 'modify',
-      keywords: partial.keywords || [],
-      estimatedScoreImprovement: partial.estimatedScoreImprovement || 10
-    };
-  }
 
   /**
    * Assess CV complexity to optimize processing strategy
@@ -1872,201 +1880,7 @@ Return JSON only: {"recommendations": [...]} with id, type, category, title, des
     });
   }
 
-  /**
-   * Generate enhanced fallback recommendations specifically for quota exceeded scenarios
-   */
-  private generateQuotaFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
-    const recommendations: CVRecommendation[] = [];
-    let recCount = 1;
-    
-    // Essential recommendations that don't require AI generation
-    
-    // 1. Professional Title (always high priority)
-    if (this.isProfessionalTitlePlaceholder(cv.personalInfo?.title)) {
-      recommendations.push({
-        id: `rec_quota_title_${recCount++}`,
-        type: 'content',
-        category: 'professional_summary',
-        title: 'Add Professional Title',
-        description: 'A professional title is essential for ATS systems and recruiter attention. Add a title that reflects your expertise and career level.',
-        currentContent: cv.personalInfo?.title || '',
-        suggestedContent: 'Professional [Your Field] Specialist',
-        impact: 'high',
-        priority: 1,
-        section: 'professional_title',
-        actionRequired: cv.personalInfo?.title ? 'replace' : 'add',
-        keywords: ['professional', 'specialist', 'expert'],
-        estimatedScoreImprovement: 15
-      });
-    }
-    
-    // 2. Professional Summary
-    if (!cv.summary || cv.summary.length < 50) {
-      recommendations.push({
-        id: `rec_quota_summary_${recCount++}`,
-        type: 'section_addition',
-        category: 'professional_summary',
-        title: 'Add Professional Summary',
-        description: 'A professional summary is crucial for making a strong first impression and improving ATS compatibility.',
-        suggestedContent: 'Experienced professional with proven expertise in [Your Field]. Skilled in [Key Skills] with a track record of [Key Achievement]. Passionate about [Industry Focus] and committed to delivering exceptional results.',
-        impact: 'high',
-        priority: 2,
-        section: 'professional_summary',
-        actionRequired: 'add',
-        keywords: ['experienced', 'professional', 'skilled', 'expertise'],
-        estimatedScoreImprovement: 20
-      });
-    }
-    
-    // 3. Experience Enhancement
-    if (cv.experience && cv.experience.length > 0) {
-      const hasWeakExperience = cv.experience.some(exp => 
-        !exp.description || exp.description.split(' ').length < 15
-      );
-      
-      if (hasWeakExperience) {
-        recommendations.push({
-          id: `rec_quota_experience_${recCount++}`,
-          type: 'content',
-          category: 'experience',
-          title: 'Enhance Experience Descriptions',
-          description: 'Transform basic job descriptions into achievement-focused statements that demonstrate your impact and value.',
-          currentContent: 'Basic job responsibilities',
-          suggestedContent: 'Led [Team/Project] achieving [Specific Result] through [Action Taken]. Improved [Metric] by [Percentage] while [Additional Achievement].',
-          impact: 'high',
-          priority: 3,
-          section: 'experience',
-          actionRequired: 'replace',
-          keywords: ['led', 'achieved', 'improved', 'delivered'],
-          estimatedScoreImprovement: 18
-        });
-      }
-    }
-    
-    // 4. Skills Organization
-    if (cv.skills && Array.isArray(cv.skills) && cv.skills.length > 8) {
-      recommendations.push({
-        id: `rec_quota_skills_${recCount++}`,
-        type: 'structure',
-        category: 'skills',
-        title: 'Organize Skills by Category',
-        description: 'Categorize your skills to improve readability and ATS scanning. Group technical skills, soft skills, and tools separately.',
-        suggestedContent: 'Technical Skills: [Programming Languages, Frameworks]\nTools & Platforms: [Software, Systems]\nSoft Skills: [Leadership, Communication, Problem-solving]',
-        impact: 'medium',
-        priority: 4,
-        section: 'skills',
-        actionRequired: 'modify',
-        keywords: ['technical', 'skills', 'tools', 'platforms'],
-        estimatedScoreImprovement: 12
-      });
-    }
-    
-    // 5. Education Enhancement
-    if (cv.education && cv.education.length > 0) {
-      const hasBasicEducation = cv.education.some(edu => 
-        !edu.description && !edu.gpa && !edu.honors
-      );
-      
-      if (hasBasicEducation) {
-        recommendations.push({
-          id: `rec_quota_education_${recCount++}`,
-          type: 'content',
-          category: 'education',
-          title: 'Enhance Education Details',
-          description: 'Add relevant coursework, achievements, or honors to make your education section more compelling.',
-          suggestedContent: 'Relevant Coursework: [Key Subjects]\nAchievements: [Academic Honors, Projects]\nGPA: [If 3.5 or higher]',
-          impact: 'medium',
-          priority: 5,
-          section: 'education',
-          actionRequired: 'add',
-          keywords: ['coursework', 'achievements', 'academic'],
-          estimatedScoreImprovement: 10
-        });
-      }
-    }
-    
-    // 6. Achievements Section
-    if (!cv.achievements || cv.achievements.length === 0) {
-      recommendations.push({
-        id: `rec_quota_achievements_${recCount++}`,
-        type: 'section_addition',
-        category: 'achievements',
-        title: 'Add Key Achievements Section',
-        description: 'A dedicated achievements section highlights your most impressive accomplishments and sets you apart from other candidates.',
-        suggestedContent: '• [Quantifiable Achievement with Percentage/Numbers]\n• [Award or Recognition Received]\n• [Project Success or Innovation]\n• [Process Improvement or Efficiency Gain]',
-        impact: 'high',
-        priority: 6,
-        section: 'achievements',
-        actionRequired: 'add',
-        keywords: ['achievements', 'accomplishments', 'awards', 'success'],
-        estimatedScoreImprovement: 15
-      });
-    }
-    
-    return recommendations;
-  }
 
-  private generateFallbackRecommendations(cv: ParsedCV): CVRecommendation[] {
-    const recommendations: CVRecommendation[] = [];
-    
-    // Check for missing or generic professional title
-    if (this.isProfessionalTitlePlaceholder(cv.personalInfo?.title)) {
-      recommendations.push({
-        id: 'rec_professional_title',
-        type: 'content',
-        category: 'professional_summary',
-        title: 'Generate Professional Title',
-        description: 'A compelling professional title is missing or too generic. This is the first thing recruiters see.',
-        currentContent: cv.personalInfo?.title || '',
-        suggestedContent: '[GENERATED BASED ON CV CONTENT]',
-        impact: 'high',
-        priority: 1,
-        section: 'professional_title',
-        actionRequired: cv.personalInfo?.title ? 'replace' : 'add',
-        keywords: ['professional', 'expert', 'specialist'],
-        estimatedScoreImprovement: 15
-      });
-    }
-    
-    // Check for missing professional summary
-    if (!cv.summary || cv.summary.length < 50) {
-      recommendations.push({
-        id: 'rec_summary',
-        type: 'section_addition',
-        category: 'professional_summary',
-        title: 'Add Professional Summary',
-        description: 'A compelling professional summary is missing. This is crucial for ATS and recruiter attention.',
-        suggestedContent: 'Results-driven professional with proven track record in [INSERT YOUR FIELD]. Experienced in [LIST KEY SKILLS] with demonstrated ability to [DESCRIBE KEY ACHIEVEMENT]. Seeking to leverage expertise in [INSERT TARGET ROLE].',
-        impact: 'high',
-        priority: 2,
-        section: 'professional_summary',
-        actionRequired: 'add',
-        keywords: ['professional', 'results-driven', 'experienced'],
-        estimatedScoreImprovement: 20
-      });
-    }
-    
-    // Check for weak experience descriptions
-    if (cv.experience?.some(exp => exp.description && exp.description.split(' ').length < 10)) {
-      recommendations.push({
-        id: 'rec_experience',
-        type: 'content',
-        category: 'experience',
-        title: 'Enhance Experience Descriptions',
-        description: 'Experience descriptions are too brief and lack quantifiable achievements.',
-        currentContent: 'Responsible for team management',
-        suggestedContent: 'Led cross-functional team of [INSERT TEAM SIZE], increasing productivity by [ADD PERCENTAGE]% and reducing project delivery time by [INSERT TIMEFRAME]',
-        impact: 'high',
-        priority: 3,
-        section: 'experience',
-        actionRequired: 'replace',
-        keywords: ['led', 'managed', 'increased', 'delivered'],
-        estimatedScoreImprovement: 15
-      });
-    }
-    
-    return recommendations;
-  }
 
   /**
    * Converts role-based recommendations to CV recommendations format
