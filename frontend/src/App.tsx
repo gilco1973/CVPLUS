@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import { HomePage } from './pages/HomePage';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
@@ -166,21 +168,23 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-      <SubscriptionMonitor />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#1f2937', // neutral-800
-            color: '#f3f4f6', // neutral-100
-            border: '1px solid #374151', // neutral-700
-          },
-        }}
-      />
-    </AuthProvider>
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <SubscriptionMonitor />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#1f2937', // neutral-800
+              color: '#f3f4f6', // neutral-100
+              border: '1px solid #374151', // neutral-700
+            },
+          }}
+        />
+      </AuthProvider>
+    </I18nextProvider>
   );
 }
 

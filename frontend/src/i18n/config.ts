@@ -1,7 +1,11 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-http-backend';
+// Import translation files directly for now
+import enNavigation from './locales/en/navigation.json';
+import esNavigation from './locales/es/navigation.json';
+import frNavigation from './locales/fr/navigation.json';
+import deNavigation from './locales/de/navigation.json';
 
 export const supportedLanguages = {
   en: { name: 'English', flag: '🇺🇸', dir: 'ltr', locale: 'en-US' },
@@ -17,7 +21,6 @@ export const supportedLanguages = {
 export type SupportedLanguage = keyof typeof supportedLanguages;
 
 i18n
-  .use(Backend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -28,12 +31,15 @@ i18n
       escapeValue: false, // React already escapes values
     },
     
-    backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+    resources: {
+      en: { navigation: enNavigation },
+      es: { navigation: esNavigation },
+      fr: { navigation: frNavigation },
+      de: { navigation: deNavigation },
     },
     
-    ns: ['common', 'cv', 'features', 'premium', 'errors', 'forms'],
-    defaultNS: 'common',
+    ns: ['navigation'],
+    defaultNS: 'navigation',
     
     detection: {
       order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
@@ -43,7 +49,7 @@ i18n
     },
     
     react: {
-      useSuspense: true,
+      useSuspense: false, // Disable suspense for simpler testing
     },
     
     // Load translations immediately for default language

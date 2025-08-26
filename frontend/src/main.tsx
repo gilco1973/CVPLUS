@@ -4,6 +4,9 @@ import './index.css'
 import App from './App.tsx'
 import { setupCriticalErrorHandling } from './utils/critical-error-handler'
 
+// Initialize i18n system
+import './i18n/index'
+
 // Setup critical error handling immediately
 setupCriticalErrorHandling();
 

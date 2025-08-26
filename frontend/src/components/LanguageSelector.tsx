@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronUpDownIcon, LanguageIcon } from '@heroicons/react/24/outline';
+import { Check, ChevronsUpDown, Languages } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { supportedLanguages, type SupportedLanguage } from '../i18n/config';
 
@@ -16,13 +16,13 @@ export function LanguageSelector() {
         <div className="relative">
           <Listbox.Button className="relative w-full cursor-pointer rounded-lg bg-white/10 backdrop-blur-sm border border-gray-700 hover:border-cyan-400/50 transition-colors py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-400/20 sm:text-sm">
             <span className="flex items-center gap-2">
-              <LanguageIcon className="h-4 w-4 text-gray-400" />
+              <Languages className="h-4 w-4 text-gray-400" />
               <span className="block truncate text-gray-200">
                 {currentLangConfig.flag} {currentLangConfig.name}
               </span>
             </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              <ChevronsUpDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
             </span>
           </Listbox.Button>
           
@@ -51,7 +51,7 @@ export function LanguageSelector() {
                       </span>
                       {selected ? (
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-400">
-                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                          <Check className="h-5 w-5" aria-hidden="true" />
                         </span>
                       ) : null}
                     </>
@@ -80,7 +80,7 @@ export function LanguageSelectorCompact() {
           <Listbox.Button className="relative cursor-pointer rounded-lg bg-white/10 backdrop-blur-sm border border-gray-700 hover:border-cyan-400/50 transition-colors p-2 shadow-md focus:outline-none focus-visible:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-400/20">
             <span className="flex items-center gap-1">
               <span className="text-lg">{currentLangConfig.flag}</span>
-              <ChevronUpDownIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              <ChevronsUpDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </span>
           </Listbox.Button>
           
@@ -106,7 +106,7 @@ export function LanguageSelectorCompact() {
                       <span className="text-lg">{lang.flag}</span>
                       <span className="text-sm">{lang.name}</span>
                       {selected && (
-                        <CheckIcon className="h-4 w-4 text-cyan-400 ml-auto" />
+                        <Check className="h-4 w-4 text-cyan-400 ml-auto" />
                       )}
                     </span>
                   )}
