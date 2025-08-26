@@ -289,7 +289,10 @@ Return a JSON array of recommendations following this exact structure:
     selectedRecommendations: CVRecommendation[]
   ): Promise<CVTransformationResult> {
     
-    // Deep clone the original CV to avoid mutations
+    // Create immutable copy of original CV for comparison and return
+    const preservedOriginalCV = JSON.parse(JSON.stringify(originalCV)) as ParsedCV;
+    
+    // Deep clone the original CV to avoid mutations during improvements
     const improvedCV = JSON.parse(JSON.stringify(originalCV)) as ParsedCV;
     const appliedRecommendations: CVRecommendation[] = [];
     const transformationSummary = {
@@ -303,8 +306,8 @@ Return a JSON array of recommendations following this exact structure:
       beforeAfter: []
     };
     
-    // Capture original content states for comparison
-    const originalContentStates = this.captureContentStates(originalCV);
+    // Capture original content states for comparison using preserved copy
+    const originalContentStates = this.captureContentStates(preservedOriginalCV);
 
     // Group recommendations by type for efficient processing
     const groupedRecommendations = this.groupRecommendationsByType(selectedRecommendations);
@@ -421,6 +424,20 @@ Return a JSON array of recommendations following this exact structure:
     
     // Generate proper before/after comparisons after all transformations
     const improvedContentStates = this.captureContentStates(improvedCV);
+    
+    // Debug logging for comparison states
+    console.log('CV Comparison Debug:');
+    console.log('Original states keys:', Object.keys(originalContentStates));
+    console.log('Improved states keys:', Object.keys(improvedContentStates));
+    console.log('Applied recommendations count:', appliedRecommendations.length);
+    
+    if (originalContentStates['Professional Summary'] && improvedContentStates['Professional Summary']) {
+      console.log('Summary comparison:');
+      console.log('  Original length:', originalContentStates['Professional Summary'].length);
+      console.log('  Improved length:', improvedContentStates['Professional Summary'].length);
+      console.log('  Are identical:', originalContentStates['Professional Summary'] === improvedContentStates['Professional Summary']);
+    }
+    
     comparisonReport.beforeAfter = this.generateComparisonReport(
       originalContentStates,
       improvedContentStates, 
@@ -428,7 +445,7 @@ Return a JSON array of recommendations following this exact structure:
     );
     
     return {
-      originalCV,
+      originalCV: preservedOriginalCV,
       improvedCV,
       appliedRecommendations,
       transformationSummary,

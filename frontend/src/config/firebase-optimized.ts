@@ -42,7 +42,7 @@ export const getFirestoreInstance = () => {
     
     // Connect to emulator in development
     if (import.meta.env.DEV && !firestore.app) {
-      connectFirestoreEmulator(firestore, 'localhost', 8080);
+      connectFirestoreEmulator(firestore, 'localhost', 8090);
     }
   }
   return firestore;

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test - Firebase Emulators</title>
+</head>
+<body>
+    <h1>Firebase Emulator CORS Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(test, success, message) {
+            const div = document.createElement('div');
+            div.innerHTML = `<p><strong>${test}:</strong> ${success ? '✅' : '❌'} ${message}</p>`;
+            div.style.color = success ? 'green' : 'red';
+            resultsDiv.appendChild(div);
+        }
+        
+        async function testCORS() {
+            console.log('🧪 Testing CORS connectivity with Firebase emulators...');
+            
+            // Test 1: Firestore Emulator
+            try {
+                const response = await fetch('http://localhost:8090/', { method: 'GET' });
+                addResult('Firestore Emulator', response.ok, `Status: ${response.status}`);
+            } catch (error) {
+                addResult('Firestore Emulator', false, `Error: ${error.message}`);
+            }
+            
+            // Test 2: Auth Emulator
+            try {
+                const response = await fetch('http://localhost:9099/', { method: 'GET' });
+                addResult('Auth Emulator', response.ok || response.status === 400, `Status: ${response.status} (400 is expected)`);
+            } catch (error) {
+                addResult('Auth Emulator', false, `Error: ${error.message}`);
+            }
+            
+            // Test 3: Functions Emulator with CORS test endpoint
+            try {
+                const response = await fetch('http://localhost:5001/getmycv-ai/us-central1/testCors', {
+                    method: 'GET',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Functions Emulator CORS', true, `Success: ${data.message}`);
+                } else {
+                    addResult('Functions Emulator CORS', false, `Status: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('Functions Emulator CORS', false, `Error: ${error.message}`);
+            }
+            
+            // Test 4: Storage Emulator
+            try {
+                const response = await fetch('http://localhost:9199/v0/b/getmycv-ai.firebasestorage.app', { method: 'GET' });
+                addResult('Storage Emulator', response.ok, `Status: ${response.status}`);
+            } catch (error) {
+                addResult('Storage Emulator', false, `Error: ${error.message}`);
+            }
+            
+            console.log('🎉 CORS testing completed!');
+        }
+        
+        // Run tests when page loads
+        testCORS();
+    </script>
+</body>
+</html>
