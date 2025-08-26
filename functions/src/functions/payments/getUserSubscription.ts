@@ -26,6 +26,29 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
 
     const { userId } = data;
 
+    // Skip database checks in development environment
+    const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+    
+    if (isDev) {
+      logger.info('Dev environment detected - returning mock subscription data', { userId });
+      return {
+        subscriptionStatus: 'premium',
+        lifetimeAccess: true,
+        features: {
+          webPortal: true,
+          aiChat: true,
+          podcast: true,
+          advancedAnalytics: true
+        },
+        purchasedAt: new Date(),
+        paymentAmount: 99,
+        currency: 'USD',
+        googleAccountVerified: new Date(),
+        stripeCustomerId: 'dev-mock-customer',
+        message: 'Dev environment - mock premium subscription'
+      };
+    }
+
     try {
       // Get user subscription from Firestore
       const subscriptionDoc = await db
@@ -88,13 +111,21 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
 // Helper function for internal use (not exposed as Cloud Function)
 export async function getUserSubscriptionInternal(userId: string) {
   try {
+    logger.info('Getting user subscription internally', { userId });
+    
     const subscriptionDoc = await db
       .collection('userSubscriptions')
       .doc(userId)
       .get();
 
+    logger.info('Subscription document query completed', { 
+      userId, 
+      exists: subscriptionDoc.exists,
+      hasData: subscriptionDoc.exists ? !!subscriptionDoc.data() : false
+    });
+
     if (!subscriptionDoc.exists) {
-      return {
+      const defaultSubscription = {
         subscriptionStatus: 'free',
         lifetimeAccess: false,
         features: {
@@ -104,11 +135,32 @@ export async function getUserSubscriptionInternal(userId: string) {
           advancedAnalytics: false
         }
       };
+      
+      logger.info('Returning default subscription for user', { userId, subscription: defaultSubscription });
+      return defaultSubscription;
     }
 
-    return subscriptionDoc.data();
+    const subscriptionData = subscriptionDoc.data();
+    logger.info('Returning existing subscription for user', { 
+      userId, 
+      subscriptionStatus: subscriptionData?.subscriptionStatus,
+      lifetimeAccess: subscriptionData?.lifetimeAccess
+    });
+    
+    return subscriptionData;
   } catch (error) {
-    logger.error('Error getting user subscription internally', { error, userId });
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      code: (error as any)?.code,
+      name: error instanceof Error ? error.name : typeof error
+    };
+    
+    logger.error('Error getting user subscription internally', { 
+      error: errorDetails, 
+      userId,
+      timestamp: new Date().toISOString()
+    });
     throw error;
   }
 }

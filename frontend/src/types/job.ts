@@ -250,7 +250,7 @@ export const jobUtils = {
       case 'preview':
         return `${baseUrl}/preview/${job.id}`;
       case 'results':
-        return `${baseUrl}/results/${job.id}`;
+        return `${baseUrl}/select-features/${job.id}`;
       case 'keywords':
         return `${baseUrl}/keywords/${job.id}`;
       default:

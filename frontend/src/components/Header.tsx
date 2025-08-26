@@ -5,6 +5,7 @@ import { Breadcrumb } from './Breadcrumb';
 import { generateBreadcrumbs } from '../utils/breadcrumbs';
 import { ChevronLeft } from 'lucide-react';
 import { designSystem } from '../config/designSystem';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 
 interface HeaderProps {
   currentPage?: string;
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
 
   // Auto-collapse header on mobile scroll down
   useEffect(() => {
@@ -127,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
                         ? 'bg-primary-100 text-primary-700' 
                         : 'bg-white/20 text-white'
                     }`}>
-                      {getStepNumber(currentPage)}/5
+                      {getStepNumber(currentPage, isPremium)}/{getTotalSteps(isPremium)}
                     </span>
                   </div>
                 )}
@@ -160,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {currentPage && (
                   <div className="flex items-center space-x-2 text-sm">
                     <span className={variant === 'default' ? 'text-gray-600' : 'text-gray-200'}>
-                      Step {getStepNumber(currentPage)} of 5:
+                      Step {getStepNumber(currentPage, isPremium)} of {getTotalSteps(isPremium)}:
                     </span>
                     <span className={`font-medium ${variant === 'default' ? 'text-primary-600' : 'text-primary-200'}`}>
                       {getStepLabel(currentPage)}
@@ -203,29 +205,59 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const getStepNumber = (currentPage: string): string => {
-  switch (currentPage) {
-    case 'processing':
-      return '1';
-    case 'analysis':
-      return '2';
-    case 'role-selection':
-      return '3';
-    case 'feature-selection':
-      return '4'; // Feature selection is step 4
-    case 'preview':
-      return '3a'; // Preview & Customize (alternative to role selection)
-    case 'templates':
-      return '4a'; // Templates are sub-step of customization
-    case 'keywords':
-      return '4b'; // Keywords are sub-step of customization
-    case 'results':
-      return '4'; // Feature selection is step 4 (legacy)
-    case 'final-results':
-      return '5'; // Final results is step 5
-    default:
-      return '1';
+const getStepNumber = (currentPage: string, isPremium: boolean): string => {
+  // Premium Flow: Upload(1) → Analysis(2) → Role Selection(3) → Feature Selection(4) → Preview(5) → Keywords(6) → Results(7)
+  // Non-Premium Flow: Upload(1) → Analysis(2) → Feature Selection(3) → Preview(4) → Keywords(5) → Results(6)
+  
+  if (isPremium) {
+    switch (currentPage) {
+      case 'processing':
+      case 'upload':
+        return '1';
+      case 'analysis':
+        return '2';
+      case 'role-selection':
+        return '3';
+      case 'feature-selection':
+        return '4';
+      case 'preview':
+      case 'templates':
+        return '5';
+      case 'keywords':
+        return '6';
+      case 'results':
+      case 'final-results':
+        return '7';
+      default:
+        return '1';
+    }
+  } else {
+    // Non-premium flow (no role selection step)
+    switch (currentPage) {
+      case 'processing':
+      case 'upload':
+        return '1';
+      case 'analysis':
+        return '2';
+      case 'feature-selection':
+        return '3';
+      case 'preview':
+      case 'templates':
+        return '4';
+      case 'keywords':
+        return '5';
+      case 'results':
+      case 'final-results':
+        return '6';
+      default:
+        return '1';
+    }
   }
+};
+
+const getTotalSteps = (isPremium: boolean): number => {
+  // Premium users get role selection step, non-premium users skip it
+  return isPremium ? 7 : 6;
 };
 
 const getStepLabel = (currentPage: string): string => {

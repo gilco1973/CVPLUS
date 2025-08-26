@@ -1,5 +1,5 @@
 /**
- * Results Page - Refactored with Modular Components
+ * Feature Selection Page - Refactored with Modular Components
  */
 
 import React, { useEffect, useState, useRef, Suspense } from 'react';
@@ -16,21 +16,21 @@ import { CVPreview } from '../components/CVPreview';
 import { GeneratedCVDisplayLazy } from '../components/GeneratedCVDisplayLazy';
 import { 
   FormatSelectionPanel,
-  TemplateSelection,
   useFeatureAvailability
 } from '../components/results';
+import { EnhancedTemplateSelection } from '../components/results/EnhancedTemplateSelection';
 import { Header } from '../components/Header';
 import type { SelectedFeatures, SelectedFormats } from '../types/results';
 import { designSystem } from '../config/designSystem';
 import toast from 'react-hot-toast';
 
-export const ResultsPage = () => {
+export const FeatureSelection = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [selectedTemplate, setSelectedTemplate] = useState('tech-innovation');
   
   const [selectedFeatures, setSelectedFeatures] = useState<SelectedFeatures>({
     atsOptimization: true,
@@ -377,7 +377,7 @@ export const ResultsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Configuration */}
           <div className="space-y-6">
-            <TemplateSelection 
+            <EnhancedTemplateSelection 
               selectedTemplate={selectedTemplate}
               setSelectedTemplate={setSelectedTemplate}
             />

@@ -364,7 +364,7 @@ export class NavigationStateManager {
       },
       {
         step: 'features',
-        path: '/features/:sessionId',
+        path: '/features/:jobId',
         title: 'Select Features',
         description: 'Choose enhancement features',
         icon: 'features',
@@ -382,7 +382,7 @@ export class NavigationStateManager {
       },
       {
         step: 'results',
-        path: '/results/:sessionId',
+        path: '/select-features/:jobId',
         title: 'Final Results',
         description: 'Download and share your CV',
         icon: 'results',
@@ -391,7 +391,7 @@ export class NavigationStateManager {
       },
       {
         step: 'keywords',
-        path: '/keywords/:sessionId',
+        path: '/keywords/:jobId',
         title: 'Keyword Optimization',
         description: 'Optimize keywords for ATS',
         icon: 'keywords',

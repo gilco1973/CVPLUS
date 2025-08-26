@@ -1,5 +1,6 @@
 import { logger } from 'firebase-functions';
-import { getFirestore } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
+const FieldValue = admin.firestore.FieldValue;
 import { CVHashService, DuplicateCheckResult, CVMetadata } from './cv-hash.service';
 import { 
   NameVerificationService, 
@@ -63,7 +64,7 @@ export interface UsageStats {
 }
 
 export class PolicyEnforcementService {
-  private readonly db = getFirestore();
+  private readonly db = admin.firestore();
   private readonly cvHashService = new CVHashService();
   private readonly nameVerificationService = new NameVerificationService();
 
@@ -402,9 +403,9 @@ export class PolicyEnforcementService {
       await policyRecordRef.set({
         userId,
         lastCheckDate: new Date(),
-        totalChecks: this.db.FieldValue.increment(1),
-        totalViolations: this.db.FieldValue.increment(checkData.violations.length),
-        totalWarnings: this.db.FieldValue.increment(checkData.warnings.length)
+        totalChecks: FieldValue.increment(1),
+        totalViolations: FieldValue.increment(checkData.violations.length),
+        totalWarnings: FieldValue.increment(checkData.warnings.length)
       }, { merge: true });
 
       // Add to check history

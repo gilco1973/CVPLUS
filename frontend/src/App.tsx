@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import { HomePage } from './pages/HomePage';
@@ -11,7 +11,7 @@ import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowL
 const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));
 const CVAnalysisPage = lazy(() => import('./pages/CVAnalysisPage').then(m => ({ default: m.CVAnalysisPage })));
 const CVPreviewPageNew = lazy(() => import('./pages/CVPreviewPageNew').then(m => ({ default: m.CVPreviewPageNew })));
-const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ default: m.ResultsPage })));
+const FeatureSelection = lazy(() => import('./pages/FeatureSelection').then(m => ({ default: m.FeatureSelection })));
 const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
 const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
 const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then(m => ({ default: m.RoleSelectionPage })));
@@ -28,6 +28,12 @@ const PageLoader = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
   </div>
 );
+
+// Redirect component for deprecated routes
+const FeatureSelectionRedirect = () => {
+  const { jobId } = useParams<{ jobId: string }>();
+  return <Navigate to={`/select-features/${jobId}`} replace />;
+};
 
 const router = createBrowserRouter(
   [
@@ -100,12 +106,8 @@ const router = createBrowserRouter(
       ),
     },
     {
-      path: '/results/:jobId',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <ResultsPage />
-        </Suspense>
-      ),
+      path: '/featureselection/:jobId',
+      element: <FeatureSelectionRedirect />,
     },
     {
       path: '/final-results/:jobId',
@@ -116,7 +118,7 @@ const router = createBrowserRouter(
       ),
     },
     {
-      path: '/keywords/:id',
+      path: '/keywords/:jobId',
       element: (
         <Suspense fallback={<PageLoader />}>
           <KeywordOptimization />

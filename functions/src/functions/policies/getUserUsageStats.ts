@@ -27,6 +27,24 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
 
     const { userId } = data;
 
+    // Skip all checks in development environment
+    const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+    
+    if (isDev) {
+      logger.info('Dev environment detected - returning mock usage stats', { userId });
+      return {
+        currentMonthUploads: 1,
+        uniqueCVsThisMonth: 1,
+        remainingUploads: 999,
+        subscriptionStatus: 'premium' as const,
+        lifetimeAccess: true,
+        monthlyLimit: 'unlimited' as const,
+        uniqueCVLimit: 3,
+        currentMonth: new Date().toISOString().substring(0, 7),
+        lastUpdated: new Date().toISOString()
+      };
+    }
+
     try {
       // Get current month date range
       const now = new Date();
@@ -37,21 +55,38 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
       const isLifetimeAccess = subscriptionData.lifetimeAccess === true;
       const isPremium = subscriptionData.subscriptionStatus === 'premium' || isLifetimeAccess;
 
-      // Get user's uploads this month
+      // Get user's uploads this month with detailed logging
+      logger.info('Querying upload history', {
+        userId,
+        startOfMonth: startOfMonth.toISOString(),
+        collection: 'userPolicyRecords',
+        subcollection: 'uploadHistory'
+      });
+      
       const uploadsQuery = await db
         .collection('userPolicyRecords')
         .doc(userId)
         .collection('uploadHistory')
         .where('uploadDate', '>=', startOfMonth)
         .get();
+        
+      logger.info('Upload history query completed', {
+        userId,
+        querySize: uploadsQuery.size,
+        isEmpty: uploadsQuery.empty
+      });
 
       const currentMonthUploads = uploadsQuery.size;
       
       // Count unique CV hashes uploaded this month
       const uniqueCVHashes = new Set(
         uploadsQuery.docs
-          .map(doc => doc.data().cvHash)
-          .filter(hash => hash) // Filter out any null/undefined hashes
+          .map(doc => {
+            const data = doc.data();
+            logger.debug('Upload document data', { userId, docId: doc.id, data });
+            return data?.cvHash;
+          })
+          .filter(hash => hash && typeof hash === 'string') // Filter out any null/undefined/invalid hashes
       ).size;
 
       // Calculate remaining uploads based on plan
@@ -83,7 +118,7 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
       logger.info('User usage stats retrieved', {
         userId,
         currentMonthUploads,
-        uniqueCVsThisMonth,
+        uniqueCVsThisMonth: uniqueCVHashes,
         remainingUploads: remainingUploads === Infinity ? 'unlimited' : remainingUploads,
         subscriptionStatus: isPremium ? 'premium' : 'free'
       });
@@ -91,7 +126,22 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
       return usageStats;
 
     } catch (error) {
-      logger.error('Error getting user usage stats', { error, userId });
+      // Properly serialize error details for logging
+      const errorDetails = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        name: error instanceof Error ? error.name : typeof error,
+        toString: error?.toString?.()
+      };
+      
+      logger.error('Error getting user usage stats', { 
+        error: errorDetails, 
+        userId,
+        timestamp: new Date().toISOString(),
+        functionName: 'getUserUsageStats'
+      });
       
       if (error instanceof HttpsError) {
         throw error;
@@ -100,7 +150,7 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
       throw new HttpsError(
         'internal',
         'Failed to get user usage statistics',
-        error
+        { originalError: errorDetails }
       );
     }
   }

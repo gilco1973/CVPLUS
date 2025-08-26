@@ -156,7 +156,7 @@ export const CVPreviewPageMobile = () => {
   };
 
   const handleNext = () => {
-    navigate(`/results/${jobId}`);
+    navigate(`/select-features/${jobId}`);
   };
 
   const handlePrevious = () => {

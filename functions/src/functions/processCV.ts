@@ -67,6 +67,8 @@ export const processCV = onCall(
       let parsedCV;
       let cvContent = '';
 
+      let buffer: Buffer | undefined;
+
       if (isUrl) {
         // Parse from URL
         parsedCV = await parser.parseFromURL(fileUrl, userInstructions);
@@ -87,7 +89,7 @@ export const processCV = onCall(
         const filePath = decodeURIComponent(pathMatch[1]);
         
         const file = bucket.file(filePath);
-        const [buffer] = await file.download();
+        [buffer] = await file.download();
         
         // Convert buffer to string for policy checking
         cvContent = buffer.toString('utf-8');
@@ -97,70 +99,99 @@ export const processCV = onCall(
       }
 
       // 🚨 POLICY ENFORCEMENT: Check upload policy before processing
-      const policyService = new PolicyEnforcementService();
+      // Skip policy checks in development environment
+      const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
       
-      // Get request metadata for policy check
-      const requestInfo = {
-        ipAddress: request.rawRequest.ip || request.rawRequest.connection?.remoteAddress,
-        userAgent: request.rawRequest.headers?.['user-agent']
-      };
-
-      const policyCheckRequest = {
-        userId: user.uid,
-        cvContent: cvContent,
-        fileName: fileName || 'unknown.pdf',
-        fileSize: fileSize || buffer?.length || cvContent.length,
-        fileType: mimeType || 'application/octet-stream',
-        requestInfo
-      };
-
-      console.log('🔍 Running policy enforcement check for user:', user.uid);
-      const policyResult = await policyService.checkUploadPolicy(policyCheckRequest);
+      let policyResult: any;
       
-      // Handle policy violations
-      if (!policyResult.allowed) {
-        const criticalViolations = policyResult.violations.filter(v => 
-          v.severity === 'critical' || (v.severity === 'high' && v.requiresAction)
-        );
+      if (!isDev) {
+        const policyService = new PolicyEnforcementService();
+        
+        // Get request metadata for policy check
+        const requestInfo = {
+          ipAddress: request.rawRequest.ip || request.rawRequest.connection?.remoteAddress,
+          userAgent: request.rawRequest.headers?.['user-agent']
+        };
 
-        if (criticalViolations.length > 0) {
-          // Block the upload completely
-          const blockingViolation = criticalViolations[0];
-          
-          console.warn('🚨 Upload blocked due to policy violation:', {
-            userId: user.uid,
-            violationType: blockingViolation.type,
-            severity: blockingViolation.severity
-          });
-          
-          // Update job with policy violation status
-          await admin.firestore()
-            .collection('jobs')
-            .doc(jobId)
-            .set({
-              status: 'policy_violation',
-              policyViolation: {
-                type: blockingViolation.type,
-                message: blockingViolation.message,
-                severity: blockingViolation.severity,
-                details: blockingViolation.details,
-                suggestedActions: blockingViolation.suggestedActions
-              },
-              updatedAt: FieldValue.serverTimestamp()
-            }, { merge: true });
+        // Fix buffer undefined issue by calculating file size correctly
+        const calculatedFileSize = fileSize || (buffer ? buffer.length : Buffer.byteLength(cvContent, 'utf-8'));
 
-          throw new Error(`Upload blocked: ${blockingViolation.message}`);
+        const policyCheckRequest = {
+          userId: user.uid,
+          cvContent: cvContent,
+          fileName: fileName || 'unknown.pdf',
+          fileSize: calculatedFileSize,
+          fileType: mimeType || 'application/octet-stream',
+          requestInfo
+        };
+
+        console.log('🔍 Running policy enforcement check for user:', user.uid);
+        const policyResult = await policyService.checkUploadPolicy(policyCheckRequest);
+      
+        // Handle policy violations
+        if (!policyResult.allowed) {
+          const criticalViolations = policyResult.violations.filter(v => 
+            v.severity === 'critical' || (v.severity === 'high' && v.requiresAction)
+          );
+
+          if (criticalViolations.length > 0) {
+            // Block the upload completely
+            const blockingViolation = criticalViolations[0];
+            
+            console.warn('🚨 Upload blocked due to policy violation:', {
+              userId: user.uid,
+              violationType: blockingViolation.type,
+              severity: blockingViolation.severity
+            });
+            
+            // Update job with policy violation status
+            await admin.firestore()
+              .collection('jobs')
+              .doc(jobId)
+              .set({
+                status: 'policy_violation',
+                policyViolation: {
+                  type: blockingViolation.type,
+                  message: blockingViolation.message,
+                  severity: blockingViolation.severity,
+                  details: blockingViolation.details,
+                  suggestedActions: blockingViolation.suggestedActions
+                },
+                updatedAt: FieldValue.serverTimestamp()
+              }, { merge: true });
+
+            throw new Error(`Upload blocked: ${blockingViolation.message}`);
+          }
         }
+        // Log policy check results (for monitoring)
+        console.log('✅ Policy check completed:', {
+          userId: user.uid,
+          allowed: policyResult.allowed,
+          violations: policyResult.violations.length,
+          warnings: policyResult.warnings.length,
+          cvHash: policyResult.metadata.cvHash.substring(0, 8) + '...'
+        });
+      } else {
+        console.log('🔧 Dev environment detected - skipping all policy checks for user:', user.uid);
+        // Create mock policy result for dev environment
+        policyResult = {
+          allowed: true,
+          violations: [],
+          warnings: [],
+          actions: [],
+          metadata: {
+            cvHash: 'dev-mock-hash',
+            extractedNames: ['Dev User'],
+            usageStats: {
+              currentMonthUploads: 1,
+              uniqueCVsThisMonth: 1,
+              remainingUploads: 999,
+              subscriptionStatus: 'premium',
+              lifetimeAccess: true
+            }
+          }
+        };
       }
-
-      // Log policy check results (for monitoring)
-      console.log('✅ Policy check completed:', {
-        userId: user.uid,
-        allowed: policyResult.allowed,
-        violations: policyResult.violations.length,
-        warnings: policyResult.warnings.length,
-        cvHash: policyResult.metadata.cvHash.substring(0, 8) + '...'
-      });
 
       // Detect PII
       const piiDetector = new PIIDetector(apiKey);

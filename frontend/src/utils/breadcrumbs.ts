@@ -72,8 +72,8 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Processing', path: jobId ? `/process/${jobId}` : undefined, icon: 'BarChart3' },
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
         { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
-        { label: 'Feature Selection', path: jobId ? `/feature-select/${jobId}` : undefined, icon: 'CheckCircle' },
-        { label: 'Final Results', current: true, icon: 'CheckCircle' },
+        { label: 'Feature Selection', path: jobId ? `/select-features/${jobId}` : undefined, icon: 'CheckCircle' },
+        { label: 'Final Results', path: jobId ? `/final-results/${jobId}` : undefined, current: true, icon: 'CheckCircle' },
       ];
 
     case 'keywords':
@@ -83,7 +83,7 @@ export const generateBreadcrumbs = (currentPage: string, jobId?: string): Breadc
         { label: 'Analysis Results', path: jobId ? `/analysis/${jobId}` : undefined, icon: 'Eye' },
         { label: 'Role Selection', path: jobId ? `/role-select/${jobId}` : undefined, icon: 'Target' },
         { label: 'Preview & Customize', path: jobId ? `/preview/${jobId}` : undefined, icon: 'Palette' },
-        { label: 'Keyword Optimization', current: true, icon: 'BarChart3' },
+        { label: 'Keyword Optimization', path: jobId ? `/keywords/${jobId}` : undefined, current: true, icon: 'BarChart3' },
       ];
 
     case 'features':

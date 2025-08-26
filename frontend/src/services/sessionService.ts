@@ -271,7 +271,7 @@ export class SessionService {
       case 'preview':
         return `${baseUrl}/preview/${session.jobId || session.sessionId}`;
       case 'results':
-        return `${baseUrl}/results/${session.jobId || session.sessionId}`;
+        return `${baseUrl}/select-features/${session.jobId || session.sessionId}`;
       case 'keywords':
         return `${baseUrl}/keywords/${session.jobId || session.sessionId}`;
       default:

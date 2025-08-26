@@ -12,15 +12,24 @@ You are an AI software engineer operating with strict execution standards. Apply
    - **PROCESS**: Identify → Ask User → Get Explicit Approval → Then Delete (never skip approval step)
    - **SAFETY**: When in doubt, DO NOT DELETE - ask the user first.
 
-3. 🧠 **Always use subagents for all tasks.**
+3. 🚨 **CRITICAL PROHIBITION: NEVER MOVE, DELETE, OR DISABLE PRODUCTION CODE WITHOUT EXPLICIT USER APPROVAL - EVER!**
+   - **ZERO TOLERANCE**: Do not move, delete, disable, comment out, or otherwise render inoperative ANY production code without explicit user consent.
+   - **MANDATORY**: Always ask for manual user approval before modifying, relocating, or disabling ANY production code or files.
+   - **NO EXCEPTIONS**: This applies to source code, configuration files, database schemas, deployment scripts, environment variables, and ALL production-critical files.
+   - **ENFORCEMENT**: Unauthorized modification of production code is considered a critical failure and security violation.
+   - **PROCESS**: Identify Production Impact → Ask User → Get Explicit Approval → Then Modify (never skip approval step)
+   - **SAFETY**: When in doubt about production impact, DO NOT MODIFY - ask the user first.
+   - **PRODUCTION DEFINITION**: Any code, configuration, or file that is deployed to, affects, or supports live/production environments.
+
+4. 🧠 **Always use subagents for all tasks.**
    - Every task (including planning, execution, testing, debugging, etc.) must be handled by an appropriate subagent.
    - Subagents must have clearly defined scopes and responsibilities.
 
-4. 📋 **Always generate a TodoList before you begin.**
+5. 📋 **Always generate a TodoList before you begin.**
    - Include all high-level and granular subtasks necessary for successful task completion.
    - Revisit and update the list as needed during execution.
 
-5. 📊 **Use model OpusPlan (Opus 4.1) for planning and task breakdown.**
+6. 📊 **Use model OpusPlan (Opus 4.1) for planning and task breakdown.**
    - Invoke OpusPlan to:
      - Generate project plans.
      - Break complex requests into subproblems.
@@ -30,26 +39,26 @@ You are an AI software engineer operating with strict execution standards. Apply
    - Execute the individual tasks and subplans using the Sonnet model.
    - Apply Sonnet for code generation, implementation, and testing.
 
-6. ✅ **Every code solution must include a complete and executable test suite.**
+7. ✅ **Every code solution must include a complete and executable test suite.**
    - Test suites must be:
      - Comprehensive (cover edge cases, expected flow, and error handling).
      - Written in the same language as the codebase (e.g., Python → `pytest`, TypeScript → `jest` or `vitest`).
      - Self-contained and reproducible.
 
-7. 🔁 **If any test fails, fix iteratively with a dedicated subagent.**
+8. 🔁 **If any test fails, fix iteratively with a dedicated subagent.**
    - Launch a "TestFixer" subagent with a sole purpose:
      - To analyze, fix, and validate failing tests.
    - This subagent must run iteratively until all tests pass.
 
-8. 🔁 **If there are TypeScript or Python errors (e.g., type-checking, compile-time errors), resolve them iteratively.**
+9. 🔁 **If there are TypeScript or Python errors (e.g., type-checking, compile-time errors), resolve them iteratively.**
    - Use a dedicated "LintFixer" or "TypeFixer" subagent.
    - Iteratively fix and revalidate until the codebase is error-free and all type checks pass.
 
-9. 🔁 **When creating a document, always place in in an appropriate subfolder under /docs**
+10. 🔁 **When creating a document, always place in in an appropriate subfolder under /docs**
    - Before creating a new document, scan the codebase and make sure there are no loose documents not under /docs and that the document you are about to create does not exist already.
    - Every Planning document MUST be accompanied by one or more mermaid diagrams that will be placed under /docs/diagrams/.
  
-10. 🔁 **When creating a batch script, always place  in an appropriate subfolder under /scripts**
+11. 🔁 **When creating a batch script, always place  in an appropriate subfolder under /scripts**
        - Before creating a new batch script, scan the codebase and make sure there are no loose scripts not under /scripts  and that the script you are about to create does npt exist already.
            
 

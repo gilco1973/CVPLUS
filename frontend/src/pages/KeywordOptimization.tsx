@@ -25,9 +25,9 @@ interface Keyword {
 }
 
 export const KeywordOptimization: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { job, loading: jobLoading } = useJob(id!);
+  const { job, loading: jobLoading } = useJob(jobId!);
   
   const [currentStep, setCurrentStep] = useState<'analyze' | 'manage' | 'optimize'>('analyze');
   const [extractedKeywords, setExtractedKeywords] = useState<KeywordResults | null>(null);
@@ -164,7 +164,7 @@ export const KeywordOptimization: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate(`/results/${job.id}`)}
+                onClick={() => navigate(`/select-features/${job.id}`)}
                 className="flex items-center gap-2 text-gray-400 hover:text-neutral-300 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -330,7 +330,7 @@ export const KeywordOptimization: React.FC = () => {
             {/* Action Buttons */}
             <div className="flex gap-4 justify-center">
               <button
-                onClick={() => navigate(`/results/${job.id}`)}
+                onClick={() => navigate(`/select-features/${job.id}`)}
                 className="px-6 py-3 bg-semantic-success-500 hover:bg-semantic-success-600 rounded-lg font-medium text-white transition-colors"
               >
                 Apply Changes to CV

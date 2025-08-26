@@ -452,7 +452,7 @@ export const FinalResultsPage = () => {
               Generate Another CV
             </button>
             <button
-              onClick={() => navigate(`/results/${jobId}`)}
+              onClick={() => navigate(`/select-features/${jobId}`)}
               className="bg-neutral-700 hover:bg-gray-600 text-neutral-200 font-semibold py-3 px-8 rounded-lg transition-colors"
             >
               Back to Feature Selection

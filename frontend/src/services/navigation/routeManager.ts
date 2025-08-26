@@ -125,7 +125,7 @@ export class RouteManager {
       },
       {
         step: 'features',
-        path: '/features/:sessionId',
+        path: '/features/:jobId',
         title: 'Select Features',
         description: 'Choose enhancement features',
         icon: 'features',
@@ -143,7 +143,7 @@ export class RouteManager {
       },
       {
         step: 'results',
-        path: '/results/:sessionId',
+        path: '/select-features/:jobId',
         title: 'Final Results',
         description: 'Download and share your CV',
         icon: 'results',
@@ -152,7 +152,7 @@ export class RouteManager {
       },
       {
         step: 'keywords',
-        path: '/keywords/:sessionId',
+        path: '/keywords/:jobId',
         title: 'Keyword Optimization',
         description: 'Optimize keywords for ATS',
         icon: 'keywords',
