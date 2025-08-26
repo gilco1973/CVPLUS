@@ -139,7 +139,7 @@ export const FinalResultsPage: React.FC = () => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate('/templates');
+    navigate('/');
   };
 
   // Loading state

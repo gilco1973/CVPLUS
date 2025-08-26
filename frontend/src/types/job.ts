@@ -247,8 +247,6 @@ export const jobUtils = {
         return `${baseUrl}/analysis/${job.id}`;
       case 'features':
         return `${baseUrl}/features/${job.id}`;
-      case 'templates':
-        return `${baseUrl}/templates/${job.id}`;
       case 'preview':
         return `${baseUrl}/preview/${job.id}`;
       case 'results':

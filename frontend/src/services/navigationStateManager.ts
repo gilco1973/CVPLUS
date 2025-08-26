@@ -372,15 +372,6 @@ export class NavigationStateManager {
         estimatedTime: 4
       },
       {
-        step: 'templates',
-        path: '/templates/:sessionId',
-        title: 'Choose Template',
-        description: 'Select CV template',
-        icon: 'template',
-        requiredData: ['selectedFeatures'],
-        estimatedTime: 3
-      },
-      {
         step: 'preview',
         path: '/preview/:sessionId',
         title: 'Preview CV',

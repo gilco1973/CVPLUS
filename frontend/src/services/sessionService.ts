@@ -268,8 +268,6 @@ export class SessionService {
         return `${baseUrl}/analysis/${session.jobId || session.sessionId}`;
       case 'features':
         return `${baseUrl}/features/${session.jobId || session.sessionId}`;
-      case 'templates':
-        return `${baseUrl}/templates/${session.jobId || session.sessionId}`;
       case 'preview':
         return `${baseUrl}/preview/${session.jobId || session.sessionId}`;
       case 'results':
