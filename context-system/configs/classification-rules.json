@@ -1,0 +1,52 @@
+{
+  "tier1_critical": {
+    "patterns": [
+      "frontend/src/**/*.{ts,tsx}",
+      "functions/src/**/*.ts",
+      "*.{js,ts,tsx,jsx}",
+      "package.json",
+      "tsconfig.json",
+      "firebase.json",
+      "CLAUDE.md"
+    ],
+    "recent_changes": true,
+    "error_logs": true,
+    "max_age_days": 7
+  },
+  "tier2_contextual": {
+    "patterns": [
+      "docs/architecture/**/*.md",
+      "docs/plans/**/*.md",
+      "docs/diagrams/**/*.mermaid",
+      "docs/implementation/**/*.md",
+      "scripts/**/*.{sh,js}",
+      "test/**/*.{js,ts}"
+    ],
+    "max_age_days": 30
+  },
+  "tier3_archive": {
+    "patterns": [
+      "docs/reports/**/*.md",
+      "docs/refactoring/**/*.md",
+      "logs/**/*",
+      "temp-disabled/**/*",
+      "node_modules/**/*"
+    ],
+    "exclude_from_active": true
+  },
+  "noise_filters": {
+    "exclude_patterns": [
+      "node_modules/**/*",
+      "dist/**/*",
+      "build/**/*",
+      "*.log",
+      "*.gz",
+      ".git/**/*",
+      "firebase-debug.log",
+      "firestore-debug.log"
+    ],
+    "duplicate_content_threshold": 0.85,
+    "min_file_size": 10,
+    "max_file_size": 1048576
+  }
+}

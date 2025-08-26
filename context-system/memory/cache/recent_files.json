@@ -1,0 +1,13 @@
+{
+  "key": "recent-files",
+  "data": {
+    "files": [
+      "src/App.tsx",
+      "src/components/CVPreview.tsx"
+    ],
+    "timestamp": "2025-08-26T11:13:44.358Z"
+  },
+  "timestamp": "2025-08-26T11:13:44.358Z",
+  "expiryTime": 1756293224358,
+  "size": 95
+}

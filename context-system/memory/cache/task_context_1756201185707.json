@@ -1,0 +1,199 @@
+{
+  "key": "task-context-1756201185707",
+  "data": {
+    "taskDescription": "implement new React component for user profile editing",
+    "contextFiles": [
+      {
+        "path": "frontend/src/scripts/benchmark-subscriptions.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 150
+      },
+      {
+        "path": "frontend/src/scripts/verify-subscription-fix.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 150
+      },
+      {
+        "path": "frontend/src/App.tsx",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/main.tsx",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/role-profiles.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/help.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/placeholders.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/cv-templates.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/firebase-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/inline-editing.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/cv.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/portal-api-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/utility-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/language.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/portal-backend-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/portal-component-props.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/externalData.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/portal-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/cv-preview.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/ats.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/error-handling.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/service-types.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/session.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/component-props.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/job.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/cv-features.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/results.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/index.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/types/cvData.ts",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      },
+      {
+        "path": "frontend/src/contexts/PlaceholderEditingContext.tsx",
+        "tier": "tier1_critical",
+        "priority": 200,
+        "relevanceScore": 145
+      }
+    ],
+    "totalFiles": 30,
+    "tierBreakdown": {
+      "critical": 0,
+      "contextual": 0,
+      "archive": 0,
+      "tier1_critical": null
+    },
+    "effectiveContextIncrease": -20
+  },
+  "timestamp": "2025-08-26T09:39:45.707Z",
+  "expiryTime": 1756208385707,
+  "size": 3384
+}

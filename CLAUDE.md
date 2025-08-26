@@ -16,6 +16,13 @@ You are an AI software engineer operating with strict execution standards. Apply
    - Every task (including planning, execution, testing, debugging, etc.) must be handled by an appropriate subagent.
    - Subagents must have clearly defined scopes and responsibilities.
 
+3.1. 🔀 **MANDATORY: Create feature branch for new plans or features.**
+   - **When implementing ANY NEW plan or feature, you MUST create a feature branch using git-expert subagent BEFORE starting implementation.**
+   - **ALL git operations MUST be handled by the git-expert subagent** - Never perform git operations directly.
+   - **Use Task tool** to invoke git-expert subagent: `Task(subagent_type="git-expert", description="[git operation]", prompt="[detailed request]")`
+   - **Process**: Create Feature Branch → Implement → Test → Code Review → Merge
+   - **NO EXCEPTIONS**: This applies to all new features, major refactoring, and significant code changes.
+
 4. 📋 **Always generate a TodoList before you begin.**
    - Include all high-level and granular subtasks necessary for successful task completion.
    - Revisit and update the list as needed during execution.

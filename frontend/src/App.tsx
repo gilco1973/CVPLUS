@@ -11,8 +11,6 @@ import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowL
 const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));
 const CVAnalysisPage = lazy(() => import('./pages/CVAnalysisPage').then(m => ({ default: m.CVAnalysisPage })));
 const CVPreviewPageNew = lazy(() => import('./pages/CVPreviewPageNew').then(m => ({ default: m.CVPreviewPageNew })));
-const ResultsPage = lazy(() => import('./pages/ResultsPage').then(m => ({ default: m.ResultsPage })));
-const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })));
 const CVFeaturesPage = lazy(() => import('./pages/CVFeaturesPage').then(m => ({ default: m.CVFeaturesPage })));
 const FeatureSelectionPage = lazy(() => import('./pages/FeatureSelectionPage').then(m => ({ default: m.FeatureSelectionPage })));
 const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then(m => ({ default: m.RoleSelectionPage })));
@@ -104,7 +102,7 @@ const router = createBrowserRouter(
       path: '/results/:jobId',
       element: (
         <Suspense fallback={<PageLoader />}>
-          <ResultsPage />
+          <FeatureSelectionPage />
         </Suspense>
       ),
     },
@@ -120,7 +118,7 @@ const router = createBrowserRouter(
       path: '/templates/:jobId',
       element: (
         <Suspense fallback={<PageLoader />}>
-          <TemplatesPage />
+          <FeatureSelectionPage />
         </Suspense>
       ),
     },
