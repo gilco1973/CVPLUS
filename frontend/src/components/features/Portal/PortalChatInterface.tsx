@@ -115,10 +115,7 @@ const MessageBubble: React.FC<{
   }
 
   return (
-    <div className="animate-fade-in">
-      }
-      }
-      className={`flex items-start gap-3 mb-4 ${isUser ? 'flex-row-reverse' : ''}`}
+    <div className={`animate-fade-in flex items-start gap-3 mb-4 ${isUser ? 'flex-row-reverse' : ''}`}
     >
       {/* Avatar */}
       <div className={`

@@ -50,8 +50,7 @@ describe('Subscription Integration Tests', () => {
   beforeEach(() => {
     manager = JobSubscriptionManager.getInstance();
     mockUnsubscribe = jest.fn();
-    mockOnSnapshot = require('firebase/firestore').onSnapshot;
-    mockGetJob = require('../cvService').getJob;
+    // Mock imports are handled by jest.mock() at the top
     
     mockOnSnapshot.mockReturnValue(mockUnsubscribe);
     mockGetJob.mockResolvedValue({ id: 'test-job', status: 'processing' });

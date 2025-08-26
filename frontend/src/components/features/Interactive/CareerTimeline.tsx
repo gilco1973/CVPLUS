@@ -168,15 +168,14 @@ const TimelineItemCard: React.FC<TimelineItemCardProps> = ({
       transition: {
         duration: 0.6,
         delay: animateOnScroll ? index * 0.1 : 0,
-        ease: "easeOut">;
+        ease: "easeOut"
+      }
+    }
 
   return (
-    <div className="animate-fade-in"
+    <div 
       ref={ref}
-      
-      
-      variants={variants}
-      className={`timeline-item cursor-pointer group ${
+      className={`animate-fade-in timeline-item cursor-pointer group ${
         isLeft ? 'timeline-item-left' : 'timeline-item-right'
       }`}
       onClick={onClick}

@@ -236,6 +236,7 @@ export const CertificationBadges: React.FC<CertificationBadgesProps> = ({
             {filteredCertifications.map((cert, index) => (
               <div className="animate-fade-in"
                 key={cert.id}>
+              <div
                 className={getBadgeDesign(cert)}
                 onClick={() => setSelectedCert(cert)}
               >

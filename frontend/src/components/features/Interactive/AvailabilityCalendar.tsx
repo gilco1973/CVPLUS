@@ -337,8 +337,6 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   key={index}
                   onClick={() => status !== 'disabled' && handleDateSelect(date)}
                   disabled={status === 'disabled'}
-                   : {}}
-                   : {}}
                   className={`relative p-3 h-16 border-r border-b text-sm transition-colors ${
                     isSelected 
                       ? 'bg-blue-500 text-white' 
@@ -356,7 +354,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                       <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1" />
                     )}
                   </div>
-                </button className="animate-scale-in hover-scale">
+                </button>
               );
             })}
           </div>
@@ -384,9 +382,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
         {/* Time Slots */}
         {selectedDayAvailability && (
-          <div className="animate-fade-in">
-            }
-            className="bg-white border rounded-lg p-6"
+          <div className="animate-fade-in bg-white border rounded-lg p-6"
           >
             <h4 className="text-lg font-medium text-gray-900 mb-4">
               Available Times - {new Date(selectedDate!).toLocaleDateString([], { 
@@ -479,10 +475,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         {/* Booking Modal */}
         <div>
           {showBookingModal && selectedTimeSlot && (
-            <div className="animate-fade-in">
-              }
-              }
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            <div className="animate-fade-in fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             >
               <div className="animate-fade-in">
                 }

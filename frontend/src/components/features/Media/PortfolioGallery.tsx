@@ -513,11 +513,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   }, []);
 
   return (
-    <div className="animate-fade-in"
+    <div 
       ref={ref}
-      }
-       : { opacity: 0, y: 20 }}
-      }
       className={`
         relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group
         ${viewMode === 'masonry' ? 'break-inside-avoid mb-6' : ''}
@@ -742,10 +739,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
 
   return (
     <div>
-      <div className="animate-fade-in">
-        }
-        }
-        className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      <div className="animate-fade-in fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         {/* Close Button */}
@@ -782,10 +776,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
         )}
 
         {/* Image Container */}
-        <div className="animate-fade-in">
-          }
-          }
-          className="max-w-7xl max-h-full mx-auto"
+        <div className="animate-fade-in max-w-7xl max-h-full mx-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="relative">

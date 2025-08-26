@@ -13,11 +13,6 @@ export const SubscriptionMonitor: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Don't render in production
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
-
   // Dragging functionality
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -69,6 +64,11 @@ export const SubscriptionMonitor: React.FC = () => {
       });
     }
   }, []);
+
+  // Don't render in production
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
 
   return (
     <>

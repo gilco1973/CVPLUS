@@ -245,8 +245,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
             {currentTestimonial && (
               <div className="animate-fade-in"
                 key={currentTestimonial.id}
-                custom={currentIndex}>
-                }
+                custom={currentIndex}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.2}

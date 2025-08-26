@@ -759,10 +759,8 @@ export const PublicProfile: React.FC<PublicProfileProps> = ({
             <div className="animate-fade-in fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               onClick={() => setShowQRCode(false)}
             >
-              <div className="animate-fade-in">
-                }
-                }
-                className="bg-white rounded-lg p-6 max-w-sm w-full"
+              <div 
+                className="bg-white rounded-lg p-6 max-w-sm w-full animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center">

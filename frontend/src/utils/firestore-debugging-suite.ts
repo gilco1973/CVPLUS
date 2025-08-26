@@ -451,7 +451,7 @@ class FirestoreDebuggingSuite {
           return false;
         }
 
-      case 'restart_listeners':
+      case 'restart_listeners': {
         // Force restart all listeners
         const listenersToRestart = Array.from(this.listeners.values()).filter(l => l.isActive);
         let restarted = 0;
@@ -469,6 +469,7 @@ class FirestoreDebuggingSuite {
         }
         
         return restarted > 0;
+      }
 
       case 'force_offline_online_cycle':
         // Force Firestore offline/online cycle to reset state

@@ -108,7 +108,7 @@ export const useComponentRenderer = (userId: string): boolean => {
 /**
  * Get feature flag status for debugging
  */
-export const getFeatureFlagStatus = (userId: string) => {
+export const useFeatureFlagStatus = (userId: string) => {
   return {
     reactSPA: {
       'cv-preview': useReactSPA(userId, 'cv-preview'),
@@ -151,7 +151,7 @@ export const useFeatureFlags = () => {
     
     // Debugging info
     userId,
-    debugInfo: getFeatureFlagStatus(userId)
+    debugInfo: useFeatureFlagStatus(userId)
   }), [userId]);
 };
 
@@ -162,7 +162,7 @@ export const logFeatureFlagStatus = (userId: string) => {
   if (process.env.NODE_ENV === 'development') {
     console.warn('🚩 Feature Flag Status:', {
       userId: userId,
-      flags: getFeatureFlagStatus(userId)
+      flags: useFeatureFlagStatus(userId)
     });
   }
 };

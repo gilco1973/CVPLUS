@@ -286,11 +286,9 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {qrCodes.map((qrCode) => (
-          <div className="animate-fade-in"
+          <div 
             key={qrCode.id}
-            }
-            }
-            className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
+            className="animate-fade-in bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
           >
             {/* QR Code Image */}
             <div className="aspect-square bg-white p-4 flex items-center justify-center">
@@ -436,11 +434,9 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {templates.map((template) => (
-          <div className="animate-fade-in"
+          <div 
             key={template.id}
-            }
-            }
-            className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden cursor-pointer hover:border-cyan-500 transition-colors"
+            className="animate-fade-in bg-gray-800 rounded-lg border border-gray-700 overflow-hidden cursor-pointer hover:border-cyan-500 transition-colors"
             onClick={() => setSelectedTemplate(template)}
           >
             {/* Template Preview */}
@@ -533,16 +529,10 @@ export const EnhancedQRCode: React.FC<EnhancedQRCodeProps> = ({
       {/* Create QR Code Modal */}
       <div>
         {showCreateModal && (
-          <div className="animate-fade-in">
-            }
-            }
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div className="animate-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowCreateModal(false)}
           >
-            <div className="animate-fade-in">
-              }
-              }
-              className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            <div className="animate-fade-in bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-2xl font-bold text-gray-100 mb-6">Create QR Code</h3>

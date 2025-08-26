@@ -26,8 +26,7 @@ const mockToast = {
 // Setup mocks
 beforeEach(() => {
   vi.clearAllMocks();
-  (require('../../../hooks/useFeatureData') as any).useFeatureData = mockUseFeatureData;
-  (require('react-hot-toast') as any).default = mockToast;
+  // Mock imports are handled by vi.mock() at the top
   
   // Mock audio API
   global.HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());

@@ -110,7 +110,7 @@ export interface DeployPortalResponse extends ApiResponse<{
   estimatedDuration: number;
   /** Webhook URL for status updates */
   statusWebhookUrl?: string;
-}> {}
+>
 
 /**
  * Get deployment status request
@@ -127,7 +127,7 @@ export interface GetDeploymentStatusRequest {
 /**
  * Get deployment status response
  */
-export interface GetDeploymentStatusResponse extends ApiResponse<DeploymentStatus> {}
+export type GetDeploymentStatusResponse = ApiResponse<DeploymentStatus>;
 
 /**
  * Cancel deployment request
@@ -149,7 +149,7 @@ export interface CancelDeploymentResponse extends ApiResponse<{
   cancelled: boolean;
   /** Cancellation timestamp */
   cancelledAt: Date;
-}> {}
+>
 
 // ============================================================================
 // CHAT API
@@ -208,7 +208,7 @@ export interface SendChatMessageResponse extends ApiResponse<{
     processingTime: number;
     vectorSearchTime?: number;
   };
-}> {}
+>
 
 /**
  * Get chat history request
@@ -241,7 +241,7 @@ export interface GetChatHistoryResponse extends ApiResponse<{
     hasMore: boolean;
     nextCursor?: string;
   };
-}> {}
+>
 
 // ============================================================================
 // VECTOR SEARCH API
@@ -278,7 +278,7 @@ export interface SearchVectorsResponse extends ApiResponse<{
     searchTime: number;
     algorithm: string;
   };
-}> {}
+>
 
 /**
  * Create embeddings request
@@ -317,7 +317,7 @@ export interface CreateEmbeddingsResponse extends ApiResponse<{
     processingTime: number;
     tokensUsed: number;
   };
-}> {}
+>
 
 // ============================================================================
 // QR CODE API
@@ -353,7 +353,7 @@ export interface GenerateQRCodeRequest {
 /**
  * Generate QR code response
  */
-export interface GenerateQRCodeResponse extends ApiResponse<QRCodeData> {}
+export type GenerateQRCodeResponse = ApiResponse<QRCodeData>;
 
 // ============================================================================
 // PORTAL SECTIONS API
@@ -390,7 +390,7 @@ export interface UpdatePortalSectionsResponse extends ApiResponse<{
     sectionsCount: number;
     validationErrors?: string[];
   };
-}> {}
+>
 
 /**
  * Get portal sections request
@@ -415,7 +415,7 @@ export interface GetPortalSectionsResponse extends ApiResponse<{
     totalSections: number;
     lastUpdated: Date;
   };
-}> {}
+>
 
 // ============================================================================
 // VALIDATION API
@@ -458,7 +458,7 @@ export interface ValidatePortalConfigResponse extends ApiResponse<{
     message: string;
     suggestion?: string;
   }>;
-}> {}
+>
 
 // ============================================================================
 // ANALYTICS API
@@ -513,7 +513,7 @@ export interface GetPortalAnalyticsResponse extends ApiResponse<{
     from: Date;
     to: Date;
   };
-}> {}
+>
 
 // ============================================================================
 // ERROR HANDLING
@@ -605,7 +605,7 @@ export interface AsyncOperationResponse extends ApiResponse<{
   statusUrl: string;
   /** Estimated completion time */
   estimatedCompletion?: Date;
-}> {}
+>
 
 /**
  * Batch operation request
@@ -648,7 +648,7 @@ export interface BatchOperationResponse<T> extends ApiResponse<{
     failedOperations: number;
     processingTime: number;
   };
-}> {}
+>
 
 // ============================================================================
 // TYPE GUARDS

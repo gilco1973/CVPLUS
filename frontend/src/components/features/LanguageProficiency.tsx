@@ -91,9 +91,7 @@ export const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
   const currentVisualization = visualization.visualizations.find(v => v.type === selectedView);
 
   return (
-    <div className="animate-fade-in">
-      }
-      className="space-y-6"
+    <div className="animate-fade-in space-y-6"
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

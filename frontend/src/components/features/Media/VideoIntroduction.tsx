@@ -258,8 +258,7 @@ export const VideoIntroduction: React.FC<VideoIntroductionProps> = ({
 
               {/* Video Overlay Controls */}
               {showControls && (
-                <div className="animate-fade-in">>
-                  className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 flex items-center justify-center"
+                <div className="animate-fade-in absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 flex items-center justify-center"
                 >
                   {/* Play/Pause Button */}
                   <button
@@ -399,10 +398,7 @@ export const VideoIntroduction: React.FC<VideoIntroductionProps> = ({
                 
                 <div>
                   {showTranscription && (
-                    <div className="animate-fade-in">
-                      }
-                      }
-                      className="prose prose-sm max-w-none"
+                    <div className="animate-fade-in prose prose-sm max-w-none"
                     >
                       <p className="text-gray-700 leading-relaxed">
                         {video.transcription}

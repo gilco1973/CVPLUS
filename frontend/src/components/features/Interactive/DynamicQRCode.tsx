@@ -682,7 +682,7 @@ export const DynamicQRCode: React.FC<QRCodeProps> = ({
                   <div className="text-center">
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {new Date(
-                        analytics?.lastScanned || qrData?.analytics?.lastScanned!
+                        analytics?.lastScanned || qrData?.analytics?.lastScanned || new Date()
                       ).toLocaleDateString()}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Last Scan</div>
