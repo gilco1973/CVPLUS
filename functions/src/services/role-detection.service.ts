@@ -26,7 +26,7 @@ import {
   createSeniorityKeywords
 } from './role-detection-maps';
 
-// TEMP DISABLED - export class RoleDetectionService {
+export class RoleDetectionService {
   private claudeService: VerifiedClaudeService;
   private roleProfileService: RoleProfileService;
   private fuzzyMatcher: FuzzyMatchingService;
@@ -122,7 +122,7 @@ import {
       // Calculate matches with enhanced reasoning algorithm
       const roleMatches = await Promise.all(
         availableProfiles.map(profile => 
-          this.matcher.calculateEnhancedRoleMatchWithReasoning(profile, cvFeatures, parsedCV)
+          this.matcher.calculateEnhancedRoleMatch(profile, cvFeatures, parsedCV)
         )
       );
 
@@ -137,12 +137,9 @@ import {
         return this.addDetectionMetadata(fallback, startTime, adjustmentsMade, 0.0, 0.0);
       }
 
-      const analysis = await this.analyzer.generateRoleProfileAnalysisWithScoring(
+      const analysis = await this.analyzer.generateRoleProfileAnalysis(
         validMatches, 
-        parsedCV,
-        availableProfiles.length,
-        finalThreshold,
-        this.config.confidenceThreshold
+        parsedCV
       );
       
       return this.addDetectionMetadata(
@@ -190,6 +187,101 @@ import {
         hybridRoleDetection: true,
         negativeIndicators: true,
         recencyWeighting: true
+      }
+    };
+  }
+
+  /**
+   * Apply dynamic threshold adjustment to guarantee minimum results
+   */
+  private applyDynamicThresholdAdjustment(
+    roleMatches: RoleMatchResult[], 
+    adjustmentsMade: string[]
+  ): { validMatches: RoleMatchResult[]; finalThreshold: number } {
+    let currentThreshold = this.config.confidenceThreshold;
+    
+    if (!this.config.enableDynamicThreshold) {
+      const validMatches = roleMatches
+        .filter(match => match.confidence >= currentThreshold)
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, this.config.maxResults);
+      
+      return { validMatches, finalThreshold: currentThreshold };
+    }
+
+    const { initialThreshold, minimumThreshold, decrementStep, maxIterations } = 
+      this.config.dynamicThresholdConfig;
+    
+    currentThreshold = Math.max(initialThreshold, this.config.confidenceThreshold);
+    let iterations = 0;
+
+    while (iterations < maxIterations) {
+      const validMatches = roleMatches
+        .filter(match => match.confidence >= currentThreshold)
+        .sort((a, b) => b.confidence - a.confidence);
+
+      if (validMatches.length >= this.config.minResults) {
+        return { 
+          validMatches: validMatches.slice(0, this.config.maxResults), 
+          finalThreshold: currentThreshold 
+        };
+      }
+
+      currentThreshold = Math.max(minimumThreshold, currentThreshold - decrementStep);
+      adjustmentsMade.push(`Lowered threshold to ${currentThreshold.toFixed(2)}`);
+      iterations++;
+
+      if (currentThreshold <= minimumThreshold) {
+        break;
+      }
+    }
+
+    // Final attempt with minimum threshold
+    const finalMatches = roleMatches
+      .filter(match => match.confidence >= minimumThreshold)
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, this.config.maxResults);
+
+    return { validMatches: finalMatches, finalThreshold: minimumThreshold };
+  }
+
+  /**
+   * Add detection metadata to analysis result
+   */
+  private addDetectionMetadata(
+    analysis: RoleProfileAnalysis,
+    startTime: number,
+    adjustmentsMade: string[],
+    finalThreshold: number,
+    originalThreshold: number
+  ): RoleProfileAnalysis {
+    const processingTime = Date.now() - startTime;
+    
+    return {
+      ...analysis,
+      detectionMetadata: {
+        processingTime,
+        algorithmVersion: '2.0',
+        adjustmentsMade,
+        confidenceDistribution: [
+          { range: '0.8-1.0', count: [analysis.primaryRole, ...analysis.alternativeRoles].filter(r => r.confidence >= 0.8).length },
+          { range: '0.6-0.8', count: [analysis.primaryRole, ...analysis.alternativeRoles].filter(r => r.confidence >= 0.6 && r.confidence < 0.8).length },
+          { range: '0.4-0.6', count: [analysis.primaryRole, ...analysis.alternativeRoles].filter(r => r.confidence >= 0.4 && r.confidence < 0.6).length },
+          { range: '0.0-0.4', count: [analysis.primaryRole, ...analysis.alternativeRoles].filter(r => r.confidence < 0.4).length }
+        ]
+      },
+      scoringBreakdown: {
+        totalRolesAnalyzed: analysis.alternativeRoles.length + 1,
+        adjustedThreshold: finalThreshold,
+        originalThreshold: originalThreshold,
+        averageConfidence: (analysis.primaryRole.confidence + 
+          analysis.alternativeRoles.reduce((sum, role) => sum + role.confidence, 0)) / 
+          (analysis.alternativeRoles.length + 1),
+        topFactors: [analysis.primaryRole, ...analysis.alternativeRoles].slice(0, 3).map((role, index) => ({
+          factor: role.roleName,
+          contribution: role.confidence,
+          explanation: `Role ${index + 1}: ${role.roleName} with ${(role.confidence * 100).toFixed(1)}% confidence`
+        }))
       }
     };
   }

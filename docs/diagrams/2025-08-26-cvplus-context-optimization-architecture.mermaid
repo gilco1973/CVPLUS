@@ -1,0 +1,108 @@
+graph TB
+    subgraph "Context Optimization System"
+        subgraph "Input Layer"
+            SF[Source Files<br/>2,603+ files]
+            DF[Documentation<br/>12,895+ files]
+            CF[Config Files]
+            LF[Log Files]
+        end
+
+        subgraph "Processing Layer"
+            CI[Claude Context<br/>MCP Server]
+            MS[Memory<br/>MCP Server]
+            CF_PROC[Content Classifier]
+            NR[Noise Reducer]
+            DD[Deduplicator]
+            RS[Relevance Scorer]
+        end
+
+        subgraph "3-Tier Architecture"
+            subgraph "Tier 1: Critical Context"
+                AC[Active Code Files]
+                RC[Recent Changes]
+                EL[Error Logs]
+                UR[User Requests]
+            end
+
+            subgraph "Tier 2: Contextual Reservoir"
+                AD[Architecture Docs]
+                FS[Feature Specs]
+                TF[Test Files]
+                DC[Deploy Configs]
+            end
+
+            subgraph "Tier 3: Archive Storage"
+                HD[Historical Docs]
+                LC[Legacy Code]
+                CR[Completed Reports]
+                RM[Reference Materials]
+            end
+        end
+
+        subgraph "Output Layer"
+            OC[Optimized Context]
+            SM[Smart Memory]
+            QR[Quick Retrieval]
+            AR[Adaptive Response]
+        end
+
+        subgraph "Monitoring Layer"
+            PM[Performance Monitor]
+            UA[Usage Analytics]
+            CH[Context Health]
+            AO[Auto Optimization]
+        end
+    end
+
+    %% Input Flow
+    SF --> CI
+    DF --> CI
+    CF --> CI
+    LF --> CI
+
+    %% Processing Flow
+    CI --> CF_PROC
+    CF_PROC --> NR
+    NR --> DD
+    DD --> RS
+    RS --> MS
+
+    %% Tier Classification
+    CF_PROC --> AC
+    CF_PROC --> AD
+    CF_PROC --> HD
+    
+    RS --> RC
+    RS --> FS
+    RS --> LC
+
+    %% Memory Integration
+    MS --> AC
+    MS --> AD
+    MS --> HD
+
+    %% Output Generation
+    AC --> OC
+    AD --> SM
+    HD --> QR
+    OC --> AR
+
+    %% Monitoring
+    OC --> PM
+    SM --> UA
+    AR --> CH
+    CH --> AO
+    AO --> CF_PROC
+
+    %% Styling
+    classDef tier1 fill:#ff6b6b,stroke:#d63031,stroke-width:3px,color:#fff
+    classDef tier2 fill:#4ecdc4,stroke:#00b894,stroke-width:2px,color:#fff
+    classDef tier3 fill:#45b7d1,stroke:#0984e3,stroke-width:2px,color:#fff
+    classDef processing fill:#fdcb6e,stroke:#e17055,stroke-width:2px,color:#2d3436
+    classDef output fill:#6c5ce7,stroke:#5f3dc4,stroke-width:2px,color:#fff
+
+    class AC,RC,EL,UR tier1
+    class AD,FS,TF,DC tier2
+    class HD,LC,CR,RM tier3
+    class CI,MS,CF_PROC,NR,DD,RS processing
+    class OC,SM,QR,AR output

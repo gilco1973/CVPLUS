@@ -41,7 +41,7 @@ export class RoleProfileService {
         maxResults: 5,
         minResults: 2,
         enableMultiRoleDetection: true,
-        enableDynamicThreshold: true,
+        enableDynamicThreshold: false,
         weightingFactors: {
           title: 0.3,
           skills: 0.35,

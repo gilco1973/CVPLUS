@@ -376,25 +376,25 @@ Remember: Always suggest multiple roles (minimum 2, ideally 3-4) with realistic 
         strengthAreas: primaryRole.fitAnalysis.strengths
       },
       scoringBreakdown: {
-        totalRolesAnalyzed: matches.length,
+        totalRolesAnalyzed: alternativeRoles.length + 1,
         adjustedThreshold: this.config.confidenceThreshold,
-        originalThreshold: 0.5,
+        originalThreshold: this.config.confidenceThreshold,
         averageConfidence: overallConfidence,
-        topFactors: matches.slice(0, 3).map((match, index) => ({
-          factor: match.roleName,
-          contribution: match.confidence,
-          explanation: match.scoringReasoning.substring(0, 100) + '...'
+        topFactors: [primaryRole, ...alternativeRoles].slice(0, 3).map((role, index) => ({
+          factor: role.roleName,
+          contribution: role.confidence,
+          explanation: `Role ${index + 1}: ${role.roleName} with ${(role.confidence * 100).toFixed(1)}% confidence`
         }))
       },
       detectionMetadata: {
-        processingTime: Date.now(),
-        algorithmVersion: 'enhanced-opus-4.1',
-        adjustmentsMade: ['Dynamic threshold adjustment', 'Multiple role guarantee'],
+        processingTime: 0,
+        algorithmVersion: '2.1-opus',
+        adjustmentsMade: [],
         confidenceDistribution: [
-          { range: '80-100%', count: matches.filter(m => m.confidence >= 0.8).length },
-          { range: '60-79%', count: matches.filter(m => m.confidence >= 0.6 && m.confidence < 0.8).length },
-          { range: '40-59%', count: matches.filter(m => m.confidence >= 0.4 && m.confidence < 0.6).length },
-          { range: '0-39%', count: matches.filter(m => m.confidence < 0.4).length }
+          { range: '0.8-1.0', count: [primaryRole, ...alternativeRoles].filter(r => r.confidence >= 0.8).length },
+          { range: '0.6-0.8', count: [primaryRole, ...alternativeRoles].filter(r => r.confidence >= 0.6 && r.confidence < 0.8).length },
+          { range: '0.4-0.6', count: [primaryRole, ...alternativeRoles].filter(r => r.confidence >= 0.4 && r.confidence < 0.6).length },
+          { range: '0.0-0.4', count: [primaryRole, ...alternativeRoles].filter(r => r.confidence < 0.4).length }
         ]
       }
     };
@@ -419,7 +419,7 @@ Remember: Always suggest multiple roles (minimum 2, ideally 3-4) with realistic 
       }
     };
     
-    return {
+    const fallbackAnalysis = {
       primaryRole: fallbackRole,
       alternativeRoles: [{
         ...fallbackRole,
@@ -438,26 +438,30 @@ Remember: Always suggest multiple roles (minimum 2, ideally 3-4) with realistic 
         strengthAreas: ['Broad professional foundation']
       },
       scoringBreakdown: {
-        totalRolesAnalyzed: 2,
-        adjustedThreshold: 0.3,
-        originalThreshold: 0.5,
+        totalRolesAnalyzed: 1,
+        adjustedThreshold: 0.6,
+        originalThreshold: 0.6,
         averageConfidence: 0.62,
-        topFactors: [
-          { factor: 'General Professional', contribution: 0.65, explanation: 'Fallback analysis based on professional experience' }
-        ]
+        topFactors: [{
+          factor: 'Fallback Analysis',
+          contribution: 0.62,
+          explanation: 'Fallback role detected with general professional assessment'
+        }]
       },
       detectionMetadata: {
-        processingTime: Date.now(),
-        algorithmVersion: 'fallback-analysis',
-        adjustmentsMade: ['Fallback mode activated'],
+        processingTime: 0,
+        algorithmVersion: '2.1-opus',
+        adjustmentsMade: ['Used fallback analysis'],
         confidenceDistribution: [
-          { range: '60-79%', count: 2 },
-          { range: '40-59%', count: 0 },
-          { range: '20-39%', count: 0 },
-          { range: '0-19%', count: 0 }
+          { range: '0.8-1.0', count: 0 },
+          { range: '0.6-0.8', count: 1 },
+          { range: '0.4-0.6', count: 0 },
+          { range: '0.0-0.4', count: 0 }
         ]
       }
     };
+    
+    return fallbackAnalysis;
   }
 
   /**

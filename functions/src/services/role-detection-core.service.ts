@@ -26,7 +26,7 @@ import {
   createSeniorityKeywords
 } from './role-detection-maps';
 
-// TEMP DISABLED - export class RoleDetectionService {
+export class RoleDetectionService {
   private claudeService: VerifiedClaudeService;
   private roleProfileService: RoleProfileService;
   private fuzzyMatcher: FuzzyMatchingService;
@@ -43,13 +43,21 @@ import {
     this.config = {
       confidenceThreshold: 0.6,
       maxResults: 5,
+      minResults: 2,
       enableMultiRoleDetection: true,
+      enableDynamicThreshold: false,
       weightingFactors: {
         title: 0.40,     // Increased from 0.30
         skills: 0.30,    // Decreased from 0.35
         experience: 0.20, // Decreased from 0.25
         industry: 0.07,   // Decreased from 0.08
         education: 0.03   // Increased from 0.02
+      },
+      dynamicThresholdConfig: {
+        initialThreshold: 0.6,
+        minimumThreshold: 0.3,
+        decrementStep: 0.05,
+        maxIterations: 5
       },
       ...config
     };

@@ -1,0 +1,30 @@
+{
+  "memoryStorage": {
+    "basePath": "/Users/gklainert/Documents/cvplus/context-system/memory",
+    "maxMemorySize": "500MB",
+    "compressionEnabled": true,
+    "autoCleanup": true,
+    "cleanupInterval": "24h",
+    "retentionPeriod": "30d"
+  },
+  "contextCaching": {
+    "enabled": true,
+    "maxCacheEntries": 1000,
+    "cacheExpiryHours": 24,
+    "preloadCriticalContext": true,
+    "compressionLevel": 6
+  },
+  "projectSnapshots": {
+    "enabled": true,
+    "snapshotInterval": "6h",
+    "maxSnapshots": 10,
+    "includeMetrics": true,
+    "deltaCompression": true
+  },
+  "sessionManagement": {
+    "persistSessions": true,
+    "maxSessionHistory": 50,
+    "sessionTimeout": "2h",
+    "autoSaveInterval": "5m"
+  }
+}

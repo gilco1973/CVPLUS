@@ -22,7 +22,7 @@ import {
 } from './role-detection-helpers';
 import { checkNegativeIndicators } from './role-detection-maps';
 
-// TEMP DISABLED - export class RoleDetectionMatcher {
+export class RoleDetectionMatcher {
   private config: RoleDetectionConfig;
   private fuzzyConfig: FuzzyMatchConfig;
   private fuzzyMatcher: FuzzyMatchingService;
@@ -69,7 +69,20 @@ import { checkNegativeIndicators } from './role-detection-maps';
         matchedKeywords: result.matches,
         weight: this.config.weightingFactors[factor.type],
         score: result.score,
-        details: `${result.matches.length}/${factor.profile.length} matched (fuzzy: ${this.fuzzyConfig.threshold * 100}%)`
+        details: `${result.matches.length}/${factor.profile.length} matched (fuzzy: ${this.fuzzyConfig.threshold * 100}%)`,
+        reasoning: {
+          contributionExplanation: `Matched ${result.matches.length} of ${factor.profile.length} ${factor.type} keywords with ${(result.score * 100).toFixed(1)}% confidence`,
+          keywordMatches: result.matches.map(keyword => ({
+            keyword,
+            found: true,
+            matchType: 'fuzzy' as const,
+            relevance: result.score,
+            context: `Found in CV ${factor.type} section`
+          })),
+          strengthAssessment: (result.score >= 0.8 ? 'excellent' : result.score >= 0.6 ? 'good' : result.score >= 0.4 ? 'moderate' : 'weak') as 'excellent' | 'good' | 'moderate' | 'weak',
+          improvementSuggestions: result.score < 0.6 ? [`Consider adding more ${factor.type}-related keywords`] : [],
+          confidenceFactors: [`${result.matches.length} keyword matches`, `${(result.score * 100).toFixed(1)}% match score`]
+        }
       };
     });
 
@@ -90,7 +103,19 @@ import { checkNegativeIndicators } from './role-detection-maps';
       confidence,
       matchingFactors,
       enhancementPotential,
-      recommendations
+      recommendations,
+      scoringReasoning: `Role match confidence of ${(confidence * 100).toFixed(1)}% based on weighted analysis of ${matchingFactors.length} factors`,
+      fitAnalysis: {
+        strengths: matchingFactors
+          .filter(f => f.score >= 0.7)
+          .map(f => `Strong ${f.type} alignment (${(f.score * 100).toFixed(1)}%)`),
+        gaps: matchingFactors
+          .filter(f => f.score < 0.5)
+          .map(f => `Limited ${f.type} match (${(f.score * 100).toFixed(1)}%)`),
+        overallAssessment: confidence >= 0.8 ? 'Excellent fit' : 
+                          confidence >= 0.6 ? 'Good fit with some gaps' : 
+                          'Moderate fit with significant development needed'
+      }
     };
   }
 

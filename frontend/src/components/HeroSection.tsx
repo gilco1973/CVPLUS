@@ -67,7 +67,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [showVideoControls, setShowVideoControls] = useState(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [_showFeatures, _setShowFeatures] = useState(false);
+  const [_showFeatures, setShowFeatures] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -76,7 +76,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          _setShowFeatures(true);
+          setShowFeatures(true);
         }
       },
       { threshold: 0.3 }

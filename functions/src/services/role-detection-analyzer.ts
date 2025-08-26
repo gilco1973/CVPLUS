@@ -26,7 +26,7 @@ import {
 } from './role-detection-helpers';
 import { detectExperienceLevel } from './role-detection-maps';
 
-// TEMP DISABLED - export class RoleDetectionAnalyzer {
+export class RoleDetectionAnalyzer {
   private config: RoleDetectionConfig;
   private roleProfileService: RoleProfileService;
   private recommendationsService: RoleRecommendationsService;
@@ -193,7 +193,29 @@ import { detectExperienceLevel } from './role-detection-maps';
         immediate: immediateRecommendations,
         strategic: strategicRecommendations
       },
-      gapAnalysis
+      gapAnalysis,
+      scoringBreakdown: {
+        totalRolesAnalyzed: matches.length,
+        adjustedThreshold: 0.5,
+        originalThreshold: 0.5,
+        averageConfidence: overallConfidence,
+        topFactors: matches.slice(0, 3).map((match, index) => ({
+          factor: match.roleName,
+          contribution: match.confidence,
+          explanation: `Role ${index + 1}: ${match.roleName} with ${(match.confidence * 100).toFixed(1)}% confidence`
+        }))
+      },
+      detectionMetadata: {
+        processingTime: 0,
+        algorithmVersion: '2.0',
+        adjustmentsMade: [],
+        confidenceDistribution: [
+          { range: '0.8-1.0', count: matches.filter(m => m.confidence >= 0.8).length },
+          { range: '0.6-0.8', count: matches.filter(m => m.confidence >= 0.6 && m.confidence < 0.8).length },
+          { range: '0.4-0.6', count: matches.filter(m => m.confidence >= 0.4 && m.confidence < 0.6).length },
+          { range: '0.0-0.4', count: matches.filter(m => m.confidence < 0.4).length }
+        ]
+      }
     };
   }
 
@@ -229,7 +251,13 @@ import { detectExperienceLevel } from './role-detection-maps';
         template: 'Choose from available role profiles for personalized suggestions',
         targetSection: CVSection.PROFESSIONAL_SUMMARY,
         expectedImpact: 40
-      }]
+      }],
+      scoringReasoning: `Fallback role detected based on skill analysis with ${(detectedRole.confidence * 100).toFixed(1)}% confidence`,
+      fitAnalysis: {
+        strengths: [`Strong foundation in ${detectedRole.keySkills.join(', ')}`],
+        gaps: ['Could benefit from more targeted role positioning'],
+        overallAssessment: 'Good potential with better targeting'
+      }
     };
     
     return {
@@ -253,6 +281,28 @@ import { detectExperienceLevel } from './role-detection-maps';
         missingSkills: [],
         weakAreas: ['Role targeting could be more specific'],
         strengthAreas: detectedRole.keySkills.length > 0 ? ['Strong skill foundation'] : []
+      },
+      scoringBreakdown: {
+        totalRolesAnalyzed: 1,
+        adjustedThreshold: detectedRole.confidence,
+        originalThreshold: detectedRole.confidence,
+        averageConfidence: detectedRole.confidence,
+        topFactors: [{
+          factor: 'Skills Analysis',
+          contribution: detectedRole.confidence,
+          explanation: `Detected ${detectedRole.roleName} based on skill analysis`
+        }]
+      },
+      detectionMetadata: {
+        processingTime: 0,
+        algorithmVersion: '2.0',
+        adjustmentsMade: ['Used fallback analysis'],
+        confidenceDistribution: [
+          { range: '0.8-1.0', count: detectedRole.confidence >= 0.8 ? 1 : 0 },
+          { range: '0.6-0.8', count: detectedRole.confidence >= 0.6 && detectedRole.confidence < 0.8 ? 1 : 0 },
+          { range: '0.4-0.6', count: detectedRole.confidence >= 0.4 && detectedRole.confidence < 0.6 ? 1 : 0 },
+          { range: '0.0-0.4', count: detectedRole.confidence < 0.4 ? 1 : 0 }
+        ]
       }
     };
   }
@@ -344,7 +394,20 @@ import { detectExperienceLevel } from './role-detection-maps';
               score: confidence,
               weight: 1.0,
               details: `Found ${matchingSkills.length} relevant skills: ${matchingSkills.slice(0, 5).join(', ')}`,
-              matchedKeywords: matchingSkills
+              matchedKeywords: matchingSkills,
+              reasoning: {
+                contributionExplanation: `Detected ${matchingSkills.length} relevant skills indicating ${pattern.roleName} experience`,
+                keywordMatches: matchingSkills.slice(0, 5).map(skill => ({
+                  keyword: skill,
+                  found: true,
+                  matchType: 'exact' as const,
+                  relevance: confidence,
+                  context: 'Skills analysis'
+                })),
+                strengthAssessment: (confidence >= 0.8 ? 'excellent' : confidence >= 0.6 ? 'good' : confidence >= 0.4 ? 'moderate' : 'weak') as 'excellent' | 'good' | 'moderate' | 'weak',
+                improvementSuggestions: confidence < 0.6 ? ['Consider emphasizing relevant experience', 'Add more specific technical skills'] : [],
+                confidenceFactors: [`${matchingSkills.length} matching skills found`, `${(confidence * 100).toFixed(1)}% skill alignment`]
+              }
             }],
             keySkills: Array.from(new Set(matchingSkills)).slice(0, 5),
             template: pattern.template
