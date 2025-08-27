@@ -21,6 +21,8 @@ import type {
   ApplyImprovementsResponse,
   PreviewImprovementParams,
   PreviewImprovementResponse,
+  CustomizePlaceholdersParams,
+  CustomizePlaceholdersResponse,
   PerformanceMetrics,
   CacheStats,
   RecommendationError
@@ -230,6 +232,54 @@ export class RecommendationsOrchestrator {
         error: {
           message: error instanceof Error ? error.message : 'Failed to generate preview',
           code: 'PREVIEW_ERROR',
+          details: error instanceof Error ? { stack: error.stack } : {}
+        }
+      };
+    }
+  }
+
+  /**
+   * Customize placeholders in recommendations
+   */
+  async customizePlaceholders(params: CustomizePlaceholdersParams): Promise<CustomizePlaceholdersResponse> {
+    const requestId = generateId();
+    const startTime = Date.now();
+    
+    try {
+      console.log(`[RecommendationsOrchestrator] Customizing placeholders ${requestId}`, { 
+        jobId: params.jobId,
+        recommendationId: params.recommendationId
+      });
+
+      // Execute with retry logic
+      const result = await retryUtil.executeWithRetry(
+        () => this.executor.executePlaceholderCustomization(params, requestId),
+        {
+          requestId,
+          operationName: 'customizePlaceholders',
+          timeout: 10000 // Quick operation, 10 second timeout
+        }
+      );
+
+      // Invalidate related cache entries since recommendation has been customized
+      await this.cacheOps.invalidateRecommendationCache(params.jobId, params.recommendationId);
+
+      this.metricsManager.recordSuccess(Date.now() - startTime, false);
+      console.log(`[RecommendationsOrchestrator] Placeholders customized successfully ${requestId}`);
+      
+      return result;
+
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      this.metricsManager.recordError(error as RecommendationError, processingTime);
+      
+      console.error(`[RecommendationsOrchestrator] Placeholder customization failed ${requestId}:`, error);
+      
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to customize placeholders',
+          code: 'PLACEHOLDER_ERROR',
           details: error instanceof Error ? { stack: error.stack } : {}
         }
       };

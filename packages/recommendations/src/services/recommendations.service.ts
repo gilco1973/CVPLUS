@@ -22,6 +22,8 @@ import type {
   ApplyImprovementsResponse,
   PreviewImprovementParams,
   PreviewImprovementResponse,
+  CustomizePlaceholdersParams,
+  CustomizePlaceholdersResponse,
   PerformanceMetrics,
   CacheStats
 } from '../types';
@@ -59,6 +61,13 @@ export class RecommendationsService {
    */
   async previewImprovement(params: PreviewImprovementParams): Promise<PreviewImprovementResponse> {
     return this.orchestrator.previewImprovement(params);
+  }
+
+  /**
+   * Customize placeholders in recommendations
+   */
+  async customizePlaceholders(params: CustomizePlaceholdersParams): Promise<CustomizePlaceholdersResponse> {
+    return this.orchestrator.customizePlaceholders(params);
   }
 
   // ============================================================================

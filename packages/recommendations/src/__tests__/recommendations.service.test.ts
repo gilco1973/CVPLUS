@@ -13,9 +13,9 @@ import { RecommendationsService } from '../services/recommendations.service';
 import { CacheService } from '../services/cache.service';
 import { RetryUtil } from '../utils/retry';
 import type { 
-  GetRecommendationsParams, 
-  RecommendationErrorType 
+  GetRecommendationsParams
 } from '../types';
+import { RecommendationErrorType } from '../types';
 
 // ============================================================================
 // MOCKS

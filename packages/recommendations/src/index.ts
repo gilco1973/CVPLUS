@@ -22,12 +22,19 @@ export * from './types';
 export { recommendationsService, RecommendationsService } from './services/recommendations.service';
 export { CacheService } from './services/cache.service';
 export { AIIntegrationService } from './services/ai-integration.service';
+export { PlaceholderCustomizationService } from './services/customization/placeholder-customization.service';
 
 // ============================================================================
 // UTILITIES
 // ============================================================================
 
 export { retryUtil, RetryUtil } from './utils/retry';
+
+// ============================================================================
+// BACKEND INTEGRATION
+// ============================================================================
+
+export { firebaseFunctionsAdapter } from './integration/firebase/functions-adapter';
 
 // ============================================================================
 // FRONTEND COMPONENTS & HOOKS
@@ -153,6 +160,7 @@ export function initializeRecommendations(config?: {
  * Get current module health status
  */
 export function getModuleHealth() {
+  const { recommendationsService } = require('./services/recommendations.service');
   const isHealthy = recommendationsService.isHealthy();
   const performance = recommendationsService.getPerformanceMetrics();
   const cacheStats = recommendationsService.getCacheStats();
@@ -179,6 +187,7 @@ export function getModuleHealth() {
  * Reset module metrics (for testing)
  */
 export function resetModuleMetrics() {
+  const { recommendationsService } = require('./services/recommendations.service');
   recommendationsService.resetMetrics();
   console.log(`[${PACKAGE_NAME}] Metrics reset`);
 }
@@ -189,6 +198,7 @@ export function resetModuleMetrics() {
 
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   // Expose module utilities in development
+  const { recommendationsService } = require('./services/recommendations.service');
   (window as any).__CVPLUS_RECOMMENDATIONS__ = {
     version: VERSION,
     service: recommendationsService,

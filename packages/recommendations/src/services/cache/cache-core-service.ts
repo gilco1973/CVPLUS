@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { MemoryManager } from './memory-manager';
 import { DistributedCacheManager } from './distributed-cache-manager';
 import { CacheStatsManager } from './cache-stats-manager';

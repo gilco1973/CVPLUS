@@ -8,6 +8,8 @@
  * @version 1.0.0
  */
 
+import { PlaceholderCustomizationService } from '../customization/placeholder-customization.service';
+import { RecommendationErrorType } from '../../types';
 import type {
   GetRecommendationsParams,
   GetRecommendationsResponse,
@@ -15,8 +17,9 @@ import type {
   ApplyImprovementsResponse,
   PreviewImprovementParams,
   PreviewImprovementResponse,
-  RecommendationError,
-  RecommendationErrorType
+  CustomizePlaceholdersParams,
+  CustomizePlaceholdersResponse,
+  RecommendationError
 } from '../../types';
 
 // ============================================================================
@@ -24,6 +27,11 @@ import type {
 // ============================================================================
 
 export class RecommendationsExecutor {
+  private placeholderService: PlaceholderCustomizationService;
+
+  constructor() {
+    this.placeholderService = new PlaceholderCustomizationService();
+  }
 
   /**
    * Execute recommendation generation via Firebase function
@@ -138,6 +146,37 @@ export class RecommendationsExecutor {
     };
   }
 
+  /**
+   * Execute placeholder customization - direct implementation (no Firebase call needed)
+   */
+  async executePlaceholderCustomization(
+    params: CustomizePlaceholdersParams,
+    requestId: string
+  ): Promise<CustomizePlaceholdersResponse> {
+    console.log(`[RecommendationsExecutor] Executing placeholder customization for ${requestId}`);
+    
+    // Validate parameters
+    this.validateCustomizePlaceholdersParams(params);
+    
+    try {
+      // Use our direct implementation instead of Firebase function
+      const result = await this.placeholderService.customizePlaceholders(params);
+
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      console.error(`[RecommendationsExecutor] Placeholder customization failed for ${requestId}:`, error);
+      throw this.createError(
+        RecommendationErrorType.VALIDATION_ERROR,
+        error instanceof Error ? error.message : 'Failed to customize placeholders',
+        true,
+        { params, error: error instanceof Error ? error.message : String(error) }
+      );
+    }
+  }
+
   // ============================================================================
   // PARAMETER VALIDATION
   // ============================================================================
@@ -238,6 +277,68 @@ export class RecommendationsExecutor {
         false,
         { params }
       );
+    }
+  }
+
+  /**
+   * Validate parameters for customizePlaceholders
+   */
+  private validateCustomizePlaceholdersParams(params: CustomizePlaceholdersParams): void {
+    if (!params.jobId || params.jobId.trim() === '') {
+      throw this.createError(
+        RecommendationErrorType.VALIDATION_ERROR,
+        'Job ID is required and cannot be empty',
+        false,
+        { params }
+      );
+    }
+
+    if (!params.recommendationId || params.recommendationId.trim() === '') {
+      throw this.createError(
+        RecommendationErrorType.VALIDATION_ERROR,
+        'Recommendation ID is required and cannot be empty',
+        false,
+        { params }
+      );
+    }
+
+    if (!params.placeholderValues || typeof params.placeholderValues !== 'object') {
+      throw this.createError(
+        RecommendationErrorType.VALIDATION_ERROR,
+        'Placeholder values must be provided as an object',
+        false,
+        { params }
+      );
+    }
+
+    if (Object.keys(params.placeholderValues).length === 0) {
+      throw this.createError(
+        RecommendationErrorType.VALIDATION_ERROR,
+        'At least one placeholder value must be provided',
+        false,
+        { params }
+      );
+    }
+
+    // Validate each placeholder value
+    for (const [key, value] of Object.entries(params.placeholderValues)) {
+      if (!key || typeof key !== 'string' || key.trim() === '') {
+        throw this.createError(
+          RecommendationErrorType.VALIDATION_ERROR,
+          'All placeholder keys must be non-empty strings',
+          false,
+          { params, invalidKey: key }
+        );
+      }
+      
+      if (value !== null && value !== undefined && typeof value !== 'string') {
+        throw this.createError(
+          RecommendationErrorType.VALIDATION_ERROR,
+          'All placeholder values must be strings, null, or undefined',
+          false,
+          { params, invalidKey: key, invalidValue: value }
+        );
+      }
     }
   }
 

@@ -17,9 +17,9 @@
 import type { 
   RetryConfiguration, 
   RecommendationError, 
-  RecommendationErrorType,
   PerformanceMetrics 
 } from '../types';
+import { RecommendationErrorType } from '../types';
 
 // ============================================================================
 // CONSTANTS

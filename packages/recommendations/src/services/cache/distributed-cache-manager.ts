@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import type { CacheEntry, CacheConfiguration } from '../../types';
 
 export class DistributedCacheManager {

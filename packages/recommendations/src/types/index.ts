@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import type { CVData, User, ApiResponse } from '@cvplus/core';
+import type { CVParsedData, ApiResponse } from '@cvplus/core';
 
 // ============================================================================
 // CORE RECOMMENDATION TYPES
@@ -138,7 +138,7 @@ export interface ApplyImprovementsParams {
 
 export interface ApplyImprovementsResponse extends ApiResponse<{
   jobId: string;
-  improvedCV: CVData;
+  improvedCV: CVParsedData;
   appliedRecommendations: Recommendation[];
   transformationSummary: TransformationSummary;
   comparisonReport: ComparisonReport;
@@ -156,9 +156,30 @@ export interface PreviewImprovementResponse extends ApiResponse<{
   recommendation: Recommendation;
   beforeContent: string;
   afterContent: string;
-  previewCV: CVData;
+  previewCV: CVParsedData;
   estimatedImpact: number;
 }> {}
+
+export interface CustomizePlaceholdersParams {
+  jobId: string;
+  recommendationId: string;
+  placeholderValues: Record<string, string>;
+  userId?: string;
+}
+
+export interface CustomizePlaceholdersResponse extends ApiResponse<{
+  recommendation: Recommendation;
+  customizedContent: string;
+  placeholdersApplied: Record<string, string>;
+  validationResults: PlaceholderValidationResult[];
+}> {}
+
+export interface PlaceholderValidationResult {
+  placeholderId: string;
+  isValid: boolean;
+  error?: string;
+  transformedValue?: string;
+}
 
 export interface TransformationSummary {
   totalRecommendations: number;
@@ -301,7 +322,7 @@ export interface ErrorRecoveryStrategy {
 // ============================================================================
 
 export interface AIRequestParams {
-  cvData: CVData;
+  cvData: CVParsedData;
   targetRole?: string;
   industryKeywords?: string[];
   promptTemplate: string;

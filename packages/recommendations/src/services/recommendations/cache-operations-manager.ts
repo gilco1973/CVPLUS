@@ -84,6 +84,27 @@ export class CacheOperationsManager {
   }
 
   /**
+   * Invalidate cache for specific recommendation
+   */
+  async invalidateRecommendationCache(jobId: string, recommendationId: string): Promise<void> {
+    try {
+      const keys = [
+        `preview:${jobId}:${recommendationId}`,
+        `customized:${jobId}:${recommendationId}`,
+        `rec:*:${jobId}:*` // Invalidate all recommendations for the job
+      ];
+      
+      for (const keyPattern of keys) {
+        await this.cacheService.delete(keyPattern);
+      }
+      
+      console.log(`[CacheOperationsManager] Cache invalidated for recommendation ${recommendationId} in job ${jobId}`);
+    } catch (error) {
+      console.error(`[CacheOperationsManager] Cache invalidation failed for recommendation ${recommendationId}:`, error);
+    }
+  }
+
+  /**
    * Invalidate related cache entries for user and job
    */
   async invalidateRelatedCache(jobId: string, userId?: string): Promise<void> {
