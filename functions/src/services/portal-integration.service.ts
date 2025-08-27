@@ -115,20 +115,33 @@ export class CVPortalIntegrationService {
           metadata: {
             version: '1.0',
             timestamp: new Date(),
+            cvAnalysis: null,
+            templateUsed: 'unknown',
+            featuresEnabled: [],
+            filesGenerated: 0,
+            totalSize: 0,
             statistics: {
               totalTimeMs: Date.now() - startTime,
               stepTimes: {
+                init: 0,
                 validate_input: 0,
+                parse_cv: 0,
                 extract_cv_data: 0,
+                select_template: 0,
                 generate_template: 0,
+                customize_theme: 0,
                 customize_design: 0,
+                build_rag: 0,
                 build_rag_system: 0,
                 create_embeddings: 0,
                 setup_vector_db: 0,
+                generate_content: 0,
+                deploy_space: 0,
                 deploy_to_huggingface: 0,
                 configure_urls: 0,
                 update_cv_document: 0,
                 generate_qr_codes: 0,
+                finalize: 0,
                 finalize_portal: 0
               },
               embeddingsGenerated: 0,
@@ -198,6 +211,11 @@ export class CVPortalIntegrationService {
         metadata: {
           version: '1.0',
           timestamp: new Date(),
+          cvAnalysis: null,
+          templateUsed: 'unknown',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0,
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {
@@ -712,7 +730,8 @@ class PortalGenerationOrchestrator {
               desktop: 0
             },
             locations: [],
-            sessions: []
+            browsers: {},
+            sources: { direct: 0, search: 0, social: 0, referral: 0, qr: 0 }
           },
           chat: {
             totalSessions: 0,
@@ -741,10 +760,7 @@ class PortalGenerationOrchestrator {
           performance: {
             pageLoadTime: 0,
             chatResponseTime: 0,
-            apiResponseTimes: {
-              total: 0,
-              byEndpoint: {}
-            },
+            apiResponseTimes: {},
             errorRates: {
               total: 0,
               byEndpoint: {}
@@ -802,6 +818,11 @@ class PortalGenerationOrchestrator {
         metadata: {
           version: '1.0',
           timestamp: new Date(),
+          cvAnalysis: null,
+          templateUsed: 'unknown',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0,
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {
@@ -868,6 +889,11 @@ class PortalGenerationOrchestrator {
         metadata: {
           version: '1.0',
           timestamp: new Date(),
+          cvAnalysis: null,
+          templateUsed: 'unknown',
+          featuresEnabled: [],
+          filesGenerated: 0,
+          totalSize: 0,
           statistics: {
             totalTimeMs: Date.now() - startTime,
             stepTimes: {

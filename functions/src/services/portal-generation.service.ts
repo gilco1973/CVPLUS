@@ -1358,7 +1358,8 @@ Return as JSON with theme, config, and content customizations.`;
             desktop: 0
           },
           locations: [],
-          sessions: []
+          browsers: {},
+          sources: { direct: 0, search: 0, social: 0, referral: 0, qr: 0 }
         },
         chat: {
           totalSessions: 0,
@@ -1387,10 +1388,7 @@ Return as JSON with theme, config, and content customizations.`;
         performance: {
           pageLoadTime: 0,
           chatResponseTime: 0,
-          apiResponseTimes: {
-            total: 0,
-            byEndpoint: {}
-          },
+          apiResponseTimes: {},
           errorRates: {
             total: 0,
             byEndpoint: {}

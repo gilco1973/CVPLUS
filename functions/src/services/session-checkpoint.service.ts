@@ -398,22 +398,19 @@ export class SessionCheckpointService {
       const stepProgress = session.stepProgress[checkpoint.stepId];
       if (stepProgress) {
         // Update substep progress based on checkpoint state
-        const relatedSubstep = stepProgress.substeps.find(
-          s => s.id === checkpoint.functionName || s.name === checkpoint.functionName
-        );
+        const relatedSubstepKey = checkpoint.functionName;
+        const hasRelatedSubstep = relatedSubstepKey in stepProgress.substeps;
         
-        if (relatedSubstep) {
+        if (hasRelatedSubstep) {
           switch (checkpoint.state) {
             case 'completed':
-              relatedSubstep.status = 'completed';
-              relatedSubstep.completedAt = checkpoint.completedAt;
+              stepProgress.substeps[relatedSubstepKey] = true;
               break;
             case 'failed':
-              relatedSubstep.status = 'error';
-              relatedSubstep.error = checkpoint.error;
+              stepProgress.substeps[relatedSubstepKey] = false;
               break;
             case 'in_progress':
-              relatedSubstep.status = 'in_progress';
+              stepProgress.substeps[relatedSubstepKey] = false;
               break;
           }
         }
