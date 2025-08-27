@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { CVAnalysisResults } from '../components/CVAnalysisResults';
 import { ExternalDataSources } from '../components/ExternalDataSources';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import { subscribeToJob } from '../services/cvService';
 import type { Job } from '../services/cvService';
 import { ArrowLeft, Loader2, Database, ChevronRight } from 'lucide-react';
@@ -13,12 +14,15 @@ import toast from 'react-hot-toast';
 export const CVAnalysisPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showExternalData, setShowExternalData] = useState(false);
   const [externalDataCompleted, setExternalDataCompleted] = useState(false);
+  const [roleContext, setRoleContext] = useState<any>(null);
 
   useEffect(() => {
     if (!jobId) {
@@ -64,6 +68,32 @@ export const CVAnalysisPage = () => {
     return () => unsubscribe();
   }, [jobId, navigate, user]);
 
+  // Retrieve role context from navigation state or sessionStorage
+  useEffect(() => {
+    if (!jobId) return;
+
+    // Try to get role context from location state first
+    const locationRoleContext = location.state?.roleContext;
+    
+    // If not in location state, try sessionStorage
+    const storedRoleContext = sessionStorage.getItem(`role-context-${jobId}`);
+    
+    if (locationRoleContext) {
+      console.log('🎯 Role context received from navigation state:', locationRoleContext);
+      setRoleContext(locationRoleContext);
+    } else if (storedRoleContext) {
+      try {
+        const parsedRoleContext = JSON.parse(storedRoleContext);
+        console.log('🎯 Role context retrieved from sessionStorage:', parsedRoleContext);
+        setRoleContext(parsedRoleContext);
+      } catch (error) {
+        console.warn('Failed to parse role context from sessionStorage:', error);
+      }
+    } else {
+      console.log('📝 No role context found - proceeding with generic analysis');
+    }
+  }, [jobId, location.state]);
+
   const handleExternalDataComplete = (enrichedData?: unknown[]) => {
     console.log('External data enrichment completed:', enrichedData?.length || 0, 'items');
     
@@ -88,7 +118,9 @@ export const CVAnalysisPage = () => {
       selectedRecommendations: selectedRecommendations.length,
       jobId,
       currentURL: window.location.href,
-      currentPath: window.location.pathname
+      currentPath: window.location.pathname,
+      isPremium,
+      premiumLoading
     });
     
     if (!jobId) {
@@ -97,13 +129,37 @@ export const CVAnalysisPage = () => {
       return;
     }
 
-    const targetPath = `/role-select/${jobId}`;
-    console.log('📍 [PARENT] Navigation target:', targetPath);
+    // Wait for premium status to load before navigating
+    if (premiumLoading) {
+      toast.loading('Checking account status...', { duration: 1000 });
+      return;
+    }
+
+    // All users go to preview after analysis (premium users already completed role selection)
+    const targetPath = `/preview/${jobId}`;
+    
+    console.log('📍 [PARENT] Navigation target after analysis:', {
+      targetPath,
+      isPremium,
+      userTier: isPremium ? 'premium' : 'basic',
+      note: 'Premium users already completed role selection'
+    });
 
     try {
       // Store recommendations data first (critical for preview page)
       sessionStorage.setItem(`recommendations-${jobId}`, JSON.stringify(selectedRecommendations));
       console.log('💾 [PARENT] Stored recommendations in sessionStorage');
+      
+      // Store user tier information for downstream navigation decisions
+      sessionStorage.setItem(`user-tier-${jobId}`, isPremium ? 'premium' : 'basic');
+      
+      // Store context about role selection completion
+      const fromRoleSelection = sessionStorage.getItem(`from-role-selection-${jobId}`) === 'true';
+      if (isPremium && fromRoleSelection) {
+        toast.success('Proceeding to preview with role-based recommendations', { duration: 2000 });
+      } else {
+        toast.success('Proceeding to CV preview', { duration: 2000 });
+      }
       
       // Store navigation timestamp for debugging
       sessionStorage.setItem(`nav-timestamp-${jobId}`, Date.now().toString());
@@ -312,6 +368,7 @@ export const CVAnalysisPage = () => {
           <>
             <CVAnalysisResults
               job={job}
+              roleContext={roleContext}
               onContinue={handleContinueToPreview}
               onBack={handleBack}
               className="animate-fade-in-up"

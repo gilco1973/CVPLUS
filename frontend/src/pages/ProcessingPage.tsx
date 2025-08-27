@@ -1,160 +1,470 @@
+/**
+ * Enhanced Processing Page with Comprehensive Error Recovery
+ * 
+ * Integrates the error recovery system with checkpoint management,
+ * retry mechanisms, and user-friendly error dialogs.
+ */
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
-import { subscribeToJob, processCV } from '../services/cvService';
+import { processCV } from '../services/cvService';
+import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { designSystem } from '../config/designSystem';
+import { ErrorRecoveryDialog } from '../components/error-recovery/ErrorRecoveryDialog';
+import { CheckpointProgressIndicator } from '../components/error-recovery/CheckpointProgressIndicator';
+import ErrorRecoveryManager from '../services/error-recovery/ErrorRecoveryManager';
+import { CheckpointType } from '../services/error-recovery/CheckpointManager';
 import type { Job } from '../services/cvService';
+import type { ClassifiedError } from '../services/error-recovery/ErrorClassification';
+import type { ProcessingCheckpoint } from '../services/error-recovery/CheckpointManager';
 
-const PROCESSING_STEPS = [
-  { id: 'upload', label: 'File Uploaded', status: 'pending' },
-  { id: 'analyze', label: 'Analyzing Content', status: 'pending' },
-  { id: 'enhance', label: 'Generating Enhanced CV', status: 'pending' },
-  { id: 'features', label: 'Applying AI Features', status: 'pending' },
-  { id: 'media', label: 'Creating Media Content', status: 'pending' }
+interface ProcessingStepEnhanced {
+  id: string;
+  label: string;
+  description: string;
+  checkpointType: CheckpointType;
+  status: 'pending' | 'active' | 'completed' | 'error' | 'restored';
+  progress?: number;
+}
+
+const PROCESSING_STEPS_ENHANCED: ProcessingStepEnhanced[] = [
+  { 
+    id: 'upload', 
+    label: 'File Uploaded', 
+    description: 'Your CV file has been securely uploaded',
+    checkpointType: CheckpointType.FILE_UPLOADED,
+    status: 'pending' 
+  },
+  { 
+    id: 'analyze', 
+    label: 'Analyzing Content', 
+    description: 'AI is extracting and analyzing your CV content',
+    checkpointType: CheckpointType.PARSING_COMPLETED,
+    status: 'pending' 
+  },
+  { 
+    id: 'enhance', 
+    label: 'Generating Enhancements', 
+    description: 'Creating recommendations and improvements',
+    checkpointType: CheckpointType.ANALYSIS_COMPLETED,
+    status: 'pending' 
+  },
+  { 
+    id: 'features', 
+    label: 'Applying AI Features', 
+    description: 'Adding advanced features and optimizations',
+    checkpointType: CheckpointType.IMPROVEMENTS_APPLIED,
+    status: 'pending' 
+  },
+  { 
+    id: 'media', 
+    label: 'Creating Media Content', 
+    description: 'Generating multimedia content and final CV',
+    checkpointType: CheckpointType.GENERATION_COMPLETED,
+    status: 'pending' 
+  }
 ];
 
 export const ProcessingPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { } = useAuth(); // Auth context needed but user not used directly
-  const [job, setJob] = useState<Job | null>(null);
-  const [steps, setSteps] = useState(PROCESSING_STEPS);
-  const [error, setError] = useState<string | null>(null);
-  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const { user } = useAuth();
+  
+  // Enhanced job subscription with better error handling
+  const {
+    job,
+    loading: jobLoading,
+    error: jobError,
+    subscriptionActive,
+    retryCount,
+    refresh: refreshJob,
+    forceRefresh
+  } = useJobEnhanced(jobId!, {
+    enableRetry: true,
+    maxRetries: 3,
+    enableLogging: true,
+    pollWhenInactive: true, // Fallback to polling for critical processing page
+    pollInterval: 15000 // More frequent polling for processing updates
+  });
 
-  const handleManualRefresh = async () => {
-    if (!jobId) return;
-    
-    setIsManualRefreshing(true);
-    try {
-      console.log('🔄 Manual refresh triggered for job:', jobId);
-      
-      // Force a refresh by checking job status manually
-      const jobDoc = await import('../services/cvService').then(service => service.getJob(jobId));
-      console.log('📊 Current job status:', jobDoc?.status);
-      console.log('📝 Job data summary:', {
-        status: jobDoc?.status,
-        hasImprovedCV: !!jobDoc?.improvedCV,
-        hasParsedData: !!jobDoc?.parsedData,
-        improvementsApplied: !!jobDoc?.improvementsApplied,
-        updatedAt: jobDoc?.updatedAt
-      });
-      
-      if (jobDoc) {
-        setJob(jobDoc);
-        
-        // Enhanced navigation logic - if job has been processed, go to results
-        const shouldNavigate = 
-          jobDoc.status === 'completed' || 
-          jobDoc.status === 'improved' || 
-          jobDoc.status === 'analyzed' ||
-          (jobDoc.parsedData && jobDoc.improvedCV) || // Has both parsed and improved data
-          (jobDoc.parsedData && jobDoc.improvementsApplied); // Has improvements applied
-          
-        if (shouldNavigate) {
-          console.log('✅ Job is complete, navigating to analysis page');
-          navigate(`/analysis/${jobId}`);
-        } else {
-          console.log('⏳ Job still processing, status:', jobDoc.status);
-          // If stuck for too long, show option to force navigation
-          if (jobDoc.parsedData && !error) {
-            setError('Processing seems delayed. Your CV data is ready - you can view preliminary results.');
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Manual refresh failed:', err);
-      setError('Unable to check job status. Please try refreshing the page.');
-    } finally {
-      setIsManualRefreshing(false);
-    }
-  };
+  // State management
+  const [steps, setSteps] = useState(PROCESSING_STEPS_ENHANCED);
+  const [checkpoints, setCheckpoints] = useState<ProcessingCheckpoint[]>([]);
+  const [error, setError] = useState<ClassifiedError | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | undefined>();
+  
+  // Recovery manager and processing guard
+  const [recoveryManager] = useState(() => ErrorRecoveryManager.getInstance());
+  const [processingInProgress, setProcessingInProgress] = useState<Set<string>>(new Set());
 
+  // Load checkpoints on mount
   useEffect(() => {
-    if (!jobId) return;
+    if (jobId) {
+      loadCheckpoints();
+      // Enable action tracking for this session
+      recoveryManager.setActionTracking(true);
+      recoveryManager.trackUserAction('page_load', 'processing_page', { jobId });
+    }
 
+    return () => {
+      // Disable action tracking when leaving page
+      recoveryManager.setActionTracking(false);
+    };
+  }, [jobId, recoveryManager]);
 
-    // Subscribe to job updates
-    const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
-      if (!updatedJob) {
-        setError('Job not found');
+  // Handle job updates with error recovery
+  useEffect(() => {
+    if (!job) return;
+
+    const handleJobUpdate = async () => {
+      await updateStepsFromJob(job);
+
+      // Handle processing failures
+      if (job.status === 'failed' && job.error) {
+        const classifiedError = recoveryManager.classifyError(
+          new Error(job.error),
+          { 
+            operation: 'cv_processing', 
+            jobId: job.id,
+            sessionId: user?.uid 
+          }
+        );
+        setError(classifiedError);
+        setShowErrorDialog(true);
         return;
       }
 
-      setJob(updatedJob);
-
-      // Update steps based on job status
-      const newSteps = [...PROCESSING_STEPS];
-      
-      if (updatedJob.status !== 'pending') {
-        newSteps[0].status = 'completed';
-      }
-      
-      if (['processing', 'analyzed', 'generating', 'completed', 'improved'].includes(updatedJob.status)) {
-        newSteps[1].status = updatedJob.status === 'processing' ? 'active' : 'completed';
-      }
-      
-      if (['generating', 'completed', 'improved'].includes(updatedJob.status)) {
-        newSteps[2].status = updatedJob.status === 'generating' ? 'active' : 'completed';
-      }
-      
-      if (updatedJob.status === 'completed' || updatedJob.status === 'improved') {
-        newSteps[3].status = 'completed';
-        newSteps[4].status = 'completed';
-      }
-
-      if (updatedJob.status === 'failed') {
-        setError(updatedJob.error || 'Processing failed');
-      }
-
-      setSteps(newSteps);
-
-      // Start processing if job is pending
-      if (updatedJob.status === 'pending' && updatedJob.fileUrl) {
-        try {
-          await processCV(
-            jobId,
-            updatedJob.fileUrl,
-            updatedJob.mimeType || '',
-            updatedJob.isUrl || false
-          );
-        } catch (err) {
-          console.error('Error starting processing:', err);
-          setError('Failed to start processing');
+      // Start processing if job is pending (SINGLE CALL POINT)
+      if (job.status === 'pending' && job.fileUrl) {
+        // Robust guard to prevent duplicate calls
+        const processingKey = `${jobId}-${job.fileUrl}`;
+        if (!processingInProgress.has(processingKey)) {
+          setProcessingInProgress(prev => new Set(prev).add(processingKey));
+          try {
+            await handleProcessingWithRecovery(job);
+          } finally {
+            setProcessingInProgress(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(processingKey);
+              return newSet;
+            });
+          }
+        } else {
+          console.log(`🚫 Skipping duplicate processCV call for job: ${jobId}`);
         }
       }
 
-      // Navigate to analysis results when analyzed, completed, or improved
-      if (updatedJob.status === 'analyzed' || updatedJob.status === 'completed' || updatedJob.status === 'improved') {
+      // Navigate to analysis when ready
+      if (job.status === 'analyzed' || job.status === 'completed') {
         setTimeout(() => {
           navigate(`/analysis/${jobId}`);
         }, 1500);
       }
+    };
+
+    handleJobUpdate();
+  }, [job, navigate, user, recoveryManager, jobId]);
+
+  // Handle job subscription errors
+  useEffect(() => {
+    if (jobError) {
+      const classifiedError = recoveryManager.classifyError(
+        new Error(jobError),
+        { operation: 'job_subscription', jobId: jobId! }
+      );
+      setError(classifiedError);
+      setShowErrorDialog(true);
+    }
+  }, [jobError, recoveryManager, jobId]);
+
+  /**
+   * Loads checkpoints for the current job
+   */
+  const loadCheckpoints = async () => {
+    if (!jobId) return;
+    
+    try {
+      const jobCheckpoints = await recoveryManager.getJobCheckpoints(jobId);
+      setCheckpoints(jobCheckpoints);
+      
+      // Update step statuses based on checkpoints
+      const updatedSteps = steps.map(step => {
+        const hasCheckpoint = jobCheckpoints.some(cp => cp.type === step.checkpointType);
+        if (hasCheckpoint && step.status === 'pending') {
+          return { ...step, status: 'restored' as const };
+        }
+        return step;
+      });
+      setSteps(updatedSteps);
+    } catch (error) {
+      console.error('Failed to load checkpoints:', error);
+    }
+  };
+
+  /**
+   * Updates processing steps based on job status
+   */
+  const updateStepsFromJob = async (updatedJob: Job) => {
+    const newSteps = [...PROCESSING_STEPS_ENHANCED];
+    
+    // Update steps based on job status
+    if (updatedJob.status !== 'pending') {
+      newSteps[0].status = 'completed';
+      
+      // Create checkpoint for file uploaded
+      if (jobId) {
+        await createCheckpointSafely(
+          jobId,
+          CheckpointType.FILE_UPLOADED,
+          { fileUrl: updatedJob.fileUrl, mimeType: updatedJob.mimeType }
+        );
+      }
+    }
+    
+    if (['processing', 'analyzed', 'generating', 'completed'].includes(updatedJob.status)) {
+      newSteps[1].status = updatedJob.status === 'processing' ? 'active' : 'completed';
+      newSteps[1].progress = updatedJob.status === 'processing' ? 50 : 100;
+      
+      if (updatedJob.status !== 'processing' && jobId && updatedJob.parsedData) {
+        await createCheckpointSafely(
+          jobId,
+          CheckpointType.PARSING_COMPLETED,
+          { parsedData: updatedJob.parsedData }
+        );
+      }
+    }
+    
+    if (['generating', 'completed'].includes(updatedJob.status)) {
+      newSteps[2].status = updatedJob.status === 'generating' ? 'active' : 'completed';
+      newSteps[2].progress = updatedJob.status === 'generating' ? 75 : 100;
+    }
+    
+    if (updatedJob.status === 'completed') {
+      newSteps[3].status = 'completed';
+      newSteps[4].status = 'completed';
+      
+      if (jobId) {
+        await createCheckpointSafely(
+          jobId,
+          CheckpointType.PROCESSING_COMPLETED,
+          { generatedCV: updatedJob.generatedCV }
+        );
+      }
+    }
+
+    setSteps(newSteps);
+    
+    // Reload checkpoints to get latest updates
+    await loadCheckpoints();
+  };
+
+  /**
+   * Handles CV processing with error recovery (SINGLE ENTRY POINT)
+   */
+  const handleProcessingWithRecovery = async (job: Job) => {
+    if (!jobId || !job.fileUrl) return;
+
+    const processingKey = `${jobId}-${job.fileUrl}`;
+    console.log(`🔄 Starting processCV for job: ${jobId} (key: ${processingKey})`);
+
+    const result = await recoveryManager.executeWithRecovery(
+      async () => {
+        console.log(`🚀 Calling processCV function for job: ${jobId}`);
+        return processCV(
+          jobId,
+          job.fileUrl!,
+          job.mimeType || '',
+          job.isUrl || false
+        );
+      },
+      {
+        operationName: 'cv_processing',
+        jobId,
+        sessionId: user?.uid,
+        checkpointType: CheckpointType.PARSING_STARTED,
+        checkpointData: {
+          fileUrl: job.fileUrl,
+          mimeType: job.mimeType,
+          userInstructions: job.userInstructions
+        }
+      },
+      {
+        enableCheckpointRestore: true,
+        enableAutoRetry: true,
+        enableErrorReporting: true,
+        maxRetries: 2
+      }
+    );
+
+    if (!result.success && result.error) {
+      console.error(`❌ processCV failed for job: ${jobId}`, result.error);
+      setError(result.error);
+      setShowErrorDialog(true);
+    } else {
+      console.log(`✅ processCV completed successfully for job: ${jobId}`);
+    }
+  };
+
+  /**
+   * Safely creates a checkpoint without throwing errors
+   */
+  const createCheckpointSafely = async (
+    jobId: string,
+    type: CheckpointType,
+    data: Record<string, unknown>
+  ) => {
+    try {
+      await recoveryManager.createCheckpoint(jobId, type, data);
+    } catch (error) {
+      console.warn(`Failed to create checkpoint ${type}:`, error);
+    }
+  };
+
+  /**
+   * Handles retry operation
+   */
+  const handleRetry = async () => {
+    if (!job || !jobId) return;
+    
+    setIsRetrying(true);
+    setShowErrorDialog(false);
+    
+    recoveryManager.trackUserAction('retry_clicked', 'error_dialog', { 
+      errorType: error?.type,
+      jobId 
     });
 
-    return () => unsubscribe();
-  }, [jobId, navigate]);
-
-  const getStepIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className={`w-6 h-6 text-${designSystem.colors.semantic.success[500]}`} />;
-      case 'active':
-        return <Loader2 className={`w-6 h-6 text-${designSystem.colors.primary[400]} animate-spin`} />;
-      default:
-        return <Circle className={`w-6 h-6 text-${designSystem.colors.neutral[600]}`} />;
+    // Reset error state
+    setError(null);
+    
+    // Apply processing guard to prevent duplicate calls
+    const processingKey = `${jobId}-${job.fileUrl}`;
+    if (!processingInProgress.has(processingKey)) {
+      setProcessingInProgress(prev => new Set(prev).add(processingKey));
+      try {
+        await handleProcessingWithRecovery(job);
+      } finally {
+        setProcessingInProgress(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(processingKey);
+          return newSet;
+        });
+      }
+    } else {
+      console.log(`🚫 Skipping duplicate processCV retry call for job: ${jobId}`);
     }
+    
+    setIsRetrying(false);
+  };
+
+  /**
+   * Handles checkpoint restoration
+   */
+  const handleRestoreCheckpoint = async () => {
+    if (!jobId) return;
+    
+    setIsRetrying(true);
+    setShowErrorDialog(false);
+    
+    recoveryManager.trackUserAction('restore_checkpoint_clicked', 'error_dialog', { jobId });
+
+    try {
+      const restoreResult = await recoveryManager.restoreFromCheckpoint(jobId);
+      
+      if (restoreResult.success && restoreResult.checkpoint) {
+        // Update UI to show restored state
+        const updatedSteps = steps.map(step => {
+          if (step.checkpointType === restoreResult.checkpoint!.type) {
+            return { ...step, status: 'restored' as const };
+          }
+          return step;
+        });
+        setSteps(updatedSteps);
+        
+        // Continue processing from restored state with guard
+        if (job) {
+          const processingKey = `${jobId}-${job.fileUrl}`;
+          if (!processingInProgress.has(processingKey)) {
+            setProcessingInProgress(prev => new Set(prev).add(processingKey));
+            try {
+              await handleProcessingWithRecovery(job);
+            } finally {
+              setProcessingInProgress(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(processingKey);
+                return newSet;
+              });
+            }
+          } else {
+            console.log(`🚫 Skipping duplicate processCV restore call for job: ${jobId}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore from checkpoint:', error);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  /**
+   * Handles error reporting
+   */
+  const handleReportError = async (error: ClassifiedError) => {
+    recoveryManager.trackUserAction('report_error_clicked', 'error_dialog', { 
+      errorId: error.id,
+      jobId 
+    });
+
+    try {
+      const reportId = await recoveryManager.reportError(error, {
+        sessionId: user?.uid,
+        jobId
+      });
+      
+      console.log(`Error reported with ID: ${reportId}`);
+      // Could show a success message here
+    } catch (reportError) {
+      console.error('Failed to report error:', reportError);
+    }
+  };
+
+  /**
+   * Calculates estimated time remaining
+   */
+  const calculateEstimatedTime = (): number | undefined => {
+    const currentStepIndex = steps.findIndex(s => s.status === 'active');
+    if (currentStepIndex === -1) return undefined;
+    
+    const remainingSteps = steps.length - currentStepIndex - 1;
+    const avgTimePerStep = 30; // seconds
+    
+    return remainingSteps * avgTimePerStep;
+  };
+
+  // Update estimated time
+  useEffect(() => {
+    setEstimatedTimeRemaining(calculateEstimatedTime());
+  }, [steps]);
+
+  const getCurrentStep = () => {
+    return steps.find(s => s.status === 'active')?.id || 'upload';
   };
 
   const getProgressPercentage = () => {
     const completedSteps = steps.filter(s => s.status === 'completed').length;
-    return (completedSteps / steps.length) * 100;
+    const activeStep = steps.find(s => s.status === 'active');
+    const activeProgress = activeStep?.progress || 0;
+    
+    return ((completedSteps * 100) + activeProgress) / steps.length;
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-900">
+    <div className="min-h-screen flex flex-col bg-gray-900">
       {/* Header */}
       <Header 
         currentPage="processing" 
@@ -166,116 +476,56 @@ export const ProcessingPage = () => {
 
       {/* Processing Content */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className={`${designSystem.components.card.base} ${designSystem.components.card.variants.elevated} ${designSystem.components.card.padding.lg} animate-scale-in`}>
-              <h2 className={`text-2xl font-bold text-center mb-8 ${designSystem.accessibility.contrast.text.primary} animate-fade-in-up`}>Processing Your CV</h2>
+        <div className="max-w-2xl w-full space-y-6">
+          {/* Enhanced Progress Indicator */}
+          <CheckpointProgressIndicator
+            currentStep={getCurrentStep()}
+            steps={steps}
+            checkpoints={checkpoints}
+            isRetrying={isRetrying}
+            error={error?.userMessage || null}
+            estimatedTimeRemaining={estimatedTimeRemaining}
+            className="animate-fade-in-up"
+          />
 
-            {/* Progress Bar */}
-            <div className="mb-8 animate-fade-in animation-delay-200">
-              <div className="bg-neutral-700 rounded-full h-2 overflow-hidden">
-                <div 
-                  className="h-full transition-all duration-500 ease-out animate-pulse-slow"
-                  style={{ 
-                    width: `${getProgressPercentage()}%`,
-                    background: designSystem.colors.gradients.primary
-                  }}
-                />
+          {/* Processing Status */}
+          {job?.status === 'completed' && (
+            <div className="text-center animate-bounce-in">
+              <div className="bg-green-900/20 border border-green-800 rounded-lg p-4">
+                <CheckCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                <p className="text-green-400 font-medium">All done! Redirecting to results...</p>
               </div>
-              <p className={`text-center text-sm ${designSystem.accessibility.contrast.text.secondary} mt-2`}>
-                {Math.round(getProgressPercentage())}% Complete
-              </p>
             </div>
+          )}
 
-            {/* Steps */}
-            <div className="space-y-4">
-              {steps.map((step, index) => (
-                <div 
-                    key={step.id}
-                    className="flex items-center space-x-4 animate-fade-in-left"
-                    style={{ animationDelay: `${300 + index * 100}ms` }}
-                  >
-                    <div className={step.status === 'active' ? 'animate-pulse' : ''}>
-                      {getStepIcon(step.status)}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-medium transition-colors duration-300 ${
-                        step.status === 'completed' ? designSystem.accessibility.contrast.text.primary : 
-                        step.status === 'active' ? designSystem.accessibility.contrast.links.default : 
-                        designSystem.accessibility.contrast.text.muted
-                      }`}>
-                        {step.label}
-                      </p>
-                    {step.status === 'active' && (
-                      <p className={`text-sm ${designSystem.accessibility.contrast.text.secondary} animate-fade-in`}>
-                        {step.id === 'analyze' && 'Extracting information with AI...'}
-                        {step.id === 'enhance' && 'Applying professional templates...'}
-                        {step.id === 'features' && 'Adding ATS optimization, personality insights...'}
-                        {step.id === 'media' && 'Generating podcast and video content...'}
-                      </p>
-                    )}
-                  </div>
-                  </div>
-              ))}
+          {/* Retry Status */}
+          {isRetrying && (
+            <div className="text-center">
+              <div className="bg-orange-900/20 border border-orange-800 rounded-lg p-4">
+                <Loader2 className="w-6 h-6 text-orange-400 animate-spin mx-auto mb-2" />
+                <p className="text-orange-400 font-medium">Attempting recovery...</p>
+              </div>
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className={`mt-6 p-4 ${designSystem.components.status.error} rounded-lg animate-fade-in-up`}>
-                <p className={`${designSystem.accessibility.contrast.text.primary} text-sm`}>{error}</p>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => navigate('/')}
-                    className={`${designSystem.accessibility.contrast.links.default} hover:${designSystem.accessibility.contrast.links.hover} text-sm font-medium transition-colors`}
-                  >
-                    Try again →
-                  </button>
-                  {/* Show force continue option if job has data */}
-                  {job && (job.parsedData || job.improvedCV) && (
-                    <button
-                      onClick={() => navigate(`/analysis/${jobId}`)}
-                      className={`text-${designSystem.colors.semantic.warning[400]} hover:text-${designSystem.colors.semantic.warning[300]} text-sm font-medium transition-colors`}
-                    >
-                      View results anyway →
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Manual Refresh Button - Show if processing seems stuck */}
-            {job && job.status === 'processing' && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleManualRefresh}
-                  disabled={isManualRefreshing}
-                  className={`${designSystem.components.button.base} ${designSystem.components.button.variants.primary.default} ${designSystem.components.button.sizes.md} ${isManualRefreshing ? designSystem.components.button.variants.primary.disabled : ''} flex items-center justify-center mx-auto`}
-                >
-                  {isManualRefreshing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    'Refresh Status'
-                  )}
-                </button>
-                <p className={`${designSystem.accessibility.contrast.text.secondary} text-sm mt-2`}>
-                  If processing seems stuck, click to check status
-                </p>
-              </div>
-            )}
-
-            {/* Status Message */}
-            {(job?.status === 'completed' || job?.status === 'improved') && (
-              <div className="mt-6 text-center animate-bounce-in">
-                <p className={`text-${designSystem.colors.semantic.success[400]} font-medium`}>
-                  {job?.status === 'improved' ? 'Improvements applied! Redirecting to results...' : 'All done! Redirecting to results...'}
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </main>
+
+      {/* Error Recovery Dialog */}
+      {error && (
+        <ErrorRecoveryDialog
+          error={error}
+          checkpoint={checkpoints.find(cp => 
+            steps.some(step => step.checkpointType === cp.type && step.status !== 'pending')
+          )}
+          isOpen={showErrorDialog}
+          onClose={() => setShowErrorDialog(false)}
+          onRetry={handleRetry}
+          onRestoreCheckpoint={handleRestoreCheckpoint}
+          onReportError={handleReportError}
+          isRetrying={isRetrying}
+          showCheckpointInfo={true}
+        />
+      )}
     </div>
   );
 };

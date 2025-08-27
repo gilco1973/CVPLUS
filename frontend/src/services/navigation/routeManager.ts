@@ -116,7 +116,7 @@ export class RouteManager {
       },
       {
         step: 'analysis',
-        path: '/analysis/:sessionId',
+        path: '/analysis/:jobId',
         title: 'Analysis Results',
         description: 'Review AI analysis',
         icon: 'analysis',
@@ -124,8 +124,17 @@ export class RouteManager {
         estimatedTime: 5
       },
       {
+        step: 'role-selection',
+        path: '/role-select/:jobId',
+        title: 'Role Selection',
+        description: 'AI-powered role detection and personalized recommendations',
+        icon: 'role-selection',
+        requiredData: ['analysisResults'],
+        estimatedTime: 3
+      },
+      {
         step: 'features',
-        path: '/features/:jobId',
+        path: '/select-features/:jobId',
         title: 'Select Features',
         description: 'Choose enhancement features',
         icon: 'features',
@@ -134,7 +143,7 @@ export class RouteManager {
       },
       {
         step: 'preview',
-        path: '/preview/:sessionId',
+        path: '/preview/:jobId',
         title: 'Preview CV',
         description: 'Review your enhanced CV',
         icon: 'preview',
@@ -143,7 +152,7 @@ export class RouteManager {
       },
       {
         step: 'results',
-        path: '/select-features/:jobId',
+        path: '/final-results/:jobId',
         title: 'Final Results',
         description: 'Download and share your CV',
         icon: 'results',

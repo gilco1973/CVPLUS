@@ -6,6 +6,7 @@ import { Section } from '../components/layout/Section';
 import { RoleProfileIntegration } from '../components/role-profiles/RoleProfileIntegration';
 import { getJob } from '../services/cvService';
 import { useAuth } from '../contexts/AuthContext';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import toast from 'react-hot-toast';
 import type { Job } from '../services/cvService';
 import { designSystem } from '../config/designSystem';
@@ -14,6 +15,7 @@ export const RoleSelectionPage: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
   const [jobData, setJobData] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<any>(null);
@@ -25,6 +27,20 @@ export const RoleSelectionPage: React.FC = () => {
       if (!jobId || !user) {
         toast.error('Missing job ID or user authentication');
         navigate('/');
+        return;
+      }
+
+      // Check premium access - redirect basic users who somehow reach this page
+      if (!premiumLoading && !isPremium) {
+        console.log('🚫 Basic user attempted to access role selection page, redirecting to analysis');
+        toast('Role selection is a premium feature. Redirecting to CV analysis...', { icon: 'ℹ️' });
+        navigate(`/analysis/${jobId}`);
+        return;
+      }
+
+      // Wait for premium status to load
+      if (premiumLoading) {
+        console.log('⏳ Waiting for premium status to load...');
         return;
       }
 
@@ -55,7 +71,7 @@ export const RoleSelectionPage: React.FC = () => {
     };
 
     loadJobData();
-  }, [jobId, user, navigate]);
+  }, [jobId, user, navigate, isPremium, premiumLoading]);
 
   const handleBack = () => {
     navigate('/');
@@ -78,17 +94,24 @@ export const RoleSelectionPage: React.FC = () => {
       );
     }
 
-    // Navigate to feature selection
-    navigate(`/select-features/${jobId}`, {
-      state: { roleContext, selectedRecommendations }
+    // Store role selection completion context
+    sessionStorage.setItem(`from-role-selection-${jobId}`, 'true');
+    sessionStorage.setItem(`role-context-${jobId}`, JSON.stringify(roleContext));
+    
+    // Navigate to analysis page with role-based context
+    navigate(`/analysis/${jobId}`, {
+      state: { roleContext, selectedRecommendations, fromRoleSelection: true }
     });
   };
 
   const handleSkipRoleSelection = () => {
     if (!jobId) return;
     
-    toast('Skipping role analysis - proceeding with standard features');
-    navigate(`/select-features/${jobId}`);
+    // Store that role selection was skipped
+    sessionStorage.setItem(`from-role-selection-${jobId}`, 'false');
+    
+    toast('Skipping role analysis - proceeding with standard analysis');
+    navigate(`/analysis/${jobId}`);
   };
 
   if (isLoading) {

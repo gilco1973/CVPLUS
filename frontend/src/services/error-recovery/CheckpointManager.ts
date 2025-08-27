@@ -18,6 +18,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase';
+import { removeUndefinedValues, sanitizeForFirestore } from '../../utils/firestore-utils';
 
 export const CheckpointType = {
   FILE_UPLOADED: 'file_uploaded',
@@ -45,7 +46,7 @@ export interface ProcessingCheckpoint {
     progress: number;
     description: string;
     canResumeFrom: boolean;
-    estimatedTimeRemaining?: number;
+    estimatedTimeRemaining: number;
   };
   createdAt: Date;
   expiresAt: Date;
@@ -103,6 +104,7 @@ export class CheckpointManager {
         progress: this.calculateProgress(type),
         description: this.getStepName(type),
         canResumeFrom: this.canResumeFromType(type),
+        estimatedTimeRemaining: metadata.estimatedTimeRemaining || 0,
         ...metadata
       },
       createdAt: now,
@@ -309,11 +311,15 @@ export class CheckpointManager {
     if (!user) return;
 
     const docRef = doc(db, 'users', user.uid, 'checkpoints', checkpoint.id);
-    await setDoc(docRef, {
+    
+    // Sanitize checkpoint data to remove undefined values
+    const sanitizedCheckpoint = removeUndefinedValues({
       ...checkpoint,
       createdAt: serverTimestamp(),
       expiresAt: checkpoint.expiresAt
     });
+    
+    await setDoc(docRef, sanitizedCheckpoint);
   }
 
   private async getLatestFromFirestore(jobId: string): Promise<ProcessingCheckpoint | null> {
@@ -387,6 +393,22 @@ export class CheckpointManager {
 
   private convertFirestoreDoc(doc: any): ProcessingCheckpoint {
     const data = doc.data();
+    
+    // Helper function to safely convert timestamps
+    const safeToDate = (timestamp: any): Date => {
+      if (!timestamp) return new Date();
+      if (timestamp instanceof Date) return timestamp;
+      if (typeof timestamp === 'string') return new Date(timestamp);
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        return timestamp.toDate();
+      }
+      if (timestamp.seconds) {
+        // Handle Firestore timestamp-like objects
+        return new Date(timestamp.seconds * 1000);
+      }
+      return new Date();
+    };
+    
     return {
       id: doc.id,
       jobId: data.jobId || '',
@@ -397,11 +419,12 @@ export class CheckpointManager {
         step: '',
         progress: 0,
         description: '',
-        canResumeFrom: false
+        canResumeFrom: false,
+        estimatedTimeRemaining: 0
       },
-      createdAt: data.createdAt?.toDate() || new Date(),
-      expiresAt: data.expiresAt?.toDate() || new Date(),
-      restoredAt: data.restoredAt?.toDate()
+      createdAt: safeToDate(data.createdAt),
+      expiresAt: safeToDate(data.expiresAt),
+      restoredAt: data.restoredAt ? safeToDate(data.restoredAt) : undefined
     };
   }
 
@@ -519,15 +542,16 @@ export class CheckpointManager {
     // Remove sensitive data and large objects
     const sanitized = { ...data };
     
-    // Remove functions
+    // Remove functions and undefined values
     Object.keys(sanitized).forEach(key => {
-      if (typeof sanitized[key] === 'function') {
+      if (typeof sanitized[key] === 'function' || sanitized[key] === undefined) {
         delete sanitized[key];
       }
     });
     
     return sanitized;
   }
+
 
   private serializeCheckpoint(checkpoint: ProcessingCheckpoint): unknown {
     return {

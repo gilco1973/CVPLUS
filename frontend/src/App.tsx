@@ -3,9 +3,11 @@ import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import { HomePage } from './pages/HomePage';
 import { AuthProvider } from './contexts/AuthContext';
+import { usePremiumStatus } from './hooks/usePremiumStatus';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
 import { GlobalLayout } from './components/layout/GlobalLayout';
 import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowLayout';
+import toast from 'react-hot-toast';
 
 // Lazy load heavy components to reduce initial bundle size
 const ProcessingPage = lazy(() => import('./pages/ProcessingPage').then(m => ({ default: m.ProcessingPage })));
@@ -28,6 +30,24 @@ const PageLoader = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
   </div>
 );
+
+// Premium route protection component
+const PremiumRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isPremium, isLoading } = usePremiumStatus();
+  const { jobId } = useParams<{ jobId: string }>();
+  
+  if (isLoading) {
+    return <PageLoader />;
+  }
+  
+  if (!isPremium) {
+    console.log('🚫 Non-premium user attempted to access premium route, redirecting');
+    toast('This feature requires a premium subscription', { icon: 'ℹ️' });
+    return <Navigate to={`/analysis/${jobId}`} replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 // Redirect component for deprecated routes
 const FeatureSelectionRedirect = () => {
@@ -68,9 +88,11 @@ const router = createBrowserRouter(
     {
       path: '/role-select/:jobId',
       element: (
-        <Suspense fallback={<PageLoader />}>
-          <RoleSelectionPage />
-        </Suspense>
+        <PremiumRoute>
+          <Suspense fallback={<PageLoader />}>
+            <RoleSelectionPage />
+          </Suspense>
+        </PremiumRoute>
       ),
     },
     {

@@ -17,6 +17,7 @@ import {
   getDocs 
 } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase';
+import { removeUndefinedValues } from '../../utils/firestore-utils';
 import { ClassifiedError, ErrorContext } from './ErrorClassification';
 import { ProcessingCheckpoint } from './CheckpointManager';
 import { RetryResult } from './RetryMechanism';
@@ -193,10 +194,10 @@ export class ErrorReportingService {
       if (!user) return false;
 
       const docRef = doc(db, 'users', user.uid, 'errorReports', reportId);
-      await setDoc(docRef, {
+      await setDoc(docRef, removeUndefinedValues({
         ...updates,
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      }), { merge: true });
 
       return true;
     } catch (error) {
@@ -373,11 +374,11 @@ export class ErrorReportingService {
     if (!user) throw new Error('User not authenticated');
 
     const docRef = doc(db, 'users', user.uid, 'errorReports', report.id);
-    await setDoc(docRef, {
+    await setDoc(docRef, removeUndefinedValues({
       ...report,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    }));
   }
 
   private saveReportLocally(report: ErrorReport): void {

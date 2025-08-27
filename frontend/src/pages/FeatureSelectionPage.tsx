@@ -274,8 +274,8 @@ export const FeatureSelectionPage = () => {
         toast.success(`${serverValidatedCount} features selected for your CV!`);
       }
       
-      // Navigate to processing page
-      navigate(`/process/${jobId}`);
+      // Navigate to final results page to show the completed CV
+      navigate(`/final-results/${jobId}`);
     } catch (error: any) {
       console.error('Error updating job features:', error);
       

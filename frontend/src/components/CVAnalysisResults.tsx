@@ -40,6 +40,7 @@ interface ATSAnalysis {
 
 interface CVAnalysisResultsProps {
   job: Job;
+  roleContext?: any;
   onContinue: (selectedRecommendations: string[]) => void;
   onBack?: () => void;
   className?: string;
@@ -47,6 +48,7 @@ interface CVAnalysisResultsProps {
 
 export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
   job,
+  roleContext,
   onContinue,
   onBack,
   className = ''
@@ -169,7 +171,21 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
       
       let recommendationsData;
       try {
-        recommendationsData = await CVServiceCore.getRecommendations(job.id);
+        // Extract role information from roleContext if available
+        const targetRole = roleContext?.selectedRole?.name || roleContext?.role?.name;
+        const industryKeywords = roleContext?.selectedRole?.keywords || roleContext?.keywords || [];
+        
+        console.log('🎯 Generating recommendations with role context:', {
+          targetRole,
+          industryKeywords,
+          roleContext: roleContext ? 'available' : 'not available'
+        });
+        
+        recommendationsData = await CVServiceCore.getRecommendations(
+          job.id, 
+          targetRole, 
+          industryKeywords
+        );
         if (process.env.NODE_ENV === 'development') {
           console.warn(`[CVAnalysisResults] Raw API response received:`, recommendationsData);
         }
@@ -461,7 +477,7 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
         setIsLoading(false);
       }
     }
-  }, [job.id, job.status, job.userId, loadedJobId, isLoading]);
+  }, [job.id, job.status, job.userId, loadedJobId, isLoading, roleContext]);
 
   // Load recommendations when job changes - Enhanced StrictMode-aware duplicate prevention
   useEffect(() => {
@@ -740,6 +756,15 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
             <p className="text-gray-400">
               We've analyzed your CV and identified opportunities to enhance its impact and ATS compatibility.
             </p>
+            {/* Role Context Indicator */}
+            {roleContext?.selectedRole && (
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 rounded-full border border-cyan-500/30">
+                <Target className="w-4 h-4 text-cyan-400" />
+                <span className="text-cyan-300 font-medium text-sm">
+                  Optimized for {roleContext.selectedRole.name}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <CheckCircle className="w-4 h-4 text-green-500" />
