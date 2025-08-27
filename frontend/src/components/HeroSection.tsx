@@ -356,7 +356,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
+            {features.map((feature, _index) => (
               <div 
                 key={feature.id}
                 className="animate-fade-in bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover-lift group"

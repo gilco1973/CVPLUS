@@ -23,31 +23,34 @@ export const GeneratedCVDisplay: React.FC<GeneratedCVDisplayProps> = ({
   const hasHtmlUrl = job.generatedCV?.htmlUrl;
   const hasFiles = job.generatedCV?.pdfUrl || job.generatedCV?.docxUrl;
   
-  console.log('🖥️ [CV-DISPLAY] Debug info:', {
-    hasGeneratedCV: !!job.generatedCV,
-    hasHTML: !!generatedHTML,
-    hasHtmlUrl: !!hasHtmlUrl,
-    hasFiles: !!hasFiles,
-    jobStatus: job.status,
-    htmlLength: generatedHTML?.length || 0,
-    htmlUrl: hasHtmlUrl,
-    generatedCVData: job.generatedCV,
-    allJobKeys: Object.keys(job),
-    allKeys: job.generatedCV ? Object.keys(job.generatedCV) : []
-  });
+  // Debug info logging (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('🖥️ [CV-DISPLAY] Debug info:', {
+      hasGeneratedCV: !!job.generatedCV,
+      hasHTML: !!generatedHTML,
+      hasHtmlUrl: !!hasHtmlUrl,
+      hasFiles: !!hasFiles,
+      jobStatus: job.status,
+      htmlLength: generatedHTML?.length || 0,
+      htmlUrl: hasHtmlUrl,
+      generatedCVData: job.generatedCV,
+      allJobKeys: Object.keys(job),
+      allKeys: job.generatedCV ? Object.keys(job.generatedCV) : []
+    });
+  }
 
   // Initialize React components after HTML is rendered
   useEffect(() => {
     if (generatedHTML && contentRef.current) {
-      console.log('🔄 [CV-DISPLAY] HTML rendered, initializing React components...');
+      // HTML rendered, initializing React components
       
       // Small delay to ensure DOM is fully updated
       const timer = setTimeout(async () => {
-        console.log('🚀 [CV-DISPLAY] Initializing React components with enhanced renderer...');
+        // Initializing React components with enhanced renderer
         
         try {
           initializeReactComponents();
-          console.log(`✅ [CV-DISPLAY] Successfully initialized React components`);
+          // Successfully initialized React components
         } catch (error) {
           console.error('❌ [CV-DISPLAY] Failed to initialize React components:', error);
         }

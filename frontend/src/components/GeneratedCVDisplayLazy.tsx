@@ -24,24 +24,27 @@ export const GeneratedCVDisplayLazy: React.FC<GeneratedCVDisplayProps> = ({
   const hasHtmlUrl = job.generatedCV?.htmlUrl;
   const hasFiles = job.generatedCV?.pdfUrl || job.generatedCV?.docxUrl;
   
-  console.log('🖥️ [CV-DISPLAY-LAZY] Debug info:', {
-    hasGeneratedCV: !!job.generatedCV,
-    hasHTML: !!generatedHTML,
-    hasHtmlUrl: !!hasHtmlUrl,
-    hasFiles: !!hasFiles,
-    jobStatus: job.status,
-    htmlLength: generatedHTML?.length || 0
-  });
+  // Debug info logging (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('🖥️ [CV-DISPLAY-LAZY] Debug info:', {
+      hasGeneratedCV: !!job.generatedCV,
+      hasHTML: !!generatedHTML,
+      hasHtmlUrl: !!hasHtmlUrl,
+      hasFiles: !!hasFiles,
+      jobStatus: job.status,
+      htmlLength: generatedHTML?.length || 0
+    });
+  }
 
   // Initialize React components after HTML is rendered with lazy loading
   useEffect(() => {
     if (generatedHTML && contentRef.current && !hasInitialized.current) {
-      console.log('🔄 [CV-DISPLAY-LAZY] HTML rendered, initializing lazy React components...');
+      // HTML rendered, initializing lazy React components
       hasInitialized.current = true;
       
       // Small delay to ensure DOM is fully updated
       const timer = setTimeout(async () => {
-        console.log('🚀 [CV-DISPLAY-LAZY] Starting lazy component initialization...');
+        // Starting lazy component initialization
         
         try {
           // Preload critical components first for better UX
@@ -50,7 +53,7 @@ export const GeneratedCVDisplayLazy: React.FC<GeneratedCVDisplayProps> = ({
           // Initialize all components lazily
           initializeLazyReactComponents();
           
-          console.log(`✅ [CV-DISPLAY-LAZY] Successfully initialized lazy React components`);
+          // Successfully initialized lazy React components
         } catch (error) {
           console.error('❌ [CV-DISPLAY-LAZY] Error initializing lazy components:', error);
         }

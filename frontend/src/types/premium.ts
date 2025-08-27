@@ -4,23 +4,11 @@
  */
 
 /**
- * Premium feature identifiers
+ * Premium feature identifiers - IMPORTED FROM MASTER DEFINITION
  * These correspond to the feature flags in the subscription system
+ * @deprecated Import from @cvplus/premium/types instead
  */
-export type PremiumFeature = 
-  | 'externalDataSources'
-  | 'advancedAnalytics'
-  | 'aiInsights'
-  | 'multimediaFeatures'
-  | 'portfolioGallery'
-  | 'videoIntroduction'
-  | 'podcastGeneration'
-  | 'certificateBadges'
-  | 'realTimeSync'
-  | 'customBranding'
-  | 'prioritySupport'
-  | 'exportOptions'
-  | 'apiAccess';
+export type { PremiumFeature } from '@cvplus/premium/types/premium-features';
 
 /**
  * Analytics event types for premium gate interactions

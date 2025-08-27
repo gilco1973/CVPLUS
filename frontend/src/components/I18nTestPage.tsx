@@ -21,7 +21,7 @@ export const I18nTestPage: React.FC = () => {
             {Object.entries(languages).map(([code, lang]) => (
               <button
                 key={code}
-                onClick={() => changeLanguage(code as any)}
+                onClick={() => changeLanguage(code)}
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                   currentLanguage === code
                     ? 'bg-blue-600 text-white'

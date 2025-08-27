@@ -3,7 +3,9 @@ import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import { HomePage } from './pages/HomePage';
 import { AuthProvider } from './contexts/AuthContext';
+import { ModuleProvider } from './providers/ModuleProvider';
 import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
+import { SimpleModuleDemo } from './components/dev/SimpleModuleDemo';
 import { GlobalLayout } from './components/layout/GlobalLayout';
 import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowLayout';
 import './i18n/config';
@@ -205,10 +207,12 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-      <SubscriptionMonitor />
-      <Toaster 
+    <ModuleProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <SubscriptionMonitor />
+        <SimpleModuleDemo />
+        <Toaster 
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -219,7 +223,8 @@ function App() {
           },
         }}
       />
-    </AuthProvider>
+      </AuthProvider>
+    </ModuleProvider>
   );
 }
 

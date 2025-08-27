@@ -1,86 +1,141 @@
 # CVPlus Documentation
 
-This directory contains all project documentation organized by category.
+Welcome to the comprehensive documentation for CVPlus - the AI-powered CV transformation platform that takes traditional CVs "From Paper to Powerful".
 
-## 📁 Directory Structure
+## 📁 Documentation Structure
 
-### `/architecture`
-System design and technical architecture documentation:
-- `ATS.md` - ATS (Applicant Tracking System) feature planning
-- `CV_IMPROVEMENT_SYSTEM.md` - CV improvement system documentation
-- `FIREBASE_CORS_RESEARCH.md` - Firebase CORS configuration research
-- `LLM_VERIFICATION_INTEGRATION_GUIDE.md` - LLM verification integration guide
-- `LLM_VERIFICATION_MIGRATION_GUIDE.md` - Migration guide for LLM verification
-- `LLM_VERIFICATION_SYSTEM.md` - LLM verification system documentation
-- `LLM_VERIFICATION_SYSTEM_DESIGN.md` - LLM verification system design
-- `NOTEBOOKLM_INTEGRATION_DESIGN.md` - NotebookLM integration design
-- `SYSTEM_DESIGN.md` - Overall system design documentation
+### 🏗️ [Architecture](./architecture/README.md)
+System design, architectural patterns, and technical specifications.
 
-### `/deployment`
-Deployment guides and procedures:
-- `DEPLOYMENT_GUIDE.md` - Comprehensive deployment guide
-- `deployment-checklist.md` - Pre-deployment checklist
-- `DEPLOYMENT_SUCCESS_REPORT.md` - Deployment success report
+**Key Files:**
+- [`SYSTEM_DESIGN.md`](./architecture/SYSTEM_DESIGN.md) - Overall system architecture
+- [`ats-applicant-tracking-system-architecture.md`](./architecture/ats-applicant-tracking-system-architecture.md) - ATS system design  
+- [`cv-improvement-system-architecture.md`](./architecture/cv-improvement-system-architecture.md) - CV improvement system
+- [`firebase-cors-configuration-research.md`](./architecture/firebase-cors-configuration-research.md) - CORS configuration research
+- [**Modular Architecture**](./architecture/modular-architecture/README.md) - Complete modular architecture initiative (23 files)
 
-### `/frontend`
-Frontend-specific documentation:
-- `CV_RECOMMENDATIONS_UI_DESIGN.md` - CV recommendations UI design
-- `NEW_WORKFLOW_IMPLEMENTATION.md` - New workflow implementation guide
-- `README.md` - Frontend project README
-- `UI_MOCKUP.md` - UI mockup documentation
+### 📊 [Analysis Reports](./analysis-reports/)
+Comprehensive analysis and assessment reports organized by category.
 
-### `/guides`
-User and developer guides:
-- `create-podcast-guide.md` - Guide for creating podcasts
+**Codebase Analysis:**
+- Comprehensive system analysis reports
+- Performance analysis and benchmarking
+- Frontend and backend analysis
+- Security audit reports
 
-### `/reports`
-Status reports and analysis:
-- `CV_FEATURES_IMPLEMENTATION_STATUS.md` - CV features implementation status
-- `CVPLUS_FEATURE_ANALYSIS_REPORT.md` - CVPlus feature analysis report
-- `IMMEDIATE_ACTIONS_SUMMARY.md` - Immediate actions summary
-- `PRIVACY_PROTECTION_STATUS_REPORT.md` - Privacy protection status report
-- `QUICK_FEATURE_STATUS_SUMMARY.md` - Quick feature status summary
-- `SECURITY_AUDIT_COMPLETED.md` - Security audit completion report
+### 📋 [Implementation Reports](./implementation-reports/)
+Completed implementation summaries organized by type.
 
-### `/testing`
-Testing documentation and reports:
-- `COMPREHENSIVE_CV_TESTING_REPORT.md` - Comprehensive CV testing report
-- `COMPREHENSIVE_GIL_KLAINERT_CV_TEST_REPORT.md` - Specific CV testing report
-- `CV_PROCESSING_TEST_REPORT.md` - CV processing test report
-- `TESTING_INSTRUCTIONS.md` - Testing instructions
+**Categories:**
+- **[Features](./implementation-reports/features/)** - Feature implementation reports
+- **[Performance](./implementation-reports/performance/)** - Performance optimization results  
+- **[Fixes](./implementation-reports/fixes/)** - Bug fixes and resolution reports
+- **[Migrations](./implementation-reports/migrations/)** - System migrations and reorganizations
+
+### 📅 [Plans](./plans/)
+Future implementation plans organized by date and feature area.
+
+**Organization:**
+- **[2025-01](./plans/2025-01/)** - January 2025 plans (modular architecture, role improvements)
+- **[2025-08](./plans/2025-08/)** - August 2025 plans (features, fixes, enhancements)
+- **[Archived](./plans/archived/)** - Completed or obsolete plans
+
+### 📈 [Diagrams](./diagrams/)
+Mermaid diagrams and visual documentation organized by type.
+
+**Categories:**
+- **[Architecture](./diagrams/architecture/)** - System and component architecture diagrams
+- **[Workflows](./diagrams/workflows/)** - Process flows and implementation workflows
+- **[User Flows](./diagrams/user-flows/)** - User experience and interaction flows
+- **[System Flows](./diagrams/system-flows/)** - System interaction and data flows
+
+### 👤 [User Guides](./user-guides/)
+User-facing documentation and setup guides.
+
+**Available Guides:**
+- [`CVPlus-User-Manual.md`](./user-guides/CVPlus-User-Manual.md) - Complete user manual
+- [`email-service-setup-guide.md`](./user-guides/email-service-setup-guide.md) - Email service configuration
+
+### 👨‍💻 [Developer Guides](./developer-guides/)
+Developer documentation and technical guides.
+
+### 🔧 [Development](./development/)
+Development processes and onboarding materials.
+
+### 🎨 [Design](./design/)
+Design system, UI/UX specifications, and visual guidelines.
+
+### 🚀 [Deployment](./deployment/)
+Deployment guides, runbooks, and operational procedures.
+
+### 🔍 [Testing](./testing/)
+Testing strategies, reports, and quality assurance documentation.
+
+### 🛡️ [Security](./security/)
+Security assessments, compliance documentation, and security implementations.
+
+### 🔧 [Fixes](./fixes/)
+Bug fixes, issue resolutions, and troubleshooting guides.
+
+**Key Areas:**
+- **[TypeScript](./fixes/typescript/)** - TypeScript compilation and error fixes
+
+### 📱 [Components](./components/)
+Component documentation and README files.
+
+### 🏢 [Business](./business/)
+Business-related documentation including pricing and policies.
+
+### 🌐 [Portal](./portal/)
+Web portal specifications and implementation guides.
+
+### ⚙️ [Features](./features/)
+Feature-specific implementation guides and documentation.
 
 ## 🔍 Quick Navigation
 
-### For Developers
-- [System Design](./architecture/SYSTEM_DESIGN.md)
-- [Frontend Implementation](./frontend/NEW_WORKFLOW_IMPLEMENTATION.md)
-- [Testing Instructions](./testing/TESTING_INSTRUCTIONS.md)
-- [Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)
+### Most Important Documents
+1. **[System Design](./architecture/SYSTEM_DESIGN.md)** - Start here for system overview
+2. **[Modular Architecture Plan](./architecture/modular-architecture/2025-01-27-modular-architecture-plan.md)** - Major architectural initiative
+3. **[User Manual](./user-guides/CVPlus-User-Manual.md)** - Complete user guide
+4. **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Production deployment procedures
 
-### For Product Management
-- [Feature Status](./reports/CV_FEATURES_IMPLEMENTATION_STATUS.md)
-- [Feature Analysis](./reports/CVPLUS_FEATURE_ANALYSIS_REPORT.md)
-- [UI Design](./frontend/UI_MOCKUP.md)
+### Recent Updates (August 2025)
+- Comprehensive documentation reorganization completed
+- Modular architecture initiative documentation consolidated
+- CI/CD pipeline implementation documentation
+- Performance optimization results and analysis
+- Security assessments and compliance reports
 
-### For DevOps
-- [Deployment Checklist](./deployment/deployment-checklist.md)
-- [Deployment Success Report](./deployment/DEPLOYMENT_SUCCESS_REPORT.md)
-- [CORS Configuration](./architecture/FIREBASE_CORS_RESEARCH.md)
+## 📝 Documentation Standards
 
-### For QA/Testing
-- [Testing Instructions](./testing/TESTING_INSTRUCTIONS.md)
-- [CV Testing Report](./testing/COMPREHENSIVE_CV_TESTING_REPORT.md)
-- [CV Processing Tests](./testing/CV_PROCESSING_TEST_REPORT.md)
+### File Naming Conventions
+- **Plans**: `YYYY-MM-DD-descriptive-name-plan.md`
+- **Reports**: `YYYY-MM-DD-descriptive-name-report.md` 
+- **Architecture**: `descriptive-system-name-architecture.md`
+- **Guides**: `descriptive-name-guide.md`
 
-## 📋 Project Status
-For the latest project status and immediate action items, see:
-- [Quick Feature Status](./reports/QUICK_FEATURE_STATUS_SUMMARY.md)
-- [Immediate Actions](./reports/IMMEDIATE_ACTIONS_SUMMARY.md)
+### Organization Principles
+- **By Type**: Documents organized by their primary purpose
+- **By Date**: Plans and reports organized chronologically
+- **By Feature**: Feature-specific documentation grouped together
+- **Clear Names**: All files have descriptive, meaningful names
 
-## 🔐 Security & Privacy
-- [Security Audit](./reports/SECURITY_AUDIT_COMPLETED.md)
-- [Privacy Protection Status](./reports/PRIVACY_PROTECTION_STATUS_REPORT.md)
+## 🔗 Cross-References
+
+### Related Documentation
+- **[API Documentation](./api-documentation/)** - API specifications and integration guides
+- **[Monitoring](./monitoring/)** - System monitoring and observability
+- **[Quality Assurance](./quality-assurance/)** - QA processes and standards
+- **[Refactoring](./refactoring/)** - Code refactoring plans and results
+
+## 📞 Support
+
+For questions about this documentation or CVPlus in general:
+- Check the [FAQ](./support/faq.md)
+- Review the [User Manual](./user-guides/CVPlus-User-Manual.md)
+- Consult the [Developer Onboarding Guide](./development/onboarding/developer-onboarding-guide.md)
 
 ---
 
-**Note**: Agent definitions remain in `.claude/agents/` and are not part of this documentation structure.
+*Last Updated: 2025-08-27 - Comprehensive documentation reorganization*

@@ -229,12 +229,30 @@ export {
   validateCorsConfiguration
 } from './scripts/test-cors';
 
-// Export CV improvement functions
+// Export CV improvement functions (modular architecture)
 export { 
-  applyImprovements, 
-  getRecommendations, 
-  previewImprovement 
-} from './functions/applyImprovements';
+  getRecommendations
+} from './functions/recommendations/getRecommendations';
+
+export { 
+  applyImprovements
+} from './functions/recommendations/applyImprovements';
+
+export { 
+  previewImprovement
+} from './functions/recommendations/previewImprovement';
+
+export { 
+  customizePlaceholders
+} from './functions/recommendations/customizePlaceholders';
+
+// Legacy functions (deprecated - use modular versions above)
+// export { 
+//   applyImprovements as applyImprovementsLegacy, 
+//   getRecommendations as getRecommendationsLegacy, 
+//   previewImprovement as previewImprovementLegacy,
+//   customizePlaceholders as customizePlaceholdersLegacy 
+// } from './functions/applyImprovements';
 
 // Export enhanced CV analysis function  
 export { enhancedAnalyzeCV } from './functions/enhancedAnalyzeCV';

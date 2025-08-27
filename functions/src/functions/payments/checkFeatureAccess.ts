@@ -3,7 +3,8 @@ import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
 import { corsOptions } from '../../config/cors';
 
-type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics' | 'videoIntroduction';
+import type { PremiumFeature } from '@cvplus/premium/types/premium-features';
+import { isValidPremiumFeature, requiresSubscription, getMinimumTier } from '@cvplus/premium/types/premium-features';
 
 interface CheckFeatureAccessData {
   userId: string;
