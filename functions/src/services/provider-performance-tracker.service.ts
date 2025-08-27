@@ -563,7 +563,7 @@ export class ProviderPerformanceTracker {
         providerId,
         period,
         metrics: {
-          successRate: aggregated.successRate,
+          successRate: aggregated.totalOperations > 0 ? aggregated.successfulOperations / aggregated.totalOperations : 0,
           averageGenerationTime: aggregated.averageResponseTime,
           averageVideoQuality: aggregated.averageVideoQuality,
           userSatisfactionScore: aggregated.averageUserSatisfaction,

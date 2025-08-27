@@ -140,9 +140,12 @@ export class CVTransformationService {
   ): Promise<CVRecommendation[]> {
     const analysisPrompt = this.buildAnalysisPrompt(parsedCV, targetRole, industryKeywords);
     
+    console.log('[CVTransformationService] Starting generateDetailedRecommendations');
+    console.log('[CVTransformationService] Prompt length:', analysisPrompt.length);
+    
     try {
       const response = await this.claudeService.createVerifiedMessage({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 4000,
         temperature: 0.3,
         system: `You are an expert CV transformation specialist. Analyze the provided CV and generate SUBSTANTIAL, impactful recommendations that dramatically improve the content quality and professional presentation.
@@ -205,21 +208,31 @@ Return a JSON array of recommendations following this exact structure:
           
           // Process each recommendation to detect placeholders
           return this.processRecommendationsWithPlaceholders(recommendations);
-        } catch (parseError) {
+        } catch (parseError: any) {
           console.error('Failed to parse recommendations JSON:', parseError);
           console.error('Raw response text:', content.text);
-          // Fallback: extract recommendations from text response
-          const fallbackRecs = this.extractRecommendationsFromText(content.text, parsedCV);
-          return this.processRecommendationsWithPlaceholders(fallbackRecs);
+          console.error('Parse error details:', {
+            message: parseError.message,
+            stack: parseError.stack
+          });
+          
+          // Re-throw with context about what went wrong
+          throw new Error(`Failed to parse AI response as JSON. Response was: ${content.text.substring(0, 500)}...`);
         }
       }
 
       throw new Error('Invalid response format from Claude');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating recommendations:', error);
-      // Return basic recommendations as fallback
-      const fallbackRecs = this.generateFallbackRecommendations(parsedCV);
-      return this.processRecommendationsWithPlaceholders(fallbackRecs);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode,
+        stack: error.stack
+      });
+      
+      // Re-throw the error with more context instead of hiding it with fallback
+      throw new Error(`Failed to generate CV recommendations: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -833,7 +846,7 @@ Requirements:
 Enhanced Summary:`;
 
       const response = await this.claudeService.createVerifiedMessage({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 500,
         temperature: 0.3,
         system: 'You are an expert CV writer. Enhance the provided professional summary by naturally integrating the specified keywords while maintaining the original meaning and professional tone.',

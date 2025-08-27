@@ -59,8 +59,21 @@ export class VerifiedClaudeService {
       ...config
     };
 
+    // Get API key - try multiple sources for compatibility
+    const apiKey = process.env.ANTHROPIC_API_KEY || 
+                   process.env.anthropic_api_key ||
+                   '';
+    
+    if (!apiKey) {
+      console.error('[VERIFIED-CLAUDE] ERROR: ANTHROPIC_API_KEY not found in environment variables');
+      console.error('[VERIFIED-CLAUDE] Available env vars:', Object.keys(process.env).filter(k => k.includes('ANTHROPIC') || k.includes('API')));
+      throw new Error('ANTHROPIC_API_KEY is not configured. Please set it as a Firebase Secret or environment variable.');
+    } else {
+      console.log('[VERIFIED-CLAUDE] API key found, length:', apiKey.length);
+    }
+    
     this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || ''
+      apiKey: apiKey
     });
 
     this.verificationService = new LLMVerificationService({
@@ -86,7 +99,7 @@ export class VerifiedClaudeService {
     try {
       // Step 1: Get initial response from Claude
       const claudeResponse = await this.anthropic.messages.create({
-        model: options.model || 'claude-sonnet-4-20250514',
+        model: options.model || 'claude-3-5-sonnet-20241022',
         max_tokens: options.max_tokens || 4000,
         temperature: options.temperature || 0.3,
         messages: options.messages,
@@ -141,7 +154,7 @@ export class VerifiedClaudeService {
         
         try {
           const fallbackResponse = await this.anthropic.messages.create({
-            model: options.model || 'claude-sonnet-4-20250514',
+            model: options.model || 'claude-3-5-sonnet-20241022',
             max_tokens: options.max_tokens || 4000,
             temperature: options.temperature || 0.3,
             messages: options.messages,

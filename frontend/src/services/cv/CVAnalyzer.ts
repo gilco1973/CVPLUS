@@ -196,45 +196,31 @@ export class CVAnalyzer {
       console.log(`[CVAnalyzer] Callable function succeeded for job: ${jobId}`);
       return result.data;
     } catch (error: unknown) {
-      console.warn(`[CVAnalyzer] Callable function failed for job: ${jobId}, trying direct HTTP call:`, error);
+      // NO FALLBACK - EXPOSE THE REAL ERROR
+      console.error(`[CVAnalyzer] Callable function FAILED for job: ${jobId}`, error);
       
-      // Fallback to direct HTTP call to V2 function  
-      const baseUrl = import.meta.env.DEV 
-        ? 'http://localhost:5001/getmycv-ai/us-central1'
-        : 'https://us-central1-getmycv-ai.cloudfunctions.net';
-      const response = await fetch(`${baseUrl}/getRecommendationsV2`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          data: {
-            jobId,
-            targetRole,
-            industryKeywords,
-            forceRegenerate
-          }
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Log detailed error information
+      if (error instanceof Error) {
+        console.error(`[CVAnalyzer] Error details:`, {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+        
+        // Check for specific Firebase function errors
+        if (error.message.includes('not-found') || error.message.includes('NOT_FOUND')) {
+          throw new Error(`Function 'getRecommendations' not found. Please ensure Firebase Functions are deployed correctly.`);
+        } else if (error.message.includes('permission-denied') || error.message.includes('PERMISSION_DENIED')) {
+          throw new Error(`Permission denied when calling 'getRecommendations'. Please check authentication and Firebase security rules.`);
+        } else if (error.message.includes('deadline-exceeded') || error.message.includes('DEADLINE_EXCEEDED')) {
+          throw new Error(`Function 'getRecommendations' timed out. The CV analysis is taking longer than expected.`);
+        } else if (error.message.includes('unauthenticated') || error.message.includes('UNAUTHENTICATED')) {
+          throw new Error(`Not authenticated. Please log in and try again.`);
+        }
       }
       
-      const result = await response.json();
-      console.log(`[CVAnalyzer] Direct HTTP call succeeded for job: ${jobId}`);
-      console.log(`[CVAnalyzer] HTTP response structure:`, result);
-      
-      // The HTTP endpoint returns the response in result.data format
-      // But we need to match the callable function format
-      if (result.result) {
-        return result.result;
-      } else if (result.data) {
-        return result.data;
-      } else {
-        return result;
-      }
+      // Re-throw the original error without any fallback
+      throw error;
     }
   }
 

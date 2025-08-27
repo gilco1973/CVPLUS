@@ -49,7 +49,6 @@ export class SessionCheckpointService {
       maxRetries: 3,
       dependencies: this.getDependencies(stepId, featureId),
       estimatedDuration: this.getEstimatedDuration(functionName),
-      resourceRequirements: this.getResourceRequirements(functionName)
     };
 
     // Store checkpoint in Firestore
@@ -327,7 +326,7 @@ export class SessionCheckpointService {
 
   private async handleSessionUpdateAction(action: QueuedAction): Promise<void> {
     const { sessionId, updates } = action.payload;
-    const session = await this.getEnhancedSession(sessionId);
+    const session = await this.getEnhancedSession(sessionId as string);
     
     if (session) {
       Object.assign(session, updates);
@@ -343,10 +342,10 @@ export class SessionCheckpointService {
 
   private async handleFeatureToggleAction(action: QueuedAction): Promise<void> {
     const { sessionId, featureId, enabled } = action.payload;
-    const session = await this.getEnhancedSession(sessionId);
+    const session = await this.getEnhancedSession(sessionId as string);
     
-    if (session && session.featureStates[featureId]) {
-      session.featureStates[featureId].enabled = enabled;
+    if (session && session.featureStates[featureId as string]) {
+      session.featureStates[featureId as string].enabled = enabled as boolean;
       await this.saveEnhancedSession(session);
     }
   }
@@ -458,10 +457,9 @@ export class SessionCheckpointService {
       analysis: ['processing'],
       features: ['analysis'],
       templates: ['analysis'],
-      preview: ['templates'],
-      results: ['preview'],
-      keywords: ['analysis'],
-      completed: ['results']
+      generation: ['templates', 'features'],
+      finalization: ['generation'],
+      preview: ['finalization']
     };
 
     return dependencies[stepId] || [];

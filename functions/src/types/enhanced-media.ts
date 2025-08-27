@@ -153,4 +153,23 @@ export interface PersonalityProfile {
   
   /** Core professional and personal values */
   values: string[];
+  
+  /** Personality traits with numeric scores */
+  traits?: {
+    leadership: number;
+    communication: number;
+    innovation: number;
+    teamwork: number;
+    problemSolving: number;
+    attention_to_detail: number;
+    adaptability: number;
+    strategic_thinking: number;
+  };
+  
+  /** Culture fit assessment */
+  cultureFit?: {
+    values: string[];
+    workEnvironment: string;
+    managementStyle: string;
+  };
 }

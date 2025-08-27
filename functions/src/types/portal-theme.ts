@@ -59,6 +59,16 @@ export interface PortalTheme {
     /** Heavy shadow */
     lg: string;
   };
+  
+  /** Background images configuration */
+  backgroundImages?: Array<{
+    id: string;
+    type: 'hero' | 'section' | 'overlay' | 'pattern';
+    url?: string;
+    style?: string;
+    position?: string;
+    opacity?: number;
+  }>;
 }
 
 /**
@@ -223,6 +233,15 @@ export enum PortalSection {
   SKILLS = 'skills',
   EDUCATION = 'education',
   PROJECTS = 'projects',
+  PORTFOLIO = 'portfolio',
+  ACHIEVEMENTS = 'achievements',
+  CERTIFICATIONS = 'certifications',
+  TESTIMONIALS = 'testimonials',
+  PUBLICATIONS = 'publications',
+  SPEAKING = 'speaking',
+  AWARDS = 'awards',
+  INTERESTS = 'interests',
+  BLOG = 'blog',
   CONTACT = 'contact',
   FOOTER = 'footer',
   SIDEBAR = 'sidebar',

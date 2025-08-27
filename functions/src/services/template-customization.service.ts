@@ -718,7 +718,21 @@ export class TemplateCustomizationService {
         name: `${this.capitalizeFirst(industry)} Professional Theme`,
         colors: colorScheme,
         typography,
-        layout: {},
+        spacing: {
+          baseUnit: 1,
+          sectionPadding: 2,
+          elementMargin: 1
+        },
+        borderRadius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '0.75rem'
+        },
+        shadows: {
+          sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+        },
         animations,
         breakpoints,
         componentVariants,
@@ -767,7 +781,6 @@ export class TemplateCustomizationService {
       const optimizedTemplate = {
         ...template,
         config: {
-          ...template.config,
           sectionOrder,
           responsiveConfig,
           contentOptimization: {
@@ -920,7 +933,6 @@ export class TemplateCustomizationService {
       const optimizedTemplate = {
         ...template,
         config: {
-          ...template.config,
           platformOptimization: optimization,
           deployment: {
             platform,
@@ -1316,15 +1328,21 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
       colors: {
         primary: colorScheme.primary[0],
         secondary: colorScheme.secondary[0],
-        background: '#ffffff',
+        background: {
+          primary: '#ffffff',
+          secondary: '#f9fafb',
+          accent: colorScheme.primary[0]
+        },
         text: {
           primary: '#1f2937',
           secondary: '#6b7280',
-          muted: '#9ca3af'
+          muted: '#9ca3af',
+          accent: colorScheme.primary[0]
         },
         border: {
           primary: '#e5e7eb',
-          secondary: '#f3f4f6'
+          light: '#f3f4f6',
+          accent: colorScheme.primary[0]
         },
         status: {
           success: '#10b981',
@@ -1334,7 +1352,11 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
         }
       },
       typography: {
-        fontFamilies: typography,
+        fontFamilies: {
+          heading: typography.heading || 'Inter, sans-serif',
+          body: typography.body || 'Inter, sans-serif', 
+          mono: 'JetBrains Mono, monospace'
+        },
         fontSizes: {
           xs: '0.75rem',
           sm: '0.875rem',
@@ -1351,15 +1373,28 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
           relaxed: 1.75
         },
         fontWeights: {
+          light: 300,
           normal: 400,
           medium: 500,
           semibold: 600,
           bold: 700
         }
       },
-      layout: {},
-      animations: {},
-      breakpoints: {}
+      spacing: {
+        baseUnit: 1,
+        sectionPadding: 4,
+        elementMargin: 2
+      },
+      borderRadius: {
+        sm: '0.25rem',
+        md: '0.5rem', 
+        lg: '1rem'
+      },
+      shadows: {
+        sm: '0 1px 3px rgba(0,0,0,0.12)',
+        md: '0 4px 6px rgba(0,0,0,0.15)',
+        lg: '0 10px 25px rgba(0,0,0,0.19)'
+      }
     };
   }
 
@@ -1390,11 +1425,7 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     
     return {
       ...template,
-      theme: industryTheme,
-      config: {
-        ...template.config
-        // Industry optimization applied via theme
-      }
+      theme: industryTheme
     };
   }
 
@@ -1414,26 +1445,27 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
     return {
       primary: primaryColor,
       secondary: palette.secondary[0],
-      background: '#ffffff',
+      background: {
+        primary: '#ffffff',
+        secondary: '#f9fafb',
+        accent: primaryColor
+      },
       text: {
         primary: '#1f2937',
         secondary: '#6b7280',
-        muted: '#9ca3af'
+        muted: '#9ca3af',
+        accent: primaryColor
       },
       border: {
         primary: '#e5e7eb',
-        secondary: '#f3f4f6'
+        light: '#f3f4f6',
+        accent: primaryColor
       },
       status: {
         success: '#10b981',
         warning: '#f59e0b',
         error: '#ef4444',
         info: '#3b82f6'
-      },
-      gradients: {
-        primary: `linear-gradient(135deg, ${primaryColor}, ${palette.secondary[0]})`,
-        secondary: `linear-gradient(45deg, ${palette.secondary[0]}, ${palette.accent[0]})`,
-        hero: `linear-gradient(135deg, ${primaryColor}20, ${palette.secondary[0]}20)`
       }
     };
   }
@@ -1446,7 +1478,11 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
       || this.industryTypography.consulting;
 
     return {
-      fontFamilies: typography,
+      fontFamilies: {
+        heading: typography.heading || 'Inter, sans-serif',
+        body: typography.body || 'Inter, sans-serif',
+        mono: 'JetBrains Mono, monospace'
+      },
       fontSizes: {
         xs: '0.75rem',
         sm: '0.875rem',
@@ -1463,6 +1499,7 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
         relaxed: 1.75
       },
       fontWeights: {
+        light: 300,
         normal: 400,
         medium: 500,
         semibold: 600,
@@ -1499,7 +1536,7 @@ Format as JSON with these exact keys: industry, level, focusAreas, personalityTr
           focus: `focus:outline-none focus:ring-2 focus:ring-[${colorScheme.secondary}]/50`
         },
         accent: {
-          base: `bg-gradient-to-r ${colorScheme.gradients?.primary} text-white px-6 py-3 rounded-lg font-medium transition-all duration-200`,
+          base: `bg-gradient-to-r from-[${colorScheme.primary}] to-[${colorScheme.secondary}] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200`,
           hover: `hover:shadow-lg hover:scale-105`,
           active: `active:scale-95`,
           disabled: `disabled:opacity-50 disabled:cursor-not-allowed`,

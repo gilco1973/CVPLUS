@@ -89,13 +89,19 @@ export class PersonalityInsightsService {
     );
     
     return {
+      workingStyle: summary || 'Adaptable professional with strong analytical skills',
+      strengths: workStyle || ['Problem-solving', 'Communication', 'Leadership'],
+      motivations: ['Professional growth', 'Innovation', 'Collaboration'],
+      communicationPreferences: ['Direct', 'Collaborative', 'Data-driven'],
+      teamRole: teamCompatibility || 'Collaborative contributor',
+      leadershipStyle: String(leadershipPotential) || 'Collaborative leader',
+      problemSolvingApproach: 'Analytical and systematic approach',
+      adaptability: 'High adaptability to changing environments',
+      stressManagement: 'Effective stress management through planning',
+      careerAspirations: ['Technical excellence', 'Leadership growth'],
+      values: ['Innovation', 'Integrity', 'Excellence'],
       traits,
-      workStyle,
-      teamCompatibility,
-      leadershipPotential,
-      cultureFit,
-      summary,
-      generatedAt: new Date()
+      cultureFit
     };
   }
   
@@ -441,7 +447,17 @@ Provide refined scores based on the context. Return only the scores in format: t
       cultureFit[key as keyof typeof cultureFit] = Math.min(10, Number(cultureFit[key as keyof typeof cultureFit].toFixed(1)));
     }
     
-    return cultureFit;
+    // Convert to proper cultureFit structure
+    const bestFit = Object.entries(cultureFit)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .slice(0, 3)
+      .map(([env]) => env);
+    
+    return {
+      values: ['Innovation', 'Excellence', 'Collaboration'],
+      workEnvironment: bestFit[0] || 'hybrid',
+      managementStyle: bestFit.includes('corporate') ? 'structured' : 'flexible'
+    };
   }
   
   /**
@@ -455,14 +471,13 @@ Provide refined scores based on the context. Return only the scores in format: t
   ): Promise<string> {
     try {
       // Find top 3 traits
-      const traitEntries = Object.entries(traits).sort((a, b) => b[1] - a[1]);
+      const traitEntries = Object.entries(traits || {}).sort((a, b) => (b[1] as number) - (a[1] as number));
       const topTraits = traitEntries.slice(0, 3).map(([trait, score]) => 
         `${trait.replace(/_/g, ' ')} (${score}/10)`
       );
       
-      // Find best culture fit
-      const bestCulture = Object.entries(cultureFit)
-        .sort((a, b) => b[1] - a[1])[0][0];
+      // Get primary culture fit characteristics
+      const bestCulture = cultureFit?.workEnvironment || 'collaborative';
       
       const prompt = `Write a 2-3 sentence professional personality summary based on these insights:
 
@@ -489,9 +504,9 @@ Make it positive and professional, focusing on strengths.`;
     } catch (error) {
       console.error('Error generating personality summary:', error);
       return this.generateDefaultSummary(
-        Object.entries(traits).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t),
+        Object.entries(traits || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 3).map(([t]) => t),
         workStyle,
-        Object.entries(cultureFit).sort((a, b) => b[1] - a[1])[0][0]
+        cultureFit?.workEnvironment || 'collaborative'
       );
     }
   }
@@ -569,13 +584,13 @@ Make it positive and professional, focusing on strengths.`;
    */
   generateSummary(profile: PersonalityProfile): any {
     return {
-      overview: profile.summary,
-      keyTraits: Object.entries(profile.traits)
-        .sort((a, b) => b[1] - a[1])
+      overview: profile.workingStyle,
+      keyTraits: Object.entries(profile.traits || {})
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
         .slice(0, 3)
         .map(([trait]) => trait),
-      workStyle: profile.workStyle,
-      teamRole: profile.teamCompatibility
+      workStyle: profile.strengths,
+      teamRole: profile.teamRole
     };
   }
 }

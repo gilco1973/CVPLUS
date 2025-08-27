@@ -12,6 +12,8 @@
 export type { HuggingFaceSpaceConfig, HuggingFaceHardware, RepositoryFile } from './portal-huggingface';
 export { HuggingFaceSDK, HuggingFaceVisibility, FileType } from './portal-huggingface';
 export type { DeploymentResult, BuildConfig, DeploymentMetadata } from './portal-original';
+export { AssetType, AssetSource, MobileOptimizationLevel } from './portal-original';
+export type { AssetProcessingResult, AssetOptimizationConfig, ComponentConfiguration, FeatureToggles } from './portal-original';
 // Note: PortalErrorCode is defined in this file, not re-exported
 
 import { ParsedCV } from './job';
@@ -99,6 +101,9 @@ export interface PortalTemplate {
   
   /** Required sections for this template */
   requiredSections: PortalSection[];
+  
+  /** Optional sections for this template */
+  optionalSections?: PortalSection[];
 }
 
 /**
@@ -172,7 +177,15 @@ export enum PortalTemplateCategory {
   BUSINESS = 'business',
   MINIMAL = 'minimal',
   MODERN = 'modern',
-  CLASSIC = 'classic'
+  CLASSIC = 'classic',
+  CORPORATE_PROFESSIONAL = 'corporate_professional',
+  CREATIVE_PORTFOLIO = 'creative_portfolio',
+  TECHNICAL_EXPERT = 'technical_expert',
+  EXECUTIVE_LEADERSHIP = 'executive_leadership',
+  ACADEMIC_RESEARCH = 'academic_research',
+  STARTUP_FOUNDER = 'startup_founder',
+  CONSULTANT = 'consultant',
+  FREELANCER = 'freelancer'
 }
 
 /**

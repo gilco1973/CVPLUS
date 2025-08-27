@@ -325,6 +325,15 @@ export interface EmbeddingMetadata {
     end?: Date;
   };
   
+  /** Keywords associated with this content */
+  keywords?: string[];
+  
+  /** Technologies mentioned in this content */
+  technologies?: string[];
+  
+  /** Type of content */
+  contentType?: 'text' | 'experience' | 'skill' | 'project' | 'education' | 'custom';
+  
   /** Tags for categorization */
   tags: string[];
   
@@ -349,5 +358,6 @@ export enum CVSection {
   LANGUAGES = 'languages',
   REFERENCES = 'references',
   PORTFOLIO = 'portfolio',
+  CUSTOM = 'custom',
   OTHER = 'other'
 }

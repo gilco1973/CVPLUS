@@ -16,6 +16,7 @@ export const applyImprovements = onCall(
   {
     timeoutSeconds: 180,
     memory: '1GiB',
+    secrets: ['ANTHROPIC_API_KEY'],
     ...corsOptions,
   },
   async (request) => {
@@ -155,6 +156,7 @@ export const getRecommendations = onCall(
     timeoutSeconds: 300,
     memory: '1GiB',
     concurrency: 10,
+    secrets: ['ANTHROPIC_API_KEY'],
     ...corsOptions,
   },
   async (request) => {

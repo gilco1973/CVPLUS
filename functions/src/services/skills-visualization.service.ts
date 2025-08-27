@@ -107,6 +107,7 @@ export class SkillsVisualizationService {
       if (categorySkills.length > 0) {
         categories.push({
           name: this.formatCategoryName(categoryName),
+          color: this.getCategoryColor(this.formatCategoryName(categoryName)),
           skills: categorySkills.sort((a, b) => b.level - a.level)
         });
       }
@@ -124,6 +125,7 @@ export class SkillsVisualizationService {
     if (uncategorized.length > 0) {
       categories.push({
         name: 'Other Technical Skills',
+        color: '#6B7280',
         skills: uncategorized.map(skill => ({
           name: skill,
           level: this.assessSkillLevel(skill, cv),
@@ -174,6 +176,7 @@ export class SkillsVisualizationService {
       if (categorySkills.length > 0) {
         categories.push({
           name: this.formatCategoryName(categoryName),
+          color: this.getCategoryColor(this.formatCategoryName(categoryName)),
           skills: categorySkills.sort((a, b) => b.level - a.level)
         });
       }
@@ -234,12 +237,15 @@ export class SkillsVisualizationService {
     if (cv.certifications) {
       cv.certifications.forEach(cert => {
         const processed: Certification = {
+          id: `cert-${cert.name}-${cert.issuer}`,
           name: cert.name,
           issuer: cert.issuer,
-          date: new Date(cert.date),
+          issueDate: new Date(cert.date),
           credentialId: cert.credentialId,
           verificationUrl: this.generateVerificationUrl(cert),
-          badge: this.generateBadgeUrl(cert)
+          badgeUrl: this.generateBadgeUrl(cert),
+          isVerified: false,
+          category: 'Technical'
         };
         
         // Estimate expiry date for common certifications
@@ -247,7 +253,7 @@ export class SkillsVisualizationService {
         if (expiryMonths) {
           const expiryDate = new Date(cert.date);
           expiryDate.setMonth(expiryDate.getMonth() + expiryMonths);
-          processed.expiryDate = expiryDate;
+          processed.expirationDate = expiryDate;
         }
         
         certifications.push(processed);
@@ -255,7 +261,7 @@ export class SkillsVisualizationService {
     }
     
     // Sort by date (most recent first)
-    return certifications.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return certifications.sort((a, b) => b.issueDate.getTime() - a.issueDate.getTime());
   }
   
   /**
@@ -514,6 +520,30 @@ Technical skills only (languages, frameworks, tools, platforms):`;
     return null;
   }
   
+  /**
+   * Get color for skill category
+   */
+  private getCategoryColor(categoryName: string): string {
+    const colors: Record<string, string> = {
+      'Frontend Development': '#3B82F6',
+      'Backend Development': '#10B981',
+      'Databases': '#F59E0B',
+      'Cloud Platforms': '#8B5CF6',
+      'Programming Languages': '#EF4444',
+      'Tools & Technologies': '#06B6D4',
+      'Soft Skills': '#F97316',
+      'Languages': '#84CC16',
+      'Other Technical Skills': '#6B7280',
+      'Frameworks': '#EC4899',
+      'DevOps': '#14B8A6',
+      'Design': '#F472B6',
+      'Analytics': '#A855F7',
+      'Management': '#059669'
+    };
+    
+    return colors[categoryName] || '#6B7280';
+  }
+
   /**
    * Generate verification URL for certification
    */

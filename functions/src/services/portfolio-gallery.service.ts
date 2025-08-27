@@ -168,7 +168,20 @@ export class PortfolioGalleryService {
   /**
    * Get technical skills from skills union type
    */
-  private getTechnicalSkills(skills: string[] | { technical: string[]; soft: string[]; languages?: string[]; tools?: string[]; } | undefined): string[] {
+  private getTechnicalSkills(skills: string[] | { 
+    [key: string]: string[];
+    technical?: string[]; 
+    soft?: string[]; 
+    languages?: string[]; 
+    tools?: string[];
+    frontend?: string[];
+    backend?: string[];
+    databases?: string[];
+    cloud?: string[];
+    competencies?: string[];
+    frameworks?: string[];
+    expertise?: string[];
+  } | undefined): string[] {
     if (!skills) return [];
     if (Array.isArray(skills)) return skills;
     return skills.technical || [];

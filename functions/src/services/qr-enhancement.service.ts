@@ -404,7 +404,7 @@ export class QRCodeEnhancementService {
       logo: undefined, // Could be CVPlus logo
       errorCorrectionLevel: 'M',
       size: 256,
-      borderWidth: 4
+      margin: 4
     };
   }
 

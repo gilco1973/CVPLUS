@@ -519,7 +519,7 @@ export const ExperienceTimeline = ({ experiences }) => {
 }
 
 .duration {
-  color: ${config.theme.colors.textSecondary};
+  color: ${config.theme.colors.text.secondary};
   font-size: 0.9rem;
 }
 
@@ -887,7 +887,7 @@ export const Footer = ({ qrCodeUrl, socialLinks }) => {
         `,
         css: `
 .main-footer {
-  background: ${config.theme.colors.backgroundDark || '#1a1a1a'};
+  background: ${config.theme.colors.background.secondary || '#1a1a1a'};
   color: white;
   padding: 3rem 0 1rem;
   margin-top: 4rem;

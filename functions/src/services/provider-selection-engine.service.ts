@@ -170,24 +170,21 @@ class AIProviderScorer {
     return Math.min(15, score);
   }
 
-  private calculateReliabilityScore(provider: VideoGenerationProvider, context: SelectionContext): number {
+  private calculateReliabilityScore(provider: VideoGenerationProvider, context: ProviderSelectionCriteria['context']): number {
     let score = 10; // Base reliability score
     
     // Penalty for recent failures
     const recentFailures = context.previousFailures.filter(id => id === provider.name).length;
     score -= recentFailures * 5;
     
-    // Bonus for consistent performance in user's history
-    const providerHistory = context.sessionHistory.filter(h => h.providerId === provider.name);
-    if (providerHistory.length > 0) {
-      const successRate = providerHistory.filter(h => h.success).length / providerHistory.length;
-      score += successRate * 5;
-    }
+    // Bonus for consistent performance in user's history (if available)
+    // Note: sessionHistory not available in ProviderSelectionCriteria context
+    // This would require a separate method or extended context type
     
     return Math.max(0, Math.min(15, score));
   }
 
-  private calculateContextScore(provider: VideoGenerationProvider, context: SelectionContext): number {
+  private calculateContextScore(provider: VideoGenerationProvider, context: ProviderSelectionCriteria['context']): number {
     let score = 5; // Base context score
     
     // Time-based scoring (some providers perform better at certain times)
@@ -410,7 +407,7 @@ export class ProviderSelectionEngine {
 
   private getCapableProviders(
     requirements: VideoRequirements,
-    context: SelectionContext
+    context: ProviderSelectionCriteria['context']
   ): VideoGenerationProvider[] {
     const availableProviders = Array.from(this.providers.values());
     

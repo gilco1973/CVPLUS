@@ -156,81 +156,8 @@ export const CVAnalysisResults: React.FC<CVAnalysisResultsProps> = ({
           stack: apiError instanceof Error ? apiError.stack : 'No stack trace'
         });
         
-        // Check if the error is a timeout - use fallback recommendations
-        if (apiError instanceof Error && apiError.message.includes('Timeout after')) {
-          console.log(`[CVAnalysisResults] Timeout detected, using fallback mock recommendations for testing`);
-          
-          // Create realistic mock recommendations for fallback
-          const fallbackRecommendations = [
-            {
-              id: 'fallback-001',
-              title: 'Enhance Professional Summary',
-              description: 'Add a compelling professional summary that highlights your key achievements and career objectives.',
-              priority: 9,
-              impact: 'high',
-              category: 'Content',
-              estimatedScoreImprovement: 8
-            },
-            {
-              id: 'fallback-002', 
-              title: 'Optimize Keywords for ATS',
-              description: 'Include industry-specific keywords and technical terms that align with the job requirements.',
-              priority: 8,
-              impact: 'high',
-              category: 'Keywords',
-              estimatedScoreImprovement: 7
-            },
-            {
-              id: 'fallback-003',
-              title: 'Quantify Achievements',
-              description: 'Add specific metrics, percentages, and numbers to demonstrate the impact of your work.',
-              priority: 7,
-              impact: 'medium',
-              category: 'Content',
-              estimatedScoreImprovement: 6
-            },
-            {
-              id: 'fallback-004',
-              title: 'Improve Section Structure',
-              description: 'Reorganize sections and use consistent formatting for better readability and ATS parsing.',
-              priority: 6,
-              impact: 'medium',
-              category: 'Structure',
-              estimatedScoreImprovement: 5
-            },
-            {
-              id: 'fallback-005',
-              title: 'Add Action Verbs',
-              description: 'Replace passive language with strong action verbs to make your experience more compelling.',
-              priority: 5,
-              impact: 'medium',
-              category: 'Content',
-              estimatedScoreImprovement: 4
-            },
-            {
-              id: 'fallback-006',
-              title: 'Update Skills Section',
-              description: 'Include relevant technical and soft skills mentioned in the job posting.',
-              priority: 4,
-              impact: 'low',
-              category: 'Skills',
-              estimatedScoreImprovement: 3
-            }
-          ];
-          
-          // Set fallback data instead of throwing error
-          recommendationsData = {
-            success: true,
-            data: {
-              recommendations: fallbackRecommendations
-            }
-          };
-          
-          console.log(`[CVAnalysisResults] Using ${fallbackRecommendations.length} fallback recommendations`);
-          
-        } else {
-          throw apiError;
-        }
+        // Re-throw the error to see what's actually happening
+        throw apiError;
       }
       
       console.log(`[CVAnalysisResults] getRecommendations completed for job: ${job.id}`);
