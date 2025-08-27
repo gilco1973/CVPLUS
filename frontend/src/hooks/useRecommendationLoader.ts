@@ -23,10 +23,17 @@ export function useRecommendationLoader(jobId: string) {
     const loadRecommendations = async () => {
       try {
         setLoading(true);
+        console.log(`[useRecommendationLoader] Loading recommendations for job: ${jobId}`);
         const response = await getRecommendations(jobId);
         
-        if (response.recommendations) {
-          const processedRecommendations: RecommendationItem[] = response.recommendations.map((rec: any, index: number) => ({
+        console.log(`[useRecommendationLoader] Received response:`, response);
+        console.log(`[useRecommendationLoader] Has recommendations:`, !!(response.data?.recommendations || response.recommendations));
+        console.log(`[useRecommendationLoader] Recommendations count:`, (response.data?.recommendations || response.recommendations)?.length || 0);
+        
+        // Handle nested response structure: response.data.recommendations or response.recommendations
+        const recommendations = response.data?.recommendations || response.recommendations;
+        if (recommendations) {
+          const processedRecommendations: RecommendationItem[] = recommendations.map((rec: any, index: number) => ({
             id: typeof rec.id === 'string' ? rec.id : `rec-${index}-${Math.random()}`,
             title: typeof rec.title === 'string' ? rec.title : 'CV Improvement',
             description: typeof rec.description === 'string' ? rec.description : 'Enhance your CV content',
@@ -41,19 +48,26 @@ export function useRecommendationLoader(jobId: string) {
             selected: false
           }));
 
+          console.log(`[useRecommendationLoader] Setting ${processedRecommendations.length} recommendations in context`);
           setRecommendations(processedRecommendations);
+        } else {
+          console.warn(`[useRecommendationLoader] No recommendations found in response`);
         }
 
-        if (response.atsAnalysis) {
-          setATSAnalysis(response.atsAnalysis);
+        // Handle nested response structure for other data too
+        const atsAnalysis = response.data?.atsAnalysis || response.atsAnalysis;
+        if (atsAnalysis) {
+          setATSAnalysis(atsAnalysis);
         }
 
-        if (response.originalCVData) {
-          setOriginalCVData(response.originalCVData);
+        const originalCVData = response.data?.originalCVData || response.originalCVData;
+        if (originalCVData) {
+          setOriginalCVData(originalCVData);
         }
 
         setLoading(false);
       } catch (error) {
+        console.error(`[useRecommendationLoader] Error loading recommendations:`, error);
         handleRecommendationLoadError(error);
       }
     };

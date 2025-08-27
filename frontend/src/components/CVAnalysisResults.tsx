@@ -175,6 +175,9 @@ function CVAnalysisResultsWithErrorBoundary(props: CVAnalysisResultsProps) {
   );
 }
 
+// Named export for CVAnalysisResults (used by CVAnalysisPage)
+export { CVAnalysisResults };
+
 // Also create HOC version for easy use
 export const CVAnalysisResultsWithHOC = withCVAnalysisErrorBoundary(CVAnalysisResults);
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useCVAnalysisState } from './useCVAnalysisState';
-import { EnhancedApplyImprovementsService, ProgressTracker } from '../services/responseProcessor';
+import { ProgressTracker } from '../services/responseProcessor';
+import { applyImprovements } from '../services/cvService';
 import type { MagicTransformProgress } from '../services/features/MagicTransformService';
 
 /**
@@ -77,15 +78,8 @@ export function useCVAnalysisProgress() {
 
       // Step 2: Process improvements
       updateStepStatus(1, 'active');
-      const enhancedService = new EnhancedApplyImprovementsService();
       
-      const result = await enhancedService.applyImprovements({
-        jobId: job.id,
-        recommendationIds: selectedRecommendations,
-        onProgress: (progress) => {
-          console.log('Apply improvements progress:', progress);
-        }
-      });
+      const result = await applyImprovements(job.id, selectedRecommendations);
       updateStepStatus(1, 'complete');
 
       // Step 3: Generate enhanced content
