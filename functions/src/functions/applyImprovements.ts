@@ -313,7 +313,12 @@ async function executeRecommendationGeneration(
   try {
     const subscriptionData = await getUserSubscriptionInternal(userId);
     isPremiumUser = subscriptionData.subscriptionStatus === 'premium' || subscriptionData.lifetimeAccess === true;
-    console.log(`[getRecommendations] Premium status for user ${userId}: ${isPremiumUser}`);
+    console.log(`[getRecommendations] Premium status check for user ${userId}:`, {
+      subscriptionStatus: subscriptionData.subscriptionStatus,
+      lifetimeAccess: subscriptionData.lifetimeAccess,
+      isPremiumUser,
+      message: (subscriptionData as any).message || 'No message'
+    });
   } catch (error) {
     console.warn(`[getRecommendations] Failed to check premium status for user ${userId}:`, error);
     // Continue with free tier recommendations

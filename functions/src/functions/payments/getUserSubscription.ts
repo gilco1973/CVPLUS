@@ -26,29 +26,6 @@ export const getUserSubscription = onCall<GetUserSubscriptionData>(
 
     const { userId } = data;
 
-    // Skip database checks in development environment
-    const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
-    
-    if (isDev) {
-      logger.info('Dev environment detected - returning mock subscription data', { userId });
-      return {
-        subscriptionStatus: 'premium',
-        lifetimeAccess: true,
-        features: {
-          webPortal: true,
-          aiChat: true,
-          podcast: true,
-          advancedAnalytics: true
-        },
-        purchasedAt: new Date(),
-        paymentAmount: 99,
-        currency: 'USD',
-        googleAccountVerified: new Date(),
-        stripeCustomerId: 'dev-mock-customer',
-        message: 'Dev environment - mock premium subscription'
-      };
-    }
-
     try {
       // Get user subscription from Firestore
       const subscriptionDoc = await db

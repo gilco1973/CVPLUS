@@ -12,6 +12,7 @@ import { processCV } from '../services/cvService';
 import { useJobEnhanced } from '../hooks/useJobEnhanced';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { usePremiumStatus } from '../hooks/usePremiumStatus';
 import { ErrorRecoveryDialog } from '../components/error-recovery/ErrorRecoveryDialog';
 import { CheckpointProgressIndicator } from '../components/error-recovery/CheckpointProgressIndicator';
 import ErrorRecoveryManager from '../services/error-recovery/ErrorRecoveryManager';
@@ -71,6 +72,7 @@ export const ProcessingPage = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium, isLoading: premiumLoading, error: premiumError } = usePremiumStatus();
   
   // Enhanced job subscription with better error handling
   const {
@@ -158,11 +160,56 @@ export const ProcessingPage = () => {
         }
       }
 
-      // Navigate to analysis when ready
+      // Navigate to appropriate next step when ready
       if (job.status === 'analyzed' || job.status === 'completed') {
-        setTimeout(() => {
-          navigate(`/analysis/${jobId}`);
-        }, 1500);
+        const checkPremiumStatusAndNavigate = () => {
+          // Handle premium status loading error - fallback to basic user flow
+          if (premiumError) {
+            console.error('⚠️ Premium status check failed, defaulting to basic flow:', premiumError);
+            navigate(`/analysis/${jobId}`);
+            return;
+          }
+
+          // If still loading, retry after a short delay (max 10 attempts)
+          if (premiumLoading) {
+            const maxRetries = 10;
+            const currentRetry = (checkPremiumStatusAndNavigate as any).__retryCount || 0;
+            
+            if (currentRetry < maxRetries) {
+              (checkPremiumStatusAndNavigate as any).__retryCount = currentRetry + 1;
+              console.log(`🔄 Premium status still loading, retry ${currentRetry + 1}/${maxRetries}`);
+              setTimeout(checkPremiumStatusAndNavigate, 500);
+              return;
+            } else {
+              console.warn('⚠️ Premium status loading timeout, defaulting to basic flow');
+              navigate(`/analysis/${jobId}`);
+              return;
+            }
+          }
+
+          // Validate navigation prerequisites
+          if (!jobId || jobId.length < 10) {
+            console.error('⚠️ Invalid jobId for navigation:', jobId);
+            return;
+          }
+
+          // Navigate based on premium status with validation
+          try {
+            if (isPremium) {
+              console.log('🎯 Premium user: navigating to role selection');
+              navigate(`/role-select/${jobId}`);
+            } else {
+              console.log('👤 Basic user: navigating to analysis');
+              navigate(`/analysis/${jobId}`);
+            }
+          } catch (navigationError) {
+            console.error('⚠️ Navigation failed:', navigationError);
+            // Fallback to analysis page if role selection fails
+            navigate(`/analysis/${jobId}`);
+          }
+        };
+        
+        setTimeout(checkPremiumStatusAndNavigate, 1500);
       }
     };
 

@@ -27,24 +27,6 @@ export const getUserUsageStats = onCall<GetUserUsageStatsData>(
 
     const { userId } = data;
 
-    // Skip all checks in development environment
-    const isDev = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
-    
-    if (isDev) {
-      logger.info('Dev environment detected - returning mock usage stats', { userId });
-      return {
-        currentMonthUploads: 1,
-        uniqueCVsThisMonth: 1,
-        remainingUploads: 999,
-        subscriptionStatus: 'premium' as const,
-        lifetimeAccess: true,
-        monthlyLimit: 'unlimited' as const,
-        uniqueCVLimit: 3,
-        currentMonth: new Date().toISOString().substring(0, 7),
-        lastUpdated: new Date().toISOString()
-      };
-    }
-
     try {
       // Get current month date range
       const now = new Date();
