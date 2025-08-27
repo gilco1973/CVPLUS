@@ -145,6 +145,13 @@ export class CVServiceCore {
     targetRole?: string, 
     industryKeywords?: string[]
   ) {
+    console.log(`[CVServiceCore] applyImprovements called for jobId: ${jobId}`, {
+      selectedRecommendationIds: selectedRecommendationIds.length,
+      targetRole,
+      industryKeywords: industryKeywords?.length || 0
+    });
+
+    // Use enhanced CVTransformer with reliability patterns
     return CVTransformer.applyImprovements(
       jobId, 
       selectedRecommendationIds, 

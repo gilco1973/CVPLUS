@@ -62,7 +62,7 @@ export class CVTransformer {
   }
 
   /**
-   * Apply selected improvements to CV
+   * Apply selected improvements to CV with enterprise reliability patterns
    */
   static async applyImprovements(
     jobId: string, 
@@ -70,18 +70,15 @@ export class CVTransformer {
     targetRole?: string, 
     industryKeywords?: string[]
   ) {
-    const user = auth.currentUser;
-    if (!user) throw new Error('User not authenticated');
+    // Use ServiceReliabilityManager for enhanced reliability
+    const { serviceReliabilityManager } = await import('../reliability/ServiceReliabilityManager');
     
-    // Use the callable function - CORS is handled automatically by Firebase v2 callable functions
-    const applyImprovementsFunction = httpsCallable(functions, 'applyImprovements');
-    const result = await applyImprovementsFunction({
+    return serviceReliabilityManager.executeApplyImprovements(
       jobId,
       selectedRecommendationIds,
       targetRole,
       industryKeywords
-    });
-    return result.data;
+    );
   }
 
   /**

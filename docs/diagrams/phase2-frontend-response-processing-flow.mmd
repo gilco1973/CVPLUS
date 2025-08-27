@@ -1,0 +1,169 @@
+# Phase 2: Frontend Response Processing Flow
+# Enhanced Response Processing Architecture
+# Author: Gil Klainert
+# Date: 2025-08-27
+
+```mermaid
+flowchart TD
+    A["User Clicks Apply & Preview"] --> B["Enhanced Response Processor"]
+    B --> C{"Validate Selected Recommendations"}
+    C -->|"Valid"| D["Initialize Progress Tracker"]
+    C -->|"Invalid"| E["Show Validation Error"]
+    
+    D --> F["Create Firebase Callable Function"]
+    F --> G["Start Enhanced API Processor"]
+    
+    G --> H["Update Progress: Processing Request"]
+    H --> I["Execute API Call with Retry Logic"]
+    
+    I --> J{"API Response Received?"}
+    J -->|"Success"| K["Update Progress: Processing Response"]
+    J -->|"Error"| L{"Is Error Retryable?"}
+    
+    L -->|"Yes"| M{"Max Attempts Reached?"}
+    L -->|"No"| N["Extract Error Information"]
+    
+    M -->|"No"| O["Calculate Exponential Backoff"]
+    M -->|"Yes"| N
+    
+    O --> P["Update Progress: Waiting to Retry"]
+    P --> Q["Wait for Delay Period"]
+    Q --> R["Update Progress: Retrying"]
+    R --> I
+    
+    K --> S["Schema Validation"]
+    S --> T{"Response Structure Valid?"}
+    
+    T -->|"Valid"| U["Extract Response Data"]
+    T -->|"Invalid"| V["Response Format Error"]
+    
+    U --> W["Type Guard Validation"]
+    W --> X{"Data Types Correct?"}
+    
+    X -->|"Valid"| Y["Process Successful Response"]
+    X -->|"Invalid"| Z["Data Validation Error"]
+    
+    Y --> AA["Store Improved CV Data"]
+    AA --> BB["Set Comparison View Data"]
+    BB --> CC["Update Progress: Complete"]
+    CC --> DD["Show Success Toast"]
+    DD --> EE["Display Comparison View"]
+    
+    N --> FF["Generate User-Friendly Message"]
+    V --> FF
+    Z --> FF
+    
+    FF --> GG["Determine Recovery Actions"]
+    GG --> HH{"Error Code Classification"}
+    
+    HH -->|"FUNCTION_TIMEOUT"| II["Suggest: Try fewer improvements\nCheck internet connection\nWait and retry"]
+    HH -->|"RATE_LIMITED"| JJ["Suggest: Wait 1-2 minutes\nReduce concurrent requests"]
+    HH -->|"INSUFFICIENT_CREDITS"| KK["Suggest: Check account balance\nUpgrade plan\nApply fewer improvements"]
+    HH -->|"INVALID_JOB"| LL["Suggest: Re-upload CV\nRefresh page\nTry different format"]
+    HH -->|"UNAUTHORIZED"| MM["Suggest: Sign in again\nClear cookies\nCheck session"]
+    HH -->|"Other"| NN["Suggest: Try again\nRefresh page\nContact support"]
+    
+    II --> OO["Show Enhanced Error Toast"]
+    JJ --> OO
+    KK --> OO
+    LL --> OO
+    MM --> OO
+    NN --> OO
+    
+    OO --> PP{"Can User Retry?"}
+    PP -->|"Yes"| QQ["Provide Retry Option"]
+    PP -->|"No"| RR["Show Recovery Actions"]
+    
+    QQ --> SS["Reset Progress State"]
+    RR --> SS
+    
+    SS --> TT["Enable Navigation Fallback"]
+    TT --> UU["Continue to Preview (Optional)"]
+    
+    E --> VV["Show Input Validation Error"]
+    VV --> WW["Reset Form State"]
+    
+    EE --> XX["User Success Path"]
+    UU --> XX
+    WW --> YY["User Error Recovery"]
+    
+    XX --> ZZ["Phase 2 Complete"]
+    YY --> ZZ
+    
+    subgraph "Progress Tracking"
+        AAA["ProgressTracker Instance"]
+        BBB["Real-time UI Updates"]
+        CCC["Percentage Calculation"]
+        DDD["Step Details Display"]
+        EEE["Time Estimation"]
+        
+        AAA --> BBB
+        BBB --> CCC
+        CCC --> DDD
+        DDD --> EEE
+    end
+    
+    subgraph "Response Validation"
+        FFF["BaseApiResponse Check"]
+        GGG["ApplyImprovementsResponse Check"]
+        HHH["Type Guard Functions"]
+        III["Runtime Safety"]
+        
+        FFF --> GGG
+        GGG --> HHH
+        HHH --> III
+    end
+    
+    subgraph "Error Recovery System"
+        JJJ["Error Classification"]
+        KKK["Recovery Action Generation"]
+        LLL["User-Friendly Messages"]
+        MMM["Retry Strategy Selection"]
+        
+        JJJ --> KKK
+        KKK --> LLL
+        LLL --> MMM
+    end
+    
+    D -.-> AAA
+    S -.-> FFF
+    FF -.-> JJJ
+    
+    classDef successPath fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef errorPath fill:#fce4ec,stroke:#ad1457,stroke-width:2px
+    classDef processPath fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef validationPath fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    
+    class A,D,F,G,K,U,Y,AA,BB,CC,DD,EE,XX,ZZ successPath
+    class L,N,V,Z,FF,GG,OO,PP,RR,YY errorPath
+    class B,C,H,I,J,S,T,W,X processPath
+    class FFF,GGG,HHH,III validationPath
+```
+
+## Key Flow Characteristics
+
+### **Success Path (Blue)**
+- User interaction → Progress tracking → API call → Response validation → Data processing → UI update
+- Optimized for typical user journey with clear progress indication
+
+### **Error Path (Pink)** 
+- Error detection → Classification → User-friendly messaging → Recovery suggestions → Retry options
+- Progressive error handling with actionable recovery steps
+
+### **Process Path (Purple)**
+- Core processing logic with validation checkpoints
+- Retry mechanisms with exponential backoff
+- Progress updates at each major step
+
+### **Validation Path (Green)**
+- Runtime type checking and schema validation
+- Type guards for bulletproof data processing
+- Response structure verification
+
+## Integration Points
+
+1. **Firebase Functions**: Enhanced callable function with proper error handling
+2. **Progress Tracking**: Real-time UI updates with percentage and step details
+3. **Error Recovery**: Intelligent retry logic with user-friendly messaging
+4. **State Management**: Clean state transitions with proper cleanup
+5. **Navigation**: Seamless integration with existing navigation flows

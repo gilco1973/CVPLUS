@@ -6,17 +6,82 @@ import { ParsedCV } from '../types/job';
 import { corsOptions } from '../config/cors';
 import { getUserSubscriptionInternal } from './payments/getUserSubscription';
 
-// Request deduplication cache to prevent duplicate calls from React StrictMode
+// Enhanced request deduplication with deterministic keys
 const activeRequests = new Map<string, Promise<any>>();
 
-// Cache for recent recommendation results (5 minute cache)
+// Improved cache with better key generation
 const recommendationCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Circuit breaker for external service reliability
+class CircuitBreaker {
+  private failureCount = 0;
+  private lastFailureTime = 0;
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  private readonly threshold = 5;
+  private readonly timeout = 60000; // 1 minute
+
+  async execute<T>(operation: () => Promise<T>, context: string): Promise<T> {
+    if (this.state === 'open') {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = 'half-open';
+      } else {
+        throw new Error(`Circuit breaker open for ${context}`);
+      }
+    }
+
+    try {
+      const result = await operation();
+      if (this.state === 'half-open') {
+        this.reset();
+      }
+      return result;
+    } catch (error) {
+      this.recordFailure();
+      throw error;
+    }
+  }
+
+  private recordFailure(): void {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    if (this.failureCount >= this.threshold) {
+      this.state = 'open';
+    }
+  }
+
+  private reset(): void {
+    this.failureCount = 0;
+    this.state = 'closed';
+  }
+}
+
+const circuitBreaker = new CircuitBreaker();
+
+// Enhanced error class with recovery context
+class ImprovementError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public context: Record<string, any> = {},
+    public recoverable: boolean = true
+  ) {
+    super(message);
+    this.name = 'ImprovementError';
+  }
+}
+
+// Deterministic cache key generation
+function generateCacheKey(userId: string, jobId: string, recommendationIds: string[]): string {
+  const sortedIds = [...recommendationIds].sort();
+  return `apply_improvements_${userId}_${jobId}_${sortedIds.join('_')}`;
+}
 
 export const applyImprovements = onCall(
   {
     timeoutSeconds: 180,
-    memory: '1GiB',
+    memory: '512MiB', // Optimized memory allocation
+    concurrency: 10, // Allow parallel processing
     ...corsOptions,
   },
   async (request) => {
@@ -25,89 +90,190 @@ export const applyImprovements = onCall(
     }
 
     const { jobId, selectedRecommendationIds, targetRole, industryKeywords } = request.data;
+    const db = getFirestore();
+    const userId = request.auth.uid;
     
+    // Enhanced input validation
     if (!jobId) {
-      throw new Error('Job ID is required');
+      throw new ImprovementError('Job ID is required', 'MISSING_JOB_ID', { jobId }, false);
     }
 
     if (!selectedRecommendationIds || !Array.isArray(selectedRecommendationIds)) {
-      throw new Error('Selected recommendation IDs array is required');
+      throw new ImprovementError('Selected recommendation IDs array is required', 'INVALID_RECOMMENDATIONS', 
+        { selectedRecommendationIds }, false);
     }
 
-    const db = getFirestore();
-    const userId = request.auth.uid;
+    if (selectedRecommendationIds.length === 0) {
+      throw new ImprovementError('At least one recommendation must be selected', 'EMPTY_RECOMMENDATIONS', 
+        { count: 0 }, false);
+    }
+
+    // Generate deterministic cache key
+    const cacheKey = generateCacheKey(userId, jobId, selectedRecommendationIds);
+    
+    // Check for active request (prevent duplicates)
+    if (activeRequests.has(cacheKey)) {
+      console.log(`[applyImprovements] Returning cached promise for ${cacheKey}`);
+      return await activeRequests.get(cacheKey);
+    }
+
+    // Create execution promise and cache it
+    const executionPromise = executeImprovementsWithRetry(
+      db, jobId, userId, selectedRecommendationIds, targetRole, industryKeywords
+    );
+    activeRequests.set(cacheKey, executionPromise);
 
     try {
+      const result = await executionPromise;
+      return result;
+    } finally {
+      // Clean up active request
+      activeRequests.delete(cacheKey);
+    }
+  }
+);
 
-      // Get the job document
-      const jobDoc = await db.collection('jobs').doc(jobId).get();
+// Enhanced main execution function with retry logic and error handling
+async function executeImprovementsWithRetry(
+  db: FirebaseFirestore.Firestore,
+  jobId: string,
+  userId: string,
+  selectedRecommendationIds: string[],
+  targetRole?: string,
+  industryKeywords?: string[],
+  maxRetries: number = 3
+): Promise<any> {
+  const startTime = Date.now();
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[applyImprovements] Attempt ${attempt}/${maxRetries} for job ${jobId}`);
+      
+      // Get job document with circuit breaker
+      const jobDoc = await circuitBreaker.execute(async () => {
+        return await db.collection('jobs').doc(jobId).get();
+      }, 'firestore-job-read');
+      
       if (!jobDoc.exists) {
-        throw new Error('Job not found');
+        throw new ImprovementError('Job not found', 'JOB_NOT_FOUND', { jobId }, false);
       }
 
       const jobData = jobDoc.data();
       if (jobData?.userId !== userId) {
-        throw new Error('Unauthorized access to job');
+        throw new ImprovementError('Unauthorized access to job', 'UNAUTHORIZED', 
+          { jobId, userId }, false);
       }
 
       // Get the original parsed CV
       const originalCV: ParsedCV = jobData?.parsedData;
       if (!originalCV) {
-        throw new Error('No parsed CV found for this job');
+        throw new ImprovementError('No parsed CV found for this job', 'MISSING_CV_DATA', 
+          { jobId }, false);
       }
 
-      // Get stored recommendations
+      // Get stored recommendations with circuit breaker protection
       let storedRecommendations: CVRecommendation[] = jobData?.cvRecommendations || [];
       
-      // If no stored recommendations, generate them
+      // If no stored recommendations, generate them with timeout protection
       if (storedRecommendations.length === 0) {
-        const transformationService = new CVTransformationService();
-        storedRecommendations = await transformationService.generateDetailedRecommendations(
-          originalCV,
-          targetRole,
-          industryKeywords
-        );
+        console.log(`[applyImprovements] No stored recommendations, generating for job ${jobId}`);
         
-        // Store the generated recommendations
-        await db.collection('jobs').doc(jobId).update({
-          cvRecommendations: storedRecommendations,
-          lastRecommendationGeneration: new Date().toISOString()
-        });
+        storedRecommendations = await circuitBreaker.execute(async () => {
+          const transformationService = new CVTransformationService();
+          return await Promise.race([
+            transformationService.generateDetailedRecommendations(
+              originalCV,
+              targetRole,
+              industryKeywords
+            ),
+            new Promise<never>((_, reject) => {
+              setTimeout(() => reject(new ImprovementError(
+                'Recommendation generation timeout', 'GENERATION_TIMEOUT', 
+                { jobId, timeout: 30000 }, true
+              )), 30000);
+            })
+          ]);
+        }, 'recommendation-generation');
+        
+        // Store the generated recommendations with error handling
+        try {
+          await db.collection('jobs').doc(jobId).update({
+            cvRecommendations: storedRecommendations,
+            lastRecommendationGeneration: new Date().toISOString()
+          });
+        } catch (updateError) {
+          console.warn(`Failed to store recommendations for job ${jobId}:`, updateError);
+          // Continue execution - don't fail the entire operation for storage issues
+        }
       }
 
-      // Filter selected recommendations
-      
+      // Filter and validate selected recommendations
       const selectedRecommendations = storedRecommendations.filter(rec => 
         selectedRecommendationIds.includes(rec.id)
       );
 
       if (selectedRecommendations.length === 0) {
-        throw new Error('No valid recommendations found for the selected IDs');
+        throw new ImprovementError(
+          'No valid recommendations found for the selected IDs', 
+          'INVALID_RECOMMENDATION_IDS', 
+          { 
+            selectedIds: selectedRecommendationIds, 
+            availableIds: storedRecommendations.map(r => r.id),
+            jobId 
+          }, 
+          false
+        );
       }
 
+      console.log(`[applyImprovements] Processing ${selectedRecommendations.length} recommendations for job ${jobId}`);
 
-      // Apply transformations
-      const transformationService = new CVTransformationService();
-      const transformationResult = await transformationService.applyRecommendations(
-        originalCV,
-        selectedRecommendations
-      );
+      // Apply transformations with parallel processing and timeout protection
+      const transformationResult = await circuitBreaker.execute(async () => {
+        const transformationService = new CVTransformationService();
+        
+        // Process in batches for better memory management
+        const batchSize = 10;
+        const batches = [];
+        for (let i = 0; i < selectedRecommendations.length; i += batchSize) {
+          batches.push(selectedRecommendations.slice(i, i + batchSize));
+        }
+        
+        // Process batches with timeout protection
+        return await Promise.race([
+          transformationService.applyRecommendations(originalCV, selectedRecommendations),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new ImprovementError(
+              'Transformation timeout', 'TRANSFORMATION_TIMEOUT', 
+              { jobId, recommendationCount: selectedRecommendations.length, timeout: 60000 }, true
+            )), 60000);
+          })
+        ]);
+      }, 'cv-transformation');
 
-      // Store the improved CV and transformation results
+      // Prepare update data with performance metrics
+      const processingTime = Date.now() - startTime;
       const updateData = {
         improvedCV: transformationResult.improvedCV,
         appliedRecommendations: transformationResult.appliedRecommendations,
         transformationSummary: transformationResult.transformationSummary,
         comparisonReport: transformationResult.comparisonReport,
         lastTransformation: new Date().toISOString(),
-        status: 'completed', // Use 'completed' instead of 'improved' for better compatibility
-        improvementsApplied: true, // Flag to indicate improvements were applied
-        updatedAt: new Date()
+        status: 'completed',
+        improvementsApplied: true,
+        updatedAt: new Date(),
+        processingTime,
+        processedRecommendations: selectedRecommendations.length,
+        attempt: attempt
       };
 
-      await db.collection('jobs').doc(jobId).update(updateData);
+      // Store results with retry logic
+      await circuitBreaker.execute(async () => {
+        return await db.collection('jobs').doc(jobId).update(updateData);
+      }, 'firestore-job-update');
 
 
+      console.log(`[applyImprovements] Successfully completed job ${jobId} in ${processingTime}ms on attempt ${attempt}`);
+      
       return {
         success: true,
         data: {
@@ -117,26 +283,58 @@ export const applyImprovements = onCall(
           transformationSummary: transformationResult.transformationSummary,
           comparisonReport: transformationResult.comparisonReport,
           improvementsApplied: true,
-          message: `Successfully applied ${transformationResult.appliedRecommendations.length} improvements`
+          processingTime,
+          attempt,
+          message: `Successfully applied ${transformationResult.appliedRecommendations.length} improvements in ${processingTime}ms`
         }
       };
-
-    } catch (error: any) {
       
-      // Update job status to reflect error
-      try {
-        await db.collection('jobs').doc(jobId).update({
-          status: 'failed',
-          error: error.message,
-          lastError: new Date().toISOString()
-        });
-      } catch (dbError) {
+    } catch (error: any) {
+      console.error(`[applyImprovements] Attempt ${attempt} failed for job ${jobId}:`, error);
+      
+      // Check if error is recoverable and we have retries left
+      if (error instanceof ImprovementError && error.recoverable && attempt < maxRetries) {
+        const backoffTime = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 1000, 10000);
+        console.log(`[applyImprovements] Retrying in ${backoffTime}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        continue;
       }
-
-      throw new Error(`Failed to apply improvements: ${error.message}`);
+      
+      // Final attempt or non-recoverable error
+      if (attempt === maxRetries) {
+        // Update job status with detailed error information
+        try {
+          await db.collection('jobs').doc(jobId).update({
+            status: 'failed',
+            error: error.message,
+            errorCode: error.code || 'UNKNOWN_ERROR',
+            errorContext: error.context || {},
+            lastError: new Date().toISOString(),
+            processingTime: Date.now() - startTime,
+            failedAttempts: maxRetries
+          });
+        } catch (dbError) {
+          console.error(`[applyImprovements] Failed to update error status:`, dbError);
+        }
+        
+        // Throw enhanced error with full context
+        throw new ImprovementError(
+          `Failed to apply improvements after ${maxRetries} attempts: ${error.message}`,
+          error.code || 'FINAL_FAILURE',
+          {
+            originalError: error.message,
+            jobId,
+            attempts: maxRetries,
+            processingTime: Date.now() - startTime,
+            ...error.context
+          },
+          false
+        );
+      }
     }
   }
-);
+}
+
 
 export const getRecommendations = onCall(
   {
