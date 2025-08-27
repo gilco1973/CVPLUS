@@ -363,3 +363,21 @@ export {
 export {
   getUserPolicyViolations,
 } from './functions/policies/getUserPolicyViolations';
+
+// Export Phase 3: Analytics & Revenue Intelligence functions
+export {
+  getRevenueMetrics
+} from './functions/analytics/getRevenueMetrics';
+
+export {
+  predictChurn
+} from './functions/ml/predictChurn';
+
+// Export premium analytics functions
+export {
+  batchTrackingEvents
+} from './functions/premium/batchTrackingEvents';
+
+export {
+  getRealtimeUsageStats
+} from './functions/premium/getRealtimeUsageStats';

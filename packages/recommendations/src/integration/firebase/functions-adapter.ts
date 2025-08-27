@@ -74,7 +74,7 @@ export class FirebaseFunctionsAdapter {
         success: true,
         data: result,
         timestamp: new Date().toISOString(),
-        cached: result.cached || false
+        cached: result.data?.cached || false
       };
 
     } catch (error: any) {

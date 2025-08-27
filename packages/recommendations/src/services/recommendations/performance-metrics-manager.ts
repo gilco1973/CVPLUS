@@ -8,10 +8,10 @@
  * @version 1.0.0
  */
 
+import { RecommendationErrorType } from '../../types';
 import type { 
   PerformanceMetrics, 
-  RecommendationError, 
-  RecommendationErrorType,
+  RecommendationError,
   CacheStats
 } from '../../types';
 import type { CacheService } from '../cache.service';

@@ -89,7 +89,8 @@ export class RecommendationsOrchestrator {
               ...cachedResult,
               cached: true,
               cacheAge: cachedResult.generatedAt ? Date.now() - new Date(cachedResult.generatedAt).getTime() : 0
-            }
+            },
+            timestamp: Date.now()
           };
           
           this.metricsManager.recordSuccess(Date.now() - startTime, true);
@@ -127,8 +128,12 @@ export class RecommendationsOrchestrator {
         error: {
           message: error instanceof Error ? error.message : 'Unknown error occurred',
           code: 'RECOMMENDATION_ERROR',
-          details: error instanceof Error ? { stack: error.stack } : {}
-        }
+          details: error instanceof Error ? { stack: error.stack } : {},
+          category: 'system',
+          severity: 'high',
+          timestamp: Date.now()
+        },
+        timestamp: Date.now()
       };
     }
   }
@@ -175,8 +180,12 @@ export class RecommendationsOrchestrator {
         error: {
           message: error instanceof Error ? error.message : 'Failed to apply improvements',
           code: 'IMPROVEMENT_ERROR',
-          details: error instanceof Error ? { stack: error.stack } : {}
-        }
+          details: error instanceof Error ? { stack: error.stack } : {},
+          category: 'system',
+          severity: 'high',
+          timestamp: Date.now()
+        },
+        timestamp: Date.now()
       };
     }
   }
@@ -199,7 +208,8 @@ export class RecommendationsOrchestrator {
         this.metricsManager.recordSuccess(Date.now() - startTime, true);
         return {
           success: true,
-          data: cachedPreview
+          data: cachedPreview,
+          timestamp: Date.now()
         };
       }
 
@@ -232,8 +242,12 @@ export class RecommendationsOrchestrator {
         error: {
           message: error instanceof Error ? error.message : 'Failed to generate preview',
           code: 'PREVIEW_ERROR',
-          details: error instanceof Error ? { stack: error.stack } : {}
-        }
+          details: error instanceof Error ? { stack: error.stack } : {},
+          category: 'system',
+          severity: 'medium',
+          timestamp: Date.now()
+        },
+        timestamp: Date.now()
       };
     }
   }
@@ -280,8 +294,12 @@ export class RecommendationsOrchestrator {
         error: {
           message: error instanceof Error ? error.message : 'Failed to customize placeholders',
           code: 'PLACEHOLDER_ERROR',
-          details: error instanceof Error ? { stack: error.stack } : {}
-        }
+          details: error instanceof Error ? { stack: error.stack } : {},
+          category: 'validation',
+          severity: 'medium',
+          timestamp: Date.now()
+        },
+        timestamp: Date.now()
       };
     }
   }

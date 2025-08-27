@@ -73,7 +73,8 @@ export class RecommendationsExecutor {
         cached: false,
         generatedAt: new Date().toISOString(),
         processingTime: responseData.data?.processingTime || 0
-      }
+      },
+      timestamp: Date.now()
     };
   }
 
@@ -113,7 +114,8 @@ export class RecommendationsExecutor {
 
     return {
       success: true,
-      data: responseData.data
+      data: responseData.data,
+      timestamp: Date.now()
     };
   }
 
@@ -142,7 +144,8 @@ export class RecommendationsExecutor {
     
     return {
       success: true,
-      data: responseData.data
+      data: responseData.data,
+      timestamp: Date.now()
     };
   }
 
@@ -164,7 +167,8 @@ export class RecommendationsExecutor {
 
       return {
         success: true,
-        data: result
+        data: result,
+        timestamp: Date.now()
       };
     } catch (error) {
       console.error(`[RecommendationsExecutor] Placeholder customization failed for ${requestId}:`, error);
@@ -396,12 +400,12 @@ export class RecommendationsExecutor {
    */
   getExecutionContext(requestId: string): {
     requestId: string;
-    timestamp: string;
+    timestamp: number;
     environment: string;
   } {
     return {
       requestId,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
       environment: process.env.NODE_ENV || 'development'
     };
   }
