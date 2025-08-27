@@ -25,8 +25,7 @@ export function useCVAnalysisProgress() {
     stopMagicTransform,
     setImprovedCVData,
     setComparisonReport,
-    setMagicTransformResult,
-    toggleComparison
+    setMagicTransformResult
   } = useCVAnalysisState();
 
   const progressTrackerRef = useRef<ProgressTracker | null>(null);
@@ -90,37 +89,18 @@ export function useCVAnalysisProgress() {
 
       // Step 4: Create comparison report  
       updateStepStatus(3, 'active');
-      // Handle nested response structure: result.result.data or result.data or result directly
-      const resultData = result.result?.data || result.data || result;
-      
-      console.log('[useCVAnalysisProgress] Processing result structure:', {
-        originalResult: result,
-        resultData,
-        hasImprovedCV: !!(resultData.improvedCV),
-        hasComparisonReport: !!(resultData.comparisonReport),
-        improvementsApplied: resultData.improvementsApplied
-      });
-      
-      if (resultData.improvedCV) {
-        console.log('[useCVAnalysisProgress] Setting improved CV data');
-        setImprovedCVData(resultData.improvedCV);
+      if (result.improvedCV) {
+        setImprovedCVData(result.improvedCV);
       }
-      
-      if (resultData.comparisonReport) {
-        console.log('[useCVAnalysisProgress] Setting comparison report');
-        setComparisonReport(resultData.comparisonReport);
+      if (result.comparisonReport) {
+        setComparisonReport(result.comparisonReport);
       }
-      
       updateStepStatus(3, 'complete');
 
       // Step 5: Finalize
       updateStepStatus(4, 'active');
       await new Promise(resolve => setTimeout(resolve, 300));
       updateStepStatus(4, 'complete');
-
-      // Show comparison view after successful completion
-      console.log('[useCVAnalysisProgress] All steps completed, showing comparison view');
-      toggleComparison(true);
 
       return result;
     } catch (error) {
@@ -147,8 +127,7 @@ export function useCVAnalysisProgress() {
     setImprovedCVData,
     setComparisonReport,
     setError,
-    progressSteps,
-    toggleComparison
+    progressSteps
   ]);
 
   // Handle magic transform progress
@@ -174,31 +153,13 @@ export function useCVAnalysisProgress() {
       });
 
       if (result) {
-        // Handle nested response structure for Magic Transform as well
-        const resultData = result.result?.data || result.data || result;
-        
-        console.log('[useCVAnalysisProgress] Magic Transform - Processing result structure:', {
-          originalResult: result,
-          resultData,
-          hasImprovedCV: !!(resultData.improvedCV),
-          hasComparisonReport: !!(resultData.comparisonReport)
-        });
-        
         setMagicTransformResult(result);
-        
-        if (resultData.improvedCV) {
-          console.log('[useCVAnalysisProgress] Magic Transform - Setting improved CV data');
-          setImprovedCVData(resultData.improvedCV);
+        if (result.improvedCV) {
+          setImprovedCVData(result.improvedCV);
         }
-        
-        if (resultData.comparisonReport) {
-          console.log('[useCVAnalysisProgress] Magic Transform - Setting comparison report');
-          setComparisonReport(resultData.comparisonReport);
+        if (result.comparisonReport) {
+          setComparisonReport(result.comparisonReport);
         }
-        
-        // Show comparison view after successful magic transform
-        console.log('[useCVAnalysisProgress] Magic transform completed successfully, showing comparison view');
-        toggleComparison(true);
       }
 
       return result;
@@ -218,8 +179,7 @@ export function useCVAnalysisProgress() {
     setMagicTransformResult,
     setImprovedCVData,
     setComparisonReport,
-    setError,
-    toggleComparison
+    setError
   ]);
 
   // Calculate overall progress for apply improvements

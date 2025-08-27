@@ -228,7 +228,7 @@ export function createInitialState(
     isMagicTransforming: false,
     magicTransformProgress: null,
     progressSteps: [],
-    originalCVData: null,
+    originalCVData: job.parsedData || null,  // Initialize with job's parsed data if available
     improvedCVData: null,
     comparisonReport: null,
     magicTransformResult: null,

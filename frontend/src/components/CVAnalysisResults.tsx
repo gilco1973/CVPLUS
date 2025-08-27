@@ -44,7 +44,17 @@ export interface CVAnalysisResultsProps {
  * Context-based state: ✓
  */
 function CVAnalysisResultsCore({ job, roleContext, onContinue, onBack, className }: CVAnalysisResultsProps) {
-  const { recommendations, isLoading, error, showComparison } = useCVAnalysisState();
+  const { recommendations, isLoading, error, showComparison, originalCVData, improvedCVData } = useCVAnalysisState();
+  
+  // Debug logging for comparison state
+  console.log('[CVAnalysisResults] Render state:', {
+    showComparison,
+    hasOriginalCVData: !!originalCVData,
+    hasImprovedCVData: !!improvedCVData,
+    recommendationsCount: recommendations.length,
+    isLoading,
+    error
+  });
   const { recoveryActions } = useCVAnalysisErrorRecovery();
   const { retryLoad } = useRecommendationLoader(job.id);
 
@@ -97,6 +107,33 @@ function CVAnalysisResultsCore({ job, roleContext, onContinue, onBack, className
 
   // Show comparison view if improvements have been applied
   if (showComparison) {
+    console.log('[CVAnalysisResults] Rendering comparison view with data:', {
+      hasOriginalCVData: !!originalCVData,
+      hasImprovedCVData: !!improvedCVData
+    });
+    
+    if (!originalCVData) {
+      console.warn('[CVAnalysisResults] showComparison is true but originalCVData is missing - falling back to recommendations view');
+      return (
+        <div className={`space-y-6 ${className}`}>
+          <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-4">
+            <p className="text-amber-300 text-sm">
+              ⚠️ Comparison data is being prepared. Showing recommendations for now.
+            </p>
+          </div>
+          {/* Progress Components */}
+          <MagicTransformProgress />
+          <ProcessingSteps />
+          {/* ATS Score Display */}
+          <ATSScoreDisplay />
+          {/* Recommendations List */}
+          {MemoizedRecommendationsList}
+          {/* Action Buttons */}
+          <ApplyImprovementsButton />
+        </div>
+      );
+    }
+    
     return (
       <div className={`space-y-6 ${className}`}>
         <CVComparisonContainer />
