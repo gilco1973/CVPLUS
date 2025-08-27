@@ -120,6 +120,10 @@ export const confirmPayment = async (
 ): Promise<ConfirmPaymentResponse> => {
   try {
     const result = await confirmPaymentFn(request);
+    
+    // Clear subscription cache after successful payment
+    clearSubscriptionCache();
+    
     return result.data;
   } catch (error) {
     logError('confirmPayment', error);
@@ -146,15 +150,88 @@ export const checkFeatureAccess = async (
   }
 };
 
+// Cache key for sessionStorage
+const SUBSCRIPTION_CACHE_KEY = 'cvplus_user_subscription';
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CachedSubscription {
+  data: GetUserSubscriptionResponse;
+  timestamp: number;
+  userId: string;
+}
+
 /**
- * Get user's subscription status and features
+ * Get cached subscription data from sessionStorage
+ */
+const getCachedSubscription = (userId: string): GetUserSubscriptionResponse | null => {
+  try {
+    const cached = sessionStorage.getItem(SUBSCRIPTION_CACHE_KEY);
+    if (!cached) return null;
+
+    const parsedCache: CachedSubscription = JSON.parse(cached);
+    const isExpired = Date.now() - parsedCache.timestamp > CACHE_EXPIRY_MS;
+    const isDifferentUser = parsedCache.userId !== userId;
+
+    if (isExpired || isDifferentUser) {
+      sessionStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+      return null;
+    }
+
+    return parsedCache.data;
+  } catch (error) {
+    console.warn('Error reading subscription cache:', error);
+    sessionStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+    return null;
+  }
+};
+
+/**
+ * Cache subscription data in sessionStorage
+ */
+const setCachedSubscription = (userId: string, data: GetUserSubscriptionResponse): void => {
+  try {
+    const cacheData: CachedSubscription = {
+      data,
+      timestamp: Date.now(),
+      userId
+    };
+    sessionStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Error caching subscription data:', error);
+  }
+};
+
+/**
+ * Clear cached subscription data
+ */
+export const clearSubscriptionCache = (): void => {
+  try {
+    sessionStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+  } catch (error) {
+    console.warn('Error clearing subscription cache:', error);
+  }
+};
+
+/**
+ * Get user's subscription status and features with caching
  */
 export const getUserSubscription = async (
   request: GetUserSubscriptionRequest
 ): Promise<GetUserSubscriptionResponse> => {
+  // Check cache first
+  const cached = getCachedSubscription(request.userId);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const result = await getUserSubscriptionFn(request);
-    return result.data;
+    const data = result.data;
+    
+    // Cache the result
+    setCachedSubscription(request.userId, data);
+    
+    return data;
   } catch (error) {
     logError('getUserSubscription', error);
     throw new Error(

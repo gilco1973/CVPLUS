@@ -12,7 +12,7 @@ import type { User } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { isFirebaseError, getErrorMessage, logError } from '../utils/errorHandling';
-import { getUserSubscription, GetUserSubscriptionResponse } from '../services/paymentService';
+import { getUserSubscription, GetUserSubscriptionResponse, clearSubscriptionCache } from '../services/paymentService';
 
 // Helper function to store Google OAuth tokens for calendar integration
 const storeGoogleTokens = async (uid: string, accessToken: string) => {
@@ -266,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPremiumStatusCache(null);
         setPremiumError(null);
         
-        // Clear premium cache from localStorage
+        // Clear premium cache from localStorage and sessionStorage
         try {
           const keys = Object.keys(localStorage);
           keys.forEach(key => {
@@ -274,6 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.removeItem(key);
             }
           });
+          // Clear sessionStorage subscription cache
+          clearSubscriptionCache();
         } catch (error) {
           logError('clearPremiumCache', error);
         }
@@ -498,6 +500,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear premium state before signing out
       setSubscription(null);
       setPremiumStatusCache(null);
+      clearSubscriptionCache();
       
       await firebaseSignOut(auth);
     } catch (error: unknown) {
@@ -557,7 +560,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchasedAt: subscription?.purchasedAt,
     isLoadingPremium,
     premiumError,
-    refreshPremiumStatus
+    refreshPremiumStatus,
+    hasFeature: (feature: keyof PremiumContextType['features']) => {
+      return subscription?.features?.[feature] === true;
+    },
+    clearPremiumError
   };
   
   const value = {

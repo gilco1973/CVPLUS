@@ -4,7 +4,8 @@ import {
   getUserSubscription, 
   checkFeatureAccess, 
   GetUserSubscriptionResponse,
-  CheckFeatureAccessResponse 
+  CheckFeatureAccessResponse,
+  clearSubscriptionCache
 } from '../services/paymentService';
 
 type PremiumFeature = 'webPortal' | 'aiChat' | 'podcast' | 'advancedAnalytics';
@@ -63,6 +64,8 @@ export const useSubscription = (): UseSubscriptionReturn => {
   };
 
   const refreshSubscription = async () => {
+    // Clear cache to force fresh data
+    clearSubscriptionCache();
     await fetchSubscription();
   };
 
