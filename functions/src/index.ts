@@ -381,3 +381,43 @@ export {
 export {
   getRealtimeUsageStats
 } from './functions/premium/getRealtimeUsageStats';
+
+// Export Phase 4: Enterprise Features & Global Optimization functions
+export {
+  getOptimizedPricing,
+  createPricingTest,
+  getPricingAnalytics,
+  optimizePricingStrategy,
+  getPricingTestResults,
+  recordPricingConversion,
+  pricingHealthCheck
+} from './functions/premium/dynamicPricing';
+
+export {
+  createEnterpriseAccount,
+  getEnterpriseAccount,
+  assignUserRole,
+  checkPermission,
+  createCustomRole,
+  configureSAMLSSO,
+  configureOAuthSSO,
+  processSSOLogin,
+  getEnterpriseAnalytics,
+  auditUserAccess,
+  getSSOMetrics,
+  getRoleTemplates,
+  enterpriseHealthCheck
+} from './functions/premium/enterpriseManagement';
+
+export {
+  createCustomReport,
+  generateReportData,
+  createDashboard,
+  scheduleReportDelivery,
+  generateWhiteLabelReport,
+  exportReport,
+  getDataSources,
+  getReportTemplates,
+  validateReportConfig,
+  analyticsHealthCheck
+} from './functions/premium/advancedAnalytics';

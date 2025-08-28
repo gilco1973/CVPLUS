@@ -105,8 +105,8 @@ export function formatAddress(
     case 'FR':
       // French format
       if (street) parts.push(street);
-      const zipCity = [postalCode, city].filter(Boolean).join(' ');
-      if (zipCity) parts.push(zipCity);
+      const zipCityFr = [postalCode, city].filter(Boolean).join(' ');
+      if (zipCityFr) parts.push(zipCityFr);
       if (country && country !== countryCode) parts.push(country);
       break;
       
