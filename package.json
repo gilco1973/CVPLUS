@@ -10,10 +10,11 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
-    "build": "npm run build:core && npm run build:i18n && npm run build:auth && npm run build:multimedia && npm run build:premium && npm run build:recommendations && npm run build:public-profiles && npm run build:frontend && npm run build:functions",
+    "build": "npm run build:core && npm run build:i18n && npm run build:auth && npm run build:cv-processing && npm run build:multimedia && npm run build:premium && npm run build:recommendations && npm run build:public-profiles && npm run build:frontend && npm run build:functions",
     "build:core": "npm run build --workspace=@cvplus/core",
     "build:i18n": "npm run build --workspace=@cvplus/i18n",
     "build:auth": "npm run build --workspace=@cvplus/auth",
+    "build:cv-processing": "npm run build --workspace=@cvplus/cv-processing",
     "build:multimedia": "npm run build --workspace=@cvplus/multimedia",
     "build:premium": "npm run build --workspace=@cvplus/premium",
     "build:recommendations": "npm run build --workspace=@cvplus/recommendations",
@@ -24,9 +25,9 @@
     "deploy:functions": "firebase deploy --only functions",
     "deploy:hosting": "firebase deploy --only hosting",
     "emulators:start": "firebase emulators:start",
-    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=@cvplus/core && npm run lint --workspace=@cvplus/i18n && npm run lint --workspace=@cvplus/auth && npm run lint --workspace=@cvplus/multimedia && npm run lint --workspace=@cvplus/premium && npm run lint --workspace=@cvplus/recommendations && npm run lint --workspace=@cvplus/public-profiles",
-    "type-check": "npm run type-check --workspace=frontend && npm run type-check --workspace=@cvplus/core && npm run type-check --workspace=@cvplus/i18n && npm run type-check --workspace=@cvplus/auth && npm run type-check --workspace=@cvplus/multimedia && npm run type-check --workspace=@cvplus/premium && npm run type-check --workspace=@cvplus/recommendations && npm run type-check --workspace=@cvplus/public-profiles",
-    "test": "npm run test --workspace=frontend && npm run test --workspace=functions && npm run test --workspace=@cvplus/core && npm run test --workspace=@cvplus/i18n && npm run test --workspace=@cvplus/auth && npm run test --workspace=@cvplus/multimedia && npm run test --workspace=@cvplus/premium && npm run test --workspace=@cvplus/recommendations && npm run test --workspace=@cvplus/public-profiles",
+    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=@cvplus/core && npm run lint --workspace=@cvplus/i18n && npm run lint --workspace=@cvplus/auth && npm run lint --workspace=@cvplus/cv-processing && npm run lint --workspace=@cvplus/multimedia && npm run lint --workspace=@cvplus/premium && npm run lint --workspace=@cvplus/recommendations && npm run lint --workspace=@cvplus/public-profiles",
+    "type-check": "npm run type-check --workspace=frontend && npm run type-check --workspace=@cvplus/core && npm run type-check --workspace=@cvplus/i18n && npm run type-check --workspace=@cvplus/auth && npm run type-check --workspace=@cvplus/cv-processing && npm run type-check --workspace=@cvplus/multimedia && npm run type-check --workspace=@cvplus/premium && npm run type-check --workspace=@cvplus/recommendations && npm run type-check --workspace=@cvplus/public-profiles",
+    "test": "npm run test --workspace=frontend && npm run test --workspace=functions && npm run test --workspace=@cvplus/core && npm run test --workspace=@cvplus/i18n && npm run test --workspace=@cvplus/auth && npm run test --workspace=@cvplus/cv-processing && npm run test --workspace=@cvplus/multimedia && npm run test --workspace=@cvplus/premium && npm run test --workspace=@cvplus/recommendations && npm run test --workspace=@cvplus/public-profiles",
     "clean": "npm run clean --workspaces"
   },
   "devDependencies": {

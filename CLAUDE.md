@@ -51,7 +51,40 @@ You are an AI software engineer operating with strict execution standards. Apply
  
 10. 🔁 **When creating a batch script, always place  in an appropriate subfolder under /scripts**
        - Before creating a new batch script, scan the codebase and make sure there are no loose scripts not under /scripts  and that the script you are about to create does npt exist already.
-           
+
+11. 🏗️ **MANDATORY: All code MUST be located in git submodules under /packages - NEVER in root repository**
+   - **CRITICAL REQUIREMENT**: All source code, components, services, and modules MUST be created within their respective git submodules under `/packages/` directory
+   - **ZERO TOLERANCE**: Do NOT create ANY code files in the root CVPlus git repository
+   - **Module Structure**: Each package is an independent git submodule with its own repository:
+     - `packages/core/` - Core types, constants, utilities (git@github.com:gilco1973/cvplus-core.git)
+     - `packages/auth/` - Authentication and session management (git@github.com:gilco1973/cvplus-auth.git)
+     - `packages/i18n/` - Internationalization framework (git@github.com:gilco1973/cvplus-i18n.git)
+     - `packages/multimedia/` - Media processing and storage (git@github.com:gilco1973/cvplus-multimedia.git)
+     - `packages/premium/` - Subscription and billing features (git@github.com:gilco1973/cvplus-premium.git)
+     - `packages/public-profiles/` - Public profile functionality (git@github.com:gilco1973/cvplus-public-profiles.git)
+     - `packages/recommendations/` - AI-powered recommendations engine (git@github.com:gilco1973/cvplus-recommendations.git)
+     - `packages/admin/` - Admin dashboard and management (git@github.com:gilco1973/cvplus-admin.git)
+     - `packages/analytics/` - Analytics and tracking services (git@github.com:gilco1973/cvplus-analytics.git)
+   - **ENFORCEMENT**: Creating code in the root repository is considered a critical architectural violation
+   - **PROCESS**: Always identify the appropriate package/module → Navigate to packages/[module]/ → Create/edit code there
+   - **Git Operations**: Each submodule has independent git history and must be committed separately to its own repository
+
+12. 🎯 **MANDATORY: Submodule tasks MUST be orchestrated by specialized submodule subagents**
+   - **CRITICAL REQUIREMENT**: When executing ANY task related to a specific submodule, the task MUST be orchestrated by the corresponding specialized submodule subagent
+   - **ZERO TOLERANCE**: Do NOT handle submodule-specific tasks directly - always delegate to the appropriate specialist
+   - **Submodule-Specialist Mapping**:
+     - `packages/core/` tasks → **core-module-specialist** subagent
+     - `packages/auth/` tasks → **auth-module-specialist** subagent  
+     - `packages/i18n/` tasks → **i18n-specialist** subagent
+     - `packages/multimedia/` tasks → **multimedia-specialist** subagent
+     - `packages/premium/` tasks → **premium-specialist** subagent
+     - `packages/public-profiles/` tasks → **public-profiles-specialist** subagent
+     - `packages/recommendations/` tasks → **recommendations-specialist** subagent
+     - `packages/admin/` tasks → **admin-specialist** subagent
+     - `packages/analytics/` tasks → **analytics-specialist** subagent
+   - **ENFORCEMENT**: Direct handling of submodule tasks without specialist orchestration is considered a critical architectural violation
+   - **PROCESS**: Identify target submodule → Use Task tool with appropriate specialist subagent → Let specialist orchestrate the task
+   - **Specialist Responsibilities**: Deep understanding of module architecture, dependencies, testing strategies, and domain-specific requirements
 
 ⚠️ **Do not shortcut these instructions**. Always adhere to this full lifecycle:
 1. Plan with OpusPlan.
