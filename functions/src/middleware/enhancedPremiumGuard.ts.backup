@@ -10,18 +10,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { logger } from 'firebase-functions';
 import { FeatureRegistry } from '../services/premium/featureRegistry';
-import { SecureRateLimitGuard } from '../services/security/rate-limit-guard.service';
-import { SecurityMonitorService } from '../services/security/security-monitor.service';
 
 interface AuthenticatedRequest extends Request {
   user?: {
     uid: string;
     email?: string;
     token?: any;
-    gracePeriodAccess?: boolean;
-    gracePeriodEnd?: Date;
-    subscription?: UserSubscription;
-    premiumAccess?: boolean;
   };
 }
 
@@ -89,12 +83,9 @@ export function enhancedPremiumGuard(options: PremiumGuardOptions) {
         });
       }
 
-      // Check rate limiting first - using secure service
+      // Check rate limiting first
       if (options.rateLimitPerMinute) {
-        const secureRateLimit = SecureRateLimitGuard.getInstance();
-        const rateLimitCheck = await secureRateLimit.checkRateLimit(userId, options.requiredFeature, {
-          limitPerMinute: options.rateLimitPerMinute
-        });
+        const rateLimitCheck = await checkRateLimit(userId, options.requiredFeature, options.rateLimitPerMinute);
         if (!rateLimitCheck.allowed) {
           await trackUsageEvent({
             userId,
@@ -158,7 +149,7 @@ export function enhancedPremiumGuard(options: PremiumGuardOptions) {
           }
         }
 
-        // Track blocked access attempt with security monitoring
+        // Track blocked access attempt
         await trackUsageEvent({
           userId,
           featureId: options.requiredFeature,
@@ -171,25 +162,6 @@ export function enhancedPremiumGuard(options: PremiumGuardOptions) {
             requiredTier: feature.tier,
             userAgent: req.headers['user-agent'],
             ip: req.ip
-          }
-        });
-
-        // Log security event for unauthorized access attempt
-        const securityMonitor = SecurityMonitorService.getInstance();
-        await securityMonitor.logSecurityEvent({
-          eventType: 'UNAUTHORIZED_ACCESS_ATTEMPT',
-          severity: 'HIGH',
-          userId,
-          featureId: options.requiredFeature,
-          service: 'EnhancedPremiumGuard',
-          message: `Unauthorized access attempt to premium feature: ${options.requiredFeature}`,
-          details: {
-            reason: hasBasicAccess.reason,
-            currentTier: subscription?.tier || 'none',
-            requiredTier: feature.tier,
-            endpoint: req.path,
-            userAgent: req.headers['user-agent'],
-            ipAddress: req.ip
           }
         });
 
@@ -402,7 +374,6 @@ async function checkUsageLimits(userId: string, featureId: string, subscription:
   limit: number;
   resetDate: Date;
   upgradeOptions?: any[];
-  securityError?: string;
 }> {
   try {
     const db = getFirestore();
@@ -434,31 +405,12 @@ async function checkUsageLimits(userId: string, featureId: string, subscription:
         undefined
     };
   } catch (error) {
-    // CRITICAL SECURITY FIX: Fail closed to prevent revenue bypass
-    logger.error('CRITICAL: Usage limits check failed - DENYING ACCESS', error);
-    
-    // Log security event
-    const securityMonitor = SecurityMonitorService.getInstance();
-    await securityMonitor.logSecurityEvent({
-      eventType: 'USAGE_SERVICE_FAILURE',
-      severity: 'CRITICAL',
-      userId,
-      featureId,
-      service: 'EnhancedPremiumGuard',
-      message: 'Usage limits verification failed - access denied',
-      details: {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        securityPolicy: 'FAIL_CLOSED',
-        action: 'DENY_ACCESS'
-      }
-    });
-    
+    logger.error('Error checking usage limits:', error);
     return {
-      withinLimits: false, // SECURITY FIX: FAIL CLOSED
-      currentUsage: -1,    // Error indicator
-      limit: 0,           // Force limit exceeded state
-      resetDate: new Date(),
-      securityError: 'Usage verification service unavailable - access denied for security'
+      withinLimits: true, // Fail open
+      currentUsage: 0,
+      limit: -1,
+      resetDate: new Date()
     };
   }
 }
@@ -467,7 +419,6 @@ async function checkRateLimit(userId: string, featureId: string, limitPerMinute:
   allowed: boolean;
   retryAfter?: number;
   currentCount?: number;
-  securityError?: string;
 }> {
   try {
     const db = getFirestore();
@@ -488,31 +439,8 @@ async function checkRateLimit(userId: string, featureId: string, limitPerMinute:
       currentCount
     };
   } catch (error) {
-    // CRITICAL SECURITY FIX: Fail closed to prevent abuse
-    logger.error('CRITICAL: Rate limit check failed - DENYING ACCESS', error);
-    
-    // Log security event
-    const securityMonitor = SecurityMonitorService.getInstance();
-    await securityMonitor.logSecurityEvent({
-      eventType: 'RATE_LIMIT_SERVICE_FAILURE',
-      severity: 'CRITICAL',
-      userId,
-      featureId,
-      service: 'EnhancedPremiumGuard',
-      message: 'Rate limit verification failed - access denied',
-      details: {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        securityPolicy: 'FAIL_CLOSED',
-        action: 'DENY_ACCESS',
-        limitPerMinute
-      }
-    });
-    
-    return { 
-      allowed: false,  // SECURITY FIX: FAIL CLOSED
-      retryAfter: 300, // 5 minute backoff for security
-      securityError: 'Rate limit verification failed - access denied for security'
-    };
+    logger.error('Error checking rate limit:', error);
+    return { allowed: true }; // Fail open for rate limiting
   }
 }
 
