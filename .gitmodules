@@ -19,3 +19,9 @@
 [submodule "packages/recommendations"]
 	path = packages/recommendations
 	url = git@github.com:gilco1973/cvplus-recommendations.git
+[submodule "packages/analytics"]
+	path = packages/analytics
+	url = git@github.com:gilco1973/cvplus-analytics.git
+[submodule "packages/admin"]
+	path = packages/admin
+	url = git@github.com:gilco1973/cvplus-admin.git
