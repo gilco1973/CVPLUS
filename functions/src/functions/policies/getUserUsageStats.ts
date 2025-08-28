@@ -2,7 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from '../../config/firebase';
 import { corsOptions } from '../../config/cors';
-import { getUserSubscriptionInternal } from '../payments/getUserSubscription';
+import { getUserSubscriptionInternal } from '../../../../packages/payments/src/backend/functions';
 
 interface GetUserUsageStatsData {
   userId: string;

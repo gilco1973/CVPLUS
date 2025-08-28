@@ -8,14 +8,22 @@
  */
 
 import { https } from 'firebase-functions/v2';
-import { logger } from 'firebase-functions';
+import { logger } from 'firebase-functions/v2';
 import { DynamicPricingEngine } from '../../services/premium/pricing/dynamicEngine';
 import { PricingAnalyticsService } from '../../services/premium/analytics/pricingAnalytics';
-import { authGuard } from '../../middleware/authGuard';
+import { requireAuth } from '../../middleware/authGuard';
 import { enhancedPremiumGuard } from '../../middleware/enhancedPremiumGuard';
 
-const pricingEngine = new DynamicPricingEngine();
-const analyticsService = new PricingAnalyticsService();
+const pricingEngine = new DynamicPricingEngine({
+  name: 'DynamicPricingEngine',
+  version: '1.0.0',
+  enabled: true
+});
+const analyticsService = new PricingAnalyticsService({
+  name: 'PricingAnalyticsService',
+  version: '1.0.0',
+  enabled: true
+});
 
 /**
  * Get optimized pricing for a specific product and user

@@ -45,7 +45,17 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() && 
-             request.auth.token.role == 'admin';
+             request.auth.token.admin != null;
+    }
+    
+    function hasAdminLevel(minLevel) {
+      return isAdmin() && 
+             request.auth.token.admin.level >= minLevel;
+    }
+    
+    function hasAdminPermission(permission) {
+      return isAdmin() && 
+             request.auth.token.admin.permissions[permission] == true;
     }
     
     function isFunctionCall() {
@@ -355,6 +365,133 @@ service cloud.firestore {
     // Emergency access for critical system maintenance
     match /emergency/{document=**} {
       allow read, write: if isAdmin();
+    }
+
+    // ========================================
+    // COMPREHENSIVE ADMIN COLLECTIONS
+    // ========================================
+    
+    // Admin Profiles - admin users can manage their own, super admins can manage all
+    match /adminProfiles/{adminUserId} {
+      allow read: if hasAdminLevel(1) && 
+                     (request.auth.uid == adminUserId || hasAdminLevel(4));
+      allow write: if hasAdminLevel(4) || isFunctionCall();
+    }
+    
+    // Admin Sessions - admin users can read their own, system admins can read all
+    match /adminSessions/{sessionId} {
+      allow read: if hasAdminLevel(1) && 
+                     (request.auth.uid == resource.data.adminUserId || hasAdminLevel(5));
+      allow create: if hasAdminLevel(1) && 
+                       request.auth.uid == request.resource.data.adminUserId;
+      allow update: if hasAdminLevel(1) && 
+                       request.auth.uid == resource.data.adminUserId;
+      allow delete: if hasAdminLevel(4) || isFunctionCall();
+    }
+    
+    // Admin Activity Audit Logs - admin level 2+ can read, functions write
+    match /adminAuditLogs/{logId} {
+      allow read: if hasAdminLevel(2);
+      allow write: if isFunctionCall();
+      allow delete: if false; // Never delete audit logs
+    }
+    
+    // System Health Metrics - admin level 2+ can read for monitoring
+    match /systemMetrics/{metricId} {
+      allow read: if hasAdminPermission('canMonitorSystem');
+      allow write: if isFunctionCall();
+    }
+    
+    // Admin Alerts and Notifications - admins can read based on level
+    match /adminAlerts/{alertId} {
+      allow read: if hasAdminLevel(1) && 
+                     (resource.data.targetAdminLevel <= request.auth.token.admin.level);
+      allow write: if isFunctionCall();
+      allow delete: if hasAdminLevel(3) || 
+                       (hasAdminLevel(1) && request.auth.uid == resource.data.createdBy);
+    }
+    
+    // User Management Queue - admin level 2+ with user management permission
+    match /userManagementQueue/{queueId} {
+      allow read, write: if hasAdminPermission('canManageUsers') && hasAdminLevel(2);
+    }
+    
+    // Content Moderation Queue - moderators and above
+    match /contentModerationQueue/{queueId} {
+      allow read, write: if hasAdminPermission('canModerateContent') && hasAdminLevel(2);
+    }
+    
+    // Security Events and Incident Logs - security permissions required
+    match /securityEvents/{eventId} {
+      allow read: if hasAdminPermission('canViewSecurityEvents');
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve security event logs
+    }
+    
+    // Admin Configuration Settings - system admin level required
+    match /adminConfig/{configId} {
+      allow read: if hasAdminLevel(3);
+      allow write: if hasAdminLevel(5) || isFunctionCall();
+    }
+    
+    // Admin Feature Flags Management - admin level 3+
+    match /adminFeatureFlags/{flagId} {
+      allow read: if hasAdminLevel(2);
+      allow write: if hasAdminPermission('canManageFeatureFlags') && hasAdminLevel(3);
+    }
+    
+    // Admin Analytics and Business Intelligence - analytics permission required
+    match /adminAnalytics/{analyticsId} {
+      allow read: if hasAdminPermission('canViewAnalytics');
+      allow write: if isFunctionCall();
+    }
+    
+    // Admin Support Ticket Management - support permission required
+    match /adminSupportTickets/{ticketId} {
+      allow read, write: if hasAdminPermission('canManageSupport');
+    }
+    
+    // Admin Billing Management - billing permission required
+    match /adminBillingData/{billingId} {
+      allow read: if hasAdminPermission('canViewBilling');
+      allow write: if hasAdminPermission('canManageBilling') || isFunctionCall();
+    }
+    
+    // Admin System Maintenance Logs - system admin only
+    match /adminMaintenanceLogs/{logId} {
+      allow read: if hasAdminLevel(4);
+      allow write: if hasAdminLevel(5) || isFunctionCall();
+    }
+    
+    // Admin Performance Monitoring - monitoring permission required
+    match /adminPerformanceMetrics/{metricId} {
+      allow read: if hasAdminPermission('canMonitorSystem');
+      allow write: if isFunctionCall();
+    }
+    
+    // Admin Error Logs - admin level 2+ for debugging
+    match /adminErrorLogs/{errorId} {
+      allow read: if hasAdminLevel(2);
+      allow write: if isFunctionCall();
+    }
+    
+    // Admin Backup Management - system admin level required
+    match /adminBackups/{backupId} {
+      allow read: if hasAdminLevel(4);
+      allow write: if hasAdminLevel(5) || isFunctionCall();
+    }
+    
+    // Admin Integration Management - system configuration permission
+    match /adminIntegrations/{integrationId} {
+      allow read: if hasAdminLevel(3);
+      allow write: if hasAdminPermission('canConfigureSystem') || isFunctionCall();
+    }
+    
+    // Admin Compliance and Audit Reports - compliance specialization or level 4+
+    match /adminComplianceReports/{reportId} {
+      allow read: if hasAdminLevel(4) || hasAdminPermission('canAuditSecurity');
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve compliance records
     }
 
     // ========================================

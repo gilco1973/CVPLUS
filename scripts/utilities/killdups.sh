@@ -475,36 +475,19 @@ echo -e "${PURPLE}╚═══════════════════�
 
 # Check if execution is requested
 if [[ "${1:-}" == "--execute-plan" ]]; then
-    echo -e "\n${YELLOW}[PHASE 7]${NC} Engaging orchestrator subagent for plan generation..."
+    echo -e "\n${YELLOW}[PHASE 7]${NC} Analysis complete. To generate execution plan with orchestrator subagent:"
+    echo -e "${BLUE}→${NC} Use Claude Code Task API to call orchestrator subagent"
+    echo -e "${BLUE}→${NC} Provide analysis data from: $ANALYSIS_FILE"
+    echo -e "${BLUE}→${NC} Request comprehensive code deduplication execution plan"
     
-    # Generate execution plan using the orchestrator
-    node "$SCRIPT_DIR/killdups-orchestrator.js" "${2:-}"
-    
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}✓${NC} Execution plan generated successfully"
-        
-        # Check if auto-approval is requested
-        if [[ "${2:-}" == "--auto-approve" ]]; then
-            echo -e "\n${YELLOW}[PHASE 8]${NC} Auto-approved - Executing with subagent coordination..."
-            node "$SCRIPT_DIR/killdups-subagent-executor.js"
-            
-            if [[ $? -eq 0 ]]; then
-                echo -e "${GREEN}✓${NC} KILLDUPS execution completed successfully!"
-            else
-                echo -e "${RED}✗${NC} Subagent execution failed. Check logs for details."
-            fi
-        else
-            echo -e "\n${BLUE}→${NC} Review the execution plan above"
-            echo -e "${YELLOW}→${NC} To proceed with subagent execution, run:"
-            echo -e "   ${GREEN}node $SCRIPT_DIR/killdups-subagent-executor.js${NC}"
-        fi
-    else
-        echo -e "${RED}✗${NC} Failed to generate execution plan"
-    fi
+    echo -e "\n${GREEN}✓${NC} Analysis data prepared for orchestrator subagent"
+    echo -e "${YELLOW}→${NC} Next: Call orchestrator subagent through Claude Code with analysis data"
 else
-    echo -e "\n${BLUE}→${NC} To proceed with automated remediation, run:"
-    echo -e "   ${GREEN}$0 --execute-plan${NC}"
-    echo -e "   ${GREEN}$0 --execute-plan --auto-approve${NC} (for automatic execution)"
+    echo -e "\n${BLUE}→${NC} Analysis complete. Next steps:"
+    echo -e "   ${GREEN}$0 --execute-plan${NC} - Prepare for orchestrator subagent"
+    echo -e "   ${YELLOW}→${NC} Then use Claude Code Task API with orchestrator subagent"
 fi
 
 echo -e "\n${GREEN}✓${NC} KILLDUPS analysis completed successfully!"
+echo -e "${BLUE}→${NC} Analysis data ready at: $ANALYSIS_FILE"
+echo -e "${BLUE}→${NC} Report available at: $REPORT_FILE"

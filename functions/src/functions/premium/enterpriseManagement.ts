@@ -8,16 +8,28 @@
  */
 
 import { https } from 'firebase-functions/v2';
-import { logger } from 'firebase-functions';
+import { logger } from 'firebase-functions/v2';
 import { EnterpriseAccountManager } from '../../services/premium/enterprise/tenantManager';
 import { EnterpriseRBACService } from '../../services/premium/enterprise/rbac';
 import { SSOManager } from '../../services/premium/enterprise/ssoManager';
-import { authGuard } from '../../middleware/authGuard';
+import { requireAuth } from '../../middleware/authGuard';
 import { enhancedPremiumGuard } from '../../middleware/enhancedPremiumGuard';
 
-const accountManager = new EnterpriseAccountManager();
-const rbacService = new EnterpriseRBACService();
-const ssoManager = new SSOManager();
+const accountManager = new EnterpriseAccountManager({
+  name: 'EnterpriseAccountManager',
+  version: '1.0.0',
+  enabled: true
+});
+const rbacService = new EnterpriseRBACService({
+  name: 'EnterpriseRBACService',
+  version: '1.0.0',
+  enabled: true
+});
+const ssoManager = new SSOManager({
+  name: 'SSOManager',
+  version: '1.0.0',
+  enabled: true
+});
 
 /**
  * Create enterprise account (Admin only)

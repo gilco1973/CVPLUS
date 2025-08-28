@@ -7,8 +7,10 @@
  * @category Enterprise Pricing
  */
 
-import { logger } from '../../shared/logger';
-import { BaseService } from '../../shared/base-service';
+import { Logger } from '../../shared/logger';
+
+const logger = new Logger();
+import { BaseService, ServiceConfig } from '../../shared/base-service';
 import { MarketIntelligenceService, MarketAnalysis } from './marketIntelligence';
 
 export interface PricingStrategy {
@@ -110,9 +112,13 @@ export class DynamicPricingEngine extends BaseService {
     'MX': 0.42
   };
 
-  constructor() {
-    super();
-    this.marketIntelligence = new MarketIntelligenceService();
+  constructor(config: ServiceConfig) {
+    super(config);
+    this.marketIntelligence = new MarketIntelligenceService({
+      name: 'MarketIntelligenceService',
+      version: '1.0.0',
+      enabled: true
+    });
   }
 
   /**
@@ -518,5 +524,23 @@ export class DynamicPricingEngine extends BaseService {
   private async storeTestResults(test: ABTestResults): Promise<void> {
     // Store test results in database
     logger.info('A/B test results stored', { testId: test.testId });
+  }
+
+  protected async onInitialize(): Promise<void> {
+    logger.info('DynamicPricingEngine initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    logger.info('DynamicPricingEngine cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    return {
+      status: 'healthy',
+      component: 'DynamicPricingEngine',
+      timestamp: new Date().toISOString()
+    };
   }
 }

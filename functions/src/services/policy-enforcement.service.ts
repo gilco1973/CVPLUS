@@ -7,7 +7,7 @@ import {
   NameVerificationResult, 
   AccountNameData 
 } from './name-verification.service';
-import { getUserSubscriptionInternal } from '../functions/payments/getUserSubscription';
+import { getUserSubscriptionInternal } from '../../../packages/payments/src/backend/functions';
 import { 
   ExternalDataSecurityAudit,
   RateLimitStatus,

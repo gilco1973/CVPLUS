@@ -8,6 +8,7 @@
  */
 
 import { BaseService, ServiceHealth } from './base-service';
+import { EnhancedBaseService } from './enhanced-base-service';
 import { Logger } from './logger';
 
 export interface ServiceRegistryConfig {
@@ -17,7 +18,7 @@ export interface ServiceRegistryConfig {
 
 export class ServiceRegistry {
   private static instance: ServiceRegistry;
-  private readonly services = new Map<string, BaseService>();
+  private readonly services = new Map<string, BaseService | EnhancedBaseService>();
   private readonly logger = new Logger('ServiceRegistry');
   private readonly config: ServiceRegistryConfig;
   private healthCheckInterval?: NodeJS.Timeout;
@@ -40,9 +41,9 @@ export class ServiceRegistry {
   }
 
   /**
-   * Register a service
+   * Register a service (supports both BaseService and EnhancedBaseService)
    */
-  async registerService(service: BaseService): Promise<void> {
+  async registerService(service: BaseService | EnhancedBaseService): Promise<void> {
     const name = service.name;
     
     if (this.services.has(name)) {
@@ -65,7 +66,7 @@ export class ServiceRegistry {
   /**
    * Get a service by name
    */
-  getService<T extends BaseService>(name: string): T | undefined {
+  getService<T extends BaseService | EnhancedBaseService>(name: string): T | undefined {
     return this.services.get(name) as T;
   }
 

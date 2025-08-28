@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 import { Timestamp } from 'firebase-admin/firestore';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil',
+  apiVersion: '2024-06-20',
 });
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;

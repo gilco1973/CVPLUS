@@ -21,7 +21,11 @@ export { usageBatchCacheService } from './usage-batch-cache.service';
 export { analyticsCacheService } from './analytics-cache.service';
 
 // Monitoring and performance
-export { cachePerformanceMonitor } from './cache-performance-monitor.service';
+export { 
+  cachePerformanceMonitor,
+  CacheHealthStatus,
+  CachePerformanceReport
+} from './cache-performance-monitor.service';
 
 // Legacy exports for backward compatibility
 export { SubscriptionCacheService, subscriptionCache } from '../subscription-cache.service';
@@ -39,7 +43,7 @@ export {
   cacheMonitor,
   CacheHealthReport 
 } from '../cache-monitor.service';
-export { getUserSubscriptionInternal, invalidateUserSubscriptionCache } from '../../functions/payments/getUserSubscription';
+export { getUserSubscriptionInternal, invalidateUserSubscriptionCache } from '../../../../packages/payments/src/backend/functions';
 
 // Type exports
 export type { 
@@ -75,8 +79,6 @@ export type {
 } from './analytics-cache.service';
 
 export type { 
-  CachePerformanceReport, 
-  CacheHealthStatus, 
   CacheAlert, 
   CacheRecommendation 
 } from './cache-performance-monitor.service';
@@ -86,6 +88,13 @@ export type {
  */
 export async function initializeCacheServices(): Promise<void> {
   try {
+    // Import services dynamically to avoid circular dependencies
+    const { redisClient } = await import('./redis-client.service');
+    const { pricingCacheService } = await import('./pricing-cache.service');
+    const { subscriptionCacheService } = await import('./subscription-cache.service');
+    const { featureAccessCacheService } = await import('./feature-access-cache.service');
+    const { analyticsCacheService } = await import('./analytics-cache.service');
+    
     // Initialize Redis client
     await redisClient.initialize();
     
@@ -108,6 +117,7 @@ export async function initializeCacheServices(): Promise<void> {
  * Perform comprehensive health check on all cache services
  */
 export async function performCacheHealthCheck(): Promise<CacheHealthStatus> {
+  const { cachePerformanceMonitor } = await import('./cache-performance-monitor.service');
   return await cachePerformanceMonitor.performHealthCheck();
 }
 
@@ -115,6 +125,7 @@ export async function performCacheHealthCheck(): Promise<CacheHealthStatus> {
  * Generate performance report for all cache services
  */
 export async function generateCachePerformanceReport(): Promise<CachePerformanceReport> {
+  const { cachePerformanceMonitor } = await import('./cache-performance-monitor.service');
   return await cachePerformanceMonitor.generatePerformanceReport();
 }
 
@@ -122,5 +133,6 @@ export async function generateCachePerformanceReport(): Promise<CachePerformance
  * Warm all cache services with common data
  */
 export async function warmAllCaches(): Promise<any> {
+  const { cachePerformanceMonitor } = await import('./cache-performance-monitor.service');
   return await cachePerformanceMonitor.warmAllCaches();
 }

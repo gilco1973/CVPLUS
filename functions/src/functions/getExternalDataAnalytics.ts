@@ -14,6 +14,7 @@ import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
 import { corsOptions } from '../config/cors';
 import { requireAuth } from '../middleware/authGuard';
+import { AdminAccessService } from '@cvplus/admin/services';
 import { 
   AnalyticsRequest,
   AnalyticsResponse,
@@ -43,8 +44,8 @@ export const getExternalDataAnalytics = onCall<GetAnalyticsRequest>(
       const authRequest = await requireAuth(request);
       const userId = authRequest.auth.uid;
       
-      // Check if user has admin access (implement your admin check logic here)
-      const isAdmin = await checkAdminAccess(userId);
+      // Check if user has admin access using centralized service
+      const isAdmin = await AdminAccessService.checkAdminAccess(userId);
       const targetUserId = request.data.adminAccess && isAdmin ? null : userId;
 
       const {
@@ -137,8 +138,8 @@ export const getDailyExternalDataAnalytics = onCall<{
       const authRequest = await requireAuth(request);
       const userId = authRequest.auth.uid;
       
-      // Check admin access
-      const isAdmin = await checkAdminAccess(userId);
+      // Check admin access using centralized service
+      const isAdmin = await AdminAccessService.checkAdminAccess(userId);
       if (request.data.adminAccess && !isAdmin) {
         throw new HttpsError(
           'permission-denied',
@@ -195,20 +196,7 @@ export const getDailyExternalDataAnalytics = onCall<{
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Check if user has admin access
- * This is a placeholder - implement your actual admin check logic
- */
-async function checkAdminAccess(userId: string): Promise<boolean> {
-  try {
-    const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.data();
-    return userData?.role === 'admin' || userData?.isAdmin === true;
-  } catch (error) {
-    logger.error('[CHECK-ADMIN] Failed to check admin access', { error, userId });
-    return false;
-  }
-}
+// Admin access checking now handled by centralized AdminAccessService
 
 /**
  * Aggregate analytics data from Firestore

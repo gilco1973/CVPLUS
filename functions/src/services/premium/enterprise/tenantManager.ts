@@ -7,7 +7,9 @@
  * @category Enterprise Management
  */
 
-import { logger } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
+
+const logger = new Logger();
 import { BaseService } from '../../shared/base-service';
 import { db } from '../../../config/firebase';
 import * as admin from 'firebase-admin';
@@ -761,6 +763,24 @@ export class EnterpriseAccountManager extends BaseService {
       monthlyRevenue: 0,
       totalRevenue: 0,
       outstandingBalance: 0
+    };
+  }
+
+  protected async onInitialize(): Promise<void> {
+    logger.info('EnterpriseAccountManager initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    logger.info('EnterpriseAccountManager cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    return {
+      status: 'healthy',
+      component: 'EnterpriseAccountManager',
+      timestamp: new Date().toISOString()
     };
   }
 }

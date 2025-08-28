@@ -152,22 +152,16 @@ export {
   enrichCVWithExternalData
 } from './functions/enrichCVWithExternalData';
 
-// Export external data analytics functions
+// Export external data analytics functions (imported from analytics submodule)
 export {
   trackExternalDataUsage,
-  getUserExternalDataUsageStats
-} from './functions/trackExternalDataUsage';
-
-export {
+  getUserExternalDataUsageStats,
   getExternalDataAnalytics,
-  getDailyExternalDataAnalytics
-} from './functions/getExternalDataAnalytics';
-
-export {
+  getDailyExternalDataAnalytics,
   trackConversionEvent,
   getConversionMetrics,
   getBusinessIntelligenceReport
-} from './functions/getConversionMetrics';
+} from '@cvplus/analytics';
 
 // Export testimonials functions
 export {
@@ -217,10 +211,19 @@ export {
   testCorsCall
 } from './functions/corsTestFunction';
 
-// Export admin functions
+// Export admin functions from admin submodule
 export {
-  getCacheStats
-} from './functions/admin/getCacheStats';
+  getUserStats,
+  getSystemHealth, 
+  manageUsers,
+  getBusinessMetrics,
+  initializeAdmin,
+  getCacheStats,
+  warmCaches,
+  clearCaches
+} from '@cvplus/admin/backend';
+
+// getCacheStats now exported from @cvplus/admin/backend along with other admin functions
 
 // Export comprehensive CORS testing scripts
 export {
@@ -303,29 +306,26 @@ export {
 export { updateCVData } from './functions/updateCVData';
 export { sendSchedulingEmail } from './functions/sendSchedulingEmail';
 
-// Export payment processing functions
-export {
-  createPaymentIntent,
-} from './functions/payments/createPaymentIntent';
-export {
-  createCheckoutSession,
-} from './functions/payments/createCheckoutSession';
+// Export payment processing functions - using wrappers with Firebase config
+export { createPaymentIntent } from './functions/payments-wrapper/createPaymentIntent';
 
-export {
+// ============================================================================
+// PREMIUM FUNCTION CONSOLIDATION - PHASE 1
+// ============================================================================
+// NOTE: Premium functions exist in both main functions/ and premium submodule.
+// Using local versions for now until premium submodule dependencies are resolved.
+// TODO: Complete consolidation by fixing premium submodule imports and switching to:
+// export { checkFeatureAccess, handleStripeWebhook, manageSubscription } from '@cvplus/premium/backend';
+
+// Keep original functions for now - will migrate others in follow-up phases
+// Import from payments submodule
+export { 
   confirmPayment,
-} from './functions/payments/confirmPayment';
-
-export {
+  createCheckoutSession,
   checkFeatureAccess,
-} from './functions/payments/checkFeatureAccess';
-
-export {
   handleStripeWebhook,
-} from './functions/payments/handleStripeWebhook';
-
-export {
-  getUserSubscription,
-} from './functions/payments/getUserSubscription';
+  getUserSubscription
+} from '../packages/payments/src/backend/functions';
 
 // Export video webhook functions
 export {
@@ -342,10 +342,10 @@ export {
   runwaymlCleanupTask
 } from './functions/runwayml-status-check';
 
-// Export video analytics dashboard functions
+// Export video analytics dashboard functions (imported from analytics submodule)
 export {
   videoAnalyticsDashboard
-} from './functions/video-analytics-dashboard';
+} from '@cvplus/analytics';
 
 // Export enhanced role profile functions with Opus 4.1
 export {
@@ -364,23 +364,33 @@ export {
   getUserPolicyViolations,
 } from './functions/policies/getUserPolicyViolations';
 
-// Export Phase 3: Analytics & Revenue Intelligence functions
-export {
-  getRevenueMetrics
-} from './functions/analytics/getRevenueMetrics';
+// ============================================================================
+// ANALYTICS FUNCTION CONSOLIDATION - PHASE 3
+// ============================================================================
+// NOTE: Some analytics functions exist in multiple locations:
+// - getRevenueMetrics, predictChurn: analytics submodule ✓
+// - batchTrackingEvents, getRealtimeUsageStats: premium submodule (should be moved to analytics)
+// TODO: Move analytics functions from premium to analytics submodule
 
+// Export Phase 3: Analytics & Revenue Intelligence functions (imported from analytics submodule)
 export {
+  getRevenueMetrics,
   predictChurn
-} from './functions/ml/predictChurn';
+} from '@cvplus/analytics';
 
-// Export premium analytics functions
+// Export premium analytics functions (temporarily - should be in analytics submodule)
 export {
-  batchTrackingEvents
-} from './functions/premium/batchTrackingEvents';
-
-export {
+  batchTrackingEvents,
   getRealtimeUsageStats
-} from './functions/premium/getRealtimeUsageStats';
+} from '@cvplus/analytics';
+
+// ============================================================================
+// PREMIUM FUNCTION CONSOLIDATION - PHASE 4: ENTERPRISE FEATURES
+// ============================================================================
+// NOTE: Enterprise functions exist in both main functions/ and premium submodule.
+// Using local versions until premium submodule dependencies are resolved.
+// TODO: Complete consolidation by switching to:
+// export { dynamicPricing, enterpriseManagement, advancedAnalytics } from '@cvplus/premium/backend';
 
 // Export Phase 4: Enterprise Features & Global Optimization functions
 export {
@@ -409,6 +419,7 @@ export {
   enterpriseHealthCheck
 } from './functions/premium/enterpriseManagement';
 
+// Export advanced analytics functions from analytics submodule
 export {
   createCustomReport,
   generateReportData,
@@ -420,4 +431,4 @@ export {
   getReportTemplates,
   validateReportConfig,
   analyticsHealthCheck
-} from './functions/premium/advancedAnalytics';
+} from '@cvplus/analytics';

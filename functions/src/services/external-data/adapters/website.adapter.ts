@@ -9,9 +9,8 @@
  * @version 1.0
  */
 
-import { logger } from 'firebase-functions';
-import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { EnhancedBaseService, EnhancedServiceConfig } from '../../shared/enhanced-base-service';
 import { 
   PersonalWebsite,
   PortfolioProject,
@@ -19,12 +18,36 @@ import {
   Testimonial
 } from '../types';
 
-export class WebsiteAdapter {
+export class WebsiteAdapter extends EnhancedBaseService {
   private readonly userAgent = 'CVPlus-Bot/1.0 (CV Enhancement Service)';
-  private readonly timeout = 10000; // 10 seconds
+  private readonly requestTimeout = 10000; // 10 seconds
   
   constructor() {
-    logger.info('[WEBSITE-ADAPTER] Website adapter initialized');
+    super({
+      name: 'WebsiteAdapter',
+      version: '1.0.0',
+      enabled: true,
+      cache: {
+        ttlSeconds: 3600, // 1 hour for website data
+        keyPrefix: 'website_adapter',
+        enableMetrics: true
+      },
+      apiClient: {
+        timeout: 10000,
+        retryAttempts: 3,
+        enableRateLimit: true,
+        rateLimitRequests: 10, // Conservative rate limiting
+        rateLimitWindow: 60000,
+        defaultHeaders: {
+          'User-Agent': 'CVPlus-Bot/1.0 (CV Enhancement Service)'
+        }
+      },
+      enableMixins: {
+        cache: true,
+        database: false,
+        apiClient: true
+      }
+    });
   }
 
   /**
@@ -32,7 +55,16 @@ export class WebsiteAdapter {
    */
   async fetchData(websiteUrl: string): Promise<PersonalWebsite> {
     try {
-      logger.info('[WEBSITE-ADAPTER] Fetching website data', { websiteUrl });
+      this.logger.info('Fetching website data', { websiteUrl });
+      
+      // Check cache first
+      const cacheKey = `website_data:${websiteUrl}`;
+      const cached = await this.getCached<PersonalWebsite>(cacheKey);
+      
+      if (cached.cached && cached.data) {
+        this.logger.info('Returning cached website data', { websiteUrl });
+        return cached.data;
+      }
       
       // Validate URL
       if (!this.isValidUrl(websiteUrl)) {
@@ -66,7 +98,10 @@ export class WebsiteAdapter {
         testimonials
       };
       
-      logger.info('[WEBSITE-ADAPTER] Website data extracted', {
+      // Cache website data for 1 hour
+      await this.setCached(cacheKey, website, 3600);
+      
+      this.logger.info('Website data extracted', {
         url: websiteUrl,
         projectsCount: portfolioProjects.length,
         postsCount: blogPosts.length
@@ -75,7 +110,7 @@ export class WebsiteAdapter {
       return website;
       
     } catch (error) {
-      logger.error('[WEBSITE-ADAPTER] Failed to fetch website data', error);
+      this.logger.error('Failed to fetch website data', { error, websiteUrl });
       throw new Error(`Website fetch failed: ${error.message}`);
     }
   }
@@ -85,15 +120,15 @@ export class WebsiteAdapter {
    */
   private async fetchPage(url: string): Promise<string> {
     try {
-      const response = await axios.get(url, {
-        headers: { 'User-Agent': this.userAgent },
-        timeout: this.timeout,
-        maxRedirects: 3
+      const response = await this.apiGet<string>(url, {
+        timeout: this.requestTimeout,
+        maxRedirects: 3,
+        responseType: 'text'
       });
       
       return response.data;
     } catch (error) {
-      if (error.response?.status === 404) {
+      if (error.status === 404) {
         throw new Error('Website not found');
       }
       throw error;
@@ -103,7 +138,7 @@ export class WebsiteAdapter {
   /**
    * Extract metadata from the page
    */
-  private extractMetadata($: cheerio.CheerioAPI, url: string): any {
+  private extractMetadata($: cheerio.Root, url: string): any {
     return {
       title: $('title').text() || $('meta[property="og:title"]').attr('content') || '',
       description: $('meta[name="description"]').attr('content') || 
@@ -116,7 +151,7 @@ export class WebsiteAdapter {
   /**
    * Discover relevant pages on the website
    */
-  private async discoverPages($: cheerio.CheerioAPI, baseUrl: string): Promise<Map<string, string>> {
+  private async discoverPages($: cheerio.Root, baseUrl: string): Promise<Map<string, string>> {
     const pages = new Map<string, string>();
     const baseUrlObj = new URL(baseUrl);
     
@@ -150,7 +185,7 @@ export class WebsiteAdapter {
    * Extract portfolio projects
    */
   private async extractPortfolioProjects(
-    $: cheerio.CheerioAPI,
+    $: cheerio.Root,
     pages: Map<string, string>
   ): Promise<PortfolioProject[]> {
     const projects: PortfolioProject[] = [];
@@ -181,7 +216,7 @@ export class WebsiteAdapter {
           if (projects.length > 0) break;
         }
       } catch (error) {
-        logger.warn('[WEBSITE-ADAPTER] Failed to fetch portfolio page', { portfolioUrl });
+        this.logger.warn('Failed to fetch portfolio page', { portfolioUrl, error });
       }
     }
     
@@ -233,7 +268,7 @@ export class WebsiteAdapter {
    * Extract blog posts
    */
   private async extractBlogPosts(
-    $: cheerio.CheerioAPI,
+    $: cheerio.Root,
     pages: Map<string, string>
   ): Promise<BlogPost[]> {
     const posts: BlogPost[] = [];
@@ -255,7 +290,7 @@ export class WebsiteAdapter {
           }
         });
       } catch (error) {
-        logger.warn('[WEBSITE-ADAPTER] Failed to fetch blog page', { blogUrl });
+        this.logger.warn('Failed to fetch blog page', { blogUrl, error });
       }
     }
     
@@ -293,7 +328,7 @@ export class WebsiteAdapter {
    * Extract testimonials
    */
   private async extractTestimonials(
-    $: cheerio.CheerioAPI,
+    $: cheerio.Root,
     pages: Map<string, string>
   ): Promise<Testimonial[]> {
     const testimonials: Testimonial[] = [];
@@ -314,7 +349,7 @@ export class WebsiteAdapter {
           }
         });
       } catch (error) {
-        logger.warn('[WEBSITE-ADAPTER] Failed to fetch testimonials page', { testimonialsUrl });
+        this.logger.warn('Failed to fetch testimonials page', { testimonialsUrl, error });
       }
     }
     
@@ -392,5 +427,34 @@ export class WebsiteAdapter {
     const wordsPerMinute = 200;
     const wordCount = text.split(/\s+/).length;
     return Math.ceil(wordCount / wordsPerMinute);
+  }
+  
+  // Enhanced service lifecycle methods
+  
+  protected async onInitialize(): Promise<void> {
+    this.logger.info('WebsiteAdapter initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    this.logger.info('WebsiteAdapter cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    const cacheMetrics = this.getCacheMetrics();
+    const rateLimitStatus = this.apiClientService?.['getRateLimitStatus']();
+    
+    return {
+      status: 'healthy',
+      component: 'WebsiteAdapter',
+      timestamp: new Date().toISOString(),
+      cache: {
+        hitRate: this.getCacheHitRate(),
+        totalRequests: cacheMetrics.totalRequests,
+        errors: cacheMetrics.errors
+      },
+      rateLimit: rateLimitStatus
+    };
   }
 }

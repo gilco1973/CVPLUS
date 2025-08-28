@@ -8,12 +8,16 @@
  */
 
 import { https } from 'firebase-functions/v2';
-import { logger } from 'firebase-functions';
+import { logger } from 'firebase-functions/v2';
 import { ReportBuilderService } from '../../services/premium/analytics/reportBuilder';
-import { authGuard } from '../../middleware/authGuard';
+import { requireAuth } from '../../middleware/authGuard';
 import { enhancedPremiumGuard } from '../../middleware/enhancedPremiumGuard';
 
-const reportBuilder = new ReportBuilderService();
+const reportBuilder = new ReportBuilderService({
+  name: 'ReportBuilderService',
+  version: '1.0.0',
+  enabled: true
+});
 
 /**
  * Create custom report (Enterprise only)

@@ -7,7 +7,9 @@
  * @category Enterprise Authentication
  */
 
-import { logger } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
+
+const logger = new Logger();
 import { BaseService } from '../../shared/base-service';
 import { db } from '../../../config/firebase';
 import { SSOConfig, AttributeMap } from './tenantManager';
@@ -720,5 +722,23 @@ export class SSOManager extends BaseService {
 
   private generateSessionId(): string {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  protected async onInitialize(): Promise<void> {
+    logger.info('SSOManager initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    logger.info('SSOManager cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    return {
+      status: 'healthy',
+      component: 'SSOManager',
+      timestamp: new Date().toISOString()
+    };
   }
 }

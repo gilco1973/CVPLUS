@@ -7,7 +7,9 @@
  * @category Enterprise Security
  */
 
-import { logger } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
+
+const logger = new Logger();
 import { BaseService } from '../../shared/base-service';
 import { db } from '../../../config/firebase';
 import { EnterpriseRole, Permission, AccessCondition } from './tenantManager';
@@ -736,5 +738,23 @@ export class EnterpriseRBACService extends BaseService {
       type: 'access_attempt',
       ...attempt
     });
+  }
+
+  protected async onInitialize(): Promise<void> {
+    logger.info('EnterpriseRBACService initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    logger.info('EnterpriseRBACService cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    return {
+      status: 'healthy',
+      component: 'EnterpriseRBACService',
+      timestamp: new Date().toISOString()
+    };
   }
 }

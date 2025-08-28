@@ -1,0 +1,16 @@
+{
+  "analysis_timestamp": "2025-08-28T15:19:54Z",
+  "project_root": "/Users/gklainert/Documents/cvplus",
+  "duplicate_code_blocks": [],
+  "similar_functionality": [],
+  "dry_violations": [],
+  "misplaced_code": [],
+  "recommendations": [],
+  "stats": {
+    "total_files_scanned": 2316,
+    "duplicate_blocks_found": 0,
+    "similar_functions_found": 0,
+    "dry_violations_found": 0,
+    "misplaced_files_found": 0
+  }
+}

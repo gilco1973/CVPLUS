@@ -7,7 +7,9 @@
  * @category Enterprise Pricing
  */
 
-import { logger } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
+
+const logger = new Logger();
 import { BaseService } from '../../shared/base-service';
 
 export interface MarketAnalysis {
@@ -389,5 +391,23 @@ export class MarketIntelligenceService extends BaseService {
       analysis.confidence > 0.5 &&
       analysis.optimizationRecommendations.length > 0
     );
+  }
+
+  protected async onInitialize(): Promise<void> {
+    logger.info('MarketIntelligenceService initializing');
+    // Initialize any required connections or configurations
+  }
+
+  protected async onCleanup(): Promise<void> {
+    logger.info('MarketIntelligenceService cleaning up');
+    // Cleanup resources
+  }
+
+  protected async onHealthCheck(): Promise<Partial<any>> {
+    return {
+      status: 'healthy',
+      component: 'MarketIntelligenceService',
+      timestamp: new Date().toISOString()
+    };
   }
 }

@@ -11,7 +11,8 @@
 
 import { onCall } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
-import { requireAuth, isAdmin } from '../../middleware/authGuard';
+import { requireAuth } from '../../middleware/authGuard';
+import { AdminAccessService } from '@cvplus/admin/services';
 import { revenueAnalyticsService, DateRange } from '../../services/analytics/revenue-analytics.service';
 
 interface RevenueMetricsRequest {
@@ -42,7 +43,7 @@ interface RevenueMetricsResponse {
   };
 }
 
-export const getRevenueMetrics = onCall<RevenueMetricsRequest, RevenueMetricsResponse>(
+export const getRevenueMetrics = onCall<RevenueMetricsRequest>(
   {
     cors: true,
     enforceAppCheck: true,
@@ -66,24 +67,13 @@ export const getRevenueMetrics = onCall<RevenueMetricsRequest, RevenueMetricsRes
       const authenticatedRequest = await requireAuth(request);
       
       // Admin access required for revenue analytics
-      if (!isAdmin(authenticatedRequest)) {
-        logger.warn('Unauthorized revenue metrics access attempt', {
-          requestId,
-          uid: authenticatedRequest.auth.uid,
-          email: authenticatedRequest.auth.token.email
-        });
-
-        return {
-          success: false,
-          error: 'Admin access required for revenue analytics',
-          metadata: {
-            requestId,
-            executionTime: Date.now() - startTime,
-            dataFreshness: 0,
-            cacheHit: false
-          }
-        };
-      }
+      await AdminAccessService.requireAdminAccess(authenticatedRequest.auth.uid);
+      
+      logger.info('Authorized admin accessing revenue metrics', {
+        requestId,
+        uid: authenticatedRequest.auth.uid,
+        email: authenticatedRequest.auth.token.email
+      });
 
       // Parse and validate request parameters
       const {

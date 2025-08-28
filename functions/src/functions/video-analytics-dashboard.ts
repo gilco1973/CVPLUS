@@ -11,6 +11,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { AdminAccessService } from '@cvplus/admin/services';
 import { PerformanceMonitorService, SystemPerformanceMetrics } from '../services/performance-monitor.service';
 import { AnalyticsEngineService, BusinessMetrics, QualityInsights, UserBehaviorInsights } from '../services/analytics-engine.service';
 import { AlertManagerService } from '../services/alert-manager.service';
@@ -113,7 +114,8 @@ export const videoAnalyticsDashboard = onRequest(
           .get();
         
         const userData = userDoc.data();
-        const hasAccess = userData?.isPremium || userData?.isAdmin || userData?.role === 'analytics';
+        const hasAdminAccess = await AdminAccessService.checkAdminAccess(decodedToken.uid);
+        const hasAccess = userData?.isPremium || hasAdminAccess || userData?.role === 'analytics';
         
         if (!hasAccess) {
           response.status(403).json({ error: 'Forbidden: Analytics access required' });

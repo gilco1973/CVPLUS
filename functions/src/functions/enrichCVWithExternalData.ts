@@ -21,7 +21,7 @@ import {
 } from '../services/external-data';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { ExternalDataUsageEvent } from '../types/external-data-analytics.types';
-import { getUserSubscriptionInternal } from './payments/getUserSubscription';
+import { getUserSubscriptionInternal } from '../../../packages/payments/src/backend/functions';
 
 interface EnrichCVRequest {
   cvId: string;

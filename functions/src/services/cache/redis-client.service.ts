@@ -11,14 +11,13 @@
 
 import Redis, { RedisOptions } from 'ioredis';
 import { logger } from 'firebase-functions';
-import { config } from '../config/environment';
+import { config } from '../../config/environment';
 
 export interface RedisConfig {
   host: string;
   port: number;
   password?: string;
   db?: number;
-  retryDelayOnFailover: number;
   maxRetriesPerRequest: number;
   lazyConnect: boolean;
   keepAlive: number;
@@ -91,14 +90,12 @@ class RedisClientService {
     
     // Base configuration
     const baseConfig: RedisOptions = {
-      retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
       keepAlive: 30000,
       connectTimeout: 10000,
       commandTimeout: 5000,
-      enableReadyCheck: true,
-      maxLoadingTimeout: 5000
+      enableReadyCheck: true
     };
 
     if (environment === 'production') {

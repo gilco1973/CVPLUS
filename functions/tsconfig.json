@@ -18,7 +18,22 @@
     "noErrorTruncation": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cvplus/admin": ["../packages/admin/src"],
+      "@cvplus/admin/*": ["../packages/admin/src/*"],
+      "@cvplus/premium": ["../packages/premium/src"],
+      "@cvplus/premium/*": ["../packages/premium/src/*"],
+      "@cvplus/payments": ["../packages/payments/src"],
+      "@cvplus/payments/*": ["../packages/payments/src/*"],
+      "@cvplus/core": ["../packages/core/src"],
+      "@cvplus/core/*": ["../packages/core/src/*"],
+      "@cvplus/cv-processing": ["../packages/cv-processing/src"],
+      "@cvplus/cv-processing/*": ["../packages/cv-processing/src/*"],
+      "@cvplus/analytics": ["../packages/analytics/src"],
+      "@cvplus/analytics/*": ["../packages/analytics/src/*"]
+    }
   },
   "compileOnSave": true,
   "include": [
