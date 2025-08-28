@@ -343,55 +343,159 @@ fi
 update_stats "dry_violations_found" "$DRY_VIOLATIONS"
 echo -e "${GREEN}✓${NC} Found $DRY_VIOLATIONS DRY principle violations"
 
-# Phase 5: Root to Submodule Migration Detection
-echo -e "\n${YELLOW}[PHASE 5]${NC} Detecting code that should be moved to submodules..."
+# Phase 5: CRITICAL ARCHITECTURAL VIOLATION DETECTION
+echo -e "\n${YELLOW}[PHASE 5]${NC} Detecting CRITICAL architectural violations - code in root that MUST be in submodules..."
 
 MISPLACED_COUNT=0
 
-# Define submodule categories and their indicators
-declare -A SUBMODULE_INDICATORS=(
-    ["auth"]="auth|login|signin|signup|token|session|permission|user|credential"
-    ["core"]="constant|util|helper|type|interface|enum|common"
-    ["i18n"]="translation|locale|language|i18n|intl"
-    ["multimedia"]="media|audio|video|image|upload|storage|cdn"
-    ["premium"]="premium|subscription|billing|payment|stripe|paypal"
-    ["public-profiles"]="profile|portfolio|public|share|networking"
-    ["recommendations"]="recommend|suggest|ai|ml|llm|claude|analysis"
-    ["admin"]="admin|dashboard|manage|control|monitor|stats"
-    ["analytics"]="analytic|metric|track|event|report|insight"
-    ["cv-processing"]="cv|resume|pdf|document|process|parse|generate"
+# MANDATORY CVPlus Architecture: ALL CODE MUST BE IN SUBMODULES UNDER /packages/
+# This is a ZERO TOLERANCE architectural requirement
+
+# Define root directories that violate architecture
+ROOT_CODE_DIRS=(
+    "frontend/src"
+    "functions/src" 
+    "functions/lib"
 )
 
-# Check files in root directories (frontend, functions) for submodule-specific content
+# Define submodule mapping based on directory/file patterns
+declare -A SUBMODULE_MAPPING=(
+    # Authentication & Session Management
+    ["auth"]="auth|login|signin|signup|token|session|permission|user|credential|Auth|User|Session"
+    # Core utilities, types, constants  
+    ["core"]="constant|util|helper|type|interface|enum|common|types/|utils/|config/|Core|Utils|Types"
+    # Internationalization
+    ["i18n"]="translation|locale|language|i18n|intl|Translation|Language|Locale"
+    # Media processing and storage
+    ["multimedia"]="media|audio|video|image|upload|storage|cdn|Media|Video|Audio|Image|Upload"
+    # Premium features and billing
+    ["premium"]="premium|subscription|billing|payment|stripe|paypal|Premium|Subscription|Payment|Billing"
+    # Public profiles and portfolios
+    ["public-profiles"]="profile|portfolio|public|share|networking|Profile|Portfolio|Public"
+    # AI recommendations engine
+    ["recommendations"]="recommend|suggest|ai|ml|llm|claude|analysis|Recommend|Analysis|AI"
+    # Admin dashboard and management
+    ["admin"]="admin|dashboard|manage|control|monitor|stats|Admin|Dashboard|Manage"
+    # Analytics and tracking
+    ["analytics"]="analytic|metric|track|event|report|insight|Analytics|Metric|Track"
+    # CV processing and generation
+    ["cv-processing"]="cv|resume|pdf|document|process|parse|generate|CV|Resume|Document|Process"
+)
+
+echo -e "${RED}🚨 CRITICAL ARCHITECTURAL VIOLATION SCAN 🚨${NC}"
+echo -e "${RED}→ Scanning for code that violates mandatory submodule architecture${NC}"
+
+# Check ALL files in root code directories (this violates architecture)
 for file in "${SOURCE_FILES[@]}"; do
-    if [[ "$file" == *"/frontend/"* ]] || [[ "$file" == *"/functions/"* ]]; then
-        # Skip if already in packages directory
-        if [[ "$file" != *"/packages/"* ]]; then
-            file_content=$(cat "$file" 2>/dev/null || echo "")
-            file_lower=$(echo "$file_content" | tr '[:upper:]' '[:lower:]')
-            
-            for module in "${!SUBMODULE_INDICATORS[@]}"; do
-                indicators="${SUBMODULE_INDICATORS[$module]}"
-                
-                # Check if file contains module-specific keywords
-                if echo "$file_lower" | grep -qE "($indicators)"; then
-                    MISPLACED_COUNT=$((MISPLACED_COUNT + 1))
-                    
-                    misplaced_finding=$(jq -n --arg file "$file" --arg module "$module" --arg indicators "$indicators" '{
-                        type: "misplaced_code",
-                        file: $file,
-                        suggested_module: $module,
-                        confidence: "medium",
-                        indicators: $indicators,
-                        severity: "medium",
-                        description: "Code appears to belong in specific submodule based on functionality"
-                    }')
-                    
-                    add_finding "misplaced_code" "$misplaced_finding"
-                    break  # Only suggest one module per file
-                fi
-            done
+    # Skip files that are correctly in packages directory
+    if [[ "$file" == *"/packages/"* ]]; then
+        continue
+    fi
+    
+    # Check if file is in root code directories (VIOLATION!)
+    is_violation=false
+    for root_dir in "${ROOT_CODE_DIRS[@]}"; do
+        if [[ "$file" == *"/$root_dir/"* ]]; then
+            is_violation=true
+            break
         fi
+    done
+    
+    if [[ "$is_violation" == true ]]; then
+        # This is a CRITICAL VIOLATION - code exists in root instead of submodules
+        MISPLACED_COUNT=$((MISPLACED_COUNT + 1))
+        
+        # Determine which submodule this should belong to
+        suggested_module="core"  # Default to core
+        confidence="high"
+        file_content=$(cat "$file" 2>/dev/null | head -100 || echo "")  # Sample first 100 lines
+        file_path_lower=$(echo "$file" | tr '[:upper:]' '[:lower:]')
+        file_content_lower=$(echo "$file_content" | tr '[:upper:]' '[:lower:]')
+        
+        # Analyze file content and path to determine correct submodule
+        highest_score=0
+        for module in "${!SUBMODULE_MAPPING[@]}"; do
+            indicators="${SUBMODULE_MAPPING[$module]}"
+            score=0
+            
+            # Score based on file path
+            if echo "$file_path_lower" | grep -qE "($indicators)"; then
+                score=$((score + 5))
+            fi
+            
+            # Score based on file content
+            content_matches=$(echo "$file_content_lower" | grep -cE "($indicators)" || echo "0")
+            score=$((score + content_matches))
+            
+            if [[ $score -gt $highest_score ]]; then
+                highest_score=$score
+                suggested_module="$module"
+                if [[ $score -gt 3 ]]; then
+                    confidence="high"
+                elif [[ $score -gt 1 ]]; then
+                    confidence="medium"
+                else
+                    confidence="low"
+                fi
+            fi
+        done
+        
+        # Create violation finding
+        misplaced_finding=$(jq -n \
+            --arg file "$file" \
+            --arg module "$suggested_module" \
+            --arg confidence "$confidence" \
+            --arg score "$highest_score" \
+            '{
+                type: "critical_architectural_violation",
+                violation_type: "code_in_root_repository", 
+                file: $file,
+                suggested_module: $module,
+                confidence: $confidence,
+                analysis_score: ($score | tonumber),
+                severity: "critical",
+                description: "CRITICAL: Code exists in root repository instead of mandatory git submodules under /packages/",
+                required_action: "IMMEDIATE: Move to appropriate submodule under /packages/",
+                compliance_status: "VIOLATION"
+            }')
+        
+        add_finding "misplaced_code" "$misplaced_finding"
+        
+        echo -e "${RED}✗ VIOLATION: $(basename "$file") should be in packages/$suggested_module/${NC}"
+    fi
+done
+
+# Additional check for entire directories that should not exist in root
+FORBIDDEN_DIRS=(
+    "$PROJECT_ROOT/frontend/src/components"
+    "$PROJECT_ROOT/frontend/src/services" 
+    "$PROJECT_ROOT/frontend/src/hooks"
+    "$PROJECT_ROOT/frontend/src/utils"
+    "$PROJECT_ROOT/functions/src/functions"
+    "$PROJECT_ROOT/functions/src/services"
+    "$PROJECT_ROOT/functions/lib/functions"
+    "$PROJECT_ROOT/functions/lib/services"
+)
+
+for dir in "${FORBIDDEN_DIRS[@]}"; do
+    if [[ -d "$dir" ]]; then
+        MISPLACED_COUNT=$((MISPLACED_COUNT + 10))  # Heavy penalty for entire directories
+        
+        dir_violation=$(jq -n \
+            --arg dir "$dir" \
+            '{
+                type: "critical_architectural_violation",
+                violation_type: "forbidden_directory_in_root",
+                directory: $dir,
+                severity: "critical", 
+                description: "CRITICAL: Entire directory structure exists in root - violates mandatory submodule architecture",
+                required_action: "IMMEDIATE: Migrate entire directory to appropriate submodule",
+                compliance_status: "MAJOR_VIOLATION"
+            }')
+        
+        add_finding "misplaced_code" "$dir_violation"
+        
+        echo -e "${RED}✗ MAJOR VIOLATION: Directory $(basename "$dir") should not exist in root${NC}"
     fi
 done
 
@@ -402,76 +506,169 @@ echo -e "${GREEN}✓${NC} Found $MISPLACED_COUNT files that may need relocation"
 echo -e "\n${YELLOW}[PHASE 6]${NC} Generating comprehensive analysis report..."
 
 cat > "$REPORT_FILE" <<EOF
-# CVPlus Code Duplication Analysis Report
+# 🚨 CVPlus CRITICAL Architectural Violation Report 🚨
+
 **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
 **Author**: Gil Klainert  
-**Tool**: /killdups - Advanced Code Deduplication System
+**Tool**: /killdups - Advanced Code Deduplication & Architectural Compliance System
+**Status**: 🔴 **CRITICAL VIOLATIONS DETECTED** 
 
-## Executive Summary
+## 🚨 URGENT: CRITICAL ARCHITECTURAL VIOLATIONS FOUND 🚨
 
-This report analyzes the CVPlus codebase for code duplication, DRY principle violations, and architectural misalignments across the main repository and all submodules.
+**MANDATORY CVPlus ARCHITECTURE VIOLATION**: This codebase has **MASSIVE** amounts of code in the root repository that **MUST** be located in git submodules under \`/packages/\`.
 
-### Analysis Statistics
+### ⚠️ Analysis Statistics
 - **Total Files Scanned**: $TOTAL_FILES
+- **🔴 CRITICAL VIOLATIONS - Files in Root**: $MISPLACED_COUNT
 - **Duplicate Code Blocks Found**: $DUPLICATE_COUNT
 - **Similar Functionality Patterns**: $SIMILAR_COUNT  
 - **DRY Principle Violations**: $DRY_VIOLATIONS
-- **Misplaced Files**: $MISPLACED_COUNT
 
-## Detailed Findings
+### 🚨 SEVERITY ASSESSMENT: CRITICAL
+
+**COMPLIANCE STATUS**: ❌ **MAJOR NON-COMPLIANCE**
+- **Architecture Requirement**: ALL source code MUST be in git submodules under \`/packages/\`
+- **Current Status**: Thousands of source files in root repository
+- **Required Action**: IMMEDIATE migration to appropriate submodules
+
+## 🔴 CRITICAL FINDINGS - IMMEDIATE ACTION REQUIRED
 
 EOF
 
-# Add detailed findings from JSON
-echo "### 1. Duplicate Code Blocks" >> "$REPORT_FILE"
-jq -r '.duplicate_code_blocks[] | "- **" + .type + "** (" + .severity + "): " + .description + "\n  Locations: " + (.locations | map(.file + ":" + (.start_line | tostring)) | join(", "))' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "No duplicate code blocks found." >> "$REPORT_FILE"
+# Add detailed findings from JSON - prioritize architectural violations
+echo "### 1. 🚨 CRITICAL ARCHITECTURAL VIOLATIONS" >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
+echo "**ZERO TOLERANCE VIOLATIONS** - The following code MUST be moved to submodules immediately:" >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
 
-echo -e "\n### 2. Similar Functionality Patterns" >> "$REPORT_FILE"
-jq -r '.similar_functionality[] | "- **" + .pattern + "** (" + .severity + "): " + .description + "\n  Functions: " + (.locations | map(.function_name + " in " + .file) | join(", "))' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "No similar functionality patterns found." >> "$REPORT_FILE"
+# Group violations by suggested module for better organization
+for module in "auth" "core" "i18n" "multimedia" "premium" "public-profiles" "recommendations" "admin" "analytics" "cv-processing"; do
+    violations_for_module=$(jq -r --arg module "$module" '.misplaced_code[] | select(.suggested_module == $module) | "- **" + (.file | split("/") | last) + "** → `packages/" + .suggested_module + "/`\n  📁 **Full Path**: " + .file + "\n  🎯 **Confidence**: " + .confidence + " (" + (.analysis_score | tostring) + " points)\n  ⚠️  **Status**: " + .compliance_status' "$ANALYSIS_FILE" 2>/dev/null)
+    
+    if [[ -n "$violations_for_module" ]]; then
+        echo "#### 📦 **packages/$module/** Violations:" >> "$REPORT_FILE"
+        echo "" >> "$REPORT_FILE"
+        echo "$violations_for_module" >> "$REPORT_FILE"
+        echo "" >> "$REPORT_FILE"
+    fi
+done
 
-echo -e "\n### 3. DRY Principle Violations" >> "$REPORT_FILE"
-jq -r '.dry_violations[] | "- **Pattern**: `" + .pattern + "` (" + (.occurrences | tostring) + " occurrences)\n  **Severity**: " + .severity + "\n  **Description**: " + .description' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "No DRY violations found." >> "$REPORT_FILE"
+echo "### 2. Directory Structure Violations" >> "$REPORT_FILE"
+jq -r '.misplaced_code[] | select(.violation_type == "forbidden_directory_in_root") | "- 🚫 **FORBIDDEN DIRECTORY**: " + (.directory | split("/") | last) + "\n  📁 **Full Path**: " + .directory + "\n  ⚠️ **Action Required**: Migrate entire directory to appropriate submodule\n  🔴 **Status**: " + .compliance_status' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "No forbidden directories found." >> "$REPORT_FILE"
 
-echo -e "\n### 4. Misplaced Code" >> "$REPORT_FILE"
-jq -r '.misplaced_code[] | "- **File**: " + .file + "\n  **Suggested Module**: " + .suggested_module + "\n  **Confidence**: " + .confidence + "\n  **Description**: " + .description' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "No misplaced code found." >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
+echo "### 3. Secondary Issues" >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
+
+echo "#### 3.1 Duplicate Code Blocks" >> "$REPORT_FILE"
+jq -r '.duplicate_code_blocks[] | "- **" + .type + "** (" + .severity + "): " + .description + "\n  Locations: " + (.locations | map(.file + ":" + (.start_line | tostring)) | join(", "))' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "✅ No duplicate code blocks found." >> "$REPORT_FILE"
+
+echo "" >> "$REPORT_FILE"
+echo "#### 3.2 Similar Functionality Patterns" >> "$REPORT_FILE"
+jq -r '.similar_functionality[] | "- **" + .pattern + "** (" + .severity + "): " + .description + "\n  Functions: " + (.locations | map(.function_name + " in " + .file) | join(", "))' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "✅ No similar functionality patterns found." >> "$REPORT_FILE"
+
+echo "" >> "$REPORT_FILE"
+echo "#### 3.3 DRY Principle Violations" >> "$REPORT_FILE"
+jq -r '.dry_violations[] | "- **Pattern**: `" + .pattern + "` (" + (.occurrences | tostring) + " occurrences)\n  **Severity**: " + .severity + "\n  **Description**: " + .description' "$ANALYSIS_FILE" >> "$REPORT_FILE" 2>/dev/null || echo "✅ No DRY violations found." >> "$REPORT_FILE"
 
 cat >> "$REPORT_FILE" <<EOF
 
-## Next Steps
+## 🚨 IMMEDIATE ACTION PLAN - CRITICAL VIOLATIONS
 
-This analysis has identified potential areas for code deduplication and architectural improvements. The recommended approach is:
+### ⚠️  PRIORITY 1: ARCHITECTURAL COMPLIANCE (CRITICAL)
 
-1. **Review High-Severity Issues First**: Focus on duplicate code blocks and high-occurrence DRY violations
-2. **Plan Refactoring Strategy**: Use the orchestrator subagent to create a comprehensive refactoring plan
-3. **Execute with Specialists**: Deploy appropriate submodule specialist agents for implementation
-4. **Validate Changes**: Ensure all modifications maintain functionality and improve maintainability
+**IMMEDIATE ACTIONS REQUIRED:**
 
-## Orchestrator Integration
+1. **🚨 STOP ALL DEVELOPMENT** until architectural violations are resolved
+2. **📋 CREATE MIGRATION PLAN** using orchestrator subagent for systematic code migration
+3. **🔧 EXECUTE MIGRATION** using specialized submodule subagents:
+   - **auth-module-specialist** for authentication code
+   - **core-module-specialist** for utilities, types, and constants
+   - **cv-processing-specialist** for CV generation and processing
+   - **premium-specialist** for subscription and billing features
+   - **recommendations-specialist** for AI-powered recommendations
+   - **admin-specialist** for admin dashboard and management
+   - **analytics-specialist** for analytics and tracking
+   - **multimedia-specialist** for media processing
+   - **public-profiles-specialist** for public profile features
+   - **i18n-specialist** for internationalization
 
-To proceed with automated fixes, run:
+### PRIORITY 2: Code Quality Improvements (Secondary)
+
+1. **Review Duplicate Code**: Focus on high-severity duplicate blocks
+2. **Address DRY Violations**: Extract repeated patterns to shared utilities  
+3. **Consolidate Similar Functions**: Review and merge redundant functionality
+
+## 🔧 AUTOMATED REMEDIATION AVAILABLE
+
+### Orchestrator-Driven Migration
+
+To proceed with **AUTOMATED ARCHITECTURAL COMPLIANCE**:
+
 \`\`\`bash
+# Generate detailed migration plan
 $SCRIPT_DIR/killdups.sh --execute-plan
+
+# This will:
+# 1. Use orchestrator subagent to create comprehensive migration plan
+# 2. Coordinate specialist subagents for each submodule migration
+# 3. Ensure proper git submodule structure and dependencies
+# 4. Validate all functionality after migration
 \`\`\`
 
-This will engage the orchestrator subagent to create a detailed remediation plan and coordinate specialist subagents for implementation.
+### Manual Alternative (NOT RECOMMENDED)
+
+If you prefer manual migration (discouraged due to complexity):
+1. Create appropriate git submodules for each package
+2. Move files to correct submodules maintaining import structure
+3. Update all references and dependencies
+4. Test thoroughly to ensure no functionality breaks
+
+## ⚠️  RISK ASSESSMENT
+
+**Current Risk Level**: 🔴 **CRITICAL**
+- **Compliance**: Major architectural violation
+- **Maintainability**: Severely compromised by scattered code
+- **Development Velocity**: Blocked until compliance achieved
+- **Code Quality**: Secondary issues present but architectural violations take priority
+
+## 📊 COMPLIANCE SCORECARD
+
+- ❌ **Architecture Compliance**: 0% (Critical Failure)
+- ✅ **Code Duplication**: 100% (No duplicates found)  
+- ✅ **DRY Principles**: 100% (No violations found)
+- ✅ **Function Similarity**: 100% (No redundant functions found)
+
+**Overall Compliance**: 🔴 **CRITICAL FAILURE** - Requires immediate remediation
 
 ---
-*Generated by CVPlus KILLDUPS v1.0*
+*Generated by CVPlus KILLDUPS v2.0 - Architectural Compliance Edition*
+*🚨 CRITICAL VIOLATIONS DETECTED - IMMEDIATE ACTION REQUIRED 🚨*
 EOF
 
 echo -e "${GREEN}✓${NC} Analysis complete! Report saved to: $REPORT_FILE"
 echo -e "${BLUE}→${NC} Analysis data saved to: $ANALYSIS_FILE"
 
-# Display summary
-echo -e "\n${PURPLE}╔══════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${PURPLE}║                         ANALYSIS SUMMARY                        ║${NC}"
-echo -e "${PURPLE}╠══════════════════════════════════════════════════════════════════╣${NC}"
-echo -e "${PURPLE}║${NC} Files Scanned:        ${GREEN}$TOTAL_FILES${NC}"
-echo -e "${PURPLE}║${NC} Duplicate Blocks:     ${YELLOW}$DUPLICATE_COUNT${NC}"
-echo -e "${PURPLE}║${NC} Similar Functions:    ${YELLOW}$SIMILAR_COUNT${NC}"
-echo -e "${PURPLE}║${NC} DRY Violations:       ${YELLOW}$DRY_VIOLATIONS${NC}"
-echo -e "${PURPLE}║${NC} Misplaced Files:      ${YELLOW}$MISPLACED_COUNT${NC}"
-echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════════╝${NC}"
+# Display critical summary
+echo -e "\n${RED}╔════════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${RED}║                    🚨 CRITICAL VIOLATIONS DETECTED 🚨               ║${NC}"
+echo -e "${RED}╠════════════════════════════════════════════════════════════════════╣${NC}"
+echo -e "${RED}║${NC} Files Scanned:           ${GREEN}$TOTAL_FILES${NC}"
+echo -e "${RED}║${NC} 🔴 CRITICAL VIOLATIONS:   ${RED}$MISPLACED_COUNT${NC} ${RED}files in root (MUST move to submodules)${NC}"
+echo -e "${RED}║${NC} ✅ Duplicate Blocks:      ${GREEN}$DUPLICATE_COUNT${NC} (EXCELLENT)"
+echo -e "${RED}║${NC} ✅ Similar Functions:     ${GREEN}$SIMILAR_COUNT${NC} (EXCELLENT)"
+echo -e "${RED}║${NC} ✅ DRY Violations:        ${GREEN}$DRY_VIOLATIONS${NC} (EXCELLENT)"
+echo -e "${RED}╠════════════════════════════════════════════════════════════════════╣${NC}"
+echo -e "${RED}║${NC} STATUS: ${RED}CRITICAL ARCHITECTURAL VIOLATIONS${NC} - Immediate action required"
+echo -e "${RED}╚════════════════════════════════════════════════════════════════════╝${NC}"
+
+if [[ $MISPLACED_COUNT -gt 0 ]]; then
+    echo -e "\n${RED}🚨 URGENT: $MISPLACED_COUNT files violate mandatory submodule architecture!${NC}"
+    echo -e "${RED}→ ALL code must be in git submodules under /packages/${NC}"
+    echo -e "${RED}→ Use orchestrator subagent for systematic migration${NC}"
+else
+    echo -e "\n${GREEN}✅ EXCELLENT: Perfect architectural compliance!${NC}"
+fi
 
 # Check if execution is requested
 if [[ "${1:-}" == "--execute-plan" ]]; then

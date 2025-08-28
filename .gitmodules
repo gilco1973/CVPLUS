@@ -31,3 +31,6 @@
 [submodule "packages/payments"]
 	path = packages/payments
 	url = git@github.com:gilco1973/cvplus-payments.git
+[submodule "packages/workflow"]
+	path = packages/workflow
+	url = git@github.com:gilco1973/cvplus-workflow.git
