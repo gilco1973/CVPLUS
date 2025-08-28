@@ -1,0 +1,21 @@
+[submodule "packages/auth"]
+	path = packages/auth
+	url = git@github.com:gilco1973/cvplus-auth.git
+[submodule "packages/core"]
+	path = packages/core
+	url = git@github.com:gilco1973/cvplus-core.git
+[submodule "packages/i18n"]
+	path = packages/i18n
+	url = git@github.com:gilco1973/cvplus-i18n.git
+[submodule "packages/multimedia"]
+	path = packages/multimedia
+	url = git@github.com:gilco1973/cvplus-multimedia.git
+[submodule "packages/premium"]
+	path = packages/premium
+	url = git@github.com:gilco1973/cvplus-premium.git
+[submodule "packages/public-profiles"]
+	path = packages/public-profiles
+	url = git@github.com:gilco1973/cvplus-public-profiles.git
+[submodule "packages/recommendations"]
+	path = packages/recommendations
+	url = git@github.com:gilco1973/cvplus-recommendations.git
