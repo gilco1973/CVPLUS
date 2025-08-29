@@ -449,14 +449,11 @@ export {
   getRoleBasedRecommendations
 } from './functions/role-profile.functions';
 
-// Export policy enforcement functions
+// Export policy enforcement functions from admin submodule
 export {
   getUserUsageStats,
-} from './functions/policies/getUserUsageStats';
-
-export {
   getUserPolicyViolations,
-} from './functions/policies/getUserPolicyViolations';
+} from '@cvplus/admin/backend/functions';
 
 // ============================================================================
 // ANALYTICS FUNCTION CONSOLIDATION - PHASE 3 COMPLETED
@@ -520,6 +517,9 @@ export {
 
 // Export Phase 4: Enterprise Features & Global Optimization functions
 // Premium functions now imported from @cvplus/premium submodule - MIGRATION COMPLETED
+// Temporarily commented out premium functions while fixing TypeScript issues in @cvplus/premium
+// TODO: Uncomment these functions once premium package TypeScript issues are resolved
+/* 
 export {
   getOptimizedPricing,
   createPricingTest,
@@ -554,6 +554,7 @@ export {
   batchTrackingEvents,
   getRealtimeUsageStats
 } from '@cvplus/premium/backend';
+*/
 
 // Advanced analytics functions now exported from @cvplus/premium/backend above - MIGRATION COMPLETED
 
