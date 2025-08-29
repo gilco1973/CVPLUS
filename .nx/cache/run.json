@@ -1,0 +1,54 @@
+{
+  "run": {
+    "command": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
+    "startTime": "2025-08-29T18:20:58.578Z",
+    "endTime": "2025-08-29T18:21:08.074Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "@cvplus/core:build",
+      "target": "build",
+      "projectName": "@cvplus/core",
+      "hash": "1543676385654318164",
+      "startTime": "2025-08-29T18:20:58.614Z",
+      "endTime": "2025-08-29T18:21:04.391Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/premium:build",
+      "target": "build",
+      "projectName": "@cvplus/premium",
+      "hash": "6571605298451009041",
+      "startTime": "2025-08-29T18:20:58.614Z",
+      "endTime": "2025-08-29T18:21:05.004Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/cv-processing:build",
+      "target": "build",
+      "projectName": "@cvplus/cv-processing",
+      "hash": "16253671116977856190",
+      "startTime": "2025-08-29T18:20:58.614Z",
+      "endTime": "2025-08-29T18:21:06.290Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/workflow:build",
+      "target": "build",
+      "projectName": "@cvplus/workflow",
+      "hash": "10984433000961328666",
+      "startTime": "2025-08-29T18:21:04.393Z",
+      "endTime": "2025-08-29T18:21:08.073Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    }
+  ]
+}

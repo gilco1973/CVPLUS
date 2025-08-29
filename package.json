@@ -10,7 +10,15 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
-    "build": "npm run build:core && npm run build:i18n && npm run build:auth && npm run build:cv-processing && npm run build:multimedia && npm run build:premium && npm run build:recommendations && npm run build:public-profiles && npm run build:frontend && npm run build:functions",
+    "build": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
+    "build:graph": "nx dep-graph",
+    "build:affected": "nx affected --target=build",
+    "build:layer0": "nx run core:build",
+    "build:layer1": "nx run-many --target=build --projects=auth,i18n --parallel=false",
+    "build:layer2": "nx run-many --target=build --projects=cv-processing,multimedia,analytics --parallel=false",
+    "build:layer3": "nx run-many --target=build --projects=premium,recommendations,public-profiles --parallel=false",
+    "build:layer4": "nx run-many --target=build --projects=admin,workflow,payments --parallel=false",
+    "build:packages": "npm run build:layer0 && npm run build:layer1 && npm run build:layer2 && npm run build:layer3 && npm run build:layer4",
     "build:core": "npm run build --workspace=@cvplus/core",
     "build:i18n": "npm run build --workspace=@cvplus/i18n",
     "build:auth": "npm run build --workspace=@cvplus/auth",
@@ -31,9 +39,12 @@
     "clean": "npm run clean --workspaces"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "@nx/devkit": "^21.4.1",
     "@types/node": "^22.9.1",
-    "firebase-tools": "^13.29.0"
+    "firebase-tools": "^13.29.0",
+    "madge": "^8.0.0",
+    "nx": "^21.4.1",
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">=20.0.0",

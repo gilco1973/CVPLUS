@@ -1,0 +1,145 @@
+name: Dependency Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/**'
+      - 'functions/**'
+      - 'frontend/**'
+
+jobs:
+  validate-dependencies:
+    name: Validate Dependency Architecture
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run dependency hierarchy validation
+      run: ./scripts/validate-dependencies.sh
+    
+    - name: Check for circular dependencies
+      run: npx madge --circular --extensions ts,tsx packages/*/src
+    
+    - name: Generate dependency graph
+      run: |
+        npm run build:graph -- --file=dependency-graph.html
+        echo "Dependency graph generated"
+      continue-on-error: true
+    
+    - name: Upload dependency graph
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-graph
+        path: dependency-graph.html
+    
+    - name: Validate TypeScript project references
+      run: npx tsc --build --dry
+    
+    - name: Check for forbidden imports
+      run: |
+        echo "Checking for Layer 0 violations..."
+        if grep -r "@cvplus/" packages/core/src/ --exclude-dir=node_modules | grep -v "// Example:" | grep -v "// Higher layers import"; then
+          echo "❌ Core module has CVPlus dependencies"
+          exit 1
+        fi
+        
+        echo "Checking for Layer 1 violations..."
+        if grep -r "@cvplus/" packages/auth/src/ --exclude-dir=node_modules | grep -v "@cvplus/core" | grep -v "// Example:" | grep -v "// Higher layers import"; then
+          echo "❌ Auth module has invalid dependencies"
+          exit 1
+        fi
+        
+        if grep -r "@cvplus/" packages/i18n/src/ --exclude-dir=node_modules | grep -v "@cvplus/core" | grep -v "// Example:" | grep -v "// Higher layers import"; then
+          echo "❌ I18n module has invalid dependencies"  
+          exit 1
+        fi
+        
+        echo "✅ Dependency validation passed"
+
+  build-validation:
+    name: Validate Build Order
+    runs-on: ubuntu-latest
+    needs: validate-dependencies
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build Layer 0 (Core)
+      run: npm run build:layer0
+    
+    - name: Build Layer 1 (Auth, I18n)
+      run: npm run build:layer1
+    
+    - name: Build Layer 2 (CV-Processing, Multimedia, Analytics)
+      run: npm run build:layer2
+    
+    - name: Build Layer 3 (Premium, Recommendations, Public-Profiles)
+      run: npm run build:layer3
+    
+    - name: Build Layer 4 (Admin, Workflow, Payments)
+      run: npm run build:layer4
+    
+    - name: Validate all builds completed
+      run: |
+        echo "Checking build artifacts..."
+        for package in core auth i18n cv-processing multimedia analytics premium recommendations public-profiles admin workflow payments; do
+          if [ ! -d "packages/$package/dist" ]; then
+            echo "❌ Missing build artifacts for $package"
+            exit 1
+          fi
+        done
+        echo "✅ All build artifacts present"
+
+  type-validation:
+    name: Validate TypeScript Types
+    runs-on: ubuntu-latest
+    needs: build-validation
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run type checking
+      run: npm run type-check
+    
+    - name: Check for type errors
+      run: |
+        echo "Running comprehensive type validation..."
+        npx tsc --noEmit --skipLibCheck
+        echo "✅ Type validation passed"
