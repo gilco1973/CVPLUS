@@ -193,10 +193,10 @@ export {
   generateLanguageCertificate
 } from './functions/languageProficiency';
 
-// Export external data integration functions
+// Export external data integration functions from cv-processing submodule
 export {
   enrichCVWithExternalData
-} from './functions/enrichCVWithExternalData';
+} from '@cvplus/cv-processing/backend/functions';
 
 // Export external data analytics functions (imported from analytics submodule)
 // STATUS: Successfully migrated to analytics submodule in Phase 3

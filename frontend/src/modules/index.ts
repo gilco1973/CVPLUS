@@ -21,10 +21,10 @@ export * from './premium';
 // Feature flags for gradual rollout
 export const MODULE_FLAGS = {
   USE_CORE_TYPES: false, // Disabled until packages are built
-  USE_AUTH_MODULE: false, // Disabled until auth module is complete
+  USE_AUTH_MODULE: true, // ENABLED: Auth module migration in progress
   USE_RECOMMENDATIONS_MODULE: false, // Disabled until package is built
   USE_PREMIUM_MODULE: true, // Enable premium module integration
-  FALLBACK_TO_LEGACY: true
+  FALLBACK_TO_LEGACY: true // Keep fallback enabled during migration
 } as const;
 
 export type ModuleFlags = typeof MODULE_FLAGS;

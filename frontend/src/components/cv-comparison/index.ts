@@ -1,18 +1,10 @@
-// CV Comparison Components
-export { CVComparisonView } from './CVComparisonView';
-export { DiffRenderer, SideBySideDiff, CompactDiff, DiffStats } from './DiffRenderer';
-export { MobileComparisonView, MobileComparisonToggle } from './MobileComparisonView';
+/**
+ * CV Comparison Integration Layer
+ * 
+ * This module provides integration layer exports for CV comparison components.
+ */
 
-// Types
-export type { 
-  DiffRendererProps, 
-  SideBySideDiffProps, 
-  CompactDiffProps, 
-  DiffStatsProps 
-} from './DiffRenderer';
+export * from './CVComparisonView';
 
-export type { CVComparisonViewProps } from './CVComparisonView';
-export type { 
-  MobileComparisonViewProps, 
-  MobileComparisonToggleProps 
-} from './MobileComparisonView';
+// Re-export legacy components if needed for gradual migration
+export { CVComparisonView as default } from './CVComparisonView';
