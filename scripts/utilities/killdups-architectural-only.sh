@@ -74,18 +74,17 @@ ROOT_CODE_DIRS=(
 )
 
 # Define submodule mapping 
-declare -A SUBMODULE_MAPPING=(
-    ["auth"]="auth|login|signin|signup|token|session|permission|user|credential|Auth|User|Session"
-    ["core"]="constant|util|helper|type|interface|enum|common|types/|utils/|config/|Core|Utils|Types|Constants"
-    ["i18n"]="translation|locale|language|i18n|intl|Translation|Language|Locale"
-    ["multimedia"]="media|audio|video|image|upload|storage|cdn|Media|Video|Audio|Image|Upload"
-    ["premium"]="premium|subscription|billing|payment|stripe|paypal|Premium|Subscription|Payment|Billing"
-    ["public-profiles"]="profile|portfolio|public|share|networking|Profile|Portfolio|Public"
-    ["recommendations"]="recommend|suggest|ai|ml|llm|claude|analysis|Recommend|Analysis|AI"
-    ["admin"]="admin|dashboard|manage|control|monitor|stats|Admin|Dashboard|Manage"
-    ["analytics"]="analytic|metric|track|event|report|insight|Analytics|Metric|Track"
-    ["cv-processing"]="cv|resume|pdf|document|process|parse|generate|CV|Resume|Document|Process"
-)
+declare -A SUBMODULE_MAPPING
+SUBMODULE_MAPPING["auth"]="auth|login|signin|signup|token|session|permission|user|credential|Auth|User|Session"
+SUBMODULE_MAPPING["core"]="constant|util|helper|type|interface|enum|common|types/|utils/|config/|Core|Utils|Types|Constants"
+SUBMODULE_MAPPING["i18n"]="translation|locale|language|i18n|intl|Translation|Language|Locale"
+SUBMODULE_MAPPING["multimedia"]="media|audio|video|image|upload|storage|cdn|Media|Video|Audio|Image|Upload"
+SUBMODULE_MAPPING["premium"]="premium|subscription|billing|payment|stripe|paypal|Premium|Subscription|Payment|Billing"
+SUBMODULE_MAPPING["public-profiles"]="profile|portfolio|public|share|networking|Profile|Portfolio|Public"
+SUBMODULE_MAPPING["recommendations"]="recommend|suggest|ai|ml|llm|claude|analysis|Recommend|Analysis|AI"
+SUBMODULE_MAPPING["admin"]="admin|dashboard|manage|control|monitor|stats|Admin|Dashboard|Manage"
+SUBMODULE_MAPPING["analytics"]="analytic|metric|track|event|report|insight|Analytics|Metric|Track"
+SUBMODULE_MAPPING["cv-processing"]="cv|resume|pdf|document|process|parse|generate|CV|Resume|Document|Process"
 
 # Fast file discovery for root violations
 for root_dir in "${ROOT_CODE_DIRS[@]}"; do
