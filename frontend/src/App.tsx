@@ -8,6 +8,7 @@ import { SubscriptionMonitor } from './components/dev/SubscriptionMonitor';
 import { SimpleModuleDemo } from './components/dev/SimpleModuleDemo';
 import { GlobalLayout } from './components/layout/GlobalLayout';
 import { WorkflowLayout as _WorkflowLayout } from './components/layout/WorkflowLayout';
+import { I18nProvider } from '@cvplus/i18n/react';
 import './i18n/config';
 
 // Lazy load heavy components to reduce initial bundle size

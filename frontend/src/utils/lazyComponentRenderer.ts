@@ -31,9 +31,9 @@ const LAZY_COMPONENT_LOADERS: Record<string, ComponentLoader> = {
   InteractiveTimeline: () => import('../components/features/InteractiveTimeline').then(m => ({ default: m.InteractiveTimeline })),
   
   // Media components - heaviest, most benefit from lazy loading
-  AIPodcastPlayer: () => import('../components/features/AI-Powered/AIPodcastPlayer').then(m => ({ default: m.AIPodcastPlayer })),
-  VideoIntroduction: () => import('../components/features/VideoIntroduction').then(m => ({ default: m.VideoIntroduction })),
-  PortfolioGallery: () => import('../components/features/PortfolioGallery').then(m => ({ default: m.PortfolioGallery })),
+  AIPodcastPlayer: () => import('@cvplus/multimedia/components/players/AIPodcastPlayer').then(m => ({ default: m.default })),
+  VideoIntroduction: () => import('@cvplus/multimedia/components/generation/VideoIntroduction').then(m => ({ default: m.default })),
+  PortfolioGallery: () => import('@cvplus/multimedia/components/gallery/PortfolioGallery').then(m => ({ default: m.default })),
   TestimonialsCarousel: () => import('../components/features/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })),
   
   // Personality insights

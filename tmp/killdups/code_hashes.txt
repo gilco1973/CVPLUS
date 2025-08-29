@@ -73,3 +73,20 @@ acab369e5992f796a4bf6ee73ee29bcf74030120f21622a9a69f71eb387ebf3e|/Users/gklainer
 0f1e1cbe52ff2349201422a3912a35684b60e6bd49c29d54e1ea2f5f66f42d1e|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-component-props.ts|||exportinterfaceportalqrintegrationpropsextendsportalcomponentprops{
 489ac314e2c7b9aee66bf7ff7a24eee46a0a478aa797d1b3f568e5d4a015beac|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-component-props.ts|||exportinterfaceportalchatinterfacepropsextendsportalcomponentprops{
 2062a9a0aa3244f839098b0b1058a58f4f9c0d88e1f9d05247b2151c3e1daa95|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-component-props.ts|||exportinterfacebaseportalcomponentpropsextendscvfeatureprops{
+feaace50b7e95875c590f20aadb41d395f9468bfedeedc52f7b81f6917e46791|/Users/gklainert/Documents/cvplus/frontend/src/types/externalData.ts|124|124|exporttypedatacategory=keyofexternaldataresult['data'];
+37415989c8dc49934263d88f9a19de0e5df1e3c9315d396a7ae2d4861af4dd4b|/Users/gklainert/Documents/cvplus/frontend/src/types/externalData.ts| 'hobbies' | 'interests'>;|125|125|exporttypeitemtype=keyofomit<selecteditems,'skills'
+4bfb8b32120c86b2fd7b25e07d0a7d052aa9723b5380c6af5a21aa3965d0bf48|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportalcomponentpropsextendscvfeatureprops{
+348694363382184f83352287e5c52db7465e46e4d3bbf1013b7a63a7fd84ee28|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportallayoutpropsextendsportalcomponentprops{
+37b6efba893fdc695e7b388935548a2685fd6321d5e887141deafe1a6f8ccf19|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportaldeploymentstatuspropsextendsportalcomponentprops{
+231472a2bce025ea7cb48bd4dd5af0e85e3f14e1f37546fd4aecac2edcdd428b|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportalsectionspropsextendsportalcomponentprops{
+9b41dc620ac514203d7180b35c2e2d9f727b06bb6cd626274c6701619b87917b|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportalsectioncustomizationextendsfeaturecustomization{
+0f1e1cbe52ff2349201422a3912a35684b60e6bd49c29d54e1ea2f5f66f42d1e|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportalqrintegrationpropsextendsportalcomponentprops{
+489ac314e2c7b9aee66bf7ff7a24eee46a0a478aa797d1b3f568e5d4a015beac|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exportinterfaceportalchatinterfacepropsextendsportalcomponentprops{
+544d4d00fd1ccd143d9ea311fe7c163f59c374ae21bee7c454086f3cccb0cd04|/Users/gklainert/Documents/cvplus/frontend/src/types/portal-types.ts|||exporttypeportalserviceresult<t>=serviceresult<t,portalerror>;
+0a25805cdb907c4d0bd797e84a30ec5d2049f8aa56922645593f033b25f2e1cd|/Users/gklainert/Documents/cvplus/frontend/src/types/ats.ts|||exporttypeenhancedatsresult=serviceenhancedatsresult;
+dad57c25d6db6c8d384a5a0b5a5d76770e8a2adc31d732c3b497280c566b0666|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|||exportfunctionisarray<t>(value:unknown):valueist[]{
+17838c246baa4c8709857dd6a1350df8ac55b7dcb4b80ee080c2f8f852eaeb8c|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|||exportfunctionisstring(value:unknown):valueisstring{
+7526f43ba3a3b07cca2d270f144db757a6caa8a2fc03888587e18ca636952c3d|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|||exportfunctionisnumber(value:unknown):valueisnumber{
+41641c67f57db7e1de4002db05560297d359d5ff39414ae5fc5b0bf4e47bd881|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|||exportfunctionisobject(value:unknown):valueisrecord<string,unknown>{
+ec59fd1b318db17bfbbae5d9f23e9450a34e8d346572e0234d9b27f50203cbe1|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|||exportfunctiongeterrormessage(error:unknown):string{
+673f51116d3ce2de8e87e25f0f7eb59e6bc828d992c51178c781c1523116eb14|/Users/gklainert/Documents/cvplus/frontend/src/types/error-handling.ts|107|107|exportfunctionhandleunknownerror(error:unknown):apperror{

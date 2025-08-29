@@ -1,9 +1,9 @@
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { simpleCorsOptions } from '../config/cors';
+import { simpleCorsOptions } from '@cvplus/core/config';
 import { calendarIntegrationService } from '../services/calendar-integration.service';
-import { requireCalendarPermissions } from '../utils/auth';
+import { requireCalendarPermissions } from '@cvplus/core/utils/auth';
 
 export const bookMeeting = onCall(
   {

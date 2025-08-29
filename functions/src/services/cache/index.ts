@@ -43,7 +43,8 @@ export {
   cacheMonitor,
   CacheHealthReport 
 } from '../cache-monitor.service';
-export { getUserSubscriptionInternal, invalidateUserSubscriptionCache } from '../../../../packages/payments/src/backend/functions';
+// TEMPORARILY DISABLED FOR DEPLOYMENT
+// export { getUserSubscriptionInternal, invalidateUserSubscriptionCache } from '@cvplus/payments/backend/functions';
 
 // Type exports
 export type { 

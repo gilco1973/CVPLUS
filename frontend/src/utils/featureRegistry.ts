@@ -5,7 +5,7 @@ import { CVFeatureProps, ComponentRegistry } from '../types/cv-features';
 import { ContactForm } from '../components/features/ContactForm';
 
 // AI-Powered Components - IMPLEMENTED
-import { AIPodcastPlayer } from '../components/features/AI-Powered/AIPodcastPlayer';
+import { AIPodcastPlayer } from '@cvplus/multimedia/components/players/AIPodcastPlayer';
 import { ATSOptimization } from '../components/features/AI-Powered/ATSOptimization';
 import { SkillsAnalytics } from '../components/features/AI-Powered/SkillsAnalytics';
 import { AIChatAssistant } from '../components/features/AI-Powered/AIChatAssistant';
@@ -21,14 +21,14 @@ import { SkillsVisualization } from '../components/features/Visual/SkillsVisuali
 import { AchievementCards } from '../components/features/Visual/AchievementCards';
 
 // Media Components - IMPLEMENTED
-import { PortfolioGallery } from '../components/features/Media/PortfolioGallery';
+import { PortfolioGallery } from '@cvplus/multimedia/components/gallery/PortfolioGallery';
 
 // Components to be implemented in future phases
 // import { KeywordEnhancement } from '../components/features/AI-Powered/KeywordEnhancement';
 // import { AchievementHighlighting } from '../components/features/AI-Powered/AchievementHighlighting';
 // import { PrivacyMode } from '../components/features/AI-Powered/PrivacyMode';
 // import { PublicProfile } from '../components/features/AI-Powered/PublicProfile';
-// import { VideoIntroduction } from '../components/features/AI-Powered/VideoIntroduction';
+import { VideoIntroduction } from '@cvplus/multimedia/components/generation/VideoIntroduction';
 // import { PersonalityInsights } from '../components/features/AI-Powered/PersonalityInsights';
 // import { LanguageProficiency } from '../components/features/Visual/LanguageProficiency';
 // import { CertificationBadges } from '../components/features/Visual/CertificationBadges';
@@ -52,7 +52,7 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
   'skills-analytics': SkillsAnalytics,
   
   // KeywordEnhancement, AchievementHighlighting, PrivacyMode, PublicProfile, 
-  // VideoIntroduction, PersonalityInsights - To be implemented in future phases
+  // PersonalityInsights - To be implemented in future phases
   // 'KeywordEnhancement': KeywordEnhancement,
   // 'keyword-enhancement': KeywordEnhancement,
   // 'AchievementHighlighting': AchievementHighlighting,
@@ -61,8 +61,8 @@ export const FEATURE_COMPONENTS: ComponentRegistry = {
   // 'privacy-mode': PrivacyMode,
   // 'PublicProfile': PublicProfile,
   // 'public-profile': PublicProfile,
-  // 'VideoIntroduction': VideoIntroduction,
-  // 'video-introduction': VideoIntroduction,
+  'VideoIntroduction': VideoIntroduction,
+  'video-introduction': VideoIntroduction,
   // 'PersonalityInsights': PersonalityInsights,
   // 'personality-insights': PersonalityInsights,
 

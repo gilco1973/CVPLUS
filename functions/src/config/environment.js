@@ -1,29 +1,65 @@
+"use strict";
 /**
  * Secure Environment Configuration System
  * Provides comprehensive validation, sanitization, and security for environment variables
  */
-import * as functions from 'firebase-functions';
-import { config as loadDotenv } from 'dotenv';
-import * as path from 'path';
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.environmentUtils = exports.config = exports.SecurityEventType = void 0;
+const functions = __importStar(require("firebase-functions"));
+const dotenv_1 = require("dotenv");
+const path = __importStar(require("path"));
 // Load environment variables from .env file
 // This must happen before any validation or configuration loading
 if (process.env.NODE_ENV !== 'production') {
     const envPath = path.resolve(__dirname, '../../.env');
-    loadDotenv({ path: envPath });
+    (0, dotenv_1.config)({ path: envPath });
     // Log successful env loading for debugging
     if (process.env.PROJECT_ID) {
         functions.logger.info('Environment variables loaded successfully from .env file');
     }
 }
 // Security event types for monitoring
-export var SecurityEventType;
+var SecurityEventType;
 (function (SecurityEventType) {
     SecurityEventType["MISSING_REQUIRED_VAR"] = "MISSING_REQUIRED_VAR";
     SecurityEventType["INVALID_FORMAT"] = "INVALID_FORMAT";
     SecurityEventType["SUSPICIOUS_VALUE"] = "SUSPICIOUS_VALUE";
     SecurityEventType["VALIDATION_ERROR"] = "VALIDATION_ERROR";
     SecurityEventType["CONFIG_ACCESS_ATTEMPT"] = "CONFIG_ACCESS_ATTEMPT";
-})(SecurityEventType || (SecurityEventType = {}));
+})(SecurityEventType || (exports.SecurityEventType = SecurityEventType = {}));
 // Security logger for configuration issues
 class SecurityLogger {
     static logSecurityEvent(event, details = {}, sensitive = false) {
@@ -349,9 +385,9 @@ class SecureEnvironmentLoader {
 SecureEnvironmentLoader.instance = null;
 SecureEnvironmentLoader.validationResult = null;
 // Export secure configuration
-export const config = SecureEnvironmentLoader.getConfig();
+exports.config = SecureEnvironmentLoader.getConfig();
 // Export utility functions for monitoring and health checks
-export const environmentUtils = {
+exports.environmentUtils = {
     getValidationResult: () => SecureEnvironmentLoader.getValidationResult(),
     validateConfiguration: () => SecureEnvironmentLoader.validateConfiguration(),
     performHealthCheck: () => SecureEnvironmentLoader.performHealthCheck(),

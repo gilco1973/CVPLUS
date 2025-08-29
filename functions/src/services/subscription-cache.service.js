@@ -1,5 +1,8 @@
-import { logger } from 'firebase-functions';
-export class SubscriptionCacheService {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.subscriptionCache = exports.SubscriptionCacheService = void 0;
+const firebase_functions_1 = require("firebase-functions");
+class SubscriptionCacheService {
     constructor() {
         this.cache = new Map();
         this.DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -20,7 +23,7 @@ export class SubscriptionCacheService {
             const entry = this.cache.get(key);
             if (!entry) {
                 this.stats.misses++;
-                logger.debug('Cache miss for user subscription', { userId });
+                firebase_functions_1.logger.debug('Cache miss for user subscription', { userId });
                 return null;
             }
             // Check if cache entry has expired
@@ -28,14 +31,14 @@ export class SubscriptionCacheService {
                 this.cache.delete(key);
                 this.stats.misses++;
                 this.stats.size = this.cache.size;
-                logger.debug('Cache expired for user subscription', {
+                firebase_functions_1.logger.debug('Cache expired for user subscription', {
                     userId,
                     age: Date.now() - entry.timestamp
                 });
                 return null;
             }
             this.stats.hits++;
-            logger.debug('Cache hit for user subscription', {
+            firebase_functions_1.logger.debug('Cache hit for user subscription', {
                 userId,
                 age: Date.now() - entry.timestamp,
                 ttl: entry.ttl
@@ -43,7 +46,7 @@ export class SubscriptionCacheService {
             return entry.data;
         }
         catch (error) {
-            logger.error('Error getting cached subscription', { error, userId });
+            firebase_functions_1.logger.error('Error getting cached subscription', { error, userId });
             return null; // Fail gracefully, caller will fetch from database
         }
     }
@@ -65,14 +68,14 @@ export class SubscriptionCacheService {
             };
             this.cache.set(key, entry);
             this.stats.size = this.cache.size;
-            logger.debug('Cached user subscription', {
+            firebase_functions_1.logger.debug('Cached user subscription', {
                 userId,
                 ttl: ttl / 1000,
                 cacheSize: this.cache.size
             });
         }
         catch (error) {
-            logger.error('Error caching subscription', { error, userId });
+            firebase_functions_1.logger.error('Error caching subscription', { error, userId });
             // Don't throw error - caching is optional
         }
     }
@@ -86,12 +89,12 @@ export class SubscriptionCacheService {
             if (deleted) {
                 this.stats.invalidations++;
                 this.stats.size = this.cache.size;
-                logger.info('Invalidated cached subscription', { userId });
+                firebase_functions_1.logger.info('Invalidated cached subscription', { userId });
             }
             return deleted;
         }
         catch (error) {
-            logger.error('Error invalidating cached subscription', { error, userId });
+            firebase_functions_1.logger.error('Error invalidating cached subscription', { error, userId });
             return false;
         }
     }
@@ -103,10 +106,10 @@ export class SubscriptionCacheService {
             const previousSize = this.cache.size;
             this.cache.clear();
             this.stats.size = 0;
-            logger.info('Cleared all cached subscriptions', { previousSize });
+            firebase_functions_1.logger.info('Cleared all cached subscriptions', { previousSize });
         }
         catch (error) {
-            logger.error('Error clearing subscription cache', { error });
+            firebase_functions_1.logger.error('Error clearing subscription cache', { error });
         }
     }
     /**
@@ -133,7 +136,7 @@ export class SubscriptionCacheService {
             }
             this.stats.size = this.cache.size;
             if (removedCount > 0) {
-                logger.debug('Cleaned up expired cache entries', {
+                firebase_functions_1.logger.debug('Cleaned up expired cache entries', {
                     removedCount,
                     remainingSize: this.cache.size
                 });
@@ -141,7 +144,7 @@ export class SubscriptionCacheService {
             return removedCount;
         }
         catch (error) {
-            logger.error('Error cleaning up expired cache entries', { error });
+            firebase_functions_1.logger.error('Error cleaning up expired cache entries', { error });
             return 0;
         }
     }
@@ -159,10 +162,11 @@ export class SubscriptionCacheService {
         }
     }
 }
+exports.SubscriptionCacheService = SubscriptionCacheService;
 // Singleton instance
-export const subscriptionCache = new SubscriptionCacheService();
+exports.subscriptionCache = new SubscriptionCacheService();
 // Periodic cleanup (runs every 10 minutes)
 setInterval(() => {
-    subscriptionCache.cleanupExpired();
+    exports.subscriptionCache.cleanupExpired();
 }, 10 * 60 * 1000);
 //# sourceMappingURL=subscription-cache.service.js.map

@@ -1,29 +1,32 @@
-import { logger } from 'firebase-functions';
-import { db } from '../config/firebase';
-import { subscriptionCache } from './subscription-cache.service';
-export class CachedSubscriptionService {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.cachedSubscriptionService = exports.CachedSubscriptionService = void 0;
+const firebase_functions_1 = require("firebase-functions");
+const firebase_1 = require("../config/firebase");
+const subscription_cache_service_1 = require("./subscription-cache.service");
+class CachedSubscriptionService {
     /**
      * Get user subscription with caching
      */
     async getUserSubscription(userId) {
         try {
             // Try to get from cache first
-            const cachedData = subscriptionCache.get(userId);
+            const cachedData = subscription_cache_service_1.subscriptionCache.get(userId);
             if (cachedData) {
-                logger.debug('Retrieved subscription from cache', { userId });
+                firebase_functions_1.logger.debug('Retrieved subscription from cache', { userId });
                 return cachedData;
             }
             // Cache miss - fetch from database
-            logger.debug('Cache miss - fetching subscription from database', { userId });
+            firebase_functions_1.logger.debug('Cache miss - fetching subscription from database', { userId });
             const subscriptionData = await this.fetchFromDatabase(userId);
             // Cache the result for future requests
-            subscriptionCache.set(userId, subscriptionData);
+            subscription_cache_service_1.subscriptionCache.set(userId, subscriptionData);
             return subscriptionData;
         }
         catch (error) {
-            logger.error('Error getting cached user subscription', { error, userId });
+            firebase_functions_1.logger.error('Error getting cached user subscription', { error, userId });
             // Fallback to direct database access on any error
-            logger.warn('Falling back to direct database access', { userId });
+            firebase_functions_1.logger.warn('Falling back to direct database access', { userId });
             return await this.fetchFromDatabase(userId);
         }
     }
@@ -32,11 +35,11 @@ export class CachedSubscriptionService {
      */
     invalidateUserSubscription(userId) {
         try {
-            const invalidated = subscriptionCache.invalidate(userId);
-            logger.info('Subscription cache invalidated', { userId, invalidated });
+            const invalidated = subscription_cache_service_1.subscriptionCache.invalidate(userId);
+            firebase_functions_1.logger.info('Subscription cache invalidated', { userId, invalidated });
         }
         catch (error) {
-            logger.error('Error invalidating subscription cache', { error, userId });
+            firebase_functions_1.logger.error('Error invalidating subscription cache', { error, userId });
         }
     }
     /**
@@ -45,19 +48,19 @@ export class CachedSubscriptionService {
     async updateUserSubscription(userId, subscriptionData) {
         try {
             // Update in database
-            await db
+            await firebase_1.db
                 .collection('userSubscriptions')
                 .doc(userId)
                 .set(subscriptionData, { merge: true });
             // Invalidate cache to ensure fresh data on next read
             this.invalidateUserSubscription(userId);
-            logger.info('User subscription updated and cache invalidated', {
+            firebase_functions_1.logger.info('User subscription updated and cache invalidated', {
                 userId,
                 updatedFields: Object.keys(subscriptionData)
             });
         }
         catch (error) {
-            logger.error('Error updating user subscription', { error, userId });
+            firebase_functions_1.logger.error('Error updating user subscription', { error, userId });
             throw error;
         }
     }
@@ -65,18 +68,18 @@ export class CachedSubscriptionService {
      * Get cache statistics for monitoring
      */
     getCacheStats() {
-        return subscriptionCache.getStats();
+        return subscription_cache_service_1.subscriptionCache.getStats();
     }
     /**
      * Clear all cached subscriptions (for maintenance)
      */
     clearAllCache() {
-        subscriptionCache.clearAll();
-        logger.info('All subscription cache cleared');
+        subscription_cache_service_1.subscriptionCache.clearAll();
+        firebase_functions_1.logger.info('All subscription cache cleared');
     }
     async fetchFromDatabase(userId) {
         try {
-            const subscriptionDoc = await db
+            const subscriptionDoc = await firebase_1.db
                 .collection('userSubscriptions')
                 .doc(userId)
                 .get();
@@ -95,11 +98,11 @@ export class CachedSubscriptionService {
                         externalData: false
                     }
                 };
-                logger.debug('No subscription found, returning default', { userId });
+                firebase_functions_1.logger.debug('No subscription found, returning default', { userId });
                 return defaultSubscription;
             }
             const data = subscriptionDoc.data();
-            logger.debug('Fetched subscription from database', {
+            firebase_functions_1.logger.debug('Fetched subscription from database', {
                 userId,
                 subscriptionStatus: data.subscriptionStatus,
                 lifetimeAccess: data.lifetimeAccess
@@ -107,11 +110,12 @@ export class CachedSubscriptionService {
             return data;
         }
         catch (error) {
-            logger.error('Error fetching subscription from database', { error, userId });
+            firebase_functions_1.logger.error('Error fetching subscription from database', { error, userId });
             throw error;
         }
     }
 }
+exports.CachedSubscriptionService = CachedSubscriptionService;
 // Singleton instance
-export const cachedSubscriptionService = new CachedSubscriptionService();
+exports.cachedSubscriptionService = new CachedSubscriptionService();
 //# sourceMappingURL=cached-subscription.service.js.map

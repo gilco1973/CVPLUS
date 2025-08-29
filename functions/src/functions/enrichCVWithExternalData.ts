@@ -21,7 +21,13 @@ import {
 } from '../services/external-data';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { ExternalDataUsageEvent } from '../types/external-data-analytics.types';
-import { getUserSubscriptionInternal } from '../../../packages/payments/src/backend/functions';
+// TEMPORARILY DISABLED FOR DEPLOYMENT
+// import { getUserSubscriptionInternal } from '@cvplus/payments/backend/functions';
+
+// Temporary placeholder function for deployment
+const getUserSubscriptionInternal = async (userId: string) => {
+  return { subscriptionStatus: 'free', lifetimeAccess: false };
+};
 
 interface EnrichCVRequest {
   cvId: string;

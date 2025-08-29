@@ -91,7 +91,7 @@ interface SecureConfig {
 }
 export declare const config: SecureConfig;
 export declare const environmentUtils: {
-    getValidationResult: () => ValidationResult | null;
+    getValidationResult: () => ValidationResult;
     validateConfiguration: () => ValidationResult;
     performHealthCheck: () => {
         status: "healthy" | "degraded" | "unhealthy";

@@ -12,9 +12,10 @@ import { SkillsVisualization } from '../components/features/Visual/SkillsVisuali
 import { CalendarIntegration } from '../components/features/CalendarIntegration';
 import { InteractiveTimeline } from '../components/features/InteractiveTimeline';
 import { AchievementCards } from '../components/features/Visual/AchievementCards';
-import { AIPodcastPlayer } from '../components/features/AI-Powered/AIPodcastPlayer';
-import { VideoIntroduction } from '../components/features/VideoIntroduction';
-import { PortfolioGallery } from '../components/features/PortfolioGallery';
+// Import multimedia components from the multimedia module
+import { AIPodcastPlayer } from '@cvplus/multimedia/components/players/AIPodcastPlayer';
+import { VideoIntroduction } from '@cvplus/multimedia/components/generation/VideoIntroduction';
+import { PortfolioGallery } from '@cvplus/multimedia/components/gallery/PortfolioGallery';
 import { TestimonialsCarousel } from '../components/features/TestimonialsCarousel';
 import { CertificationBadges } from '../components/features/CertificationBadges';
 import { PersonalityInsights } from '../components/features/PersonalityInsights';

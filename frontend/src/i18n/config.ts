@@ -1,57 +1,87 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-http-backend';
+// CVPlus i18n integration - Phase 3 implementation
+import { initializeI18n, SUPPORTED_LANGUAGES, LANGUAGE_CONFIG } from '@cvplus/i18n';
+import { translationService } from '@cvplus/i18n';
 
-export const supportedLanguages = {
-  en: { name: 'English', flag: '🇺🇸', dir: 'ltr', locale: 'en-US' },
-  es: { name: 'Español', flag: '🇪🇸', dir: 'ltr', locale: 'es-ES' },
-  fr: { name: 'Français', flag: '🇫🇷', dir: 'ltr', locale: 'fr-FR' },
-  de: { name: 'Deutsch', flag: '🇩🇪', dir: 'ltr', locale: 'de-DE' },
-  zh: { name: '中文', flag: '🇨🇳', dir: 'ltr', locale: 'zh-CN' },
-  ar: { name: 'العربية', flag: '🇸🇦', dir: 'rtl', locale: 'ar-SA' },
-  pt: { name: 'Português', flag: '🇧🇷', dir: 'ltr', locale: 'pt-BR' },
-  ja: { name: '日本語', flag: '🇯🇵', dir: 'ltr', locale: 'ja-JP' }
-} as const;
+// Re-export types and constants from the CVPlus i18n module
+export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+export const supportedLanguages = LANGUAGE_CONFIG;
 
-export type SupportedLanguage = keyof typeof supportedLanguages;
+// Initialize CVPlus i18n system
+const initCVPlusI18n = async () => {
+  try {
+    await initializeI18n({
+      defaultLanguage: 'en',
+      fallbackLanguage: 'en',
+      enableProfessionalTerms: true,
+      enableCaching: true,
+      enableRTL: true,
+      enableDevTools: process.env.NODE_ENV === 'development',
+      namespaces: ['common', 'cv', 'features', 'premium', 'errors', 'forms'],
+      preloadLanguages: ['en'],
+      detectionOptions: {
+        order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
+        caches: ['localStorage', 'cookie'],
+        storageKey: 'cvplus-language',
+      },
+      backendOptions: {
+        loadPath: '/locales/{{lng}}/{{ns}}.json',
+      },
+    });
+    
+    console.log('CVPlus i18n system initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize CVPlus i18n system:', error);
+    // Fallback to basic i18next configuration if CVPlus i18n fails
+    await initBasicI18n();
+  }
+};
 
-i18n
-  .use(Backend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
-    
-    interpolation: {
-      escapeValue: false, // React already escapes values
-    },
-    
-    backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
-    },
-    
-    ns: ['common', 'cv', 'features', 'premium', 'errors', 'forms'],
-    defaultNS: 'common',
-    
-    detection: {
-      order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
-      caches: ['localStorage', 'cookie'],
-      lookupLocalStorage: 'cvplus-language',
-      lookupCookie: 'cvplus-language',
-    },
-    
-    react: {
-      useSuspense: true,
-    },
-    
-    // Load translations immediately for default language
-    preload: ['en'],
-    
-    // Allow keys to be used as fallback
-    keySeparator: '.',
-    nsSeparator: ':',
-  });
+// Fallback basic i18n configuration
+const initBasicI18n = async () => {
+  const i18next = await import('i18next');
+  const { initReactI18next } = await import('react-i18next');
+  const LanguageDetector = await import('i18next-browser-languagedetector');
+  const Backend = await import('i18next-http-backend');
 
-export default i18n;
+  await i18next.default
+    .use(Backend.default)
+    .use(LanguageDetector.default)
+    .use(initReactI18next)
+    .init({
+      fallbackLng: 'en',
+      debug: process.env.NODE_ENV === 'development',
+      
+      interpolation: {
+        escapeValue: false,
+      },
+      
+      backend: {
+        loadPath: '/locales/{{lng}}/{{ns}}.json',
+      },
+      
+      ns: ['common', 'cv', 'features', 'premium', 'errors', 'forms'],
+      defaultNS: 'common',
+      
+      detection: {
+        order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
+        caches: ['localStorage', 'cookie'],
+        lookupLocalStorage: 'cvplus-language',
+        lookupCookie: 'cvplus-language',
+      },
+      
+      react: {
+        useSuspense: true,
+      },
+      
+      preload: ['en'],
+      keySeparator: '.',
+      nsSeparator: ':',
+    });
+};
+
+// Initialize the i18n system
+initCVPlusI18n();
+
+// Export translation service for direct use
+export { translationService };
+export default translationService;

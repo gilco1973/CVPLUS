@@ -9,9 +9,11 @@ import { Request, Response, NextFunction } from 'express';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { logger } from 'firebase-functions';
-import { FeatureRegistry } from '../services/premium/featureRegistry';
-import { SecureRateLimitGuard } from '../services/security/rate-limit-guard.service';
-import { SecurityMonitorService } from '../services/security/security-monitor.service';
+// Circular import removed - use relative path;
+import { SecureRateLimitGuard, SecurityMonitorService } from '@cvplus/premium/backend';
+
+const rateLimitGuard = new SecureRateLimitGuard();
+const securityMonitor = new SecurityMonitorService();
 
 interface AuthenticatedRequest extends Request {
   user?: {
