@@ -100,3 +100,27 @@ scripts/cleanup/*.js
 docs/implementation/
 docs/fixes/*-summary.md
 docs/tools/*-generated.md
+
+# Temporary markdown files
+*-task.md
+*-orchestration*.md
+
+# Temporary directories
+tmp/
+context-system/
+emu
+emulator-data/
+
+# Additional backup patterns
+*.tar.gz
+backups/migration/archives/
+
+# User-specific files
+users.json
+
+# Additional debug files
+*-debug.log
+
+# Duplicate sample projects
+cvplus-html/
+klainert-web-portal/
