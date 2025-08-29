@@ -26,6 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [showVideoControls, setShowVideoControls] = useState(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [_showFeatures, _setShowFeatures] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -101,12 +102,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const handlePlay = () => setIsVideoPlaying(true);
     const handlePause = () => setIsVideoPlaying(false);
     const handleEnded = () => setIsVideoPlaying(false);
+    const handleLoadedData = () => setIsVideoLoaded(true);
+    const handleError = () => setIsVideoLoaded(false);
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('error', handleError);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -114,6 +119,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('error', handleError);
     };
   }, []);
 
@@ -240,7 +247,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               onMouseEnter={() => setShowVideoControls(true)}
               onMouseLeave={() => setShowVideoControls(false)}
             >
-              {/* Video Element - Placeholder for now */}
+              {/* Video Element - CVPlus Intro Video */}
               <div className="relative aspect-video bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
                 <video
                   ref={videoRef}
@@ -248,30 +255,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   muted={isVideoMuted}
                   loop
                   playsInline
-                  poster="/images/cv-demo-thumbnail.jpg"
                   onLoadedMetadata={() => {
                     // Auto-set duration when video metadata loads
                     if (videoRef.current) {
                       setVideoDuration(videoRef.current.duration);
+                      setIsVideoLoaded(true);
                     }
                   }}
                 >
-                  {/* Placeholder - Replace with actual video source */}
-                  <source src="/videos/cv-generation-demo.mp4" type="video/mp4" />
-                  <source src="/videos/cv-generation-demo.webm" type="video/webm" />
+                  {/* CVPlus intro video */}
+                  <source src="/videos/intro.mp4" type="video/mp4" />
                   {t('hero.accessibility.browserNotSupported')}
                 </video>
                 
-                {/* Video Placeholder Content */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-gray-300">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-blue-600/20 rounded-full flex items-center justify-center">
-                      <Play className="w-10 h-10 text-blue-400" />
+                {/* Video Placeholder Content - Only show when video is not loaded */}
+                {!isVideoLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-gray-300">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-blue-600/20 rounded-full flex items-center justify-center">
+                        <Play className="w-10 h-10 text-blue-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">{t('hero.video.title')}</h3>
+                      <p className="text-gray-400">{t('hero.video.description')}</p>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{t('hero.video.title')}</h3>
-                    <p className="text-gray-400">{t('hero.video.description')}</p>
                   </div>
-                </div>
+                )}
 
                 {/* Video Controls Overlay */}
                 <div>

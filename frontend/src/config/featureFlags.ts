@@ -14,6 +14,7 @@ interface FeatureFlags {
   reactSPA: FeatureFlagConfig;
   jsonAPIs: FeatureFlagConfig;
   componentRenderer: FeatureFlagConfig;
+  adminIntegration: FeatureFlagConfig;
 }
 
 export const FEATURE_FLAGS: FeatureFlags = {
@@ -45,6 +46,17 @@ export const FEATURE_FLAGS: FeatureFlags = {
   componentRenderer: {
     enabled: false, // Disabled - using pure React components now
     rolloutPercentage: 0, // 0% - legacy system being removed
+  },
+
+  // Admin Components Integration (gradual rollout from @cvplus/admin)
+  adminIntegration: {
+    enabled: true, // Enable admin submodule integration
+    rolloutPercentage: 25, // Conservative rollout for testing
+    userWhitelist: ['admin'], // Admin users get early access
+    routeSpecific: {
+      'admin-analytics': 25,    // Admin analytics dashboard
+      'admin-monitoring': 0,    // Performance dashboard (pending integration work)
+    }
   }
 };
 

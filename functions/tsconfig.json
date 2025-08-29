@@ -55,7 +55,7 @@
     "src/tests/**/*",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "src/functions/payments/**/*",
-    "src/functions/payments-wrapper/**/*"
+    "src/scripts/functions/payments/**/*",
+    "src/scripts/functions/payments-wrapper/**/*"
   ]
 }

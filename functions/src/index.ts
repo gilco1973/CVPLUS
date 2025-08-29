@@ -62,16 +62,16 @@ if (!admin.apps.length) {
 // These functions remain in root as they orchestrate cross-submodule workflows
 
 // Calendar and Meeting Functions
-export { bookMeeting } from './functions/bookMeeting';
+export { bookMeeting } from './scripts/functions/bookMeeting';
 export { 
   generateCalendarEvents,
   syncToGoogleCalendar,
   syncToOutlook,
   downloadICalFile,
   handleCalendarCallback
-} from './functions/calendarIntegration';
-export { generateAvailabilityCalendar } from './functions/generateAvailabilityCalendar';
-export { sendSchedulingEmail } from './functions/sendSchedulingEmail';
+} from './scripts/functions/calendarIntegration';
+export { generateAvailabilityCalendar } from './scripts/functions/generateAvailabilityCalendar';
+export { sendSchedulingEmail } from './scripts/functions/sendSchedulingEmail';
 
 // ============================================================================
 // CV PROCESSING FUNCTIONS
