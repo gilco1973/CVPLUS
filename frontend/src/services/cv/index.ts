@@ -10,8 +10,9 @@ export { CVAnalyzer } from './CVAnalyzer';
 export { CVTransformer } from './CVTransformer';
 
 // Main service orchestrator
-export { 
+export {
   CVServiceCore,
+  CVUploadResponse,
   // Legacy compatibility exports
   createJob,
   createDevelopmentJob,

@@ -124,3 +124,5 @@ users.json
 # Duplicate sample projects
 cvplus-html/
 klainert-web-portal/
+.nx/cache/
+.nx/workspace-data/06088284-6B28-5C7E-A723-AC3F0EE25F1D.db-wal

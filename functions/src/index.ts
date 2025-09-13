@@ -79,6 +79,8 @@ export { sendSchedulingEmail } from './scripts/functions/sendSchedulingEmail';
 // All CV processing, analysis, and enhancement functions
 
 export {
+  uploadCV,
+  getCVStatus,
   processCV,
   generateCV,
   generateCVPreview,
