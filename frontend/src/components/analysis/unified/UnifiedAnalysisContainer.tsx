@@ -4,7 +4,7 @@ import { RoleDetectionSection } from '../role-detection/RoleDetectionSection';
 import { RoleDetectionPremiumGate } from '../../role-profiles/premium/RoleDetectionPremiumGate';
 import { RecommendationsContainer } from '../recommendations/RecommendationsContainer';
 import { UnifiedAnalysisProvider, useUnifiedAnalysis } from '../context/UnifiedAnalysisContext';
-import type { Job } from '../../../services/cvService';
+import type { Job } from '@cvplus/core/types';
 import type { DetectedRole } from '../../../types/role-profiles';
 import toast from 'react-hot-toast';
 

@@ -120,16 +120,94 @@ async function handleGeneratePortal(req: Request, res: Response): Promise<void> 
     // Save portal to Firestore
     await db.collection('portals').doc(portalId).set(portalData);
 
-    // TODO: Trigger portal generation process (T032 implementation)
-    // This will be implemented in the actual portal generation phase
+    // Start portal generation process with the public-profiles service
+    try {
+      // Update status to processing
+      await db.collection('portals').doc(portalId).update({
+        status: 'processing',
+        updatedAt: new Date(),
+        processingStartedAt: new Date(),
+      });
 
-    // Return successful response
-    res.status(200).json({
-      success: true,
-      portalId,
-      status: 'queued',
-      message: 'Portal generation initiated successfully',
-    } as GeneratePortalResponse);
+      // Import the portal generation service from the public-profiles package
+      const { portalGenerationService } = await import('../../../packages/public-profiles/src/backend/services/portals/portal-generation.service');
+
+      // Start portal generation (async process)
+      portalGenerationService.generatePortal(processedCvId, portalConfig, {
+        portalId,
+        userId,
+        timeout: 60000, // 60 seconds max
+      }).then(async (result) => {
+        // Update portal with generation results
+        const updateData = {
+          status: result.success ? 'completed' : 'failed',
+          updatedAt: new Date(),
+          processingCompletedAt: new Date(),
+          ...(result.success ? {
+            urls: result.urls,
+            metadata: result.metadata,
+            stepsCompleted: result.stepsCompleted || [],
+          } : {
+            error: result.error,
+            warnings: result.warnings || [],
+          }),
+        };
+
+        await db.collection('portals').doc(portalId).update(updateData);
+
+        // If successful, update the original processed CV with portal URLs
+        if (result.success && result.urls) {
+          await db.collection('processedCVs').doc(processedCvId).update({
+            portalUrls: result.urls,
+            portalId,
+            portalGenerated: true,
+            portalGeneratedAt: new Date(),
+          });
+        }
+      }).catch(async (error) => {
+        // Handle generation failure
+        console.error('Portal generation failed:', error);
+        await db.collection('portals').doc(portalId).update({
+          status: 'failed',
+          updatedAt: new Date(),
+          processingCompletedAt: new Date(),
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+            timestamp: new Date(),
+            context: { processedCvId, portalId },
+          },
+        });
+      });
+
+      // Return immediate successful response (generation continues in background)
+      res.status(200).json({
+        success: true,
+        portalId,
+        status: 'processing',
+        message: 'Portal generation initiated successfully. Check status using portal ID.',
+      } as GeneratePortalResponse);
+
+    } catch (serviceError) {
+      console.error('Error starting portal generation:', serviceError);
+
+      // Update portal status to failed
+      await db.collection('portals').doc(portalId).update({
+        status: 'failed',
+        updatedAt: new Date(),
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: serviceError.message,
+          timestamp: new Date(),
+          context: { processedCvId },
+        },
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to start portal generation',
+      } as GeneratePortalResponse);
+    }
   } catch (error) {
     console.error('Error in generatePortal:', error);
     res.status(500).json({

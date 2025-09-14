@@ -8,7 +8,7 @@ import type {
   RoleProfileAnalysis, 
   RoleBasedRecommendation 
 } from '../../../types/role-profiles';
-import type { Job } from '../../../services/cvService';
+import type { Job } from '@cvplus/core/types';
 
 // Analysis Steps
 export type AnalysisStep = 'analysis' | 'role-detection' | 'improvements' | 'actions';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Zap, Target, AlertCircle, CheckCircle } from 'lucide-react';
-import { generateATSKeywords } from '../services/cvService';
+import { generateATSKeywords } from '@cvplus/cv-processing';
 
 interface JobDescriptionParserProps {
   onKeywordsExtracted: (keywords: {

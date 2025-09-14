@@ -16,7 +16,7 @@ import {
   initialUnifiedAnalysisState,
   unifiedAnalysisActions
 } from './actions';
-import type { Job } from '../../../services/cvService';
+import type { Job } from '@cvplus/core/types';
 import type { DetectedRole } from '../../../types/role-profiles';
 
 // Create Context

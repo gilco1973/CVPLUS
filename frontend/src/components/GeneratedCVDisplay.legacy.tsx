@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Download, FileText, Globe } from 'lucide-react';
-import type { Job } from '../services/cvService';
+import type { Job } from '@cvplus/core/types';
 import { initializeReactComponents } from '../utils/componentRenderer';
 
 interface GeneratedCVDisplayProps {
