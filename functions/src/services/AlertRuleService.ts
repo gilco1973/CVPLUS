@@ -1,124 +1,31 @@
 /**
- * T041: Alert rule management service
+ * T041: Alert rule management in functions/src/services/AlertRuleService.ts
  *
- * Manages alert rules, monitors log events, and triggers notifications
- * when specified conditions are met. Provides comprehensive alerting
- * capabilities for the CVPlus logging system.
+ * Service for managing alert rules, evaluating conditions, and triggering notifications
+ * when log patterns or thresholds are met. Provides comprehensive alert management
+ * for the CVPlus logging system.
  */
 
-import {
-  LoggerFactory,
-  CorrelationService,
-  AlertRule,
-  AlertRuleManager,
-  globalAlertManager,
-  LogLevel,
-  LogDomain,
-  AlertConditionType,
-  type Logger,
-  type LogEntry
-} from '@cvplus/logging';
+import { LoggerFactory, LogLevel, LogDomain, LogEntry } from '@cvplus/logging/backend';
+import { AuditTrailClass as AuditTrail, AuditAction, AuditEventType } from '@cvplus/logging/backend';
+import { firestore } from 'firebase-admin';
 
-export interface AlertRuleCreateRequest {
-  name: string;
-  description?: string;
-  enabled: boolean;
-  conditions: AlertCondition[];
-  actions: AlertAction[];
-  throttle?: AlertThrottle;
-  tags?: string[];
+/**
+ * Alert rule condition types
+ */
+export enum AlertConditionType {
+  ERROR_RATE = 'error_rate',
+  ERROR_COUNT = 'error_count',
+  PERFORMANCE_THRESHOLD = 'performance_threshold',
+  SECURITY_EVENT = 'security_event',
+  LOG_PATTERN = 'log_pattern',
+  VOLUME_SPIKE = 'volume_spike',
+  CUSTOM_METRIC = 'custom_metric'
 }
 
-export interface AlertCondition {
-  type: AlertConditionType;
-  field: string;
-  operator: ComparisonOperator;
-  value: string | number | boolean;
-  timeWindow?: number; // minutes
-  threshold?: number;
-}
-
-export interface AlertAction {
-  type: AlertActionType;
-  configuration: AlertActionConfig;
-}
-
-export interface AlertActionConfig {
-  // Email action
-  email?: {
-    to: string[];
-    cc?: string[];
-    subject: string;
-    template?: string;
-  };
-  // Webhook action
-  webhook?: {
-    url: string;
-    method: 'POST' | 'PUT' | 'PATCH';
-    headers?: Record<string, string>;
-    payload?: Record<string, any>;
-  };
-  // Slack action
-  slack?: {
-    channel: string;
-    message: string;
-    username?: string;
-    iconEmoji?: string;
-  };
-  // SMS action
-  sms?: {
-    to: string[];
-    message: string;
-  };
-}
-
-export interface AlertThrottle {
-  enabled: boolean;
-  windowMinutes: number;
-  maxAlertsPerWindow: number;
-}
-
-export enum ComparisonOperator {
-  EQUALS = 'equals',
-  NOT_EQUALS = 'not_equals',
-  GREATER_THAN = 'greater_than',
-  GREATER_THAN_EQUAL = 'greater_than_equal',
-  LESS_THAN = 'less_than',
-  LESS_THAN_EQUAL = 'less_than_equal',
-  CONTAINS = 'contains',
-  NOT_CONTAINS = 'not_contains',
-  REGEX_MATCH = 'regex_match',
-  IN = 'in',
-  NOT_IN = 'not_in'
-}
-
-export enum AlertActionType {
-  EMAIL = 'email',
-  WEBHOOK = 'webhook',
-  SLACK = 'slack',
-  SMS = 'sms',
-  FIREBASE_NOTIFICATION = 'firebase_notification'
-}
-
-export interface AlertEvent {
-  id: string;
-  ruleId: string;
-  ruleName: string;
-  timestamp: Date;
-  severity: AlertSeverity;
-  triggerLog: LogEntry;
-  matchedConditions: AlertCondition[];
-  actionResults: AlertActionResult[];
-}
-
-export interface AlertActionResult {
-  actionType: AlertActionType;
-  success: boolean;
-  error?: string;
-  executedAt: Date;
-  duration: number;
-}
-
+/**
+ * Alert severity levels
+ */
 export enum AlertSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
@@ -126,67 +33,145 @@ export enum AlertSeverity {
   CRITICAL = 'critical'
 }
 
-export class AlertRuleService {
-  private readonly logger: Logger;
-  private readonly alertManager: AlertRuleManager;
-  private readonly alertHistory: Map<string, AlertEvent[]> = new Map();
-  private readonly throttleState: Map<string, number[]> = new Map(); // ruleId -> timestamps
+/**
+ * Alert notification channels
+ */
+export enum AlertChannel {
+  EMAIL = 'email',
+  SMS = 'sms',
+  SLACK = 'slack',
+  WEBHOOK = 'webhook',
+  PUSH_NOTIFICATION = 'push_notification'
+}
 
-  constructor() {
-    this.logger = LoggerFactory.createLogger('@cvplus/alert-rules');
-    this.alertManager = globalAlertManager;
-  }
+/**
+ * Alert rule condition definition
+ */
+export interface AlertCondition {
+  type: AlertConditionType;
+  threshold: number;
+  timeWindow: number; // seconds
+  aggregation?: 'count' | 'rate' | 'average' | 'max' | 'min';
+  field?: string;
+  pattern?: string; // for log pattern matching
+  comparison: 'greater_than' | 'less_than' | 'equals' | 'contains';
+}
+
+/**
+ * Alert rule configuration
+ */
+export interface AlertRule {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  severity: AlertSeverity;
+  conditions: AlertCondition[];
+  channels: AlertChannel[];
+  recipients: string[]; // email addresses, phone numbers, etc.
+  cooldownPeriod: number; // seconds before re-alerting
+  tags: string[];
+  createdBy: string;
+  createdAt: number;
+  updatedAt: number;
+  lastTriggered?: number;
+  triggerCount: number;
+  filters?: {
+    domains?: LogDomain[];
+    levels?: LogLevel[];
+    functionNames?: string[];
+    userIds?: string[];
+  };
+}
+
+/**
+ * Alert instance when a rule is triggered
+ */
+export interface Alert {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  severity: AlertSeverity;
+  message: string;
+  details: Record<string, any>;
+  triggeredAt: number;
+  resolvedAt?: number;
+  status: 'active' | 'resolved' | 'suppressed';
+  relatedLogIds: string[];
+  notificationsSent: {
+    channel: AlertChannel;
+    recipient: string;
+    sentAt: number;
+    success: boolean;
+  }[];
+}
+
+/**
+ * Alert evaluation context
+ */
+interface AlertEvaluationContext {
+  rule: AlertRule;
+  logs: LogEntry[];
+  timeWindow: number;
+  currentTime: number;
+}
+
+/**
+ * Service for managing alert rules and processing alerts
+ */
+export class AlertRuleService {
+  private logger = LoggerFactory.createLogger('alert-rule-service');
+  private db = firestore();
+  private auditTrail = new AuditTrail();
 
   /**
    * Create a new alert rule
    */
-  async createAlertRule(request: AlertRuleCreateRequest): Promise<string> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async createAlertRule(rule: Omit<AlertRule, 'id' | 'createdAt' | 'updatedAt' | 'triggerCount'>): Promise<string> {
     try {
-      // Validate request
-      this.validateAlertRuleRequest(request);
+      const ruleId = this.db.collection('alert_rules').doc().id;
+      const now = Date.now();
 
-      // Create alert rule
-      const ruleId = await this.alertManager.createRule({
-        id: this.generateRuleId(),
-        name: request.name,
-        description: request.description || '',
-        enabled: request.enabled,
-        conditions: request.conditions.map(condition => ({
-          type: condition.type,
-          field: condition.field,
-          operator: condition.operator,
-          value: condition.value,
-          timeWindow: condition.timeWindow || 5
-        })),
-        actions: this.convertActions(request.actions),
-        createdAt: new Date(),
-        updatedAt: new Date()
+      const newRule: AlertRule = {
+        ...rule,
+        id: ruleId,
+        createdAt: now,
+        updatedAt: now,
+        triggerCount: 0
+      };
+
+      await this.db.collection('alert_rules').doc(ruleId).set(newRule);
+
+      // Audit log
+      this.auditTrail.logAction({
+        action: AuditAction.CREATE,
+        eventType: AuditEventType.SYSTEM_CONFIG,
+        resourceType: 'alert_rule',
+        resourceId: ruleId,
+        userId: rule.createdBy,
+        details: {
+          ruleName: rule.name,
+          severity: rule.severity,
+          conditionCount: rule.conditions.length
+        }
       });
 
-      // Initialize throttle state if needed
-      if (request.throttle?.enabled) {
-        this.throttleState.set(ruleId, []);
-      }
-
-      this.logger.info('Alert rule created', {
-        event: 'alert.rule.created',
+      this.logger.log(LogLevel.INFO, 'Alert rule created', {
+        domain: LogDomain.AUDIT,
+        event: 'ALERT_RULE_CREATED',
         ruleId,
-        ruleName: request.name,
-        correlationId
+        ruleName: rule.name,
+        severity: rule.severity
       });
 
       return ruleId;
-
     } catch (error) {
-      this.logger.error('Failed to create alert rule', {
-        event: 'alert.rule.create.failed',
-        ruleName: request.name,
-        correlationId,
+      this.logger.log(LogLevel.ERROR, 'Failed to create alert rule', {
+        domain: LogDomain.SYSTEM,
+        event: 'ALERT_RULE_CREATION_FAILED',
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
         }
       });
       throw error;
@@ -196,41 +181,54 @@ export class AlertRuleService {
   /**
    * Update an existing alert rule
    */
-  async updateAlertRule(ruleId: string, updates: Partial<AlertRuleCreateRequest>): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async updateAlertRule(ruleId: string, updates: Partial<AlertRule>, updatedBy: string): Promise<void> {
     try {
-      const existingRule = await this.alertManager.getRule(ruleId);
-      if (!existingRule) {
-        throw new Error(`Alert rule not found: ${ruleId}`);
+      const ruleRef = this.db.collection('alert_rules').doc(ruleId);
+      const ruleDoc = await ruleRef.get();
+
+      if (!ruleDoc.exists) {
+        throw new Error(`Alert rule ${ruleId} not found`);
       }
 
-      // Validate updates if provided
-      if (updates) {
-        this.validateAlertRuleRequest(updates as AlertRuleCreateRequest);
-      }
-
-      // Update rule
-      await this.alertManager.updateRule(ruleId, {
-        ...existingRule,
+      const currentRule = ruleDoc.data() as AlertRule;
+      const updatedRule = {
+        ...currentRule,
         ...updates,
-        updatedAt: new Date()
+        updatedAt: Date.now()
+      };
+
+      await ruleRef.update(updatedRule);
+
+      // Audit log
+      this.auditTrail.logAction({
+        action: AuditAction.UPDATE,
+        eventType: AuditEventType.SYSTEM_CONFIG,
+        resourceType: 'alert_rule',
+        resourceId: ruleId,
+        userId: updatedBy,
+        details: {
+          changes: updates,
+          previousValues: Object.keys(updates).reduce((prev, key) => {
+            prev[key] = currentRule[key as keyof AlertRule];
+            return prev;
+          }, {} as Record<string, any>)
+        }
       });
 
-      this.logger.info('Alert rule updated', {
-        event: 'alert.rule.updated',
+      this.logger.log(LogLevel.INFO, 'Alert rule updated', {
+        domain: LogDomain.AUDIT,
+        event: 'ALERT_RULE_UPDATED',
         ruleId,
-        correlationId
+        updatedBy,
+        changes: Object.keys(updates)
       });
-
     } catch (error) {
-      this.logger.error('Failed to update alert rule', {
-        event: 'alert.rule.update.failed',
+      this.logger.log(LogLevel.ERROR, 'Failed to update alert rule', {
+        domain: LogDomain.SYSTEM,
+        event: 'ALERT_RULE_UPDATE_FAILED',
         ruleId,
-        correlationId,
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }
       });
       throw error;
@@ -240,109 +238,45 @@ export class AlertRuleService {
   /**
    * Delete an alert rule
    */
-  async deleteAlertRule(ruleId: string): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async deleteAlertRule(ruleId: string, deletedBy: string): Promise<void> {
     try {
-      await this.alertManager.removeRule(ruleId);
+      const ruleRef = this.db.collection('alert_rules').doc(ruleId);
+      const ruleDoc = await ruleRef.get();
 
-      // Clean up throttle state
-      this.throttleState.delete(ruleId);
-
-      // Clean up alert history
-      this.alertHistory.delete(ruleId);
-
-      this.logger.info('Alert rule deleted', {
-        event: 'alert.rule.deleted',
-        ruleId,
-        correlationId
-      });
-
-    } catch (error) {
-      this.logger.error('Failed to delete alert rule', {
-        event: 'alert.rule.delete.failed',
-        ruleId,
-        correlationId,
-        error: {
-          name: error.name,
-          message: error.message
-        }
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get alert rule by ID
-   */
-  async getAlertRule(ruleId: string): Promise<AlertRule | null> {
-    try {
-      return await this.alertManager.getRule(ruleId);
-    } catch (error) {
-      this.logger.error('Failed to get alert rule', {
-        event: 'alert.rule.get.failed',
-        ruleId,
-        error: {
-          name: error.name,
-          message: error.message
-        }
-      });
-      return null;
-    }
-  }
-
-  /**
-   * List all alert rules
-   */
-  async listAlertRules(): Promise<AlertRule[]> {
-    try {
-      return await this.alertManager.listRules();
-    } catch (error) {
-      this.logger.error('Failed to list alert rules', {
-        event: 'alert.rule.list.failed',
-        error: {
-          name: error.name,
-          message: error.message
-        }
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Enable/disable alert rule
-   */
-  async toggleAlertRule(ruleId: string, enabled: boolean): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
-    try {
-      const rule = await this.alertManager.getRule(ruleId);
-      if (!rule) {
-        throw new Error(`Alert rule not found: ${ruleId}`);
+      if (!ruleDoc.exists) {
+        throw new Error(`Alert rule ${ruleId} not found`);
       }
 
-      await this.alertManager.updateRule(ruleId, {
-        ...rule,
-        enabled,
-        updatedAt: new Date()
+      const rule = ruleDoc.data() as AlertRule;
+      await ruleRef.delete();
+
+      // Audit log
+      this.auditTrail.logAction({
+        action: AuditAction.DELETE,
+        eventType: AuditEventType.SYSTEM_CONFIG,
+        resourceType: 'alert_rule',
+        resourceId: ruleId,
+        userId: deletedBy,
+        details: {
+          ruleName: rule.name,
+          severity: rule.severity,
+          triggerCount: rule.triggerCount
+        }
       });
 
-      this.logger.info('Alert rule toggled', {
-        event: 'alert.rule.toggled',
+      this.logger.log(LogLevel.INFO, 'Alert rule deleted', {
+        domain: LogDomain.AUDIT,
+        event: 'ALERT_RULE_DELETED',
         ruleId,
-        enabled,
-        correlationId
+        deletedBy
       });
-
     } catch (error) {
-      this.logger.error('Failed to toggle alert rule', {
-        event: 'alert.rule.toggle.failed',
+      this.logger.log(LogLevel.ERROR, 'Failed to delete alert rule', {
+        domain: LogDomain.SYSTEM,
+        event: 'ALERT_RULE_DELETION_FAILED',
         ruleId,
-        enabled,
-        correlationId,
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }
       });
       throw error;
@@ -350,315 +284,365 @@ export class AlertRuleService {
   }
 
   /**
-   * Process log entry and check for alert triggers
+   * Get all alert rules
    */
-  async processLogForAlerts(log: LogEntry): Promise<AlertEvent[]> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-    const triggeredEvents: AlertEvent[] = [];
-
+  async getAlertRules(filters?: { enabled?: boolean; severity?: AlertSeverity }): Promise<AlertRule[]> {
     try {
-      const rules = await this.alertManager.listRules();
-      const enabledRules = rules.filter(rule => rule.enabled);
+      let query = this.db.collection('alert_rules') as any;
 
-      for (const rule of enabledRules) {
-        try {
-          const shouldTrigger = await this.evaluateRule(rule, log);
+      if (filters?.enabled !== undefined) {
+        query = query.where('enabled', '==', filters.enabled);
+      }
+      if (filters?.severity) {
+        query = query.where('severity', '==', filters.severity);
+      }
 
-          if (shouldTrigger) {
-            // Check throttle
-            if (this.isThrottled(rule.id)) {
-              this.logger.debug('Alert rule throttled', {
-                event: 'alert.rule.throttled',
-                ruleId: rule.id,
-                ruleName: rule.name,
-                correlationId
-              });
-              continue;
-            }
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      } as AlertRule));
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Failed to get alert rules', {
+        domain: LogDomain.SYSTEM,
+        event: 'ALERT_RULES_FETCH_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+      throw error;
+    }
+  }
 
-            // Create alert event
-            const alertEvent = await this.createAlertEvent(rule, log);
-            triggeredEvents.push(alertEvent);
+  /**
+   * Evaluate all enabled alert rules against recent logs
+   */
+  async evaluateAlertRules(logs: LogEntry[]): Promise<Alert[]> {
+    try {
+      const rules = await this.getAlertRules({ enabled: true });
+      const triggeredAlerts: Alert[] = [];
 
-            // Execute actions
-            await this.executeAlertActions(rule, alertEvent);
-
-            // Update throttle state
-            this.updateThrottleState(rule.id);
-
-            // Store in history
-            this.addToHistory(rule.id, alertEvent);
-
+      for (const rule of rules) {
+        // Check cooldown period
+        if (rule.lastTriggered) {
+          const timeSinceLastTrigger = Date.now() - rule.lastTriggered;
+          if (timeSinceLastTrigger < (rule.cooldownPeriod * 1000)) {
+            continue; // Skip rule due to cooldown
           }
-        } catch (error) {
-          this.logger.error('Error evaluating alert rule', {
-            event: 'alert.rule.evaluation.error',
-            ruleId: rule.id,
-            correlationId,
-            error: {
-              name: error.name,
-              message: error.message
-            }
-          });
         }
+
+        const matchingLogs = this.filterLogsForRule(logs, rule);
+        const alerts = await this.evaluateRule(rule, matchingLogs);
+        triggeredAlerts.push(...alerts);
       }
 
-      return triggeredEvents;
-
+      return triggeredAlerts;
     } catch (error) {
-      this.logger.error('Error processing log for alerts', {
-        event: 'alert.log.processing.error',
-        logId: log.id,
-        correlationId,
+      this.logger.log(LogLevel.ERROR, 'Failed to evaluate alert rules', {
+        domain: LogDomain.SYSTEM,
+        event: 'ALERT_EVALUATION_FAILED',
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }
       });
-      return [];
+      throw error;
     }
   }
 
   /**
-   * Get alert history for a rule
+   * Evaluate a single alert rule
    */
-  getAlertHistory(ruleId: string, limit: number = 100): AlertEvent[] {
-    const history = this.alertHistory.get(ruleId) || [];
-    return history.slice(0, limit);
-  }
+  private async evaluateRule(rule: AlertRule, logs: LogEntry[]): Promise<Alert[]> {
+    const alerts: Alert[] = [];
 
-  /**
-   * Get alert statistics
-   */
-  getAlertStatistics(): {
-    totalRules: number;
-    enabledRules: number;
-    totalAlerts: number;
-    alertsByRule: Record<string, number>;
-    alertsBySeverity: Record<AlertSeverity, number>;
-  } {
-    const statistics = {
-      totalRules: 0,
-      enabledRules: 0,
-      totalAlerts: 0,
-      alertsByRule: {} as Record<string, number>,
-      alertsBySeverity: {} as Record<AlertSeverity, number>
-    };
-
-    // Initialize severity counts
-    Object.values(AlertSeverity).forEach(severity => {
-      statistics.alertsBySeverity[severity] = 0;
-    });
-
-    // Count alerts from history
-    for (const [ruleId, events] of this.alertHistory.entries()) {
-      statistics.alertsByRule[ruleId] = events.length;
-      statistics.totalAlerts += events.length;
-
-      events.forEach(event => {
-        statistics.alertsBySeverity[event.severity]++;
-      });
-    }
-
-    return statistics;
-  }
-
-  private validateAlertRuleRequest(request: AlertRuleCreateRequest): void {
-    if (!request.name || request.name.trim().length === 0) {
-      throw new Error('Alert rule name is required');
-    }
-
-    if (!request.conditions || request.conditions.length === 0) {
-      throw new Error('At least one condition is required');
-    }
-
-    if (!request.actions || request.actions.length === 0) {
-      throw new Error('At least one action is required');
-    }
-
-    // Validate conditions
-    for (const condition of request.conditions) {
-      if (!condition.field || !condition.operator || condition.value === undefined) {
-        throw new Error('Condition must have field, operator, and value');
-      }
-    }
-
-    // Validate actions
-    for (const action of request.actions) {
-      if (!action.type || !action.configuration) {
-        throw new Error('Action must have type and configuration');
-      }
-    }
-  }
-
-  private async evaluateRule(rule: AlertRule, log: LogEntry): Promise<boolean> {
-    // Check if any condition matches
     for (const condition of rule.conditions) {
-      const matches = await this.evaluateCondition(condition, log);
-      if (matches) {
-        return true; // OR logic - any condition can trigger
+      const context: AlertEvaluationContext = {
+        rule,
+        logs,
+        timeWindow: condition.timeWindow,
+        currentTime: Date.now()
+      };
+
+      if (await this.evaluateCondition(condition, context)) {
+        const alert = await this.createAlert(rule, condition, logs);
+        alerts.push(alert);
+
+        // Update rule trigger count and last triggered time
+        await this.updateRuleTriggerInfo(rule.id);
       }
     }
-    return false;
+
+    return alerts;
   }
 
-  private async evaluateCondition(condition: any, log: LogEntry): Promise<boolean> {
-    const fieldValue = this.getFieldValue(log, condition.field);
+  /**
+   * Evaluate a single alert condition
+   */
+  private async evaluateCondition(condition: AlertCondition, context: AlertEvaluationContext): Promise<boolean> {
+    const { logs, timeWindow, currentTime } = context;
 
-    if (fieldValue === undefined) {
-      return false;
-    }
+    // Filter logs by time window
+    const windowStart = currentTime - (timeWindow * 1000);
+    const windowLogs = logs.filter(log => log.timestamp >= windowStart);
 
-    switch (condition.operator) {
-      case ComparisonOperator.EQUALS:
-        return fieldValue === condition.value;
-      case ComparisonOperator.NOT_EQUALS:
-        return fieldValue !== condition.value;
-      case ComparisonOperator.GREATER_THAN:
-        return Number(fieldValue) > Number(condition.value);
-      case ComparisonOperator.GREATER_THAN_EQUAL:
-        return Number(fieldValue) >= Number(condition.value);
-      case ComparisonOperator.LESS_THAN:
-        return Number(fieldValue) < Number(condition.value);
-      case ComparisonOperator.LESS_THAN_EQUAL:
-        return Number(fieldValue) <= Number(condition.value);
-      case ComparisonOperator.CONTAINS:
-        return String(fieldValue).toLowerCase().includes(String(condition.value).toLowerCase());
-      case ComparisonOperator.NOT_CONTAINS:
-        return !String(fieldValue).toLowerCase().includes(String(condition.value).toLowerCase());
-      case ComparisonOperator.REGEX_MATCH:
-        const regex = new RegExp(String(condition.value), 'i');
-        return regex.test(String(fieldValue));
-      case ComparisonOperator.IN:
-        const inValues = Array.isArray(condition.value) ? condition.value : [condition.value];
-        return inValues.includes(fieldValue);
-      case ComparisonOperator.NOT_IN:
-        const notInValues = Array.isArray(condition.value) ? condition.value : [condition.value];
-        return !notInValues.includes(fieldValue);
+    switch (condition.type) {
+      case AlertConditionType.ERROR_RATE:
+        return this.evaluateErrorRate(condition, windowLogs);
+
+      case AlertConditionType.ERROR_COUNT:
+        return this.evaluateErrorCount(condition, windowLogs);
+
+      case AlertConditionType.PERFORMANCE_THRESHOLD:
+        return this.evaluatePerformanceThreshold(condition, windowLogs);
+
+      case AlertConditionType.SECURITY_EVENT:
+        return this.evaluateSecurityEvent(condition, windowLogs);
+
+      case AlertConditionType.LOG_PATTERN:
+        return this.evaluateLogPattern(condition, windowLogs);
+
+      case AlertConditionType.VOLUME_SPIKE:
+        return this.evaluateVolumeSpike(condition, windowLogs);
+
       default:
         return false;
     }
   }
 
-  private getFieldValue(log: LogEntry, fieldPath: string): any {
-    const parts = fieldPath.split('.');
-    let value: any = log;
+  /**
+   * Evaluate error rate condition
+   */
+  private evaluateErrorRate(condition: AlertCondition, logs: LogEntry[]): boolean {
+    const totalLogs = logs.length;
+    const errorLogs = logs.filter(log => log.level === LogLevel.ERROR).length;
+    const errorRate = totalLogs > 0 ? errorLogs / totalLogs : 0;
 
-    for (const part of parts) {
-      if (value && typeof value === 'object' && part in value) {
-        value = value[part];
-      } else {
-        return undefined;
+    return condition.comparison === 'greater_than'
+      ? errorRate > condition.threshold
+      : errorRate < condition.threshold;
+  }
+
+  /**
+   * Evaluate error count condition
+   */
+  private evaluateErrorCount(condition: AlertCondition, logs: LogEntry[]): boolean {
+    const errorCount = logs.filter(log => log.level === LogLevel.ERROR).length;
+
+    return condition.comparison === 'greater_than'
+      ? errorCount > condition.threshold
+      : errorCount < condition.threshold;
+  }
+
+  /**
+   * Evaluate performance threshold condition
+   */
+  private evaluatePerformanceThreshold(condition: AlertCondition, logs: LogEntry[]): boolean {
+    const performanceLogs = logs.filter(log =>
+      log.context?.performance?.duration !== undefined
+    );
+
+    if (performanceLogs.length === 0) return false;
+
+    const durations = performanceLogs.map(log => log.context!.performance!.duration);
+    let value: number;
+
+    switch (condition.aggregation) {
+      case 'average':
+        value = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+        break;
+      case 'max':
+        value = Math.max(...durations);
+        break;
+      case 'min':
+        value = Math.min(...durations);
+        break;
+      default:
+        value = durations.length;
+    }
+
+    return condition.comparison === 'greater_than'
+      ? value > condition.threshold
+      : value < condition.threshold;
+  }
+
+  /**
+   * Evaluate security event condition
+   */
+  private evaluateSecurityEvent(condition: AlertCondition, logs: LogEntry[]): boolean {
+    const securityLogs = logs.filter(log => log.domain === LogDomain.SECURITY);
+    return securityLogs.length > condition.threshold;
+  }
+
+  /**
+   * Evaluate log pattern condition
+   */
+  private evaluateLogPattern(condition: AlertCondition, logs: LogEntry[]): boolean {
+    if (!condition.pattern) return false;
+
+    const regex = new RegExp(condition.pattern, 'i');
+    const matchingLogs = logs.filter(log =>
+      regex.test(log.message) ||
+      (log.context && JSON.stringify(log.context).match(regex))
+    );
+
+    return matchingLogs.length > condition.threshold;
+  }
+
+  /**
+   * Evaluate volume spike condition
+   */
+  private evaluateVolumeSpike(condition: AlertCondition, logs: LogEntry[]): boolean {
+    // Compare current window volume to historical average
+    // This is a simplified implementation
+    return logs.length > condition.threshold;
+  }
+
+  /**
+   * Filter logs based on rule filters
+   */
+  private filterLogsForRule(logs: LogEntry[], rule: AlertRule): LogEntry[] {
+    let filteredLogs = logs;
+
+    if (rule.filters) {
+      if (rule.filters.domains) {
+        filteredLogs = filteredLogs.filter(log =>
+          rule.filters!.domains!.includes(log.domain)
+        );
+      }
+
+      if (rule.filters.levels) {
+        filteredLogs = filteredLogs.filter(log =>
+          rule.filters!.levels!.includes(log.level)
+        );
+      }
+
+      if (rule.filters.functionNames) {
+        filteredLogs = filteredLogs.filter(log =>
+          log.context?.functionName &&
+          rule.filters!.functionNames!.includes(log.context.functionName)
+        );
+      }
+
+      if (rule.filters.userIds) {
+        filteredLogs = filteredLogs.filter(log =>
+          log.context?.userId &&
+          rule.filters!.userIds!.includes(log.context.userId)
+        );
       }
     }
 
-    return value;
+    return filteredLogs;
   }
 
-  private async createAlertEvent(rule: AlertRule, log: LogEntry): Promise<AlertEvent> {
-    const severity = this.determineSeverity(rule, log);
+  /**
+   * Create an alert when a rule is triggered
+   */
+  private async createAlert(rule: AlertRule, condition: AlertCondition, relatedLogs: LogEntry[]): Promise<Alert> {
+    const alertId = this.db.collection('alerts').doc().id;
+    const now = Date.now();
 
-    return {
-      id: this.generateEventId(),
+    const alert: Alert = {
+      id: alertId,
       ruleId: rule.id,
       ruleName: rule.name,
-      timestamp: new Date(),
-      severity,
-      triggerLog: log,
-      matchedConditions: rule.conditions,
-      actionResults: []
+      severity: rule.severity,
+      message: `Alert: ${rule.name} - ${condition.type} threshold exceeded`,
+      details: {
+        condition,
+        threshold: condition.threshold,
+        timeWindow: condition.timeWindow,
+        triggerTime: now
+      },
+      triggeredAt: now,
+      status: 'active',
+      relatedLogIds: relatedLogs.map(log => log.id),
+      notificationsSent: []
     };
-  }
 
-  private determineSeverity(rule: AlertRule, log: LogEntry): AlertSeverity {
-    // Simple severity mapping based on log level
-    switch (log.level) {
-      case LogLevel.FATAL:
-        return AlertSeverity.CRITICAL;
-      case LogLevel.ERROR:
-        return AlertSeverity.HIGH;
-      case LogLevel.WARN:
-        return AlertSeverity.MEDIUM;
-      default:
-        return AlertSeverity.LOW;
-    }
-  }
+    // Store alert
+    await this.db.collection('alerts').doc(alertId).set(alert);
 
-  private async executeAlertActions(rule: AlertRule, alertEvent: AlertEvent): Promise<void> {
-    // In a real implementation, you would execute the actual actions
-    // For now, we'll just log the action execution
-    const correlationId = CorrelationService.getCurrentCorrelationId();
+    // Send notifications
+    await this.sendAlertNotifications(alert, rule);
 
-    this.logger.info('Alert actions executed', {
-      event: 'alert.actions.executed',
+    this.logger.log(LogLevel.ERROR, 'Alert triggered', {
+      domain: LogDomain.SYSTEM,
+      event: 'ALERT_TRIGGERED',
+      alertId,
       ruleId: rule.id,
-      alertEventId: alertEvent.id,
-      actionCount: rule.actions.length,
-      correlationId
+      severity: rule.severity,
+      conditionType: condition.type
     });
 
-    // Simulate action results
-    alertEvent.actionResults = rule.actions.map(action => ({
-      actionType: action.type as AlertActionType,
-      success: true,
-      executedAt: new Date(),
-      duration: Math.random() * 1000 // Random duration for simulation
-    }));
+    return alert;
   }
 
-  private isThrottled(ruleId: string): boolean {
-    const timestamps = this.throttleState.get(ruleId);
-    if (!timestamps) return false;
+  /**
+   * Send notifications for an alert
+   */
+  private async sendAlertNotifications(alert: Alert, rule: AlertRule): Promise<void> {
+    for (const channel of rule.channels) {
+      for (const recipient of rule.recipients) {
+        try {
+          // This would integrate with actual notification services
+          await this.sendNotification(channel, recipient, alert);
 
-    const now = Date.now();
-    const windowMs = 5 * 60 * 1000; // 5 minutes default
-    const maxAlerts = 10; // default limit
+          alert.notificationsSent.push({
+            channel,
+            recipient,
+            sentAt: Date.now(),
+            success: true
+          });
+        } catch (error) {
+          alert.notificationsSent.push({
+            channel,
+            recipient,
+            sentAt: Date.now(),
+            success: false
+          });
 
-    // Remove old timestamps outside the window
-    const recentTimestamps = timestamps.filter(ts => now - ts < windowMs);
-    this.throttleState.set(ruleId, recentTimestamps);
-
-    return recentTimestamps.length >= maxAlerts;
-  }
-
-  private updateThrottleState(ruleId: string): void {
-    const timestamps = this.throttleState.get(ruleId) || [];
-    timestamps.push(Date.now());
-    this.throttleState.set(ruleId, timestamps);
-  }
-
-  private addToHistory(ruleId: string, alertEvent: AlertEvent): void {
-    const history = this.alertHistory.get(ruleId) || [];
-    history.unshift(alertEvent); // Add to beginning
-
-    // Keep only last 1000 events per rule
-    if (history.length > 1000) {
-      history.splice(1000);
+          this.logger.log(LogLevel.ERROR, 'Failed to send alert notification', {
+            domain: LogDomain.SYSTEM,
+            event: 'ALERT_NOTIFICATION_FAILED',
+            alertId: alert.id,
+            channel,
+            recipient,
+            error: {
+              message: error instanceof Error ? error.message : 'Unknown error'
+            }
+          });
+        }
+      }
     }
-
-    this.alertHistory.set(ruleId, history);
   }
 
-  private convertActions(actions: AlertAction[]): any[] {
-    // Convert actions to internal format
-    return actions.map(action => ({
-      type: action.type,
-      configuration: action.configuration
-    }));
+  /**
+   * Send a single notification (placeholder implementation)
+   */
+  private async sendNotification(channel: AlertChannel, recipient: string, alert: Alert): Promise<void> {
+    // This would integrate with actual notification services like:
+    // - SendGrid for email
+    // - Twilio for SMS
+    // - Slack API for Slack
+    // - Webhooks for custom integrations
+
+    this.logger.log(LogLevel.INFO, 'Alert notification sent', {
+      domain: LogDomain.SYSTEM,
+      event: 'ALERT_NOTIFICATION_SENT',
+      alertId: alert.id,
+      channel,
+      recipient: '[RECIPIENT_REDACTED]'
+    });
   }
 
-  private generateRuleId(): string {
-    return `rule_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-  }
-
-  private generateEventId(): string {
-    return `event_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  /**
+   * Update rule trigger information
+   */
+  private async updateRuleTriggerInfo(ruleId: string): Promise<void> {
+    const ruleRef = this.db.collection('alert_rules').doc(ruleId);
+    await ruleRef.update({
+      lastTriggered: Date.now(),
+      triggerCount: firestore.FieldValue.increment(1)
+    });
   }
 }
-
-/**
- * Global alert rule service instance
- */
-export const globalAlertRuleService = new AlertRuleService();
-
-export default AlertRuleService;

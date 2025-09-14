@@ -1625,6 +1625,657 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/e2e-flows": {
+      "name": "@cvplus/e2e-flows",
+      "type": "lib",
+      "data": {
+        "root": "packages/e2e-flows",
+        "name": "@cvplus/e2e-flows",
+        "tags": [
+          "npm:public",
+          "npm:e2e-testing",
+          "npm:cvplus",
+          "npm:firebase",
+          "npm:jest",
+          "npm:typescript",
+          "npm:test-automation",
+          "npm:api-testing",
+          "npm:mock-data"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "build",
+              "build:watch",
+              "dev",
+              "test",
+              "test:watch",
+              "test:coverage",
+              "test:contract",
+              "test:integration",
+              "test:unit",
+              "test:performance",
+              "test:load",
+              "test:load:baseline",
+              "test:load:medium",
+              "test:load:high",
+              "test:load:stress",
+              "test:load:10k",
+              "test:load:breakpoint",
+              "test:load:recovery",
+              "test:load:complete",
+              "test:load:jest",
+              "test:load:validate",
+              "test:e2e",
+              "test:e2e:real-apis",
+              "test:smoke",
+              "test:ci",
+              "lint",
+              "lint:fix",
+              "format",
+              "format:check",
+              "health-check",
+              "mock-data:generate",
+              "mock-data:clean",
+              "mock-data:clear-cache",
+              "e2e:run",
+              "e2e:list",
+              "api-test:endpoint",
+              "api-test:suite",
+              "scenario:complete-journey",
+              "scenario:submodule-integration",
+              "scenario:api-contracts",
+              "scenario:load-test",
+              "scenario:regression-check",
+              "dev:start",
+              "test:report",
+              "firebase:emulators",
+              "validate:quickstart"
+            ]
+          },
+          "description": "End-to-end testing flows for CVPlus - comprehensive user journey validation, submodule testing, and API validation",
+          "js": {
+            "packageName": "@cvplus/e2e-flows",
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "tsc",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:watch"
+            },
+            "metadata": {
+              "scriptContent": "tsc --watch",
+              "runCommand": "npm run build:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/index.ts",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "jest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:watch"
+            },
+            "metadata": {
+              "scriptContent": "jest --watch",
+              "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:contract": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:contract"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/contract",
+              "runCommand": "npm run test:contract"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:integration": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:integration"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/integration",
+              "runCommand": "npm run test:integration"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:unit": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:unit"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/unit",
+              "runCommand": "npm run test:unit"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:performance": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:performance"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/performance",
+              "runCommand": "npm run test:performance"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts",
+              "runCommand": "npm run test:load"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:baseline": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:baseline"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=baseline",
+              "runCommand": "npm run test:load:baseline"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:medium": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:medium"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=medium",
+              "runCommand": "npm run test:load:medium"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:high": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:high"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=high",
+              "runCommand": "npm run test:load:high"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:stress": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:stress"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=stress",
+              "runCommand": "npm run test:load:stress"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:10k": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:10k"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=stress --users=10000",
+              "runCommand": "npm run test:load:10k"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:breakpoint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:breakpoint"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=breakpoint",
+              "runCommand": "npm run test:load:breakpoint"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:recovery": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:recovery"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=recovery",
+              "runCommand": "npm run test:load:recovery"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:complete": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:complete"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/run-load-tests.ts --scenario=complete",
+              "runCommand": "npm run test:load:complete"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:jest": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:jest"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/load/concurrent-load.test.ts",
+              "runCommand": "npm run test:load:jest"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:load:validate": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:load:validate"
+            },
+            "metadata": {
+              "scriptContent": "ts-node tests/load/validate-load-tests.ts",
+              "runCommand": "npm run test:load:validate"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:e2e": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:e2e"
+            },
+            "metadata": {
+              "scriptContent": "npm run test:contract && npm run test:integration",
+              "runCommand": "npm run test:e2e"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:e2e:real-apis": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:e2e:real-apis"
+            },
+            "metadata": {
+              "scriptContent": "E2E_MOCK_APIS=false npm run test:e2e",
+              "runCommand": "npm run test:e2e:real-apis"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:smoke": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:smoke"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/contract --testTimeout=30000",
+              "runCommand": "npm run test:smoke"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:ci": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ci"
+            },
+            "metadata": {
+              "scriptContent": "jest --ci --coverage --maxWorkers=2",
+              "runCommand": "npm run test:ci"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint src tests --ext .ts,.tsx",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "lint:fix": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint:fix"
+            },
+            "metadata": {
+              "scriptContent": "eslint src tests --ext .ts,.tsx --fix",
+              "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format"
+            },
+            "metadata": {
+              "scriptContent": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+              "runCommand": "npm run format"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format:check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format:check"
+            },
+            "metadata": {
+              "scriptContent": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+              "runCommand": "npm run format:check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "health-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "health-check"
+            },
+            "metadata": {
+              "scriptContent": "node scripts/health-check.js",
+              "runCommand": "npm run health-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:generate": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:generate"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/mock-data-commands.ts generate",
+              "runCommand": "npm run mock-data:generate"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:clean"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/mock-data-commands.ts clean",
+              "runCommand": "npm run mock-data:clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:clear-cache": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:clear-cache"
+            },
+            "metadata": {
+              "scriptContent": "rm -rf .cache/mock-data",
+              "runCommand": "npm run mock-data:clear-cache"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "e2e:run": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "e2e:run"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/e2e-commands.ts run",
+              "runCommand": "npm run e2e:run"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "e2e:list": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "e2e:list"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/e2e-commands.ts list",
+              "runCommand": "npm run e2e:list"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "api-test:endpoint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "api-test:endpoint"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/api-test-commands.ts endpoint",
+              "runCommand": "npm run api-test:endpoint"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "api-test:suite": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "api-test:suite"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/api-test-commands.ts suite",
+              "runCommand": "npm run api-test:suite"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:complete-journey": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:complete-journey"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/complete-journey.ts",
+              "runCommand": "npm run scenario:complete-journey"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:submodule-integration": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:submodule-integration"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/submodule-integration.ts",
+              "runCommand": "npm run scenario:submodule-integration"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:api-contracts": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:api-contracts"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/api-contracts.ts",
+              "runCommand": "npm run scenario:api-contracts"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:load-test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:load-test"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/load-test.ts",
+              "runCommand": "npm run scenario:load-test"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:regression-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:regression-check"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/regression-check.ts",
+              "runCommand": "npm run scenario:regression-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev:start": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev:start"
+            },
+            "metadata": {
+              "scriptContent": "concurrently \"npm run build:watch\" \"npm run test:watch\"",
+              "runCommand": "npm run dev:start"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:report": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:report"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage --coverageReporters=html",
+              "runCommand": "npm run test:report"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "firebase:emulators": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "firebase:emulators"
+            },
+            "metadata": {
+              "scriptContent": "firebase emulators:start --only firestore,auth,storage",
+              "runCommand": "npm run firebase:emulators"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "validate:quickstart": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "validate:quickstart"
+            },
+            "metadata": {
+              "scriptContent": "ts-node scripts/validate-quickstart.ts",
+              "runCommand": "npm run validate:quickstart"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/payments": {
       "name": "@cvplus/payments",
       "type": "lib",
@@ -24850,6 +25501,103 @@
       {
         "source": "@cvplus/analytics",
         "target": "npm:stripe",
+        "type": "static"
+      }
+    ],
+    "@cvplus/e2e-flows": [
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/uuid",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-tools",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:ts-jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:axios",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:commander",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:uuid",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:winston",
         "type": "static"
       }
     ],
@@ -55776,5 +56524,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757825705298
+  "computedAt": 1757875008320
 }

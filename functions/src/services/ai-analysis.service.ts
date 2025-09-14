@@ -377,8 +377,7 @@ export class AIAnalysisService {
         { role: 'user', content: prompt }
       ],
       temperature: options.temperature,
-      max_tokens: options.maxTokens,
-      timeout: TIMEOUT_MS
+      max_tokens: options.maxTokens
     });
 
     const content = response.choices[0]?.message?.content;

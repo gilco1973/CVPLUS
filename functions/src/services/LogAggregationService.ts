@@ -1,151 +1,154 @@
 /**
- * T040: Log aggregation service
+ * T040: Log aggregation service in functions/src/services/LogAggregationService.ts
  *
- * Aggregates, processes, and analyzes logs from multiple sources.
- * Provides real-time log processing, filtering, and statistical analysis.
+ * Service for aggregating, processing, and analyzing logs from across the CVPlus ecosystem.
+ * Handles log collection from multiple sources, real-time processing, and metric generation.
  */
 
-import {
-  LoggerFactory,
-  CorrelationService,
-  LogLevel,
-  LogDomain,
-  LogStream,
-  LogStreamManager,
-  globalStreamManager,
-  AlertRule,
-  AlertRuleManager,
-  globalAlertManager,
-  type Logger,
-  type LogEntry
-} from '@cvplus/logging';
+import { LoggerFactory, LogLevel, LogDomain, LogEntry } from '@cvplus/logging/backend';
+import { firestore } from 'firebase-admin';
 
-export interface LogAggregationConfig {
+/**
+ * Log aggregation configuration
+ */
+export interface AggregationConfig {
   batchSize: number;
   flushInterval: number; // milliseconds
-  retentionPeriod: number; // days
-  maxMemoryUsage: number; // bytes
+  retentionDays: number;
   enableRealTimeProcessing: boolean;
-  enableStatisticalAnalysis: boolean;
+  enableMetricGeneration: boolean;
+  alertThresholds: {
+    errorRate: number;
+    performanceThreshold: number;
+    securityEventThreshold: number;
+  };
 }
 
-export interface LogStatistics {
+/**
+ * Aggregated log metrics
+ */
+export interface LogMetrics {
+  timestamp: number;
+  timeWindow: string; // e.g., '1h', '24h'
   totalLogs: number;
-  logsByLevel: Record<LogLevel, number>;
-  logsByDomain: Record<LogDomain, number>;
-  logsByService: Record<string, number>;
-  averageProcessingTime: number;
+  errorCount: number;
+  warningCount: number;
   errorRate: number;
-  peakLogsPerSecond: number;
-  timeRange: {
-    start: Date;
-    end: Date;
+  averageResponseTime: number;
+  slowRequestCount: number;
+  securityEventCount: number;
+  topErrors: Array<{
+    message: string;
+    count: number;
+    lastOccurrence: number;
+  }>;
+  performanceMetrics: {
+    p50: number;
+    p95: number;
+    p99: number;
   };
+  domainBreakdown: Record<LogDomain, number>;
 }
 
-export interface LogAggregationResult {
-  processed: number;
-  filtered: number;
-  errors: number;
-  duration: number;
-  statistics: LogStatistics;
-}
-
-export interface LogFilter {
-  level?: LogLevel[];
-  domain?: LogDomain[];
-  service?: string[];
-  timeRange?: {
-    start: Date;
-    end: Date;
-  };
-  correlationId?: string;
+/**
+ * Log aggregation query parameters
+ */
+export interface AggregationQuery {
+  startTime: number;
+  endTime: number;
+  domain?: LogDomain;
+  level?: LogLevel;
   userId?: string;
-  keywords?: string[];
+  functionName?: string;
+  correlationId?: string;
+  limit?: number;
+  offset?: number;
 }
 
-const DEFAULT_CONFIG: LogAggregationConfig = {
-  batchSize: 1000,
-  flushInterval: 10000, // 10 seconds
-  retentionPeriod: 30, // 30 days
-  maxMemoryUsage: 100 * 1024 * 1024, // 100MB
-  enableRealTimeProcessing: true,
-  enableStatisticalAnalysis: true
-};
-
+/**
+ * Log aggregation service for processing and analyzing logs
+ */
 export class LogAggregationService {
-  private readonly logger: Logger;
-  private readonly config: LogAggregationConfig;
-  private readonly streamManager: LogStreamManager;
-  private readonly alertManager: AlertRuleManager;
-  private readonly logBuffer: LogEntry[] = [];
-  private readonly statistics: LogStatistics;
+  private logger = LoggerFactory.createLogger('log-aggregation-service');
+  private db = firestore();
+  private config: AggregationConfig;
+  private logBuffer: LogEntry[] = [];
   private flushTimer?: NodeJS.Timeout;
-  private isProcessing = false;
 
-  constructor(config: Partial<LogAggregationConfig> = {}) {
-    this.logger = LoggerFactory.createLogger('@cvplus/log-aggregation');
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.streamManager = globalStreamManager;
-    this.alertManager = globalAlertManager;
-    this.statistics = this.initializeStatistics();
+  constructor(config: Partial<AggregationConfig> = {}) {
+    this.config = {
+      batchSize: 100,
+      flushInterval: 5000, // 5 seconds
+      retentionDays: 30,
+      enableRealTimeProcessing: true,
+      enableMetricGeneration: true,
+      alertThresholds: {
+        errorRate: 0.05, // 5% error rate threshold
+        performanceThreshold: 2000, // 2 second response time
+        securityEventThreshold: 10 // 10 security events per hour
+      },
+      ...config
+    };
 
-    // Start periodic flush
     this.startPeriodicFlush();
   }
 
   /**
-   * Add log entries to the aggregation pipeline
+   * Aggregate logs from a specific time range
    */
-  async addLogs(logs: LogEntry[]): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async aggregateLogs(query: AggregationQuery): Promise<LogEntry[]> {
     try {
-      for (const log of logs) {
-        // Validate log entry
-        if (!this.isValidLogEntry(log)) {
-          this.logger.warn('Invalid log entry received', {
-            event: 'aggregation.log.invalid',
-            logId: log.id,
-            correlationId
-          });
-          continue;
-        }
-
-        // Add to buffer
-        this.logBuffer.push(log);
-
-        // Update real-time statistics
-        if (this.config.enableStatisticalAnalysis) {
-          this.updateStatistics(log);
-        }
-
-        // Trigger real-time processing if enabled
-        if (this.config.enableRealTimeProcessing) {
-          await this.processLogEntry(log);
-        }
-
-        // Check if we need to flush due to buffer size
-        if (this.logBuffer.length >= this.config.batchSize) {
-          await this.flush();
-        }
-      }
-
-      this.logger.debug('Logs added to aggregation pipeline', {
-        event: 'aggregation.logs.added',
-        count: logs.length,
-        bufferSize: this.logBuffer.length,
-        correlationId
+      this.logger.log(LogLevel.INFO, 'Starting log aggregation', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_AGGREGATION_STARTED',
+        query
       });
 
+      let firestoreQuery = this.db.collection('logs')
+        .where('timestamp', '>=', query.startTime)
+        .where('timestamp', '<=', query.endTime);
+
+      // Apply additional filters
+      if (query.domain) {
+        firestoreQuery = firestoreQuery.where('domain', '==', query.domain);
+      }
+      if (query.level) {
+        firestoreQuery = firestoreQuery.where('level', '==', query.level);
+      }
+      if (query.userId) {
+        firestoreQuery = firestoreQuery.where('context.userId', '==', query.userId);
+      }
+      if (query.functionName) {
+        firestoreQuery = firestoreQuery.where('context.functionName', '==', query.functionName);
+      }
+
+      // Apply limit and ordering
+      firestoreQuery = firestoreQuery.orderBy('timestamp', 'desc');
+      if (query.limit) {
+        firestoreQuery = firestoreQuery.limit(query.limit);
+      }
+
+      const snapshot = await firestoreQuery.get();
+      const logs = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      } as LogEntry));
+
+      this.logger.log(LogLevel.INFO, 'Log aggregation completed', {
+        domain: LogDomain.PERFORMANCE,
+        event: 'LOG_AGGREGATION_COMPLETED',
+        resultCount: logs.length,
+        executionTime: Date.now() - query.startTime
+      });
+
+      return logs;
     } catch (error) {
-      this.logger.error('Error adding logs to aggregation', {
-        event: 'aggregation.logs.error',
-        correlationId,
+      this.logger.log(LogLevel.ERROR, 'Log aggregation failed', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_AGGREGATION_FAILED',
         error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
         }
       });
       throw error;
@@ -153,362 +156,316 @@ export class LogAggregationService {
   }
 
   /**
-   * Process logs with filtering and aggregation
+   * Generate metrics from aggregated logs
    */
-  async processLogs(filter?: LogFilter): Promise<LogAggregationResult> {
-    const startTime = Date.now();
-    const correlationId = CorrelationService.getCurrentCorrelationId();
+  async generateMetrics(timeWindow: string, query: Partial<AggregationQuery> = {}): Promise<LogMetrics> {
+    const endTime = Date.now();
+    const startTime = this.getStartTimeForWindow(timeWindow, endTime);
 
-    if (this.isProcessing) {
-      throw new Error('Log processing already in progress');
-    }
-
-    this.isProcessing = true;
-
-    try {
-      this.logger.info('Starting log processing', {
-        event: 'aggregation.processing.started',
-        bufferSize: this.logBuffer.length,
-        filter,
-        correlationId
-      });
-
-      // Get logs to process
-      const logsToProcess = filter ? this.filterLogs(this.logBuffer, filter) : [...this.logBuffer];
-
-      let processed = 0;
-      let filtered = 0;
-      let errors = 0;
-
-      // Process logs in batches
-      const batches = this.createBatches(logsToProcess, this.config.batchSize);
-
-      for (const batch of batches) {
-        try {
-          const result = await this.processBatch(batch);
-          processed += result.processed;
-          filtered += result.filtered;
-          errors += result.errors;
-        } catch (error) {
-          this.logger.error('Batch processing error', {
-            event: 'aggregation.batch.error',
-            batchSize: batch.length,
-            correlationId,
-            error: {
-              name: error.name,
-              message: error.message
-            }
-          });
-          errors += batch.length;
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      const result: LogAggregationResult = {
-        processed,
-        filtered,
-        errors,
-        duration,
-        statistics: { ...this.statistics }
-      };
-
-      this.logger.info('Log processing completed', {
-        event: 'aggregation.processing.completed',
-        ...result,
-        correlationId
-      });
-
-      return result;
-
-    } catch (error) {
-      this.logger.error('Log processing failed', {
-        event: 'aggregation.processing.failed',
-        correlationId,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      });
-      throw error;
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-
-  /**
-   * Get current statistics
-   */
-  getStatistics(): LogStatistics {
-    return { ...this.statistics };
-  }
-
-  /**
-   * Clear log buffer and reset statistics
-   */
-  async clear(): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
-    this.logBuffer.length = 0;
-    Object.assign(this.statistics, this.initializeStatistics());
-
-    this.logger.info('Log aggregation cleared', {
-      event: 'aggregation.cleared',
-      correlationId
+    const logs = await this.aggregateLogs({
+      startTime,
+      endTime,
+      ...query
     });
-  }
 
-  /**
-   * Stop the aggregation service
-   */
-  async stop(): Promise<void> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = undefined;
-    }
-
-    // Final flush
-    await this.flush();
-
-    this.logger.info('Log aggregation service stopped', {
-      event: 'aggregation.stopped',
-      correlationId
-    });
-  }
-
-  private async processLogEntry(log: LogEntry): Promise<void> {
-    try {
-      // Stream to active log streams
-      await this.streamManager.streamLog(log);
-
-      // Check alert rules
-      await this.alertManager.checkLogForAlerts(log);
-
-    } catch (error) {
-      this.logger.warn('Error processing individual log entry', {
-        logId: log.id,
-        error: {
-          name: error.name,
-          message: error.message
-        }
-      });
-    }
-  }
-
-  private async processBatch(batch: LogEntry[]): Promise<{ processed: number; filtered: number; errors: number }> {
-    let processed = 0;
-    let filtered = 0;
-    let errors = 0;
-
-    for (const log of batch) {
-      try {
-        // Apply processing logic
-        const shouldProcess = await this.shouldProcessLog(log);
-
-        if (shouldProcess) {
-          await this.processLogEntry(log);
-          processed++;
-        } else {
-          filtered++;
-        }
-
-      } catch (error) {
-        this.logger.warn('Error processing log in batch', {
-          logId: log.id,
-          error: {
-            name: error.name,
-            message: error.message
-          }
-        });
-        errors++;
-      }
-    }
-
-    return { processed, filtered, errors };
-  }
-
-  private filterLogs(logs: LogEntry[], filter: LogFilter): LogEntry[] {
-    return logs.filter(log => {
-      // Filter by level
-      if (filter.level && !filter.level.includes(log.level)) {
-        return false;
-      }
-
-      // Filter by domain
-      if (filter.domain && !filter.domain.includes(log.domain)) {
-        return false;
-      }
-
-      // Filter by service
-      if (filter.service && !filter.service.includes(log.serviceName)) {
-        return false;
-      }
-
-      // Filter by time range
-      if (filter.timeRange) {
-        const logTime = new Date(log.timestamp);
-        if (logTime < filter.timeRange.start || logTime > filter.timeRange.end) {
-          return false;
-        }
-      }
-
-      // Filter by correlation ID
-      if (filter.correlationId && log.correlationId !== filter.correlationId) {
-        return false;
-      }
-
-      // Filter by user ID
-      if (filter.userId && log.userId !== filter.userId) {
-        return false;
-      }
-
-      // Filter by keywords
-      if (filter.keywords && filter.keywords.length > 0) {
-        const searchText = `${log.message} ${JSON.stringify(log.context)}`.toLowerCase();
-        const hasKeyword = filter.keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-        if (!hasKeyword) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }
-
-  private createBatches<T>(items: T[], batchSize: number): T[][] {
-    const batches: T[][] = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      batches.push(items.slice(i, i + batchSize));
-    }
-    return batches;
-  }
-
-  private async shouldProcessLog(log: LogEntry): Promise<boolean> {
-    // Basic validation
-    if (!log.id || !log.timestamp || !log.level || !log.message) {
-      return false;
-    }
-
-    // Check retention period
-    const logAge = Date.now() - new Date(log.timestamp).getTime();
-    const maxAge = this.config.retentionPeriod * 24 * 60 * 60 * 1000; // Convert days to ms
-
-    if (logAge > maxAge) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private isValidLogEntry(log: LogEntry): boolean {
-    return !!(
-      log &&
-      log.id &&
-      log.timestamp &&
-      log.level &&
-      log.message &&
-      log.serviceName
-    );
-  }
-
-  private updateStatistics(log: LogEntry): void {
-    this.statistics.totalLogs++;
-
-    // Update by level
-    this.statistics.logsByLevel[log.level] = (this.statistics.logsByLevel[log.level] || 0) + 1;
-
-    // Update by domain
-    this.statistics.logsByDomain[log.domain] = (this.statistics.logsByDomain[log.domain] || 0) + 1;
-
-    // Update by service
-    this.statistics.logsByService[log.serviceName] = (this.statistics.logsByService[log.serviceName] || 0) + 1;
-
-    // Update error rate
-    const errorLogs = (this.statistics.logsByLevel[LogLevel.ERROR] || 0) +
-                      (this.statistics.logsByLevel[LogLevel.FATAL] || 0);
-    this.statistics.errorRate = (errorLogs / this.statistics.totalLogs) * 100;
-
-    // Update time range
-    const logTime = new Date(log.timestamp);
-    if (!this.statistics.timeRange.start || logTime < this.statistics.timeRange.start) {
-      this.statistics.timeRange.start = logTime;
-    }
-    if (!this.statistics.timeRange.end || logTime > this.statistics.timeRange.end) {
-      this.statistics.timeRange.end = logTime;
-    }
-  }
-
-  private initializeStatistics(): LogStatistics {
-    return {
-      totalLogs: 0,
-      logsByLevel: {} as Record<LogLevel, number>,
-      logsByDomain: {} as Record<LogDomain, number>,
-      logsByService: {},
-      averageProcessingTime: 0,
+    const metrics: LogMetrics = {
+      timestamp: endTime,
+      timeWindow,
+      totalLogs: logs.length,
+      errorCount: 0,
+      warningCount: 0,
       errorRate: 0,
-      peakLogsPerSecond: 0,
-      timeRange: {
-        start: new Date(),
-        end: new Date()
+      averageResponseTime: 0,
+      slowRequestCount: 0,
+      securityEventCount: 0,
+      topErrors: [],
+      performanceMetrics: { p50: 0, p95: 0, p99: 0 },
+      domainBreakdown: {
+        [LogDomain.SYSTEM]: 0,
+        [LogDomain.BUSINESS]: 0,
+        [LogDomain.SECURITY]: 0,
+        [LogDomain.PERFORMANCE]: 0,
+        [LogDomain.AUDIT]: 0
       }
     };
-  }
 
-  private startPeriodicFlush(): void {
-    this.flushTimer = setInterval(async () => {
-      if (this.logBuffer.length > 0) {
-        await this.flush();
+    // Calculate metrics from logs
+    const responseTimes: number[] = [];
+    const errorMessages: Map<string, number> = new Map();
+
+    for (const log of logs) {
+      // Count by level
+      if (log.level === LogLevel.ERROR) metrics.errorCount++;
+      if (log.level === LogLevel.WARN) metrics.warningCount++;
+
+      // Count by domain
+      metrics.domainBreakdown[log.domain]++;
+
+      // Security events
+      if (log.domain === LogDomain.SECURITY) {
+        metrics.securityEventCount++;
       }
-    }, this.config.flushInterval);
+
+      // Performance metrics
+      if (log.context?.performance?.duration) {
+        const duration = log.context.performance.duration;
+        responseTimes.push(duration);
+        if (duration > this.config.alertThresholds.performanceThreshold) {
+          metrics.slowRequestCount++;
+        }
+      }
+
+      // Error tracking
+      if (log.level === LogLevel.ERROR && log.message) {
+        const count = errorMessages.get(log.message) || 0;
+        errorMessages.set(log.message, count + 1);
+      }
+    }
+
+    // Calculate derived metrics
+    metrics.errorRate = metrics.totalLogs > 0 ? metrics.errorCount / metrics.totalLogs : 0;
+
+    if (responseTimes.length > 0) {
+      responseTimes.sort((a, b) => a - b);
+      metrics.averageResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      metrics.performanceMetrics.p50 = this.percentile(responseTimes, 0.5);
+      metrics.performanceMetrics.p95 = this.percentile(responseTimes, 0.95);
+      metrics.performanceMetrics.p99 = this.percentile(responseTimes, 0.99);
+    }
+
+    // Top errors
+    metrics.topErrors = Array.from(errorMessages.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([message, count]) => ({
+        message,
+        count,
+        lastOccurrence: endTime // Approximate
+      }));
+
+    // Store metrics
+    if (this.config.enableMetricGeneration) {
+      await this.storeMetrics(metrics);
+    }
+
+    // Check alert thresholds
+    await this.checkAlertThresholds(metrics);
+
+    return metrics;
   }
 
+  /**
+   * Add logs to buffer for batch processing
+   */
+  bufferLog(logEntry: LogEntry): void {
+    this.logBuffer.push(logEntry);
+
+    if (this.logBuffer.length >= this.config.batchSize) {
+      this.flush();
+    }
+  }
+
+  /**
+   * Process logs in real-time
+   */
+  async processLogInRealTime(logEntry: LogEntry): Promise<void> {
+    if (!this.config.enableRealTimeProcessing) return;
+
+    try {
+      // Check for immediate alerts
+      if (logEntry.level === LogLevel.ERROR && logEntry.domain === LogDomain.SECURITY) {
+        await this.triggerSecurityAlert(logEntry);
+      }
+
+      // Track performance issues
+      if (logEntry.context?.performance?.duration) {
+        const duration = logEntry.context.performance.duration;
+        if (duration > this.config.alertThresholds.performanceThreshold) {
+          await this.triggerPerformanceAlert(logEntry);
+        }
+      }
+
+      this.logger.log(LogLevel.DEBUG, 'Real-time log processing completed', {
+        domain: LogDomain.SYSTEM,
+        event: 'REALTIME_PROCESSING_COMPLETED',
+        logId: logEntry.id,
+        logLevel: logEntry.level
+      });
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Real-time processing failed', {
+        domain: LogDomain.SYSTEM,
+        event: 'REALTIME_PROCESSING_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+    }
+  }
+
+  /**
+   * Flush buffered logs to storage
+   */
   private async flush(): Promise<void> {
     if (this.logBuffer.length === 0) return;
 
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-    const logsToFlush = [...this.logBuffer];
-    this.logBuffer.length = 0; // Clear buffer
+    const batch = this.db.batch();
+    const currentBuffer = [...this.logBuffer];
+    this.logBuffer = [];
 
     try {
-      await this.processLogs();
+      for (const logEntry of currentBuffer) {
+        const docRef = this.db.collection('logs').doc();
+        batch.set(docRef, {
+          ...logEntry,
+          storedAt: Date.now()
+        });
+      }
 
-      this.logger.debug('Log buffer flushed', {
-        event: 'aggregation.flushed',
-        count: logsToFlush.length,
-        correlationId
+      await batch.commit();
+
+      this.logger.log(LogLevel.DEBUG, 'Log batch flushed successfully', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_BATCH_FLUSHED',
+        batchSize: currentBuffer.length
       });
-
     } catch (error) {
-      this.logger.error('Error flushing log buffer', {
-        event: 'aggregation.flush.error',
-        count: logsToFlush.length,
-        correlationId,
+      // Re-add logs to buffer on failure
+      this.logBuffer.unshift(...currentBuffer);
+
+      this.logger.log(LogLevel.ERROR, 'Log batch flush failed', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_BATCH_FLUSH_FAILED',
+        batchSize: currentBuffer.length,
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }
       });
-
-      // Put logs back in buffer if flush failed
-      this.logBuffer.unshift(...logsToFlush);
     }
   }
+
+  /**
+   * Start periodic flush timer
+   */
+  private startPeriodicFlush(): void {
+    this.flushTimer = setInterval(() => {
+      this.flush();
+    }, this.config.flushInterval);
+  }
+
+  /**
+   * Store metrics in Firestore
+   */
+  private async storeMetrics(metrics: LogMetrics): Promise<void> {
+    try {
+      await this.db.collection('log_metrics').add({
+        ...metrics,
+        createdAt: Date.now()
+      });
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Failed to store metrics', {
+        domain: LogDomain.SYSTEM,
+        event: 'METRICS_STORAGE_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+    }
+  }
+
+  /**
+   * Check alert thresholds and trigger alerts
+   */
+  private async checkAlertThresholds(metrics: LogMetrics): Promise<void> {
+    // Error rate alert
+    if (metrics.errorRate > this.config.alertThresholds.errorRate) {
+      await this.triggerErrorRateAlert(metrics);
+    }
+
+    // Security event alert
+    if (metrics.securityEventCount > this.config.alertThresholds.securityEventThreshold) {
+      await this.triggerSecurityThresholdAlert(metrics);
+    }
+  }
+
+  /**
+   * Trigger security alert
+   */
+  private async triggerSecurityAlert(logEntry: LogEntry): Promise<void> {
+    this.logger.log(LogLevel.ERROR, 'Security alert triggered', {
+      domain: LogDomain.SECURITY,
+      event: 'SECURITY_ALERT_TRIGGERED',
+      logId: logEntry.id,
+      severity: 'high'
+    });
+  }
+
+  /**
+   * Trigger performance alert
+   */
+  private async triggerPerformanceAlert(logEntry: LogEntry): Promise<void> {
+    this.logger.log(LogLevel.WARN, 'Performance alert triggered', {
+      domain: LogDomain.PERFORMANCE,
+      event: 'PERFORMANCE_ALERT_TRIGGERED',
+      logId: logEntry.id,
+      duration: logEntry.context?.performance?.duration
+    });
+  }
+
+  /**
+   * Trigger error rate alert
+   */
+  private async triggerErrorRateAlert(metrics: LogMetrics): Promise<void> {
+    this.logger.log(LogLevel.ERROR, 'Error rate threshold exceeded', {
+      domain: LogDomain.SYSTEM,
+      event: 'ERROR_RATE_ALERT',
+      errorRate: metrics.errorRate,
+      threshold: this.config.alertThresholds.errorRate,
+      timeWindow: metrics.timeWindow
+    });
+  }
+
+  /**
+   * Trigger security threshold alert
+   */
+  private async triggerSecurityThresholdAlert(metrics: LogMetrics): Promise<void> {
+    this.logger.log(LogLevel.ERROR, 'Security event threshold exceeded', {
+      domain: LogDomain.SECURITY,
+      event: 'SECURITY_THRESHOLD_ALERT',
+      securityEventCount: metrics.securityEventCount,
+      threshold: this.config.alertThresholds.securityEventThreshold,
+      timeWindow: metrics.timeWindow
+    });
+  }
+
+  /**
+   * Calculate percentile from sorted array
+   */
+  private percentile(sortedArray: number[], percentile: number): number {
+    const index = Math.ceil(sortedArray.length * percentile) - 1;
+    return sortedArray[index] || 0;
+  }
+
+  /**
+   * Get start time for time window
+   */
+  private getStartTimeForWindow(window: string, endTime: number): number {
+    const now = endTime;
+    switch (window) {
+      case '1h': return now - (60 * 60 * 1000);
+      case '24h': return now - (24 * 60 * 60 * 1000);
+      case '7d': return now - (7 * 24 * 60 * 60 * 1000);
+      case '30d': return now - (30 * 24 * 60 * 60 * 1000);
+      default: return now - (60 * 60 * 1000); // Default to 1 hour
+    }
+  }
+
+  /**
+   * Clean up resources
+   */
+  destroy(): void {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+    }
+    this.flush(); // Final flush
+  }
 }
-
-/**
- * Global log aggregation service instance
- */
-export const globalLogAggregationService = new LogAggregationService();
-
-/**
- * Factory function to create aggregation service with custom config
- */
-export function createLogAggregationService(config?: Partial<LogAggregationConfig>): LogAggregationService {
-  return new LogAggregationService(config);
-}
-
-export default LogAggregationService;

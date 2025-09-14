@@ -15,7 +15,16 @@ process.env.LOG_LEVEL = process.env.LOG_LEVEL || 'error';
 jest.setTimeout(parseInt(process.env.E2E_TIMEOUT, 10));
 
 // Setup global test utilities
-global.testConfig = {
+declare global {
+  var testConfig: {
+    timeout: number;
+    mockApis: boolean;
+    baseUrl: string;
+    apiUrl: string;
+  };
+}
+
+(global as any).testConfig = {
   timeout: parseInt(process.env.E2E_TIMEOUT, 10),
   mockApis: process.env.E2E_MOCK_APIS === 'true',
   baseUrl: process.env.E2E_BASE_URL || 'http://localhost:3000',

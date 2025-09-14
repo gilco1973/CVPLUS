@@ -146,24 +146,57 @@ const MessageBubble: React.FC<{
             {message.content}
           </p>
           
-          {/* Confidence Score */}
+          {/* AI Confidence Score with Visual Indicator */}
           {message.metadata?.confidence && !isUser && (
-            <div className="mt-2 text-xs text-gray-500">
-              Confidence: {Math.round(message.metadata.confidence * 100)}%
+            <div className="mt-2 flex items-center gap-2">
+              <div className="text-xs text-gray-500">
+                AI Confidence:
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      message.metadata.confidence > 0.8 ? 'bg-green-500' :
+                      message.metadata.confidence > 0.6 ? 'bg-yellow-500' : 'bg-orange-500'
+                    }`}
+                    style={{ width: `${message.metadata.confidence * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">
+                  {Math.round(message.metadata.confidence * 100)}%
+                </span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Source Documents */}
+        {/* Enhanced Source Documents with Expandable Details */}
         {showSources && message.sourceDocuments && message.sourceDocuments.length > 0 && (
-          <div className="mt-2 space-y-1">
-            <p className="text-xs text-gray-500 mb-1">Sources:</p>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Search className="w-3 h-3" />
+              <span className="font-medium">Found in CV:</span>
+            </div>
             {message.sourceDocuments.map((doc, index) => (
-              <div key={index} className="text-xs bg-gray-50 border rounded p-2">
-                <div className="font-medium text-gray-700">{doc.section}</div>
-                <div className="text-gray-600 truncate">{doc.content}</div>
-                <div className="text-gray-400 mt-1">
-                  Relevance: {Math.round(doc.score * 100)}%
+              <div key={index} className="text-xs bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-blue-800 capitalize">
+                    📄 {doc.section.replace('_', ' ')}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-8 h-1 bg-blue-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${doc.score * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-blue-600 font-medium">
+                      {Math.round(doc.score * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="text-gray-700 line-clamp-2 text-xs leading-relaxed">
+                  {doc.content}
                 </div>
               </div>
             ))}
@@ -250,22 +283,28 @@ const MessageBubble: React.FC<{
 };
 
 /**
- * Typing indicator animation
+ * Enhanced typing indicator with RAG processing status
  */
-const TypingIndicator: React.FC = () => (
+const TypingIndicator: React.FC<{ processingStage?: string }> = ({ processingStage = "thinking" }) => (
   <div className="animate-fade-in">
-    }
-    }
-    className="flex items-center gap-3 mb-4"
-  >
-    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-      <Bot className="w-4 h-4 text-white" />
-    </div>
-    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3">
-      <div className="flex items-center space-x-1">
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center relative">
+        <Bot className="w-4 h-4 text-white" />
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+      </div>
+      <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+          </div>
+          <span className="text-xs text-gray-500 ml-2">
+            {processingStage === "searching" && "🔍 Searching CV..."}
+            {processingStage === "processing" && "🧠 Processing with AI..."}
+            {processingStage === "thinking" && "💭 AI is thinking..."}
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -471,17 +510,11 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
   const initializeSession = useCallback(async () => {
     try {
       setChatState(prev => ({ ...prev, isConnected: false }));
-      
-      const result = await callFunction('startChatSession', {
-        portalId: portalConfig.id,
-        ragConfig: {
-          enabled: ragConfig.enabled !== false,
-          maxSources: ragConfig.maxSources || 3,
-          similarityThreshold: ragConfig.similarityThreshold || 0.7
-        }
-      });
 
-      const sessionId = result.sessionId;
+      // For portal chat, we create a session by sending an initial system message
+      // This will trigger the RAG initialization on the backend
+      const sessionId = generateMessageId(); // Generate client-side session ID
+
       setChatState(prev => ({
         ...prev,
         sessionId,
@@ -493,11 +526,21 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
           timestamp: new Date(),
           type: 'text',
           status: 'sent'
-        }] : []
+        }] : [{
+          id: generateMessageId(),
+          content: "Hi! I'm an AI assistant with access to this CV. Ask me anything about the professional experience, skills, or background.",
+          sender: 'assistant',
+          timestamp: new Date(),
+          type: 'text',
+          status: 'sent'
+        }]
       }));
 
       onChatOpen?.();
-      toast.success('Chat session started');
+      toast.success('AI assistant ready', {
+        icon: '🤖',
+        duration: 2000
+      });
     } catch (error) {
       console.error('Failed to initialize chat session:', error);
       const chatError: ChatError = {
@@ -510,7 +553,7 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
       onError?.(chatError);
       toast.error('Failed to start chat session');
     }
-  }, [callFunction, portalConfig.id, ragConfig, initialState, generateMessageId, onChatOpen, onError]);
+  }, [portalConfig.id, ragConfig, initialState, generateMessageId, onChatOpen, onError]);
 
   const sendMessage = useCallback(async (messageText?: string) => {
     const text = messageText || inputState.text.trim();
@@ -555,35 +598,64 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
         )
       }));
 
-      // Call AI service
+      // Show AI processing status
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, {
+          id: 'ai-processing',
+          content: 'AI is searching CV content and generating response...',
+          sender: 'system',
+          timestamp: new Date(),
+          type: 'text',
+          status: 'sent'
+        }]
+      }));
+
+      // Call RAG-powered AI service
       const startTime = Date.now();
-      const result = await callFunction('sendChatMessage', {
-        sessionId: chatState.sessionId,
+      const result = await callFunction('portalChat', {
+        portalId: portalConfig.id,
         message: text,
-        options: {
-          enableRAG: ragConfig.enabled !== false,
-          maxSources: ragConfig.maxSources || 3,
-          similarityThreshold: ragConfig.similarityThreshold || 0.7,
-          includeSourceDocuments: ragConfig.showSources !== false
+        sessionId: chatState.sessionId,
+        visitorMetadata: {
+          userAgent: navigator.userAgent,
+          referrer: document.referrer,
+          location: window.location.href
         }
       });
 
+      // Remove processing message
+      setChatState(prev => ({
+        ...prev,
+        messages: prev.messages.filter(msg => msg.id !== 'ai-processing')
+      }));
+
       const processingTime = Date.now() - startTime;
 
-      // Create assistant response
+      // Create assistant response with RAG data
       const assistantMessage: ChatMessage = {
         id: generateMessageId(),
-        content: result.response,
+        content: result.response.content,
         sender: 'assistant',
         timestamp: new Date(),
         type: 'text',
         status: 'sent',
         metadata: {
           processingTime,
-          confidence: result.confidence,
-          tokenUsage: result.tokenUsage
+          confidence: result.response.confidence,
+          tokenUsage: {
+            prompt: 0,
+            completion: 0,
+            total: 0
+          }
         },
-        sourceDocuments: result.sourceDocuments
+        sourceDocuments: result.response.sources?.map((source: string, index: number) => ({
+          id: `source-${index}`,
+          content: `Referenced from ${source}`,
+          section: source,
+          score: result.response.confidence || 0.8,
+          metadata: { section: source }
+        })) || []
       };
 
       // Add assistant message
@@ -596,12 +668,31 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
       onMessageReceived?.(assistantMessage);
       onTypingEnd?.();
 
-      // Update rate limiting
+      // Update rate limiting based on backend response
       setRateLimitState(prev => ({
         ...prev,
-        remainingMessages: Math.max(0, prev.remainingMessages - 1),
-        isLimited: prev.remainingMessages <= 1
+        remainingMessages: result.rateLimiting?.remaining || prev.remainingMessages - 1,
+        resetTime: result.rateLimiting?.resetTime ? new Date(result.rateLimiting.resetTime) : prev.resetTime,
+        isLimited: (result.rateLimiting?.remaining || prev.remainingMessages) <= 1
       }));
+
+      // Show suggested follow-up questions if available
+      if (result.suggestedQuestions && result.suggestedQuestions.length > 0) {
+        setTimeout(() => {
+          const suggestionsMessage: ChatMessage = {
+            id: generateMessageId(),
+            content: `💡 You might also ask:\n${result.suggestedQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`,
+            sender: 'system',
+            timestamp: new Date(),
+            type: 'text',
+            status: 'sent'
+          };
+          setChatState(prev => ({
+            ...prev,
+            messages: [...prev.messages, suggestionsMessage]
+          }));
+        }, 1000);
+      }
 
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -646,19 +737,42 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
 
   const handleReaction = useCallback(async (messageId: string, reaction: string) => {
     try {
-      await callFunction('addMessageReaction', {
-        sessionId: chatState.sessionId,
-        messageId,
-        reaction
-      });
-      
+      // For now, just store locally and show feedback
+      // TODO: Implement backend reaction storage when available
+
+      // Update message with reaction
+      setChatState(prev => ({
+        ...prev,
+        messages: prev.messages.map(msg => {
+          if (msg.id === messageId) {
+            const reactions = msg.metadata?.reactions || [];
+            const newReactions = [...reactions, {
+              emoji: reaction === 'thumbs_up' ? '👍' : '👎',
+              userId: 'anonymous',
+              timestamp: new Date()
+            }];
+            return {
+              ...msg,
+              metadata: {
+                ...msg.metadata,
+                reactions: newReactions
+              }
+            };
+          }
+          return msg;
+        })
+      }));
+
       onReactionAdd?.(messageId, reaction);
-      toast.success('Feedback recorded');
+      toast.success('Feedback recorded', {
+        icon: reaction === 'thumbs_up' ? '👍' : '👎',
+        duration: 1500
+      });
     } catch (error) {
       console.error('Failed to add reaction:', error);
       toast.error('Failed to record feedback');
     }
-  }, [chatState.sessionId, callFunction, onReactionAdd]);
+  }, [onReactionAdd]);
 
   const exportConversation = useCallback(async (options: ConversationExport) => {
     try {
@@ -1101,8 +1215,14 @@ export const PortalChatInterface: React.FC<PortalChatInterfaceProps> = ({
                   />
                 ))}
                 
-                {/* Typing Indicator */}
-                {chatState.isTyping && <TypingIndicator />}
+                {/* Enhanced Typing Indicator */}
+                {chatState.isTyping && (
+                  <TypingIndicator
+                    processingStage={
+                      chatState.messages.some(m => m.id === 'ai-processing') ? "processing" : "thinking"
+                    }
+                  />
+                )}
               </div>
             )}
             

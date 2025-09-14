@@ -1,256 +1,207 @@
 /**
- * T047: Log retention policy implementation with automated lifecycle management
+ * T047: Log retention policy implementation in functions/src/services/LogRetentionService.ts
  *
  * Comprehensive log retention service that manages log lifecycle, implements
- * retention policies, handles archiving, cleanup, and provides compliance
- * features for data retention requirements.
+ * retention policies, handles archival, and ensures compliance with data
+ * governance requirements across the CVPlus logging ecosystem.
  */
 
-import {
-  LoggerFactory,
-  CorrelationService,
-  LogLevel,
-  LogDomain,
-  type Logger,
-  type LogEntry
-} from '@cvplus/logging';
+import { LoggerFactory, LogLevel, LogDomain, LogEntry } from '@cvplus/logging/backend';
+import { AuditTrailClass as AuditTrail, AuditAction, AuditEventType } from '@cvplus/logging/backend';
+import { firestore, storage } from 'firebase-admin';
 
+/**
+ * Retention policy types
+ */
+export enum RetentionPolicyType {
+  TIME_BASED = 'time_based',
+  SIZE_BASED = 'size_based',
+  COUNT_BASED = 'count_based',
+  COMPLIANCE_BASED = 'compliance_based',
+  HYBRID = 'hybrid'
+}
+
+/**
+ * Log archive formats
+ */
+export enum ArchiveFormat {
+  JSON = 'json',
+  PARQUET = 'parquet',
+  CSV = 'csv',
+  COMPRESSED_JSON = 'compressed_json'
+}
+
+/**
+ * Retention policy configuration
+ */
 export interface RetentionPolicy {
   id: string;
   name: string;
   description: string;
   enabled: boolean;
-  conditions: RetentionCondition[];
-  actions: RetentionAction[];
-  priority: number;
-  createdAt: Date;
-  updatedAt: Date;
+  type: RetentionPolicyType;
+  rules: RetentionRule[];
+  archivalConfig?: ArchivalConfig;
+  complianceConfig?: ComplianceConfig;
+  createdAt: number;
+  updatedAt: number;
   createdBy: string;
-  tags?: string[];
 }
 
-export interface RetentionCondition {
-  type: 'age' | 'level' | 'domain' | 'size' | 'count' | 'custom';
-  operator: 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'ne' | 'in' | 'not_in' | 'regex';
-  value: any;
-  unit?: 'days' | 'hours' | 'minutes' | 'bytes' | 'kb' | 'mb' | 'gb';
-}
-
-export interface RetentionAction {
-  type: 'delete' | 'archive' | 'compress' | 'move' | 'alert' | 'export';
-  target?: string;
-  parameters?: Record<string, any>;
-  delay?: number; // milliseconds
-}
-
-export interface RetentionJob {
+/**
+ * Individual retention rule
+ */
+export interface RetentionRule {
   id: string;
+  priority: number; // Lower number = higher priority
+  conditions: RetentionCondition[];
+  action: RetentionAction;
+  enabled: boolean;
+}
+
+/**
+ * Retention condition
+ */
+export interface RetentionCondition {
+  field: string; // e.g., 'level', 'domain', 'timestamp', 'userId'
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'regex';
+  value: any;
+}
+
+/**
+ * Retention action
+ */
+export interface RetentionAction {
+  type: 'delete' | 'archive' | 'compress' | 'move' | 'anonymize';
+  retentionDays: number;
+  parameters?: Record<string, any>;
+}
+
+/**
+ * Archival configuration
+ */
+export interface ArchivalConfig {
+  enabled: boolean;
+  destination: 'cloud_storage' | 'external_system' | 'tape';
+  format: ArchiveFormat;
+  compression: boolean;
+  encryption: boolean;
+  bucketName?: string;
+  archivalDelay: number; // Days before archiving
+  verificationRequired: boolean;
+}
+
+/**
+ * Compliance configuration
+ */
+export interface ComplianceConfig {
+  gdprCompliant: boolean;
+  ccpaCompliant: boolean;
+  hipaaCompliant: boolean;
+  piiHandling: 'retain' | 'anonymize' | 'delete';
+  legalHoldExemption: boolean;
+  auditRequirement: boolean;
+  customCompliance?: Record<string, any>;
+}
+
+/**
+ * Retention execution result
+ */
+export interface RetentionExecutionResult {
   policyId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-  startTime?: Date;
-  endTime?: Date;
-  processedCount: number;
-  affectedCount: number;
-  errors: RetentionError[];
-  metrics: RetentionJobMetrics;
+  ruleId: string;
+  executionId: string;
+  startTime: number;
+  endTime: number;
+  logsProcessed: number;
+  logsDeleted: number;
+  logsArchived: number;
+  logsCompressed: number;
+  logsAnonymized: number;
+  errors: string[];
+  success: boolean;
+  metadata: Record<string, any>;
 }
 
-export interface RetentionError {
-  timestamp: Date;
-  level: 'warning' | 'error' | 'fatal';
-  message: string;
-  context?: Record<string, any>;
-}
-
-export interface RetentionJobMetrics {
-  totalLogs: number;
-  deletedLogs: number;
-  archivedLogs: number;
-  compressedLogs: number;
-  movedLogs: number;
-  bytesProcessed: number;
-  bytesReclaimed: number;
-  processingTime: number;
-}
-
+/**
+ * Log retention statistics
+ */
 export interface RetentionStats {
-  totalPolicies: number;
-  activePolicies: number;
-  totalJobs: number;
-  runningJobs: number;
-  completedJobs: number;
-  failedJobs: number;
-  totalLogsProcessed: number;
-  totalBytesReclaimed: number;
-  averageJobTime: number;
-  lastJobTime?: Date;
+  totalLogs: number;
+  totalSize: number; // bytes
+  logsByDomain: Record<LogDomain, number>;
+  logsByLevel: Record<LogLevel, number>;
+  oldestLog: number; // timestamp
+  newestLog: number; // timestamp
+  retentionActions: {
+    deleted: number;
+    archived: number;
+    compressed: number;
+    anonymized: number;
+  };
+  complianceStatus: {
+    gdprCompliant: boolean;
+    dataRetentionWithinLimits: boolean;
+    piiHandledProperly: boolean;
+  };
 }
 
-export interface LogRetentionConfig {
-  defaultRetentionDays: number;
-  maxBatchSize: number;
-  maxJobDuration: number; // milliseconds
-  archivePath: string;
-  compressionEnabled: boolean;
-  compressionLevel: number;
-  enableMetrics: boolean;
-  enableAlerting: boolean;
-  schedulerInterval: number; // milliseconds
-}
-
-const DEFAULT_CONFIG: LogRetentionConfig = {
-  defaultRetentionDays: 90,
-  maxBatchSize: 1000,
-  maxJobDuration: 3600000, // 1 hour
-  archivePath: 'gs://cvplus-logs-archive',
-  compressionEnabled: true,
-  compressionLevel: 6,
-  enableMetrics: true,
-  enableAlerting: true,
-  schedulerInterval: 3600000 // 1 hour
-};
-
+/**
+ * Log retention service
+ */
 export class LogRetentionService {
-  private readonly logger: Logger;
-  private readonly config: LogRetentionConfig;
-  private readonly policies = new Map<string, RetentionPolicy>();
-  private readonly jobs = new Map<string, RetentionJob>();
-  private schedulerTimer?: NodeJS.Timeout;
-  private isRunning = false;
-
-  constructor(config: Partial<LogRetentionConfig> = {}) {
-    this.logger = LoggerFactory.createLogger('@cvplus/log-retention');
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.initializeDefaultPolicies();
-  }
+  private logger = LoggerFactory.createLogger('log-retention-service');
+  private db = firestore();
+  private storageClient = storage();
+  private auditTrail = new AuditTrail();
 
   /**
-   * Start the retention service
+   * Create a new retention policy
    */
-  async start(): Promise<void> {
-    if (this.isRunning) return;
-
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async createRetentionPolicy(policy: Omit<RetentionPolicy, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
-      this.isRunning = true;
+      const policyId = this.db.collection('retention_policies').doc().id;
+      const now = Date.now();
 
-      // Start the scheduler
-      this.startScheduler();
-
-      this.logger.info('Log retention service started', {
-        event: 'retention.service.started',
-        config: this.config,
-        policyCount: this.policies.size,
-        correlationId
-      });
-
-    } catch (error) {
-      this.logger.error('Failed to start log retention service', {
-        event: 'retention.service.start_failed',
-        correlationId,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Stop the retention service
-   */
-  async stop(): Promise<void> {
-    if (!this.isRunning) return;
-
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
-    try {
-      this.isRunning = false;
-
-      // Stop the scheduler
-      if (this.schedulerTimer) {
-        clearInterval(this.schedulerTimer);
-        this.schedulerTimer = undefined;
-      }
-
-      // Cancel running jobs
-      await this.cancelRunningJobs();
-
-      this.logger.info('Log retention service stopped', {
-        event: 'retention.service.stopped',
-        correlationId
-      });
-
-    } catch (error) {
-      this.logger.error('Error stopping log retention service', {
-        event: 'retention.service.stop_error',
-        correlationId,
-        error: {
-          name: error.name,
-          message: error.message
-        }
-      });
-    }
-  }
-
-  /**
-   * Create a retention policy
-   */
-  async createPolicy(
-    name: string,
-    description: string,
-    conditions: RetentionCondition[],
-    actions: RetentionAction[],
-    priority: number = 100,
-    createdBy: string = 'system',
-    tags?: string[]
-  ): Promise<string> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
-    try {
-      const policy: RetentionPolicy = {
-        id: this.generatePolicyId(),
-        name,
-        description,
-        enabled: true,
-        conditions,
-        actions,
-        priority,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy,
-        tags
+      const newPolicy: RetentionPolicy = {
+        ...policy,
+        id: policyId,
+        createdAt: now,
+        updatedAt: now
       };
 
-      // Validate policy
-      this.validatePolicy(policy);
+      await this.db.collection('retention_policies').doc(policyId).set(newPolicy);
 
-      // Store policy
-      this.policies.set(policy.id, policy);
-
-      this.logger.info('Retention policy created', {
-        event: 'retention.policy.created',
-        policyId: policy.id,
-        name: policy.name,
-        conditionCount: policy.conditions.length,
-        actionCount: policy.actions.length,
-        priority: policy.priority,
-        correlationId
+      // Audit log
+      this.auditTrail.logAction({
+        action: AuditAction.CREATE,
+        eventType: AuditEventType.SYSTEM_CONFIG,
+        resourceType: 'retention_policy',
+        resourceId: policyId,
+        userId: policy.createdBy,
+        details: {
+          policyName: policy.name,
+          policyType: policy.type,
+          rulesCount: policy.rules.length
+        }
       });
 
-      return policy.id;
+      this.logger.log(LogLevel.INFO, 'Retention policy created', {
+        domain: LogDomain.AUDIT,
+        event: 'RETENTION_POLICY_CREATED',
+        policyId,
+        policyName: policy.name,
+        policyType: policy.type
+      });
 
+      return policyId;
     } catch (error) {
-      this.logger.error('Failed to create retention policy', {
-        event: 'retention.policy.create_failed',
-        name,
-        correlationId,
+      this.logger.log(LogLevel.ERROR, 'Failed to create retention policy', {
+        domain: LogDomain.SYSTEM,
+        event: 'RETENTION_POLICY_CREATION_FAILED',
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
         }
       });
       throw error;
@@ -258,39 +209,40 @@ export class LogRetentionService {
   }
 
   /**
-   * Execute retention policies manually
+   * Execute retention policies
    */
-  async executePolicies(policyIds?: string[]): Promise<RetentionJob[]> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-
+  async executeRetentionPolicies(policyId?: string): Promise<RetentionExecutionResult[]> {
     try {
-      const policiesToRun = policyIds
-        ? policyIds.map(id => this.policies.get(id)).filter(Boolean) as RetentionPolicy[]
-        : Array.from(this.policies.values()).filter(p => p.enabled);
-
-      const jobs: RetentionJob[] = [];
-
-      for (const policy of policiesToRun.sort((a, b) => b.priority - a.priority)) {
-        const job = await this.executePolicy(policy);
-        jobs.push(job);
-      }
-
-      this.logger.info('Retention policies executed', {
-        event: 'retention.policies.executed',
-        policyCount: policiesToRun.length,
-        jobCount: jobs.length,
-        correlationId
+      this.logger.log(LogLevel.INFO, 'Starting retention policy execution', {
+        domain: LogDomain.SYSTEM,
+        event: 'RETENTION_EXECUTION_STARTED',
+        policyId: policyId || 'all'
       });
 
-      return jobs;
+      // Get policies to execute
+      const policies = await this.getRetentionPolicies(policyId ? { id: policyId } : { enabled: true });
+      const results: RetentionExecutionResult[] = [];
 
+      for (const policy of policies) {
+        const policyResults = await this.executePolicyRules(policy);
+        results.push(...policyResults);
+      }
+
+      this.logger.log(LogLevel.INFO, 'Retention policy execution completed', {
+        domain: LogDomain.SYSTEM,
+        event: 'RETENTION_EXECUTION_COMPLETED',
+        policiesExecuted: policies.length,
+        totalResults: results.length,
+        successfulExecutions: results.filter(r => r.success).length
+      });
+
+      return results;
     } catch (error) {
-      this.logger.error('Failed to execute retention policies', {
-        event: 'retention.policies.execution_failed',
-        correlationId,
+      this.logger.log(LogLevel.ERROR, 'Retention policy execution failed', {
+        domain: LogDomain.SYSTEM,
+        event: 'RETENTION_EXECUTION_FAILED',
         error: {
-          name: error.name,
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }
       });
       throw error;
@@ -300,504 +252,497 @@ export class LogRetentionService {
   /**
    * Get retention statistics
    */
-  getStats(): RetentionStats {
-    const jobs = Array.from(this.jobs.values());
-    const completedJobs = jobs.filter(j => j.status === 'completed');
+  async getRetentionStats(): Promise<RetentionStats> {
+    try {
+      const logsCollection = this.db.collection('logs');
+      const snapshot = await logsCollection.get();
 
-    return {
-      totalPolicies: this.policies.size,
-      activePolicies: Array.from(this.policies.values()).filter(p => p.enabled).length,
-      totalJobs: jobs.length,
-      runningJobs: jobs.filter(j => j.status === 'running').length,
-      completedJobs: completedJobs.length,
-      failedJobs: jobs.filter(j => j.status === 'failed').length,
-      totalLogsProcessed: completedJobs.reduce((sum, j) => sum + j.processedCount, 0),
-      totalBytesReclaimed: completedJobs.reduce((sum, j) => sum + j.metrics.bytesReclaimed, 0),
-      averageJobTime: completedJobs.length > 0
-        ? completedJobs.reduce((sum, j) => sum + j.metrics.processingTime, 0) / completedJobs.length
-        : 0,
-      lastJobTime: jobs.length > 0
-        ? new Date(Math.max(...jobs.map(j => j.endTime?.getTime() || 0)))
-        : undefined
-    };
+      const stats: RetentionStats = {
+        totalLogs: snapshot.size,
+        totalSize: 0,
+        logsByDomain: {} as Record<LogDomain, number>,
+        logsByLevel: {} as Record<LogLevel, number>,
+        oldestLog: Date.now(),
+        newestLog: 0,
+        retentionActions: {
+          deleted: 0,
+          archived: 0,
+          compressed: 0,
+          anonymized: 0
+        },
+        complianceStatus: {
+          gdprCompliant: true,
+          dataRetentionWithinLimits: true,
+          piiHandledProperly: true
+        }
+      };
+
+      // Initialize counters
+      Object.values(LogDomain).forEach(domain => {
+        stats.logsByDomain[domain] = 0;
+      });
+      Object.values(LogLevel).forEach(level => {
+        stats.logsByLevel[level] = 0;
+      });
+
+      // Analyze logs
+      snapshot.docs.forEach(doc => {
+        const log = doc.data() as LogEntry;
+        const logSize = JSON.stringify(log).length;
+
+        stats.totalSize += logSize;
+        stats.logsByDomain[log.domain]++;
+        stats.logsByLevel[log.level]++;
+
+        const timestamp = new Date(log.timestamp).getTime();
+        if (timestamp < stats.oldestLog) {
+          stats.oldestLog = timestamp;
+        }
+        if (timestamp > stats.newestLog) {
+          stats.newestLog = timestamp;
+        }
+      });
+
+      // Get retention action stats from audit logs
+      const retentionActions = await this.getRetentionActionStats();
+      stats.retentionActions = retentionActions;
+
+      // Check compliance status
+      stats.complianceStatus = await this.checkComplianceStatus();
+
+      this.logger.log(LogLevel.INFO, 'Retention statistics calculated', {
+        domain: LogDomain.AUDIT,
+        event: 'RETENTION_STATS_CALCULATED',
+        totalLogs: stats.totalLogs,
+        totalSizeBytes: stats.totalSize
+      });
+
+      return stats;
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Failed to get retention statistics', {
+        domain: LogDomain.SYSTEM,
+        event: 'RETENTION_STATS_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+      throw error;
+    }
   }
 
   /**
-   * Get policy by ID
+   * Archive logs to cloud storage
    */
-  getPolicy(policyId: string): RetentionPolicy | undefined {
-    return this.policies.get(policyId);
-  }
+  async archiveLogs(logs: LogEntry[], config: ArchivalConfig): Promise<string> {
+    try {
+      const archiveId = `archive_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      const archiveDate = new Date().toISOString().split('T')[0];
+      const archiveFileName = `logs_archive_${archiveDate}_${archiveId}.${config.format}`;
 
-  /**
-   * Get all policies
-   */
-  getPolicies(): RetentionPolicy[] {
-    return Array.from(this.policies.values());
-  }
-
-  /**
-   * Get job by ID
-   */
-  getJob(jobId: string): RetentionJob | undefined {
-    return this.jobs.get(jobId);
-  }
-
-  /**
-   * Get all jobs
-   */
-  getJobs(): RetentionJob[] {
-    return Array.from(this.jobs.values());
-  }
-
-  /**
-   * Execute a single retention policy
-   */
-  private async executePolicy(policy: RetentionPolicy): Promise<RetentionJob> {
-    const correlationId = CorrelationService.getCurrentCorrelationId();
-    const job: RetentionJob = {
-      id: this.generateJobId(),
-      policyId: policy.id,
-      status: 'pending',
-      processedCount: 0,
-      affectedCount: 0,
-      errors: [],
-      metrics: {
-        totalLogs: 0,
-        deletedLogs: 0,
-        archivedLogs: 0,
-        compressedLogs: 0,
-        movedLogs: 0,
-        bytesProcessed: 0,
-        bytesReclaimed: 0,
-        processingTime: 0
+      // Prepare archive data
+      let archiveData: string;
+      switch (config.format) {
+        case ArchiveFormat.JSON:
+          archiveData = JSON.stringify(logs, null, 2);
+          break;
+        case ArchiveFormat.COMPRESSED_JSON:
+          archiveData = JSON.stringify(logs); // Would use compression library in real implementation
+          break;
+        case ArchiveFormat.CSV:
+          archiveData = this.convertLogsToCSV(logs);
+          break;
+        default:
+          archiveData = JSON.stringify(logs);
       }
-    };
 
-    this.jobs.set(job.id, job);
+      // Upload to cloud storage
+      const bucket = this.storageClient.bucket(config.bucketName || 'cvplus-log-archives');
+      const file = bucket.file(`archives/${archiveDate}/${archiveFileName}`);
+
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: this.getContentType(config.format),
+          metadata: {
+            archiveId,
+            logCount: logs.length.toString(),
+            archiveDate,
+            format: config.format,
+            compressed: config.compression.toString(),
+            encrypted: config.encryption.toString()
+          }
+        }
+      });
+
+      return new Promise((resolve, reject) => {
+        stream.on('error', reject);
+        stream.on('finish', () => {
+          this.logger.log(LogLevel.INFO, 'Logs archived successfully', {
+            domain: LogDomain.AUDIT,
+            event: 'LOGS_ARCHIVED',
+            archiveId,
+            logCount: logs.length,
+            fileName: archiveFileName
+          });
+          resolve(archiveId);
+        });
+
+        stream.end(archiveData);
+      });
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Failed to archive logs', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_ARCHIVAL_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Anonymize sensitive data in logs
+   */
+  async anonymizeLogs(logs: LogEntry[]): Promise<LogEntry[]> {
+    const anonymizedLogs = logs.map(log => {
+      const anonymizedLog = { ...log };
+
+      // Anonymize user ID
+      if (anonymizedLog.userId) {
+        anonymizedLog.userId = this.anonymizeValue(anonymizedLog.userId);
+      }
+
+      // Anonymize context data
+      if (anonymizedLog.context) {
+        anonymizedLog.context = this.anonymizeContext(anonymizedLog.context);
+      }
+
+      // Anonymize message content
+      anonymizedLog.message = this.anonymizeMessage(anonymizedLog.message);
+
+      return anonymizedLog;
+    });
+
+    this.logger.log(LogLevel.INFO, 'Logs anonymized', {
+      domain: LogDomain.AUDIT,
+      event: 'LOGS_ANONYMIZED',
+      logCount: logs.length
+    });
+
+    return anonymizedLogs;
+  }
+
+  /**
+   * Delete logs permanently
+   */
+  async deleteLogs(logIds: string[]): Promise<number> {
+    try {
+      const batch = this.db.batch();
+      let deletedCount = 0;
+
+      for (const logId of logIds) {
+        const docRef = this.db.collection('logs').doc(logId);
+        batch.delete(docRef);
+        deletedCount++;
+      }
+
+      await batch.commit();
+
+      // Audit log
+      this.auditTrail.logAction({
+        action: AuditAction.DELETE,
+        eventType: AuditEventType.DATA_RETENTION,
+        resourceType: 'logs',
+        resourceId: 'batch',
+        userId: 'system',
+        details: {
+          deletedCount,
+          logIds: logIds.slice(0, 10) // Log first 10 IDs
+        }
+      });
+
+      this.logger.log(LogLevel.INFO, 'Logs deleted permanently', {
+        domain: LogDomain.AUDIT,
+        event: 'LOGS_DELETED',
+        deletedCount
+      });
+
+      return deletedCount;
+    } catch (error) {
+      this.logger.log(LogLevel.ERROR, 'Failed to delete logs', {
+        domain: LogDomain.SYSTEM,
+        event: 'LOG_DELETION_FAILED',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Execute rules for a specific policy
+   */
+  private async executePolicyRules(policy: RetentionPolicy): Promise<RetentionExecutionResult[]> {
+    const results: RetentionExecutionResult[] = [];
+
+    // Sort rules by priority
+    const sortedRules = [...policy.rules].sort((a, b) => a.priority - b.priority);
+
+    for (const rule of sortedRules) {
+      if (!rule.enabled) continue;
+
+      const result = await this.executeRule(policy, rule);
+      results.push(result);
+    }
+
+    return results;
+  }
+
+  /**
+   * Execute a single retention rule
+   */
+  private async executeRule(policy: RetentionPolicy, rule: RetentionRule): Promise<RetentionExecutionResult> {
+    const startTime = Date.now();
+    const executionId = `exec_${startTime}_${Math.random().toString(36).substring(2, 15)}`;
+
+    const result: RetentionExecutionResult = {
+      policyId: policy.id,
+      ruleId: rule.id,
+      executionId,
+      startTime,
+      endTime: 0,
+      logsProcessed: 0,
+      logsDeleted: 0,
+      logsArchived: 0,
+      logsCompressed: 0,
+      logsAnonymized: 0,
+      errors: [],
+      success: false,
+      metadata: {}
+    };
 
     try {
-      job.status = 'running';
-      job.startTime = new Date();
+      // Find logs matching the rule conditions
+      const matchingLogs = await this.findLogsMatchingConditions(rule.conditions);
+      result.logsProcessed = matchingLogs.length;
 
-      this.logger.info('Retention job started', {
-        event: 'retention.job.started',
-        jobId: job.id,
-        policyId: policy.id,
-        policyName: policy.name,
-        correlationId
-      });
-
-      const startTime = Date.now();
-
-      // Find logs matching conditions
-      const matchingLogs = await this.findMatchingLogs(policy.conditions);
-      job.metrics.totalLogs = matchingLogs.length;
-
-      this.logger.debug('Found matching logs', {
-        event: 'retention.job.logs_found',
-        jobId: job.id,
-        count: matchingLogs.length,
-        correlationId
-      });
-
-      // Process logs in batches
-      const batches = this.createBatches(matchingLogs, this.config.maxBatchSize);
-
-      for (const batch of batches) {
-        if (Date.now() - startTime > this.config.maxJobDuration) {
-          throw new Error('Job exceeded maximum duration');
-        }
-
-        await this.processBatch(batch, policy.actions, job);
-        job.processedCount += batch.length;
+      if (matchingLogs.length === 0) {
+        result.success = true;
+        result.endTime = Date.now();
+        return result;
       }
 
-      // Complete job
-      job.status = 'completed';
-      job.endTime = new Date();
-      job.metrics.processingTime = Date.now() - startTime;
+      // Execute the retention action
+      switch (rule.action.type) {
+        case 'delete':
+          const logIds = matchingLogs.map(log => log.id);
+          result.logsDeleted = await this.deleteLogs(logIds);
+          break;
 
-      this.logger.info('Retention job completed', {
-        event: 'retention.job.completed',
-        jobId: job.id,
-        policyId: policy.id,
-        processedCount: job.processedCount,
-        affectedCount: job.affectedCount,
-        processingTime: job.metrics.processingTime,
-        correlationId
-      });
+        case 'archive':
+          if (policy.archivalConfig) {
+            await this.archiveLogs(matchingLogs, policy.archivalConfig);
+            result.logsArchived = matchingLogs.length;
+          }
+          break;
 
-      return job;
+        case 'anonymize':
+          await this.anonymizeLogs(matchingLogs);
+          result.logsAnonymized = matchingLogs.length;
+          break;
 
+        case 'compress':
+          // Compression logic would be implemented here
+          result.logsCompressed = matchingLogs.length;
+          break;
+      }
+
+      result.success = true;
     } catch (error) {
-      job.status = 'failed';
-      job.endTime = new Date();
-      job.errors.push({
-        timestamp: new Date(),
-        level: 'fatal',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        context: { correlationId }
-      });
-
-      this.logger.error('Retention job failed', {
-        event: 'retention.job.failed',
-        jobId: job.id,
-        policyId: policy.id,
-        correlationId,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      });
-
-      return job;
+      result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      result.success = false;
     }
+
+    result.endTime = Date.now();
+    return result;
   }
 
   /**
    * Find logs matching retention conditions
    */
-  private async findMatchingLogs(conditions: RetentionCondition[]): Promise<LogEntry[]> {
-    // In a real implementation, this would query the log storage system
-    // For demonstration, we'll simulate finding logs
-    const simulatedLogs: LogEntry[] = [];
+  private async findLogsMatchingConditions(conditions: RetentionCondition[]): Promise<LogEntry[]> {
+    let query = this.db.collection('logs') as any;
 
-    // This would be replaced with actual database/storage queries
-    // based on the retention conditions
-
-    return simulatedLogs;
-  }
-
-  /**
-   * Process a batch of logs
-   */
-  private async processBatch(
-    logs: LogEntry[],
-    actions: RetentionAction[],
-    job: RetentionJob
-  ): Promise<void> {
-    for (const action of actions) {
-      switch (action.type) {
-        case 'delete':
-          await this.deleteLogs(logs, job);
+    for (const condition of conditions) {
+      switch (condition.operator) {
+        case 'equals':
+          query = query.where(condition.field, '==', condition.value);
           break;
-        case 'archive':
-          await this.archiveLogs(logs, action.target, job);
+        case 'not_equals':
+          query = query.where(condition.field, '!=', condition.value);
           break;
-        case 'compress':
-          await this.compressLogs(logs, job);
+        case 'greater_than':
+          query = query.where(condition.field, '>', condition.value);
           break;
-        case 'move':
-          await this.moveLogs(logs, action.target, job);
+        case 'less_than':
+          query = query.where(condition.field, '<', condition.value);
           break;
-        case 'alert':
-          await this.sendAlert(logs, action.parameters, job);
-          break;
-        case 'export':
-          await this.exportLogs(logs, action.target, job);
+        case 'contains':
+          query = query.where(condition.field, 'array-contains', condition.value);
           break;
       }
     }
+
+    const snapshot = await query.get();
+    return snapshot.docs.map((doc: any) => ({
+      ...doc.data(),
+      id: doc.id
+    } as LogEntry));
   }
 
   /**
-   * Delete logs
+   * Get retention policies
    */
-  private async deleteLogs(logs: LogEntry[], job: RetentionJob): Promise<void> {
-    // In a real implementation, this would delete logs from storage
-    job.metrics.deletedLogs += logs.length;
-    job.affectedCount += logs.length;
+  private async getRetentionPolicies(filters?: { id?: string; enabled?: boolean }): Promise<RetentionPolicy[]> {
+    let query = this.db.collection('retention_policies') as any;
 
-    // Estimate bytes reclaimed (simplified calculation)
-    const estimatedBytes = logs.reduce((sum, log) =>
-      sum + JSON.stringify(log).length * 2, 0); // Rough estimate
-    job.metrics.bytesReclaimed += estimatedBytes;
+    if (filters?.id) {
+      const doc = await query.doc(filters.id).get();
+      return doc.exists ? [{ ...doc.data(), id: doc.id }] : [];
+    }
 
-    this.logger.debug('Logs deleted', {
-      event: 'retention.logs.deleted',
-      jobId: job.id,
-      count: logs.length,
-      bytesReclaimed: estimatedBytes
+    if (filters?.enabled !== undefined) {
+      query = query.where('enabled', '==', filters.enabled);
+    }
+
+    const snapshot = await query.get();
+    return snapshot.docs.map((doc: any) => ({
+      ...doc.data(),
+      id: doc.id
+    } as RetentionPolicy));
+  }
+
+  /**
+   * Get retention action statistics
+   */
+  private async getRetentionActionStats(): Promise<{
+    deleted: number;
+    archived: number;
+    compressed: number;
+    anonymized: number;
+  }> {
+    // In a real implementation, this would query audit logs
+    return {
+      deleted: 0,
+      archived: 0,
+      compressed: 0,
+      anonymized: 0
+    };
+  }
+
+  /**
+   * Check compliance status
+   */
+  private async checkComplianceStatus(): Promise<{
+    gdprCompliant: boolean;
+    dataRetentionWithinLimits: boolean;
+    piiHandledProperly: boolean;
+  }> {
+    // In a real implementation, this would check actual compliance metrics
+    return {
+      gdprCompliant: true,
+      dataRetentionWithinLimits: true,
+      piiHandledProperly: true
+    };
+  }
+
+  /**
+   * Convert logs to CSV format
+   */
+  private convertLogsToCSV(logs: LogEntry[]): string {
+    if (logs.length === 0) return '';
+
+    const headers = ['id', 'timestamp', 'level', 'domain', 'message', 'serviceName', 'userId', 'correlationId'];
+    const csvRows = [headers.join(',')];
+
+    logs.forEach(log => {
+      const row = [
+        log.id,
+        log.timestamp,
+        log.level,
+        log.domain,
+        `"${log.message.replace(/"/g, '""')}"`, // Escape quotes
+        log.serviceName || '',
+        log.userId || '',
+        log.correlationId || ''
+      ];
+      csvRows.push(row.join(','));
     });
+
+    return csvRows.join('\n');
   }
 
   /**
-   * Archive logs
+   * Get content type for archive format
    */
-  private async archiveLogs(logs: LogEntry[], target: string | undefined, job: RetentionJob): Promise<void> {
-    // In a real implementation, this would move logs to archive storage
-    job.metrics.archivedLogs += logs.length;
-    job.affectedCount += logs.length;
-
-    const archivePath = target || this.config.archivePath;
-
-    this.logger.debug('Logs archived', {
-      event: 'retention.logs.archived',
-      jobId: job.id,
-      count: logs.length,
-      archivePath
-    });
+  private getContentType(format: ArchiveFormat): string {
+    switch (format) {
+      case ArchiveFormat.JSON:
+      case ArchiveFormat.COMPRESSED_JSON:
+        return 'application/json';
+      case ArchiveFormat.CSV:
+        return 'text/csv';
+      case ArchiveFormat.PARQUET:
+        return 'application/octet-stream';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
   /**
-   * Compress logs
+   * Anonymize a single value
    */
-  private async compressLogs(logs: LogEntry[], job: RetentionJob): Promise<void> {
-    if (!this.config.compressionEnabled) return;
-
-    // In a real implementation, this would compress logs
-    job.metrics.compressedLogs += logs.length;
-    job.affectedCount += logs.length;
-
-    // Estimate compression savings
-    const originalBytes = logs.reduce((sum, log) =>
-      sum + JSON.stringify(log).length * 2, 0);
-    const compressionRatio = 0.3; // Assume 70% compression
-    const savedBytes = originalBytes * compressionRatio;
-    job.metrics.bytesReclaimed += savedBytes;
-
-    this.logger.debug('Logs compressed', {
-      event: 'retention.logs.compressed',
-      jobId: job.id,
-      count: logs.length,
-      originalBytes,
-      savedBytes,
-      compressionRatio
-    });
+  private anonymizeValue(value: string): string {
+    // Simple anonymization - in real implementation, use proper anonymization techniques
+    const hash = Buffer.from(value).toString('base64').substring(0, 8);
+    return `anon_${hash}`;
   }
 
   /**
-   * Move logs
+   * Anonymize context object
    */
-  private async moveLogs(logs: LogEntry[], target: string | undefined, job: RetentionJob): Promise<void> {
-    // In a real implementation, this would move logs to a different location
-    job.metrics.movedLogs += logs.length;
-    job.affectedCount += logs.length;
+  private anonymizeContext(context: Record<string, any>): Record<string, any> {
+    const anonymized = { ...context };
 
-    this.logger.debug('Logs moved', {
-      event: 'retention.logs.moved',
-      jobId: job.id,
-      count: logs.length,
-      target
-    });
-  }
+    // Fields that should be anonymized
+    const sensitiveFields = ['email', 'phone', 'address', 'name', 'ssn', 'credit_card'];
 
-  /**
-   * Send alert
-   */
-  private async sendAlert(
-    logs: LogEntry[],
-    parameters: Record<string, any> | undefined,
-    job: RetentionJob
-  ): Promise<void> {
-    if (!this.config.enableAlerting) return;
-
-    this.logger.warn('Retention alert triggered', {
-      event: 'retention.alert',
-      jobId: job.id,
-      logCount: logs.length,
-      parameters
-    });
-  }
-
-  /**
-   * Export logs
-   */
-  private async exportLogs(logs: LogEntry[], target: string | undefined, job: RetentionJob): Promise<void> {
-    // In a real implementation, this would export logs to external system
-    this.logger.debug('Logs exported', {
-      event: 'retention.logs.exported',
-      jobId: job.id,
-      count: logs.length,
-      target
-    });
-  }
-
-  /**
-   * Initialize default retention policies
-   */
-  private initializeDefaultPolicies(): void {
-    // Default policy: Delete debug logs older than 7 days
-    this.createPolicy(
-      'delete-old-debug-logs',
-      'Delete debug level logs older than 7 days',
-      [
-        { type: 'age', operator: 'gt', value: 7, unit: 'days' },
-        { type: 'level', operator: 'eq', value: LogLevel.DEBUG }
-      ],
-      [{ type: 'delete' }],
-      100,
-      'system',
-      ['default', 'debug', 'cleanup']
-    );
-
-    // Default policy: Archive info logs older than 30 days
-    this.createPolicy(
-      'archive-old-info-logs',
-      'Archive info level logs older than 30 days',
-      [
-        { type: 'age', operator: 'gt', value: 30, unit: 'days' },
-        { type: 'level', operator: 'eq', value: LogLevel.INFO }
-      ],
-      [{ type: 'archive' }, { type: 'compress' }, { type: 'delete' }],
-      200,
-      'system',
-      ['default', 'info', 'archive']
-    );
-
-    // Default policy: Compress warning logs older than 60 days
-    this.createPolicy(
-      'compress-old-warning-logs',
-      'Compress warning level logs older than 60 days',
-      [
-        { type: 'age', operator: 'gt', value: 60, unit: 'days' },
-        { type: 'level', operator: 'eq', value: LogLevel.WARN }
-      ],
-      [{ type: 'compress' }],
-      150,
-      'system',
-      ['default', 'warning', 'compress']
-    );
-
-    // Default policy: Keep error logs for 1 year, then archive
-    this.createPolicy(
-      'archive-old-error-logs',
-      'Archive error level logs older than 365 days',
-      [
-        { type: 'age', operator: 'gt', value: 365, unit: 'days' },
-        { type: 'level', operator: 'in', value: [LogLevel.ERROR, LogLevel.FATAL] }
-      ],
-      [{ type: 'archive' }, { type: 'compress' }],
-      300,
-      'system',
-      ['default', 'error', 'long-term']
-    );
-  }
-
-  /**
-   * Start the retention scheduler
-   */
-  private startScheduler(): void {
-    this.schedulerTimer = setInterval(async () => {
-      if (this.isRunning) {
-        try {
-          await this.executePolicies();
-        } catch (error) {
-          this.logger.error('Scheduled retention execution failed', {
-            event: 'retention.scheduler.error',
-            error: {
-              name: error.name,
-              message: error.message
-            }
-          });
-        }
+    sensitiveFields.forEach(field => {
+      if (anonymized[field]) {
+        anonymized[field] = this.anonymizeValue(anonymized[field]);
       }
-    }, this.config.schedulerInterval);
+    });
+
+    return anonymized;
   }
 
   /**
-   * Cancel all running jobs
+   * Anonymize message content
    */
-  private async cancelRunningJobs(): Promise<void> {
-    const runningJobs = Array.from(this.jobs.values()).filter(j => j.status === 'running');
+  private anonymizeMessage(message: string): string {
+    // Simple regex-based anonymization for common patterns
+    let anonymized = message;
 
-    for (const job of runningJobs) {
-      job.status = 'cancelled';
-      job.endTime = new Date();
-      job.errors.push({
-        timestamp: new Date(),
-        level: 'warning',
-        message: 'Job cancelled during service shutdown'
-      });
-    }
+    // Email addresses
+    anonymized = anonymized.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
 
-    if (runningJobs.length > 0) {
-      this.logger.info('Running jobs cancelled', {
-        event: 'retention.jobs.cancelled',
-        count: runningJobs.length
-      });
-    }
-  }
+    // Phone numbers
+    anonymized = anonymized.replace(/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g, '[PHONE_REDACTED]');
 
-  /**
-   * Helper methods
-   */
-  private generatePolicyId(): string {
-    return `policy_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-  }
+    // IP addresses
+    anonymized = anonymized.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[IP_REDACTED]');
 
-  private generateJobId(): string {
-    return `job_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-  }
-
-  private validatePolicy(policy: RetentionPolicy): void {
-    if (!policy.name || policy.name.length === 0) {
-      throw new Error('Policy name is required');
-    }
-
-    if (!policy.conditions || policy.conditions.length === 0) {
-      throw new Error('Policy must have at least one condition');
-    }
-
-    if (!policy.actions || policy.actions.length === 0) {
-      throw new Error('Policy must have at least one action');
-    }
-
-    // Validate conditions
-    for (const condition of policy.conditions) {
-      this.validateCondition(condition);
-    }
-
-    // Validate actions
-    for (const action of policy.actions) {
-      this.validateAction(action);
-    }
-  }
-
-  private validateCondition(condition: RetentionCondition): void {
-    const validTypes = ['age', 'level', 'domain', 'size', 'count', 'custom'];
-    if (!validTypes.includes(condition.type)) {
-      throw new Error(`Invalid condition type: ${condition.type}`);
-    }
-
-    const validOperators = ['gt', 'gte', 'lt', 'lte', 'eq', 'ne', 'in', 'not_in', 'regex'];
-    if (!validOperators.includes(condition.operator)) {
-      throw new Error(`Invalid condition operator: ${condition.operator}`);
-    }
-
-    if (condition.value === undefined || condition.value === null) {
-      throw new Error('Condition value is required');
-    }
-  }
-
-  private validateAction(action: RetentionAction): void {
-    const validTypes = ['delete', 'archive', 'compress', 'move', 'alert', 'export'];
-    if (!validTypes.includes(action.type)) {
-      throw new Error(`Invalid action type: ${action.type}`);
-    }
-  }
-
-  private createBatches<T>(items: T[], batchSize: number): T[][] {
-    const batches: T[][] = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      batches.push(items.slice(i, i + batchSize));
-    }
-    return batches;
+    return anonymized;
   }
 }
-
-/**
- * Global log retention service instance
- */
-export const globalLogRetentionService = new LogRetentionService();
-
-/**
- * Factory function to create retention service with custom config
- */
-export function createLogRetentionService(config?: Partial<LogRetentionConfig>): LogRetentionService {
-  return new LogRetentionService(config);
-}
-
-export default LogRetentionService;

@@ -34,23 +34,24 @@
 
 ## Path Conventions
 - **Monorepo structure**: `packages/*/src/`, `frontend/src/`, `functions/src/`
-- Core logging library in: `packages/core/src/logging/`
-- Package integrations in: `packages/*/src/logging/`
+- **Core logging library** (Layer 0): `packages/logging/src/backend/`
+- **Package integrations** (Layer 1+): `packages/*/src/logging/`
+- **Architecture**: @cvplus/logging is Layer 0 infrastructure imported by all other packages
 
 ## Phase 3.1: Setup
-- [ ] T001 Create core logging library structure in packages/core/src/logging/
-- [ ] T002 Install Winston and structured logging dependencies in packages/core/
-- [ ] T003 [P] Configure TypeScript build for logging module
+- [ ] T001 Create core logging library structure in packages/logging/src/backend/
+- [ ] T002 Install Winston and structured logging dependencies in packages/logging/
+- [ ] T003 [P] Configure TypeScript build for logging submodule
 - [ ] T004 [P] Set up ESLint rules for structured logging standards
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### Core Logging Tests
-- [ ] T005 [P] Logger factory test in packages/core/src/logging/__tests__/logger-factory.test.ts
-- [ ] T006 [P] Correlation ID test in packages/core/src/logging/__tests__/correlation.test.ts
-- [ ] T007 [P] PII redaction test in packages/core/src/logging/__tests__/pii-redaction.test.ts
-- [ ] T008 [P] Log formatting test in packages/core/src/logging/__tests__/formatter.test.ts
+- [ ] T005 [P] Logger factory test in packages/logging/src/backend/__tests__/logger-factory.test.ts
+- [ ] T006 [P] Correlation ID test in packages/logging/src/backend/__tests__/correlation.test.ts
+- [ ] T007 [P] PII redaction test in packages/logging/src/backend/__tests__/pii-redaction.test.ts
+- [ ] T008 [P] Log formatting test in packages/logging/src/backend/__tests__/formatter.test.ts
 
 ### Domain Logging Integration Tests
 - [ ] T009 [P] Authentication logging test in packages/auth/src/__tests__/auth-logging.integration.test.ts
@@ -70,20 +71,20 @@
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
 ### Core Logging Library
-- [ ] T018 [P] LoggerFactory with Winston backend in packages/core/src/logging/LoggerFactory.ts
-- [ ] T019 [P] Correlation ID service in packages/core/src/logging/CorrelationService.ts
-- [ ] T020 [P] PII redaction utility in packages/core/src/logging/PiiRedaction.ts
-- [ ] T021 [P] Log formatter with structured format in packages/core/src/logging/LogFormatter.ts
-- [ ] T022 [P] Log transport for Firebase Cloud Logging in packages/core/src/logging/FirebaseTransport.ts
+- [ ] T018 [P] LoggerFactory with Winston backend in packages/logging/src/backend/LoggerFactory.ts
+- [ ] T019 [P] Correlation ID service in packages/logging/src/backend/CorrelationService.ts
+- [ ] T020 [P] PII redaction utility in packages/logging/src/backend/PiiRedaction.ts
+- [ ] T021 [P] Log formatter with structured format in packages/logging/src/backend/LogFormatter.ts
+- [ ] T022 [P] Log transport for Firebase Cloud Logging in packages/logging/src/backend/FirebaseTransport.ts
 
 ### Data Models
-- [ ] T023 [P] LogEntry model in packages/core/src/logging/models/LogEntry.ts
-- [ ] T024 [P] LogStream model in packages/core/src/logging/models/LogStream.ts
-- [ ] T025 [P] AlertRule model in packages/core/src/logging/models/AlertRule.ts
-- [ ] T026 [P] AuditTrail model in packages/core/src/logging/models/AuditTrail.ts
+- [ ] T023 [P] LogEntry model in packages/logging/src/backend/models/LogEntry.ts
+- [ ] T024 [P] LogStream model in packages/logging/src/backend/LogStream.ts
+- [ ] T025 [P] AlertRule model in packages/logging/src/backend/AlertRule.ts
+- [ ] T026 [P] AuditTrail model in packages/logging/src/backend/AuditTrail.ts
 
-### Package Integration - Layer 0 (Core Dependencies)
-- [ ] T027 Core package logging integration in packages/core/src/logging/index.ts
+### Package Integration - Layer 1 (Core Dependencies)
+- [ ] T027 Core package logging integration - import and re-export @cvplus/logging in packages/core/src/index.ts
 
 ### Package Integration - Layer 1 (Auth & i18n)
 - [ ] T028 [P] Auth package logging integration in packages/auth/src/logging/AuthLogger.ts
@@ -155,6 +156,10 @@
 
 ## Dependencies
 
+**Build Order (CRITICAL):**
+- @cvplus/logging MUST build successfully before ALL other packages
+- Layer 0 (logging) → Layer 1 (core, shell) → Layer 2 (all domain modules)
+
 **Setup Dependencies:**
 - T001 → T002 → (T003, T004)
 
@@ -166,6 +171,9 @@
 
 **Layer Dependencies:**
 - T027 → T028, T029 → T030, T031, T032 → T033, T034, T035 → T036, T037, T038
+
+**Package Dependencies:**
+- All packages requiring logging MUST add "@cvplus/logging": "file:../logging" to package.json
 
 **Integration Dependencies:**
 - T039-T047 require core logging library (T018-T026)
