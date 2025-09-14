@@ -2740,6 +2740,121 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/shell": {
+      "name": "@cvplus/shell",
+      "type": "lib",
+      "data": {
+        "root": "packages/shell",
+        "name": "@cvplus/shell",
+        "tags": [
+          "npm:private",
+          "npm:cvplus",
+          "npm:cv-enhancement",
+          "npm:ai",
+          "npm:react",
+          "npm:shell",
+          "npm:orchestrator"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "dev",
+              "build",
+              "lint",
+              "preview",
+              "type-check"
+            ]
+          },
+          "description": "CVPlus Shell - Main orchestrator application for the CVPlus platform",
+          "js": {
+            "packageName": "@cvplus/shell",
+            "packageMain": "src/main.tsx",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "vite",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "tsc && vite build",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "preview": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "preview"
+            },
+            "metadata": {
+              "scriptContent": "vite preview",
+              "runCommand": "npm run preview"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/auth": {
       "name": "@cvplus/auth",
       "type": "lib",
@@ -25260,6 +25375,103 @@
       {
         "source": "@cvplus/admin",
         "target": "npm:react-router-dom",
+        "type": "static"
+      }
+    ],
+    "@cvplus/shell": [
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:postcss",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:vite",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/auth",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/cv-processing",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/multimedia",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/public-profiles",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/analytics",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react-router-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:firebase",
         "type": "static"
       }
     ],
@@ -55580,8 +55792,8 @@
   "version": "6.0",
   "errors": [
     {
-      "stack": " - packages/portal-analytics/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/portal-generator/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/rag-chat/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/shell/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
-      "message": "4 errors occurred while processing files for the nx/core/package-json plugin\n.\n  - packages/portal-analytics/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n  - packages/portal-generator/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n  - packages/rag-chat/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n  - packages/shell/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'",
+      "stack": " - packages/portal-analytics/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/portal-generator/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/rag-chat/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+      "message": "3 errors occurred while processing files for the nx/core/package-json plugin\n.\n  - packages/portal-analytics/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n  - packages/portal-generator/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n  - packages/rag-chat/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'",
       "errors": [
         [
           "packages/portal-analytics/package.json",
@@ -55614,17 +55826,6 @@
             "code": "ENOENT",
             "syscall": "open",
             "path": "/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json"
-          }
-        ],
-        [
-          "packages/shell/package.json",
-          {
-            "stack": "Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
-            "message": "ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'",
-            "errno": -2,
-            "code": "ENOENT",
-            "syscall": "open",
-            "path": "/Users/gklainert/Documents/cvplus/packages/shell/package.json"
           }
         ]
       ],
@@ -58795,6 +58996,95 @@
           }
         ],
         [
+          "packages/shell/package.json",
+          {
+            "projects": {
+              "packages/shell": {
+                "root": "packages/shell",
+                "name": "@cvplus/shell",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc && vite build",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "preview": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "preview"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite preview",
+                      "runCommand": "npm run preview"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:private",
+                  "npm:cvplus",
+                  "npm:cv-enhancement",
+                  "npm:ai",
+                  "npm:react",
+                  "npm:shell",
+                  "npm:orchestrator"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "dev",
+                      "build",
+                      "lint",
+                      "preview",
+                      "type-check"
+                    ]
+                  },
+                  "description": "CVPlus Shell - Main orchestrator application for the CVPlus platform",
+                  "js": {
+                    "packageName": "@cvplus/shell",
+                    "packageMain": "src/main.tsx",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
           "packages/workflow/package.json",
           {
             "projects": {
@@ -58943,5 +59233,5 @@
       "name": "AggregateCreateNodesError"
     }
   ],
-  "computedAt": 1757820499898
+  "computedAt": 1757820989705
 }
