@@ -78,11 +78,11 @@ export { sendSchedulingEmail } from './scripts/functions/sendSchedulingEmail';
 // ============================================================================
 // All CV processing, analysis, and enhancement functions
 
-// New CV Processing Functions (T041-T044)
-export { uploadCV } from './functions/cv/upload';
-export { uploadCVFromUrl } from './functions/cv/url';
-export { getCVStatus } from './functions/cv/status';
-export { downloadProcessedCV } from './functions/cv/download';
+// CV Processing Functions - Migrated to submodule (T041-T044)
+export { uploadCV } from '@cvplus/cv-processing/backend/functions/cv/upload';
+export { uploadCVFromUrl } from '@cvplus/cv-processing/backend/functions/cv/url';
+export { getCVStatus } from '@cvplus/cv-processing/backend/functions/cv/status';
+export { downloadProcessedCV } from '@cvplus/cv-processing/backend/functions/cv/download';
 
 // Existing CV Processing Functions from submodules
 export {
@@ -143,9 +143,9 @@ export {
 // ============================================================================
 // Media generation, podcasts, videos, QR codes, and multimedia processing
 
-// New Multimedia Functions (T045-T046)
-export { generatePodcast } from './functions/multimedia/podcast';
-export { generateVideo } from './functions/multimedia/video';
+// Multimedia Functions - Migrated to submodule (T045-T046)
+export { generatePodcast } from '@cvplus/multimedia/backend/functions/multimedia/podcast';
+export { generateVideo } from '@cvplus/multimedia/backend/functions/multimedia/video';
 
 // Existing Multimedia Functions from submodules
 export {
@@ -181,8 +181,8 @@ export {
 // ============================================================================
 // Analytics, metrics, reporting, and business intelligence
 
-// New Analytics Functions (T051)
-export { getAnalytics } from './functions/analytics/get';
+// Analytics Functions - Migrated to submodule (T051)
+export { getAnalytics } from '@cvplus/analytics/backend/functions/analytics/get';
 
 // Existing Analytics Functions from submodules
 export {
@@ -263,11 +263,11 @@ export {
 // ============================================================================
 // Public profiles, web portals, social integration, QR codes, and testimonials
 
-// New Public Profile Functions (T047-T050)
-export { createPublicProfile } from './functions/profile/create';
-export { viewPublicProfile } from './functions/profile/view';
-export { updatePublicProfile } from './functions/profile/update';
-export { contactProfileOwner } from './functions/profile/contact';
+// Public Profile Functions - Migrated to submodule (T047-T050)
+export { createPublicProfile } from '@cvplus/public-profiles/backend/functions/profile/create';
+export { viewPublicProfile } from '@cvplus/public-profiles/backend/functions/profile/view';
+export { updatePublicProfile } from '@cvplus/public-profiles/backend/functions/profile/update';
+export { contactProfileOwner } from '@cvplus/public-profiles/backend/functions/profile/contact';
 
 // Existing Public Profile Functions from submodules
 export {
@@ -447,7 +447,7 @@ export const healthCheck = onRequest(
         timestamp: new Date().toISOString(),
         version: CVPLUS_FUNCTIONS_VERSION,
         environment: process.env.NODE_ENV || 'production',
-        newFunctions: {
+        migratedFunctions: {
           cv: ['uploadCV', 'uploadCVFromUrl', 'getCVStatus', 'downloadProcessedCV'],
           multimedia: ['generatePodcast', 'generateVideo'],
           profile: ['createPublicProfile', 'viewPublicProfile', 'updatePublicProfile', 'contactProfileOwner'],
@@ -532,7 +532,7 @@ export const cleanupExpiredData = onSchedule(
 // SYSTEM INFORMATION
 // ============================================================================
 export const CVPLUS_FUNCTIONS_VERSION = '4.1.0';
-export const MIGRATION_STATUS = 'PHASE_4_COMPLETE_WITH_NEW_FUNCTIONS';
+export const MIGRATION_STATUS = 'PHASE_5_COMPLETE_API_FUNCTIONS_MIGRATED';
 export const ARCHITECTURE_DATE = '2025-09-13';
 // ============================================================================
 // ONE CLICK PORTAL FUNCTIONS
@@ -550,4 +550,4 @@ export {
 export const TOTAL_FUNCTIONS_COUNT = 166; // Updated count with portal functions
 export const ROOT_FUNCTIONS_COUNT = 4;
 export const SUBMODULE_COUNT = 11;
-export const NEW_FUNCTIONS_COUNT = 16; // T041-T051 + Portal functions (T005)
+export const MIGRATED_FUNCTIONS_COUNT = 11; // CV(4) + Multimedia(2) + Profile(4) + Analytics(1) migrated to submodules
