@@ -2183,30 +2183,24 @@
         "tags": [
           "npm:public",
           "npm:logging",
-          "npm:winston",
           "npm:firebase",
-          "npm:audit",
-          "npm:compliance",
+          "npm:cvplus",
           "npm:monitoring",
-          "npm:cvplus"
+          "npm:audit",
+          "npm:pii-redaction"
         ],
         "metadata": {
           "targetGroups": {
             "NPM Scripts": [
               "build",
-              "build:types",
-              "build:rollup",
-              "clean",
               "dev",
               "test",
               "test:watch",
-              "test:coverage",
-              "type-check",
               "lint",
-              "format"
+              "lint:fix"
             ]
           },
-          "description": "Comprehensive logging system for CVPlus platform",
+          "description": "CVPlus comprehensive logging system with Firebase integration, PII redaction, and performance monitoring",
           "js": {
             "packageName": "@cvplus/logging",
             "packageMain": "dist/index.js",
@@ -2220,7 +2214,7 @@
               "script": "build"
             },
             "metadata": {
-              "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+              "scriptContent": "tsc",
               "runCommand": "npm run build"
             },
             "configurations": {},
@@ -2234,49 +2228,13 @@
             ],
             "cache": true
           },
-          "build:types": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build:types"
-            },
-            "metadata": {
-              "scriptContent": "tsc --project tsconfig.build.json",
-              "runCommand": "npm run build:types"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "build:rollup": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build:rollup"
-            },
-            "metadata": {
-              "scriptContent": "rollup -c",
-              "runCommand": "npm run build:rollup"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "clean": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "clean"
-            },
-            "metadata": {
-              "scriptContent": "rimraf dist",
-              "runCommand": "npm run clean"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
           "dev": {
             "executor": "nx:run-script",
             "options": {
               "script": "dev"
             },
             "metadata": {
-              "scriptContent": "rollup -c -w",
+              "scriptContent": "tsc --watch",
               "runCommand": "npm run dev"
             },
             "configurations": {},
@@ -2312,42 +2270,13 @@
             "configurations": {},
             "parallelism": true
           },
-          "test:coverage": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test:coverage"
-            },
-            "metadata": {
-              "scriptContent": "jest --coverage",
-              "runCommand": "npm run test:coverage"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "type-check": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "type-check"
-            },
-            "metadata": {
-              "scriptContent": "tsc --noEmit",
-              "runCommand": "npm run type-check"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "^production"
-            ],
-            "cache": true
-          },
           "lint": {
             "executor": "nx:run-script",
             "options": {
               "script": "lint"
             },
             "metadata": {
-              "scriptContent": "eslint src --ext .ts,.tsx --fix",
+              "scriptContent": "eslint src/**/*.{ts,tsx}",
               "runCommand": "npm run lint"
             },
             "configurations": {},
@@ -2358,14 +2287,14 @@
             ],
             "cache": true
           },
-          "format": {
+          "lint:fix": {
             "executor": "nx:run-script",
             "options": {
-              "script": "format"
+              "script": "lint:fix"
             },
             "metadata": {
-              "scriptContent": "prettier --write src/**/*.{ts,tsx}",
-              "runCommand": "npm run format"
+              "scriptContent": "eslint src/**/*.{ts,tsx} --fix",
+              "runCommand": "npm run lint:fix"
             },
             "configurations": {},
             "parallelism": true
@@ -2806,146 +2735,6 @@
             },
             "configurations": {},
             "parallelism": true
-          }
-        },
-        "implicitDependencies": []
-      }
-    },
-    "@cvplus/shell": {
-      "name": "@cvplus/shell",
-      "type": "app",
-      "data": {
-        "root": "packages/shell",
-        "name": "@cvplus/shell",
-        "tags": [
-          "npm:public"
-        ],
-        "metadata": {
-          "targetGroups": {
-            "NPM Scripts": [
-              "dev",
-              "build",
-              "preview",
-              "test",
-              "test:ui",
-              "lint",
-              "type-check"
-            ]
-          },
-          "description": "CVPlus Shell Application - Main app orchestrator for all submodules",
-          "js": {
-            "packageName": "@cvplus/shell",
-            "isInPackageManagerWorkspaces": true
-          }
-        },
-        "targets": {
-          "dev": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "dev"
-            },
-            "metadata": {
-              "scriptContent": "vite",
-              "runCommand": "npm run dev"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "build": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build"
-            },
-            "metadata": {
-              "scriptContent": "tsc && vite build",
-              "runCommand": "npm run build"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "dependsOn": [
-              "^build"
-            ],
-            "inputs": [
-              "production",
-              "^production"
-            ],
-            "cache": true
-          },
-          "preview": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "preview"
-            },
-            "metadata": {
-              "scriptContent": "vite preview",
-              "runCommand": "npm run preview"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "test": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test"
-            },
-            "metadata": {
-              "scriptContent": "vitest",
-              "runCommand": "npm run test"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "^production",
-              "{workspaceRoot}/jest.preset.js"
-            ],
-            "cache": true
-          },
-          "test:ui": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test:ui"
-            },
-            "metadata": {
-              "scriptContent": "vitest --ui",
-              "runCommand": "npm run test:ui"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "lint": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "lint"
-            },
-            "metadata": {
-              "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-              "runCommand": "npm run lint"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "{workspaceRoot}/.eslintrc.json"
-            ],
-            "cache": true
-          },
-          "type-check": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "type-check"
-            },
-            "metadata": {
-              "scriptContent": "tsc --noEmit",
-              "runCommand": "npm run type-check"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "^production"
-            ],
-            "cache": true
           }
         },
         "implicitDependencies": []
@@ -25211,47 +25000,7 @@
     "@cvplus/logging": [
       {
         "source": "@cvplus/logging",
-        "target": "npm:firebase-admin",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:firebase-functions",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:express",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
         "target": "npm:@types/node",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:@typescript-eslint/eslint-plugin",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:@typescript-eslint/parser",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:eslint",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:jest",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:ts-jest",
         "type": "static"
       },
       {
@@ -25261,37 +25010,27 @@
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:rimraf",
+        "target": "npm:jest",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:rollup",
+        "target": "npm:@types/jest",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:@rollup/plugin-typescript",
+        "target": "npm:eslint",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:tslib",
+        "target": "npm:firebase-admin",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:winston",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:winston-transport",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/logging",
-        "target": "npm:nanoid",
+        "target": "npm:firebase-functions",
         "type": "static"
       }
     ],
@@ -25521,103 +25260,6 @@
       {
         "source": "@cvplus/admin",
         "target": "npm:react-router-dom",
-        "type": "static"
-      }
-    ],
-    "@cvplus/shell": [
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:react-dom",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:@types/react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:@types/react-dom",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:@typescript-eslint/eslint-plugin",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:@typescript-eslint/parser",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:@vitejs/plugin-react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:eslint",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:typescript",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:vite",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:vitest",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/auth",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/cv-processing",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/multimedia",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/public-profiles",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/analytics",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/core",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:react-router-dom",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "npm:firebase",
         "type": "static"
       }
     ],
@@ -55938,8 +55580,8 @@
   "version": "6.0",
   "errors": [
     {
-      "stack": " - packages/portal-analytics/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/portal-generator/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/rag-chat/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
-      "message": "3 errors occurred while processing files for the nx/core/package-json plugin\n.\n  - packages/portal-analytics/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n  - packages/portal-generator/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n  - packages/rag-chat/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'",
+      "stack": " - packages/portal-analytics/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/portal-generator/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/rag-chat/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/shell/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+      "message": "4 errors occurred while processing files for the nx/core/package-json plugin\n.\n  - packages/portal-analytics/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n  - packages/portal-generator/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n  - packages/rag-chat/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n  - packages/shell/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'",
       "errors": [
         [
           "packages/portal-analytics/package.json",
@@ -55972,6 +55614,17 @@
             "code": "ENOENT",
             "syscall": "open",
             "path": "/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json"
+          }
+        ],
+        [
+          "packages/shell/package.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+            "message": "ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/shell/package.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/Users/gklainert/Documents/cvplus/packages/shell/package.json"
           }
         ]
       ],
@@ -57557,38 +57210,8 @@
                       "script": "build"
                     },
                     "metadata": {
-                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "scriptContent": "tsc",
                       "runCommand": "npm run build"
-                    }
-                  },
-                  "build:types": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "build:types"
-                    },
-                    "metadata": {
-                      "scriptContent": "tsc --project tsconfig.build.json",
-                      "runCommand": "npm run build:types"
-                    }
-                  },
-                  "build:rollup": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "build:rollup"
-                    },
-                    "metadata": {
-                      "scriptContent": "rollup -c",
-                      "runCommand": "npm run build:rollup"
-                    }
-                  },
-                  "clean": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "clean"
-                    },
-                    "metadata": {
-                      "scriptContent": "rimraf dist",
-                      "runCommand": "npm run clean"
                     }
                   },
                   "dev": {
@@ -57597,7 +57220,7 @@
                       "script": "dev"
                     },
                     "metadata": {
-                      "scriptContent": "rollup -c -w",
+                      "scriptContent": "tsc --watch",
                       "runCommand": "npm run dev"
                     }
                   },
@@ -57621,74 +57244,48 @@
                       "runCommand": "npm run test:watch"
                     }
                   },
-                  "test:coverage": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "test:coverage"
-                    },
-                    "metadata": {
-                      "scriptContent": "jest --coverage",
-                      "runCommand": "npm run test:coverage"
-                    }
-                  },
-                  "type-check": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "type-check"
-                    },
-                    "metadata": {
-                      "scriptContent": "tsc --noEmit",
-                      "runCommand": "npm run type-check"
-                    }
-                  },
                   "lint": {
                     "executor": "nx:run-script",
                     "options": {
                       "script": "lint"
                     },
                     "metadata": {
-                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "scriptContent": "eslint src/**/*.{ts,tsx}",
                       "runCommand": "npm run lint"
                     }
                   },
-                  "format": {
+                  "lint:fix": {
                     "executor": "nx:run-script",
                     "options": {
-                      "script": "format"
+                      "script": "lint:fix"
                     },
                     "metadata": {
-                      "scriptContent": "prettier --write src/**/*.{ts,tsx}",
-                      "runCommand": "npm run format"
+                      "scriptContent": "eslint src/**/*.{ts,tsx} --fix",
+                      "runCommand": "npm run lint:fix"
                     }
                   }
                 },
                 "tags": [
                   "npm:public",
                   "npm:logging",
-                  "npm:winston",
                   "npm:firebase",
-                  "npm:audit",
-                  "npm:compliance",
+                  "npm:cvplus",
                   "npm:monitoring",
-                  "npm:cvplus"
+                  "npm:audit",
+                  "npm:pii-redaction"
                 ],
                 "metadata": {
                   "targetGroups": {
                     "NPM Scripts": [
                       "build",
-                      "build:types",
-                      "build:rollup",
-                      "clean",
                       "dev",
                       "test",
                       "test:watch",
-                      "test:coverage",
-                      "type-check",
                       "lint",
-                      "format"
+                      "lint:fix"
                     ]
                   },
-                  "description": "Comprehensive logging system for CVPlus platform",
+                  "description": "CVPlus comprehensive logging system with Firebase integration, PII redaction, and performance monitoring",
                   "js": {
                     "packageName": "@cvplus/logging",
                     "packageMain": "dist/index.js",
@@ -59198,110 +58795,6 @@
           }
         ],
         [
-          "packages/shell/package.json",
-          {
-            "projects": {
-              "packages/shell": {
-                "root": "packages/shell",
-                "name": "@cvplus/shell",
-                "targets": {
-                  "dev": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "dev"
-                    },
-                    "metadata": {
-                      "scriptContent": "vite",
-                      "runCommand": "npm run dev"
-                    }
-                  },
-                  "build": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "build"
-                    },
-                    "metadata": {
-                      "scriptContent": "tsc && vite build",
-                      "runCommand": "npm run build"
-                    }
-                  },
-                  "preview": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "preview"
-                    },
-                    "metadata": {
-                      "scriptContent": "vite preview",
-                      "runCommand": "npm run preview"
-                    }
-                  },
-                  "test": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "test"
-                    },
-                    "metadata": {
-                      "scriptContent": "vitest",
-                      "runCommand": "npm run test"
-                    }
-                  },
-                  "test:ui": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "test:ui"
-                    },
-                    "metadata": {
-                      "scriptContent": "vitest --ui",
-                      "runCommand": "npm run test:ui"
-                    }
-                  },
-                  "lint": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "lint"
-                    },
-                    "metadata": {
-                      "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-                      "runCommand": "npm run lint"
-                    }
-                  },
-                  "type-check": {
-                    "executor": "nx:run-script",
-                    "options": {
-                      "script": "type-check"
-                    },
-                    "metadata": {
-                      "scriptContent": "tsc --noEmit",
-                      "runCommand": "npm run type-check"
-                    }
-                  }
-                },
-                "tags": [
-                  "npm:public"
-                ],
-                "metadata": {
-                  "targetGroups": {
-                    "NPM Scripts": [
-                      "dev",
-                      "build",
-                      "preview",
-                      "test",
-                      "test:ui",
-                      "lint",
-                      "type-check"
-                    ]
-                  },
-                  "description": "CVPlus Shell Application - Main app orchestrator for all submodules",
-                  "js": {
-                    "packageName": "@cvplus/shell",
-                    "isInPackageManagerWorkspaces": true
-                  }
-                }
-              }
-            }
-          }
-        ],
-        [
           "packages/workflow/package.json",
           {
             "projects": {
@@ -59450,5 +58943,5 @@
       "name": "AggregateCreateNodesError"
     }
   ],
-  "computedAt": 1757818746379
+  "computedAt": 1757820499898
 }

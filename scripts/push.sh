@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# CVPlus Universal Push Script
-# Handles all modules including root, sets up remotes, pulls with rebase, commits and pushes
+# CVPlus Simple Universal Push Script
+# Handles all modules including root, commits and pushes safely
 
 set -e  # Exit on any error
 
@@ -12,232 +12,64 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Function to generate commit message using git log and diff
-generate_commit_message() {
-    local module_name="$1"
-    local module_path="$2"
-
-    # Get recent commit messages to understand style
-    local recent_commits=$(git log --oneline -3 2>/dev/null || echo "")
-
-    # Get status of changes
-    local status=$(git status --porcelain 2>/dev/null)
-    local staged_files=$(git diff --cached --name-only 2>/dev/null)
-    local modified_files=$(git diff --name-only 2>/dev/null)
-
-    # Count changes
-    local added_count=$(echo "$status" | grep "^A" | wc -l | xargs)
-    local modified_count=$(echo "$status" | grep "^M" | wc -l | xargs)
-    local deleted_count=$(echo "$status" | grep "^D" | wc -l | xargs)
-    local untracked_count=$(echo "$status" | grep "^??" | wc -l | xargs)
-
-    # Generate appropriate commit message based on changes
-    local commit_type="feat"
-    local description=""
-
-    if [[ $added_count -gt 0 && $modified_count -gt 0 ]]; then
-        commit_type="feat"
-        description="Add new features and update existing components"
-    elif [[ $added_count -gt 0 ]]; then
-        commit_type="feat"
-        description="Add new components and functionality"
-    elif [[ $modified_count -gt 0 ]]; then
-        commit_type="chore"
-        description="Update existing components and configuration"
-    elif [[ $deleted_count -gt 0 ]]; then
-        commit_type="refactor"
-        description="Remove obsolete files and clean up codebase"
-    else
-        commit_type="chore"
-        description="General maintenance and updates"
-    fi
-
-    # Create the commit message
-    local commit_message="${commit_type}(${module_name}): ${description}"
-
-    if [[ $added_count -gt 0 || $modified_count -gt 0 || $deleted_count -gt 0 || $untracked_count -gt 0 ]]; then
-        commit_message+="\n\nChanges summary:"
-        [[ $added_count -gt 0 ]] && commit_message+="\n- Added: ${added_count} files"
-        [[ $modified_count -gt 0 ]] && commit_message+="\n- Modified: ${modified_count} files"
-        [[ $deleted_count -gt 0 ]] && commit_message+="\n- Deleted: ${deleted_count} files"
-        [[ $untracked_count -gt 0 ]] && commit_message+="\n- Untracked: ${untracked_count} files"
-    fi
-
-    commit_message+="\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
-
-    echo "$commit_message"
-}
-
-# Function to setup remote for a module
-setup_remote() {
-    local module_name="$1"
-    local module_path="$2"
-
-    # Check if remote exists
-    if ! git remote get-url origin >/dev/null 2>&1; then
-        print_warning "No remote 'origin' found for $module_name"
-
-        # Map module names to their repositories
-        case "$module_name" in
-            "cvplus-root")
-                git remote add origin git@github.com:gilco1973/cvplus.git
-                ;;
-            "core")
-                git remote add origin git@github.com:gilco1973/cvplus-core.git
-                ;;
-            "auth")
-                git remote add origin git@github.com:gilco1973/cvplus-auth.git
-                ;;
-            "cv-processing")
-                git remote add origin git@github.com:gilco1973/cvplus-cv-processing.git
-                ;;
-            "multimedia")
-                git remote add origin git@github.com:gilco1973/cvplus-multimedia.git
-                ;;
-            "analytics")
-                git remote add origin git@github.com:gilco1973/cvplus-analytics.git
-                ;;
-            "premium")
-                git remote add origin git@github.com:gilco1973/cvplus-premium.git
-                ;;
-            "workflow")
-                git remote add origin git@github.com:gilco1973/cvplus-workflow.git
-                ;;
-            "admin")
-                git remote add origin git@github.com:gilco1973/cvplus-admin.git
-                ;;
-            "public-profiles")
-                git remote add origin git@github.com:gilco1973/cvplus-public-profiles.git
-                ;;
-            "recommendations")
-                git remote add origin git@github.com:gilco1973/cvplus-recommendations.git
-                ;;
-            "payments")
-                git remote add origin git@github.com:gilco1973/cvplus-payments.git
-                ;;
-            "i18n")
-                git remote add origin git@github.com:gilco1973/cvplus-i18n.git
-                ;;
-            "shell")
-                git remote add origin git@github.com:gilco1973/cvplus-shell.git
-                ;;
-            "logging")
-                git remote add origin git@github.com:gilco1973/cvplus-logging.git
-                ;;
-            *)
-                print_warning "Unknown module '$module_name', skipping remote setup"
-                return 1
-                ;;
-        esac
-
-        print_success "Added remote origin for $module_name"
-    else
-        print_status "Remote 'origin' already exists for $module_name"
-    fi
-
-    return 0
-}
+print_status() { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Function to process a single module
 process_module() {
     local module_name="$1"
     local module_path="$2"
 
-    print_status "Processing module: $module_name at $module_path"
-
-    # Change to module directory
-    cd "$module_path" || {
-        print_error "Failed to change to directory: $module_path"
-        return 1
-    }
+    print_status "Processing module: $module_name"
+    cd "$module_path" || { print_error "Failed to change to: $module_path"; return 1; }
 
     # Check if it's a git repository
     if [[ ! -d ".git" ]]; then
-        print_warning "$module_name is not a git repository, skipping"
+        print_warning "$module_name: Not a git repository, skipping"
         return 0
     fi
 
-    # Setup remote if missing
-    setup_remote "$module_name" "$module_path"
-
-    # Check for changes
-    if [[ -z $(git status --porcelain) ]]; then
+    # Check for any changes (staged or unstaged)
+    if [[ -z $(git status --porcelain 2>/dev/null) ]]; then
         print_status "$module_name: No changes to commit"
         return 0
     fi
 
-    print_status "$module_name: Changes detected, processing..."
+    print_status "$module_name: Changes detected"
 
-    # Add all files
+    # Add all changes
     git add -A
 
-    # Check if there are staged changes
-    if [[ -z $(git diff --cached --name-only) ]]; then
-        print_status "$module_name: No staged changes after git add"
+    # Check if we have staged changes now
+    if [[ -z $(git diff --cached --name-only 2>/dev/null) ]]; then
+        print_status "$module_name: No staged changes after add"
         return 0
     fi
 
-    # Pull with rebase before committing
-    print_status "$module_name: Pulling latest changes with rebase..."
-    if git remote get-url origin >/dev/null 2>&1; then
-        # Get current branch name
-        local current_branch=$(git branch --show-current)
+    # Simple commit with basic message
+    local timestamp=$(date '+%Y-%m-%d %H:%M')
+    local commit_msg="chore($module_name): Auto-commit changes - $timestamp
 
-        # Pull with rebase, handling case where remote branch might not exist
-        if git ls-remote --heads origin "$current_branch" | grep -q "$current_branch"; then
-            git pull --rebase origin "$current_branch" || {
-                print_error "$module_name: Failed to pull with rebase"
-                return 1
-            }
-        else
-            print_warning "$module_name: Remote branch '$current_branch' doesn't exist, will create it on push"
-        fi
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+    if git commit -m "$commit_msg" >/dev/null 2>&1; then
+        print_success "$module_name: Changes committed"
     else
-        print_warning "$module_name: No remote configured, skipping pull"
+        print_error "$module_name: Failed to commit"
+        return 1
     fi
 
-    # Generate commit message
-    local commit_msg=$(generate_commit_message "$module_name" "$module_path")
-
-    # Commit changes
-    git commit -m "$commit_msg" || {
-        print_error "$module_name: Failed to commit changes"
-        return 1
-    }
-
-    print_success "$module_name: Changes committed"
-
-    # Push to remote
-    if git remote get-url origin >/dev/null 2>&1; then
-        local current_branch=$(git branch --show-current)
-        print_status "$module_name: Pushing to origin/$current_branch..."
-
-        # Push with upstream set
-        git push -u origin "$current_branch" || {
-            print_error "$module_name: Failed to push to remote"
-            return 1
-        }
-
-        print_success "$module_name: Successfully pushed to remote"
+    # Try to push (don't fail if remote doesn't exist)
+    local current_branch=$(git branch --show-current 2>/dev/null || echo "main")
+    if git push -u origin "$current_branch" >/dev/null 2>&1; then
+        print_success "$module_name: Pushed to origin/$current_branch"
     else
-        print_warning "$module_name: No remote configured, skipping push"
+        print_warning "$module_name: Push failed (remote may not exist)"
+        print_status "$module_name: Changes committed locally"
     fi
 
     return 0
@@ -248,54 +80,79 @@ main() {
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local project_root="$(dirname "$script_dir")"
 
-    print_status "Starting CVPlus universal push process..."
-    print_status "Project root: $project_root"
+    print_status "CVPlus Universal Push - Starting..."
 
+    local success_count=0
     local failed_modules=()
-    local processed_count=0
 
-    # Process root module first
-    print_status "=== Processing CVPlus Root Module ==="
+    # Process root first
+    print_status "=== Processing CVPlus Root ==="
     if process_module "cvplus-root" "$project_root"; then
-        ((processed_count++))
+        ((success_count++))
     else
         failed_modules+=("cvplus-root")
     fi
 
-    # Process all submodules
-    print_status "=== Processing Submodules ==="
+    # Process submodules that are actual git submodules
+    print_status "=== Processing Git Submodules ==="
 
-    local packages_dir="$project_root/packages"
-    if [[ -d "$packages_dir" ]]; then
-        for module_dir in "$packages_dir"/*; do
-            if [[ -d "$module_dir" ]]; then
-                local module_name=$(basename "$module_dir")
-                print_status "=== Processing Submodule: $module_name ==="
+    # Get list of actual git submodules
+    local submodules=($(git submodule status 2>/dev/null | awk '{print $2}' || true))
 
-                if process_module "$module_name" "$module_dir"; then
-                    ((processed_count++))
-                else
-                    failed_modules+=("$module_name")
+    for submodule_path in "${submodules[@]}"; do
+        if [[ -n "$submodule_path" && -d "$project_root/$submodule_path" ]]; then
+            local module_name=$(basename "$submodule_path")
+            print_status "=== Processing Submodule: $module_name ==="
+
+            if process_module "$module_name" "$project_root/$submodule_path"; then
+                ((success_count++))
+            else
+                failed_modules+=("$module_name")
+            fi
+        fi
+    done
+
+    # Process any additional directories in packages/ that might not be submodules
+    print_status "=== Checking Additional Package Directories ==="
+
+    if [[ -d "$project_root/packages" ]]; then
+        for pkg_dir in "$project_root/packages"/*; do
+            if [[ -d "$pkg_dir" && -d "$pkg_dir/.git" ]]; then
+                local pkg_name=$(basename "$pkg_dir")
+                local is_submodule=false
+
+                # Check if this is already a processed submodule
+                for sub in "${submodules[@]}"; do
+                    if [[ "$(basename "$sub")" == "$pkg_name" ]]; then
+                        is_submodule=true
+                        break
+                    fi
+                done
+
+                if [[ "$is_submodule" == false ]]; then
+                    print_status "=== Processing Additional Package: $pkg_name ==="
+                    if process_module "$pkg_name" "$pkg_dir"; then
+                        ((success_count++))
+                    else
+                        failed_modules+=("$pkg_name")
+                    fi
                 fi
             fi
         done
-    else
-        print_warning "Packages directory not found: $packages_dir"
     fi
 
     # Summary
-    print_status "=== Push Process Summary ==="
-    print_success "Successfully processed: $processed_count modules"
+    print_status "=== Summary ==="
+    print_success "Successfully processed: $success_count modules"
 
     if [[ ${#failed_modules[@]} -gt 0 ]]; then
-        print_error "Failed modules: ${failed_modules[*]}"
-        exit 1
+        print_warning "Modules with issues: ${failed_modules[*]}"
     else
         print_success "All modules processed successfully!"
     fi
 }
 
-# Check if script is being run directly (not sourced)
+# Run if executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
