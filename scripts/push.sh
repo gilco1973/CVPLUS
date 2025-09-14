@@ -17,6 +17,18 @@ print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+# Function to check if a directory is a git submodule
+is_submodule() {
+    local module_path="$1"
+    if [[ -f "$module_path/.git" ]]; then
+        local git_content=$(cat "$module_path/.git" 2>/dev/null)
+        if [[ $git_content == gitdir:* ]]; then
+            return 0  # is submodule
+        fi
+    fi
+    return 1  # not submodule
+}
+
 # Function to process a single module
 process_module() {
     local module_name="$1"
@@ -25,11 +37,31 @@ process_module() {
     print_status "Processing module: $module_name"
     cd "$module_path" || { print_error "Failed to change to: $module_path"; return 1; }
 
-    # Check if it's a git repository
-    if [[ ! -d ".git" ]]; then
+    # Check if it's a git repository (handles both .git directory and .git file for submodules)
+    if [[ ! -d ".git" && ! -f ".git" ]]; then
         print_warning "$module_name: Not a git repository, skipping"
         return 0
     fi
+
+    # For submodules, verify we can run git commands
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+        print_warning "$module_name: Git repository not accessible, skipping"
+        return 0
+    fi
+
+    # Check if this is a submodule and show its status
+    if [[ -f ".git" ]]; then
+        local git_dir_content=$(cat .git 2>/dev/null)
+        if [[ $git_dir_content == gitdir:* ]]; then
+            print_status "$module_name: Git submodule detected"
+        fi
+    fi
+
+    # Get current branch and remote info
+    local current_branch=$(git branch --show-current 2>/dev/null || echo "unknown")
+    local remote_url=$(git remote get-url origin 2>/dev/null || echo "no remote")
+
+    print_status "$module_name: Branch '$current_branch', Remote: $remote_url"
 
     # Check for any changes (staged or unstaged)
     if [[ -z $(git status --porcelain 2>/dev/null) ]]; then
@@ -37,7 +69,7 @@ process_module() {
         return 0
     fi
 
-    print_status "$module_name: Changes detected"
+    print_status "$module_name: Changes detected, processing..."
 
     # Add all changes
     git add -A
@@ -83,12 +115,15 @@ main() {
     print_status "CVPlus Universal Push - Starting..."
 
     local success_count=0
+    local submodule_count=0
+    local regular_repo_count=0
     local failed_modules=()
 
     # Process root first
     print_status "=== Processing CVPlus Root ==="
     if process_module "cvplus-root" "$project_root"; then
         ((success_count++))
+        ((regular_repo_count++))
     else
         failed_modules+=("cvplus-root")
     fi
@@ -106,6 +141,7 @@ main() {
 
             if process_module "$module_name" "$project_root/$submodule_path"; then
                 ((success_count++))
+                ((submodule_count++))
             else
                 failed_modules+=("$module_name")
             fi
@@ -133,6 +169,7 @@ main() {
                     print_status "=== Processing Additional Package: $pkg_name ==="
                     if process_module "$pkg_name" "$pkg_dir"; then
                         ((success_count++))
+                        ((regular_repo_count++))
                     else
                         failed_modules+=("$pkg_name")
                     fi
@@ -143,12 +180,16 @@ main() {
 
     # Summary
     print_status "=== Summary ==="
-    print_success "Successfully processed: $success_count modules"
+    print_success "Successfully processed: $success_count modules total"
+    print_status "  - Git submodules: $submodule_count"
+    print_status "  - Regular repositories: $regular_repo_count"
 
     if [[ ${#failed_modules[@]} -gt 0 ]]; then
         print_warning "Modules with issues: ${failed_modules[*]}"
+        print_status "Consider checking these modules manually"
     else
         print_success "All modules processed successfully!"
+        print_status "🎉 CVPlus universal push completed!"
     fi
 }
 
