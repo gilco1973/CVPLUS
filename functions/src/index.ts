@@ -534,7 +534,20 @@ export const cleanupExpiredData = onSchedule(
 export const CVPLUS_FUNCTIONS_VERSION = '4.1.0';
 export const MIGRATION_STATUS = 'PHASE_4_COMPLETE_WITH_NEW_FUNCTIONS';
 export const ARCHITECTURE_DATE = '2025-09-13';
-export const TOTAL_FUNCTIONS_COUNT = 161; // Updated count with new functions
+// ============================================================================
+// ONE CLICK PORTAL FUNCTIONS
+// ============================================================================
+// Portal generation, chat, and analytics functions
+
+export {
+  generatePortal,
+  getPortalStatus,
+  startChatSession,
+  sendChatMessage,
+  getPortalAnalytics
+} from './portal';
+
+export const TOTAL_FUNCTIONS_COUNT = 166; // Updated count with portal functions
 export const ROOT_FUNCTIONS_COUNT = 4;
 export const SUBMODULE_COUNT = 11;
-export const NEW_FUNCTIONS_COUNT = 11; // T041-T051
+export const NEW_FUNCTIONS_COUNT = 16; // T041-T051 + Portal functions (T005)

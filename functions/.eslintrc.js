@@ -80,5 +80,47 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'off',
       },
     },
+    // Portal-specific files (T009)
+    {
+      files: [
+        'src/portal/**/*.ts',
+        'src/portal/**/*.js'
+      ],
+      rules: {
+        // Stricter rules for portal modules
+        '@typescript-eslint/explicit-function-return-type': 'warn',
+        '@typescript-eslint/no-explicit-any': 'error',
+        'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+        // Portal-specific naming conventions
+        '@typescript-eslint/naming-convention': [
+          'warn',
+          {
+            'selector': 'interface',
+            'format': ['PascalCase'],
+            'custom': {
+              'regex': '^(Portal|Chat|Analytics|Generate)',
+              'match': false
+            }
+          },
+          {
+            'selector': 'typeAlias',
+            'format': ['PascalCase']
+          }
+        ],
+        // Require documentation for exported functions
+        'require-jsdoc': [
+          'warn',
+          {
+            'require': {
+              'FunctionDeclaration': true,
+              'MethodDefinition': false,
+              'ClassDeclaration': true,
+              'ArrowFunctionExpression': false,
+              'FunctionExpression': false
+            }
+          }
+        ],
+      },
+    },
   ],
 };

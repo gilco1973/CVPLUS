@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { Request } from 'firebase-functions';
+import { Request } from 'express';
 
 export interface AuthResult {
   success: boolean;

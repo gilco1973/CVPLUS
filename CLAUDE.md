@@ -225,6 +225,27 @@ CVPlus is actively being developed with the following key features implemented:
 - Public profile sharing
 - Real-time processing status tracking
 
+## Active Migration Project (Feature 005)
+**Current Branch**: `005-migration-plan-migrate`
+**Status**: Implementation planning complete, ready for task generation
+
+**Migration Scope**: Complete code migration from root repository to submodules
+- **Objective**: Achieve 100% architectural compliance with submodule-only business logic
+- **Target**: Migrate remaining service files, models, and new API functions to appropriate submodules
+- **Preservation**: Maintain all 166+ Firebase Function exports and external API contracts
+- **Validation**: Zero breaking changes, TypeScript compilation, full test suite, deployment success
+
+**Submodule Architecture**: 18+ independent git repositories under /packages/
+- core, auth, cv-processing, multimedia, analytics, premium, workflow, admin, public-profiles, recommendations, payments, i18n, etc.
+
+**Key Migration Units**:
+- Services: ai-analysis.service.ts, cv-processor.service.ts → cv-processing submodule
+- Models: analytics.service.ts, public-profile.service.ts → analytics/public-profiles submodules
+- New APIs: CV upload/status, multimedia generation, profile management → respective submodules
+- Import chains: Update to @cvplus/[module]/backend pattern (already established)
+
+**Migration Approach**: Incremental domain-based batches with atomic rollback capability
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

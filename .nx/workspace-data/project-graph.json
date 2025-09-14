@@ -2174,6 +2174,206 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/logging": {
+      "name": "@cvplus/logging",
+      "type": "lib",
+      "data": {
+        "root": "packages/logging",
+        "name": "@cvplus/logging",
+        "tags": [
+          "npm:public",
+          "npm:logging",
+          "npm:winston",
+          "npm:firebase",
+          "npm:audit",
+          "npm:compliance",
+          "npm:monitoring",
+          "npm:cvplus"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "build",
+              "build:types",
+              "build:rollup",
+              "clean",
+              "dev",
+              "test",
+              "test:watch",
+              "test:coverage",
+              "type-check",
+              "lint",
+              "format"
+            ]
+          },
+          "description": "Comprehensive logging system for CVPlus platform",
+          "js": {
+            "packageName": "@cvplus/logging",
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:types": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:types"
+            },
+            "metadata": {
+              "scriptContent": "tsc --project tsconfig.build.json",
+              "runCommand": "npm run build:types"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:rollup": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:rollup"
+            },
+            "metadata": {
+              "scriptContent": "rollup -c",
+              "runCommand": "npm run build:rollup"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "rollup -c -w",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "jest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:watch"
+            },
+            "metadata": {
+              "scriptContent": "jest --watch",
+              "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint src --ext .ts,.tsx --fix",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "format": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format"
+            },
+            "metadata": {
+              "scriptContent": "prettier --write src/**/*.{ts,tsx}",
+              "runCommand": "npm run format"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/premium": {
       "name": "@cvplus/premium",
       "type": "lib",
@@ -2206,6 +2406,11 @@
               "lint",
               "test",
               "test:watch",
+              "test:coverage",
+              "test:payments",
+              "test:monitoring",
+              "test:functions",
+              "test:comprehensive",
               "clean",
               "validate-dependencies"
             ]
@@ -2327,6 +2532,66 @@
             "metadata": {
               "scriptContent": "jest --watch",
               "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:payments": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:payments"
+            },
+            "metadata": {
+              "scriptContent": "jest --testPathPattern=payments",
+              "runCommand": "npm run test:payments"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:monitoring": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:monitoring"
+            },
+            "metadata": {
+              "scriptContent": "jest --testPathPattern=monitoring",
+              "runCommand": "npm run test:monitoring"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:functions": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:functions"
+            },
+            "metadata": {
+              "scriptContent": "jest --testPathPattern=functions",
+              "runCommand": "npm run test:functions"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:comprehensive": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:comprehensive"
+            },
+            "metadata": {
+              "scriptContent": "./scripts/run-tests.sh",
+              "runCommand": "npm run test:comprehensive"
             },
             "configurations": {},
             "parallelism": true
@@ -2541,6 +2806,146 @@
             },
             "configurations": {},
             "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
+    "@cvplus/shell": {
+      "name": "@cvplus/shell",
+      "type": "app",
+      "data": {
+        "root": "packages/shell",
+        "name": "@cvplus/shell",
+        "tags": [
+          "npm:public"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "dev",
+              "build",
+              "preview",
+              "test",
+              "test:ui",
+              "lint",
+              "type-check"
+            ]
+          },
+          "description": "CVPlus Shell Application - Main app orchestrator for all submodules",
+          "js": {
+            "packageName": "@cvplus/shell",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "vite",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "tsc && vite build",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "preview": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "preview"
+            },
+            "metadata": {
+              "scriptContent": "vite preview",
+              "runCommand": "npm run preview"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "vitest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:ui": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ui"
+            },
+            "metadata": {
+              "scriptContent": "vitest --ui",
+              "runCommand": "npm run test:ui"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
           }
         },
         "implicitDependencies": []
@@ -3366,7 +3771,13 @@
               "verify:mock",
               "emulators:start",
               "emulators:stop",
-              "verify:test"
+              "verify:test",
+              "format",
+              "format:check",
+              "lint:portal",
+              "format:portal",
+              "test:portal-emulators",
+              "emulators:portal-test"
             ]
           },
           "js": {
@@ -3638,6 +4049,78 @@
             "metadata": {
               "scriptContent": "ts-node src/tools/verification/test-runner.ts",
               "runCommand": "npm run verify:test"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format"
+            },
+            "metadata": {
+              "scriptContent": "prettier --write 'src/**/*.{ts,js,json}'",
+              "runCommand": "npm run format"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format:check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format:check"
+            },
+            "metadata": {
+              "scriptContent": "prettier --check 'src/**/*.{ts,js,json}'",
+              "runCommand": "npm run format:check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint:portal": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint:portal"
+            },
+            "metadata": {
+              "scriptContent": "eslint 'src/portal/**/*.ts' --fix",
+              "runCommand": "npm run lint:portal"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format:portal": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format:portal"
+            },
+            "metadata": {
+              "scriptContent": "prettier --write 'src/portal/**/*.ts'",
+              "runCommand": "npm run format:portal"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:portal-emulators": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:portal-emulators"
+            },
+            "metadata": {
+              "scriptContent": "node scripts/test-portal-emulators.js",
+              "runCommand": "npm run test:portal-emulators"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "emulators:portal-test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "emulators:portal-test"
+            },
+            "metadata": {
+              "scriptContent": "npm run emulators:start && npm run test:portal-emulators",
+              "runCommand": "npm run emulators:portal-test"
             },
             "configurations": {},
             "parallelism": true
@@ -24725,6 +25208,93 @@
         "type": "static"
       }
     ],
+    "@cvplus/logging": [
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:firebase-admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:express",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:ts-jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:rimraf",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:rollup",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:@rollup/plugin-typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:tslib",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston-transport",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:nanoid",
+        "type": "static"
+      }
+    ],
     "@cvplus/premium": [
       {
         "source": "@cvplus/premium",
@@ -24954,6 +25524,103 @@
         "type": "static"
       }
     ],
+    "@cvplus/shell": [
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:vite",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:vitest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/auth",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/cv-processing",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/multimedia",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/public-profiles",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/analytics",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:react-router-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:firebase",
+        "type": "static"
+      }
+    ],
     "@cvplus/auth": [
       {
         "source": "@cvplus/auth",
@@ -25094,6 +25761,11 @@
       },
       {
         "source": "@cvplus/core",
+        "target": "npm:@types/cls-hooked",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
         "target": "npm:@typescript-eslint/eslint-plugin",
         "type": "static"
       },
@@ -25160,6 +25832,26 @@
       {
         "source": "@cvplus/core",
         "target": "npm:tailwind-merge",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
+        "target": "npm:winston",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
+        "target": "npm:winston-transport",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
+        "target": "npm:nanoid@5.1.5",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
+        "target": "npm:cls-hooked",
         "type": "static"
       }
     ],
@@ -25413,12 +26105,22 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "@cvplus/cv-processing",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "@cvplus/i18n",
         "type": "static"
       },
       {
         "source": "cvplus-functions",
         "target": "@cvplus/multimedia",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "@cvplus/payments",
         "type": "static"
       },
       {
@@ -25493,6 +26195,11 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "npm:csv-parser",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "npm:dotenv@17.2.1",
         "type": "static"
       },
@@ -25518,7 +26225,17 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "npm:ical-generator",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "npm:isomorphic-dompurify@2.26.0",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "npm:mammoth",
         "type": "static"
       },
       {
@@ -55219,6 +55936,3519 @@
     ]
   },
   "version": "6.0",
-  "errors": [],
-  "computedAt": 1757807270882
+  "errors": [
+    {
+      "stack": " - packages/portal-analytics/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/portal-generator/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n - packages/rag-chat/package.json: Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+      "message": "3 errors occurred while processing files for the nx/core/package-json plugin\n.\n  - packages/portal-analytics/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n  - packages/portal-generator/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n  - packages/rag-chat/package.json: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'",
+      "errors": [
+        [
+          "packages/portal-analytics/package.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+            "message": "ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/Users/gklainert/Documents/cvplus/packages/portal-analytics/package.json"
+          }
+        ],
+        [
+          "packages/portal-generator/package.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+            "message": "ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/Users/gklainert/Documents/cvplus/packages/portal-generator/package.json"
+          }
+        ],
+        [
+          "packages/rag-chat/package.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'\n    at readFileSync (node:fs:449:20)\n    at t.readFileSync (node:electron/js2c/node_init:2:10175)\n    at readJsonFile (/Users/gklainert/Documents/cvplus/node_modules/nx/src/utils/fileutils.js:27:48)\n    at createNodeFromPackageJson (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:86:47)\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:43:20\n    at /Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.createNodesV2 (/Users/gklainert/Documents/cvplus/node_modules/nx/src/plugins/package-json/create-nodes.js:36:51)\n    at LoadedNxPlugin.createNodes (/Users/gklainert/Documents/cvplus/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)",
+            "message": "ENOENT: no such file or directory, open '/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/Users/gklainert/Documents/cvplus/packages/rag-chat/package.json"
+          }
+        ]
+      ],
+      "partialResults": [
+        [
+          "frontend/package.json",
+          {
+            "projects": {
+              "frontend": {
+                "root": "frontend",
+                "name": "frontend",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite build",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit --skipLibCheck && vite build",
+                      "runCommand": "npm run build:check"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint .",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "preview": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "preview"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite preview",
+                      "runCommand": "npm run preview"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:run": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:run"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest run",
+                      "runCommand": "npm run test:run"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:private"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "dev",
+                      "build",
+                      "build:check",
+                      "lint",
+                      "preview",
+                      "test",
+                      "test:run",
+                      "type-check"
+                    ]
+                  },
+                  "js": {
+                    "packageName": "frontend",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "functions/package.json",
+          {
+            "projects": {
+              "functions": {
+                "root": "functions",
+                "name": "cvplus-functions",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "serve": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "serve"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build && firebase emulators:start --only functions",
+                      "runCommand": "npm run serve"
+                    }
+                  },
+                  "shell": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "shell"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build && firebase functions:shell",
+                      "runCommand": "npm run shell"
+                    }
+                  },
+                  "start": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "start"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run shell",
+                      "runCommand": "npm run start"
+                    }
+                  },
+                  "deploy": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy"
+                    },
+                    "metadata": {
+                      "scriptContent": "firebase deploy --only functions",
+                      "runCommand": "npm run deploy"
+                    }
+                  },
+                  "deploy:batch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:batch"
+                    },
+                    "metadata": {
+                      "scriptContent": "node ../scripts/deployment/deploy-batch.js",
+                      "runCommand": "npm run deploy:batch"
+                    }
+                  },
+                  "deploy:safe": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:safe"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run fix-secrets && npm run build && npm run deploy:batch",
+                      "runCommand": "npm run deploy:safe"
+                    }
+                  },
+                  "fix-secrets": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "fix-secrets"
+                    },
+                    "metadata": {
+                      "scriptContent": "node ../scripts/deployment/fix-secrets-config.js",
+                      "runCommand": "npm run fix-secrets"
+                    }
+                  },
+                  "logs": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "logs"
+                    },
+                    "metadata": {
+                      "scriptContent": "firebase functions:log",
+                      "runCommand": "npm run logs"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "test:cv-processing": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:cv-processing"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest cv-processing.test.ts",
+                      "runCommand": "npm run test:cv-processing"
+                    }
+                  },
+                  "verify": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "verify"
+                    },
+                    "metadata": {
+                      "scriptContent": "node src/tools/verification/test-verify-systems.js",
+                      "runCommand": "npm run verify"
+                    }
+                  },
+                  "verify:emulator": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "verify:emulator"
+                    },
+                    "metadata": {
+                      "scriptContent": "node src/tools/verification/test-verify-systems.js --mode=emulator",
+                      "runCommand": "npm run verify:emulator"
+                    }
+                  },
+                  "verify:production": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "verify:production"
+                    },
+                    "metadata": {
+                      "scriptContent": "node src/tools/verification/test-verify-systems.js --mode=production",
+                      "runCommand": "npm run verify:production"
+                    }
+                  },
+                  "verify:mock": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "verify:mock"
+                    },
+                    "metadata": {
+                      "scriptContent": "node src/tools/verification/test-verify-systems.js --mode=mock",
+                      "runCommand": "npm run verify:mock"
+                    }
+                  },
+                  "emulators:start": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "emulators:start"
+                    },
+                    "metadata": {
+                      "scriptContent": "../scripts/verification/start-emulators.sh",
+                      "runCommand": "npm run emulators:start"
+                    }
+                  },
+                  "emulators:stop": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "emulators:stop"
+                    },
+                    "metadata": {
+                      "scriptContent": "../scripts/verification/stop-emulators.sh",
+                      "runCommand": "npm run emulators:stop"
+                    }
+                  },
+                  "verify:test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "verify:test"
+                    },
+                    "metadata": {
+                      "scriptContent": "ts-node src/tools/verification/test-runner.ts",
+                      "runCommand": "npm run verify:test"
+                    }
+                  },
+                  "format": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "format"
+                    },
+                    "metadata": {
+                      "scriptContent": "prettier --write 'src/**/*.{ts,js,json}'",
+                      "runCommand": "npm run format"
+                    }
+                  },
+                  "format:check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "format:check"
+                    },
+                    "metadata": {
+                      "scriptContent": "prettier --check 'src/**/*.{ts,js,json}'",
+                      "runCommand": "npm run format:check"
+                    }
+                  },
+                  "lint:portal": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:portal"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint 'src/portal/**/*.ts' --fix",
+                      "runCommand": "npm run lint:portal"
+                    }
+                  },
+                  "format:portal": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "format:portal"
+                    },
+                    "metadata": {
+                      "scriptContent": "prettier --write 'src/portal/**/*.ts'",
+                      "runCommand": "npm run format:portal"
+                    }
+                  },
+                  "test:portal-emulators": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:portal-emulators"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/test-portal-emulators.js",
+                      "runCommand": "npm run test:portal-emulators"
+                    }
+                  },
+                  "emulators:portal-test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "emulators:portal-test"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run emulators:start && npm run test:portal-emulators",
+                      "runCommand": "npm run emulators:portal-test"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:private"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:watch",
+                      "serve",
+                      "shell",
+                      "start",
+                      "deploy",
+                      "deploy:batch",
+                      "deploy:safe",
+                      "fix-secrets",
+                      "logs",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "test:cv-processing",
+                      "verify",
+                      "verify:emulator",
+                      "verify:production",
+                      "verify:mock",
+                      "emulators:start",
+                      "emulators:stop",
+                      "verify:test",
+                      "format",
+                      "format:check",
+                      "lint:portal",
+                      "format:portal",
+                      "test:portal-emulators",
+                      "emulators:portal-test"
+                    ]
+                  },
+                  "js": {
+                    "packageName": "cvplus-functions",
+                    "packageMain": "lib/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/admin/package.json",
+          {
+            "projects": {
+              "packages/admin": {
+                "root": "packages/admin",
+                "name": "@cvplus/admin",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c -w",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "type-check:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit --watch",
+                      "runCommand": "npm run type-check:watch"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:admin",
+                  "npm:dashboard",
+                  "npm:cvplus",
+                  "npm:user-management",
+                  "npm:content-moderation",
+                  "npm:system-monitoring",
+                  "npm:analytics",
+                  "npm:security-audit"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:watch",
+                      "type-check",
+                      "type-check:watch",
+                      "test",
+                      "test:coverage",
+                      "lint",
+                      "lint:fix",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "Comprehensive admin dashboard module for CVPlus platform management",
+                  "js": {
+                    "packageName": "@cvplus/admin",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js",
+                        "types": "./dist/index.d.ts"
+                      },
+                      "./react": {
+                        "import": "./dist/react.esm.js",
+                        "require": "./dist/react.js",
+                        "types": "./dist/react.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/analytics/package.json",
+          {
+            "projects": {
+              "packages/analytics": {
+                "root": "packages/analytics",
+                "name": "@cvplus/analytics",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cvplus",
+                  "npm:analytics",
+                  "npm:revenue",
+                  "npm:metrics",
+                  "npm:business-intelligence",
+                  "npm:cohort-analysis"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "dev",
+                      "type-check",
+                      "test",
+                      "test:watch",
+                      "lint",
+                      "lint:fix",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus Analytics Module - Advanced analytics, revenue tracking, and business intelligence",
+                  "js": {
+                    "packageName": "@cvplus/analytics",
+                    "packageExports": {
+                      ".": {
+                        "types": "./dist/index.d.ts",
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/auth/package.json",
+          {
+            "projects": {
+              "packages/auth": {
+                "root": "packages/auth",
+                "name": "@cvplus/auth",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "validate-deps": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-deps"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-deps"
+                    }
+                  },
+                  "test-integration": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test-integration"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/test-core-integration.sh",
+                      "runCommand": "npm run test-integration"
+                    }
+                  },
+                  "precommit": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "precommit"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run validate-deps && npm run type-check && npm run lint",
+                      "runCommand": "npm run precommit"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:authentication",
+                  "npm:authorization",
+                  "npm:firebase",
+                  "npm:google-oauth",
+                  "npm:react",
+                  "npm:typescript",
+                  "npm:cvplus"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "dev",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "clean",
+                      "validate-deps",
+                      "test-integration",
+                      "precommit",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "Authentication and authorization module for CVPlus platform",
+                  "js": {
+                    "packageName": "@cvplus/auth",
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/core/package.json",
+          {
+            "projects": {
+              "packages/core": {
+                "root": "packages/core",
+                "name": "@cvplus/core",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:rollup": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:rollup"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build:rollup"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:types -- --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run lint -- --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:types",
+                      "build:rollup",
+                      "build:watch",
+                      "clean",
+                      "dev",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus Core - Shared types, constants, and utilities",
+                  "js": {
+                    "packageName": "@cvplus/core",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js",
+                        "types": "./dist/index.d.ts"
+                      },
+                      "./types": {
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js",
+                        "types": "./dist/types/index.d.ts"
+                      },
+                      "./constants": {
+                        "import": "./dist/constants/index.esm.js",
+                        "require": "./dist/constants/index.js",
+                        "types": "./dist/constants/index.d.ts"
+                      },
+                      "./utils": {
+                        "import": "./dist/utils/index.esm.js",
+                        "require": "./dist/utils/index.js",
+                        "types": "./dist/utils/index.d.ts"
+                      },
+                      "./config": {
+                        "import": "./dist/config/index.esm.js",
+                        "require": "./dist/config/index.js",
+                        "types": "./dist/config/index.d.ts"
+                      },
+                      "./logging": {
+                        "import": "./dist/logging/index.esm.js",
+                        "require": "./dist/logging/index.js",
+                        "types": "./dist/logging/index.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/cv-processing/package.json",
+          {
+            "projects": {
+              "packages/cv-processing": {
+                "root": "packages/cv-processing",
+                "name": "@cvplus/cv-processing",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:rollup": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:rollup"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build:rollup"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:types -- --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run lint -- --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:ci": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:ci"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest run",
+                      "runCommand": "npm run test:ci"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest run --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cv",
+                  "npm:processing",
+                  "npm:ai",
+                  "npm:anthropic",
+                  "npm:claude",
+                  "npm:firebase",
+                  "npm:pdf",
+                  "npm:analysis",
+                  "npm:generation",
+                  "npm:cvplus"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:types",
+                      "build:rollup",
+                      "build:watch",
+                      "clean",
+                      "dev",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "test",
+                      "test:watch",
+                      "test:ci",
+                      "test:coverage",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus CV Processing - Core CV analysis, generation, and processing functionality with AI integration",
+                  "js": {
+                    "packageName": "@cvplus/cv-processing",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js",
+                        "types": "./dist/index.d.ts"
+                      },
+                      "./frontend": {
+                        "import": "./dist/frontend/index.esm.js",
+                        "require": "./dist/frontend/index.js",
+                        "types": "./dist/frontend/index.d.ts"
+                      },
+                      "./backend": {
+                        "import": "./dist/backend/index.esm.js",
+                        "require": "./dist/backend/index.js",
+                        "types": "./dist/backend/index.d.ts"
+                      },
+                      "./types": {
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js",
+                        "types": "./dist/types/index.d.ts"
+                      },
+                      "./shared": {
+                        "import": "./dist/shared/index.esm.js",
+                        "require": "./dist/shared/index.js",
+                        "types": "./dist/shared/index.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/i18n/package.json",
+          {
+            "projects": {
+              "packages/i18n": {
+                "root": "packages/i18n",
+                "name": "@cvplus/i18n",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup src/index.ts src/react.ts --format cjs,esm --dts --clean",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:locales": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:locales"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/build/build-locales.js",
+                      "runCommand": "npm run build:locales"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup src/index.ts src/react.ts --format cjs,esm --dts --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "test:rtl": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:rtl"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --run --grep='RTL'",
+                      "runCommand": "npm run test:rtl"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rm -rf dist node_modules",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "extract:keys": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "extract:keys"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/extract-translation-keys.js",
+                      "runCommand": "npm run extract:keys"
+                    }
+                  },
+                  "validate:translations": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate:translations"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/validate-translations.js",
+                      "runCommand": "npm run validate:translations"
+                    }
+                  },
+                  "validate:rtl": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate:rtl"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/test/validate-rtl.js",
+                      "runCommand": "npm run validate:rtl"
+                    }
+                  },
+                  "generate:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "generate:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/generate-types.js",
+                      "runCommand": "npm run generate:types"
+                    }
+                  },
+                  "deploy:translations": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:translations"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/deployment/deploy-translations.js",
+                      "runCommand": "npm run deploy:translations"
+                    }
+                  },
+                  "deploy:dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/deployment/deploy-translations.js development",
+                      "runCommand": "npm run deploy:dev"
+                    }
+                  },
+                  "deploy:staging": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:staging"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/deployment/deploy-translations.js staging",
+                      "runCommand": "npm run deploy:staging"
+                    }
+                  },
+                  "deploy:prod": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:prod"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/deployment/deploy-translations.js production",
+                      "runCommand": "npm run deploy:prod"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:i18n",
+                  "npm:internationalization",
+                  "npm:localization",
+                  "npm:cvplus",
+                  "npm:react",
+                  "npm:typescript",
+                  "npm:translations",
+                  "npm:rtl",
+                  "npm:multilingual"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:locales",
+                      "dev",
+                      "lint",
+                      "type-check",
+                      "test",
+                      "test:coverage",
+                      "test:rtl",
+                      "clean",
+                      "extract:keys",
+                      "validate:translations",
+                      "validate:rtl",
+                      "generate:types",
+                      "deploy:translations",
+                      "deploy:dev",
+                      "deploy:staging",
+                      "deploy:prod",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus Internationalization Module - Comprehensive i18n solution for multi-language support",
+                  "js": {
+                    "packageName": "@cvplus/i18n",
+                    "packageExports": {
+                      ".": {
+                        "types": "./dist/index.d.ts",
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js"
+                      },
+                      "./react": {
+                        "types": "./dist/react.d.ts",
+                        "import": "./dist/react.esm.js",
+                        "require": "./dist/react.js"
+                      },
+                      "./functions": {
+                        "types": "./src/backend/functions/index.ts",
+                        "import": "./src/backend/functions/index.ts",
+                        "require": "./src/backend/functions/index.ts"
+                      },
+                      "./locales/*": "./dist/locales/*"
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/logging/package.json",
+          {
+            "projects": {
+              "packages/logging": {
+                "root": "packages/logging",
+                "name": "@cvplus/logging",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:rollup": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:rollup"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build:rollup"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c -w",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "format": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "format"
+                    },
+                    "metadata": {
+                      "scriptContent": "prettier --write src/**/*.{ts,tsx}",
+                      "runCommand": "npm run format"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:logging",
+                  "npm:winston",
+                  "npm:firebase",
+                  "npm:audit",
+                  "npm:compliance",
+                  "npm:monitoring",
+                  "npm:cvplus"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:types",
+                      "build:rollup",
+                      "clean",
+                      "dev",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "type-check",
+                      "lint",
+                      "format"
+                    ]
+                  },
+                  "description": "Comprehensive logging system for CVPlus platform",
+                  "js": {
+                    "packageName": "@cvplus/logging",
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/multimedia/package.json",
+          {
+            "projects": {
+              "packages/multimedia": {
+                "root": "packages/multimedia",
+                "name": "@cvplus/multimedia",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:js",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:js": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:js"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.js.json",
+                      "runCommand": "npm run build:js"
+                    }
+                  },
+                  "build:frontend": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:frontend"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean:frontend && npm run build:frontend-types",
+                      "runCommand": "npm run build:frontend"
+                    }
+                  },
+                  "build:frontend-types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:frontend-types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.frontend.json",
+                      "runCommand": "npm run build:frontend-types"
+                    }
+                  },
+                  "build:simple": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:simple"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean:simple && npm run build:simple-types",
+                      "runCommand": "npm run build:simple"
+                    }
+                  },
+                  "build:simple-types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:simple-types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.simple.json",
+                      "runCommand": "npm run build:simple-types"
+                    }
+                  },
+                  "build:standalone": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:standalone"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean:standalone && npm run build:standalone-types",
+                      "runCommand": "npm run build:standalone"
+                    }
+                  },
+                  "build:standalone-types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:standalone-types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.standalone.json",
+                      "runCommand": "npm run build:standalone-types"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:types -- --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "clean:frontend": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean:frontend"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist/frontend",
+                      "runCommand": "npm run clean:frontend"
+                    }
+                  },
+                  "clean:simple": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean:simple"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist/frontend-simple",
+                      "runCommand": "npm run clean:simple"
+                    }
+                  },
+                  "clean:standalone": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean:standalone"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist/standalone",
+                      "runCommand": "npm run clean:standalone"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run lint -- --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "type-check:frontend": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check:frontend"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.frontend.json --noEmit",
+                      "runCommand": "npm run type-check:frontend"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cvplus",
+                  "npm:multimedia",
+                  "npm:image-processing",
+                  "npm:video-processing",
+                  "npm:audio-processing",
+                  "npm:file-upload",
+                  "npm:storage-management",
+                  "npm:cdn-integration",
+                  "npm:typescript"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:types",
+                      "build:js",
+                      "build:frontend",
+                      "build:frontend-types",
+                      "build:simple",
+                      "build:simple-types",
+                      "build:standalone",
+                      "build:standalone-types",
+                      "build:watch",
+                      "clean",
+                      "clean:frontend",
+                      "clean:simple",
+                      "clean:standalone",
+                      "dev",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "type-check:frontend",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus Multimedia - Phase 2C Complete: Interactive QR components with enhanced backend integration",
+                  "js": {
+                    "packageName": "@cvplus/multimedia",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.minimal.esm.js",
+                        "require": "./dist/index.minimal.js",
+                        "types": "./dist/index.minimal.d.ts"
+                      },
+                      "./frontend": {
+                        "import": "./dist/frontend/index.esm.js",
+                        "require": "./dist/frontend/index.js",
+                        "types": "./dist/frontend/index.d.ts"
+                      },
+                      "./integration": {
+                        "import": "./dist/standalone/frontend/integration/StandaloneIntegration.esm.js",
+                        "require": "./dist/standalone/frontend/integration/StandaloneIntegration.js",
+                        "types": "./dist/standalone/frontend/integration/StandaloneIntegration.d.ts"
+                      },
+                      "./standalone": {
+                        "import": "./dist/standalone/frontend/standalone-index.esm.js",
+                        "require": "./dist/standalone/frontend/standalone-index.js",
+                        "types": "./dist/standalone/frontend/standalone-index.d.ts"
+                      },
+                      "./types": {
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js",
+                        "types": "./dist/types/index.d.ts"
+                      },
+                      "./constants": {
+                        "import": "./dist/constants/index.esm.js",
+                        "require": "./dist/constants/index.js",
+                        "types": "./dist/constants/index.d.ts"
+                      },
+                      "./services": {
+                        "import": "./dist/services/index.esm.js",
+                        "require": "./dist/services/index.js",
+                        "types": "./dist/services/index.d.ts"
+                      },
+                      "./processors": {
+                        "import": "./dist/processors/index.esm.js",
+                        "require": "./dist/processors/index.js",
+                        "types": "./dist/processors/index.d.ts"
+                      },
+                      "./storage": {
+                        "import": "./dist/storage/index.esm.js",
+                        "require": "./dist/storage/index.js",
+                        "types": "./dist/storage/index.d.ts"
+                      },
+                      "./utils": {
+                        "import": "./dist/utils/index.esm.js",
+                        "require": "./dist/utils/index.js",
+                        "types": "./dist/utils/index.d.ts"
+                      },
+                      "./components": {
+                        "import": "./dist/components/index.esm.js",
+                        "require": "./dist/components/index.js",
+                        "types": "./dist/components/index.d.ts"
+                      },
+                      "./components/players/AIPodcastPlayer": {
+                        "import": "./dist/components/players/AIPodcastPlayer.esm.js",
+                        "require": "./dist/components/players/AIPodcastPlayer.js",
+                        "types": "./dist/components/players/AIPodcastPlayer.d.ts"
+                      },
+                      "./components/generation/VideoIntroduction": {
+                        "import": "./dist/components/generation/VideoIntroduction.esm.js",
+                        "require": "./dist/components/generation/VideoIntroduction.js",
+                        "types": "./dist/components/generation/VideoIntroduction.d.ts"
+                      },
+                      "./components/gallery/PortfolioGallery": {
+                        "import": "./dist/components/gallery/PortfolioGallery.esm.js",
+                        "require": "./dist/components/gallery/PortfolioGallery.js",
+                        "types": "./dist/components/gallery/PortfolioGallery.d.ts"
+                      },
+                      "./hooks": {
+                        "import": "./dist/frontend/hooks/useMultimediaFeatures.esm.js",
+                        "require": "./dist/frontend/hooks/useMultimediaFeatures.js",
+                        "types": "./dist/frontend/hooks/useMultimediaFeatures.d.ts"
+                      },
+                      "./providers": {
+                        "import": "./dist/frontend/providers/MultimediaProvider.esm.js",
+                        "require": "./dist/frontend/providers/MultimediaProvider.js",
+                        "types": "./dist/frontend/providers/MultimediaProvider.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.minimal.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/payments/package.json",
+          {
+            "projects": {
+              "packages/payments": {
+                "root": "packages/payments",
+                "name": "@cvplus/payments",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:secure": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:secure"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/build/secure-build.sh",
+                      "runCommand": "npm run build:secure"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:rollup": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:rollup"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build:rollup"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:types -- --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run lint -- --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "test-payment-providers": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test-payment-providers"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/test/test-payment-providers.sh",
+                      "runCommand": "npm run test-payment-providers"
+                    }
+                  },
+                  "validate-security": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-security"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/test/validate-security.sh",
+                      "runCommand": "npm run validate-security"
+                    }
+                  },
+                  "process-webhooks": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "process-webhooks"
+                    },
+                    "metadata": {
+                      "scriptContent": "echo 'Processing webhook test events...' && npm run test -- --testPathPattern='webhook'",
+                      "runCommand": "npm run process-webhooks"
+                    }
+                  },
+                  "audit-security": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "audit-security"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm audit && ./scripts/test/validate-security.sh",
+                      "runCommand": "npm run audit-security"
+                    }
+                  },
+                  "check-pci-compliance": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "check-pci-compliance"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/test/validate-security.sh | grep -i 'pci'",
+                      "runCommand": "npm run check-pci-compliance"
+                    }
+                  },
+                  "deploy:staging": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:staging"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/deployment/secure-deploy.sh staging",
+                      "runCommand": "npm run deploy:staging"
+                    }
+                  },
+                  "deploy:production": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:production"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/deployment/secure-deploy.sh production",
+                      "runCommand": "npm run deploy:production"
+                    }
+                  },
+                  "health-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "health-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "echo 'Running payment provider health checks...' && ./scripts/test/test-payment-providers.sh",
+                      "runCommand": "npm run health-check"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:secure",
+                      "build:types",
+                      "build:rollup",
+                      "build:watch",
+                      "clean",
+                      "dev",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "test-payment-providers",
+                      "validate-security",
+                      "process-webhooks",
+                      "audit-security",
+                      "check-pci-compliance",
+                      "deploy:staging",
+                      "deploy:production",
+                      "health-check",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus Payments - Stripe integration, payment processing, and booking services",
+                  "js": {
+                    "packageName": "@cvplus/payments",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js",
+                        "types": "./dist/index.d.ts"
+                      },
+                      "./backend": {
+                        "import": "./dist/backend/index.esm.js",
+                        "require": "./dist/backend/index.js",
+                        "types": "./dist/backend/index.d.ts"
+                      },
+                      "./backend/functions": {
+                        "import": "./dist/backend/functions/index.esm.js",
+                        "require": "./dist/backend/functions/index.js",
+                        "types": "./dist/backend/functions/index.d.ts"
+                      },
+                      "./frontend": {
+                        "import": "./dist/frontend/index.esm.js",
+                        "require": "./dist/frontend/index.js",
+                        "types": "./dist/frontend/index.d.ts"
+                      },
+                      "./types": {
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js",
+                        "types": "./dist/types/index.d.ts"
+                      },
+                      "./constants": {
+                        "import": "./dist/constants/index.esm.js",
+                        "require": "./dist/constants/index.js",
+                        "types": "./dist/constants/index.d.ts"
+                      },
+                      "./utils": {
+                        "import": "./dist/utils/index.esm.js",
+                        "require": "./dist/utils/index.js",
+                        "types": "./dist/utils/index.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/premium/package.json",
+          {
+            "projects": {
+              "packages/premium": {
+                "root": "packages/premium",
+                "name": "@cvplus/premium",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "test:payments": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:payments"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=payments",
+                      "runCommand": "npm run test:payments"
+                    }
+                  },
+                  "test:monitoring": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:monitoring"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=monitoring",
+                      "runCommand": "npm run test:monitoring"
+                    }
+                  },
+                  "test:functions": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:functions"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=functions",
+                      "runCommand": "npm run test:functions"
+                    }
+                  },
+                  "test:comprehensive": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:comprehensive"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/run-tests.sh",
+                      "runCommand": "npm run test:comprehensive"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:premium",
+                  "npm:subscription",
+                  "npm:billing",
+                  "npm:stripe",
+                  "npm:paypal",
+                  "npm:payment",
+                  "npm:analytics",
+                  "npm:enterprise",
+                  "npm:pricing",
+                  "npm:rbac",
+                  "npm:sso",
+                  "npm:ml",
+                  "npm:react",
+                  "npm:typescript"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "dev",
+                      "type-check",
+                      "lint",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "test:payments",
+                      "test:monitoring",
+                      "test:functions",
+                      "test:comprehensive",
+                      "clean",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "Premium subscription, billing, analytics, and enterprise management module for CVPlus",
+                  "js": {
+                    "packageName": "@cvplus/premium",
+                    "packageExports": {
+                      ".": {
+                        "types": "./dist/index.d.ts",
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js"
+                      },
+                      "./backend": {
+                        "types": "./dist/backend/index.d.ts",
+                        "import": "./dist/backend/index.esm.js",
+                        "require": "./dist/backend/index.js"
+                      },
+                      "./types": {
+                        "types": "./dist/types/index.d.ts",
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/public-profiles/package.json",
+          {
+            "projects": {
+              "packages/public-profiles": {
+                "root": "packages/public-profiles",
+                "name": "@cvplus/public-profiles",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:types": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:types"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --project tsconfig.build.json",
+                      "runCommand": "npm run build:types"
+                    }
+                  },
+                  "build:rollup": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:rollup"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build:rollup"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:types -- --watch",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rimraf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run lint -- --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --watch",
+                      "runCommand": "npm run test:watch"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  },
+                  "test-sharing": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test-sharing"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run test:social-sharing",
+                      "runCommand": "npm run test-sharing"
+                    }
+                  },
+                  "validate-privacy": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-privacy"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run test:privacy-controls",
+                      "runCommand": "npm run validate-privacy"
+                    }
+                  },
+                  "analyze-engagement": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "analyze-engagement"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run analytics:engagement",
+                      "runCommand": "npm run analyze-engagement"
+                    }
+                  },
+                  "seo-audit": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "seo-audit"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run test:seo-optimization",
+                      "runCommand": "npm run seo-audit"
+                    }
+                  },
+                  "social-test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "social-test"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run test:social-integration",
+                      "runCommand": "npm run social-test"
+                    }
+                  },
+                  "profile-validation": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "profile-validation"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run test:profile-validation",
+                      "runCommand": "npm run profile-validation"
+                    }
+                  },
+                  "test:social-sharing": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:social-sharing"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/test/test-social-sharing.sh",
+                      "runCommand": "npm run test:social-sharing"
+                    }
+                  },
+                  "test:privacy-controls": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:privacy-controls"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=privacy",
+                      "runCommand": "npm run test:privacy-controls"
+                    }
+                  },
+                  "test:social-integration": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:social-integration"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=social",
+                      "runCommand": "npm run test:social-integration"
+                    }
+                  },
+                  "test:seo-optimization": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:seo-optimization"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=seo",
+                      "runCommand": "npm run test:seo-optimization"
+                    }
+                  },
+                  "test:profile-validation": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:profile-validation"
+                    },
+                    "metadata": {
+                      "scriptContent": "jest --testPathPattern=profile",
+                      "runCommand": "npm run test:profile-validation"
+                    }
+                  },
+                  "build:social-features": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:social-features"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/build/build-social-features.sh",
+                      "runCommand": "npm run build:social-features"
+                    }
+                  },
+                  "build:social-components": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:social-components"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:social-components",
+                      "runCommand": "npm run build:social-components"
+                    }
+                  },
+                  "build:sharing-widgets": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:sharing-widgets"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:sharing-widgets",
+                      "runCommand": "npm run build:sharing-widgets"
+                    }
+                  },
+                  "build:social-analytics": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:social-analytics"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:social-analytics",
+                      "runCommand": "npm run build:social-analytics"
+                    }
+                  },
+                  "build:social-templates": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:social-templates"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:social-templates",
+                      "runCommand": "npm run build:social-templates"
+                    }
+                  },
+                  "build:privacy-controls": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:privacy-controls"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:privacy-controls",
+                      "runCommand": "npm run build:privacy-controls"
+                    }
+                  },
+                  "build:responsive-social": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:responsive-social"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment TARGET:responsive-social",
+                      "runCommand": "npm run build:responsive-social"
+                    }
+                  },
+                  "deploy:profiles": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "deploy:profiles"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/deployment/deploy-public-profiles.sh",
+                      "runCommand": "npm run deploy:profiles"
+                    }
+                  },
+                  "analytics:social": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "analytics:social"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/analytics/social-analytics.js",
+                      "runCommand": "npm run analytics:social"
+                    }
+                  },
+                  "analytics:seo": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "analytics:seo"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/analytics/seo-analytics.js",
+                      "runCommand": "npm run analytics:seo"
+                    }
+                  },
+                  "analytics:engagement": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "analytics:engagement"
+                    },
+                    "metadata": {
+                      "scriptContent": "node scripts/analytics/engagement-analytics.js",
+                      "runCommand": "npm run analytics:engagement"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cvplus",
+                  "npm:public-profiles",
+                  "npm:seo-optimization",
+                  "npm:professional-networking",
+                  "npm:cv-sharing",
+                  "npm:portfolio-showcase",
+                  "npm:social-integration",
+                  "npm:personal-branding",
+                  "npm:analytics-tracking",
+                  "npm:custom-domains",
+                  "npm:typescript",
+                  "npm:react"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:types",
+                      "build:rollup",
+                      "build:watch",
+                      "clean",
+                      "dev",
+                      "lint",
+                      "lint:fix",
+                      "type-check",
+                      "test",
+                      "test:watch",
+                      "test:coverage",
+                      "validate-dependencies",
+                      "test-sharing",
+                      "validate-privacy",
+                      "analyze-engagement",
+                      "seo-audit",
+                      "social-test",
+                      "profile-validation",
+                      "test:social-sharing",
+                      "test:privacy-controls",
+                      "test:social-integration",
+                      "test:seo-optimization",
+                      "test:profile-validation",
+                      "build:social-features",
+                      "build:social-components",
+                      "build:sharing-widgets",
+                      "build:social-analytics",
+                      "build:social-templates",
+                      "build:privacy-controls",
+                      "build:responsive-social",
+                      "deploy:profiles",
+                      "analytics:social",
+                      "analytics:seo",
+                      "analytics:engagement"
+                    ]
+                  },
+                  "description": "CVPlus Public Profiles - SEO-optimized public CV sharing and professional networking platform",
+                  "js": {
+                    "packageName": "@cvplus/public-profiles",
+                    "packageExports": {
+                      ".": {
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js",
+                        "types": "./dist/index.d.ts"
+                      },
+                      "./types": {
+                        "import": "./dist/types/index.esm.js",
+                        "require": "./dist/types/index.js",
+                        "types": "./dist/types/index.d.ts"
+                      },
+                      "./constants": {
+                        "import": "./dist/constants/index.esm.js",
+                        "require": "./dist/constants/index.js",
+                        "types": "./dist/constants/index.d.ts"
+                      },
+                      "./services": {
+                        "import": "./dist/services/index.esm.js",
+                        "require": "./dist/services/index.js",
+                        "types": "./dist/services/index.d.ts"
+                      },
+                      "./components": {
+                        "import": "./dist/components/index.esm.js",
+                        "require": "./dist/components/index.js",
+                        "types": "./dist/components/index.d.ts"
+                      },
+                      "./hooks": {
+                        "import": "./dist/hooks/index.esm.js",
+                        "require": "./dist/hooks/index.js",
+                        "types": "./dist/hooks/index.d.ts"
+                      },
+                      "./seo": {
+                        "import": "./dist/seo/index.esm.js",
+                        "require": "./dist/seo/index.js",
+                        "types": "./dist/seo/index.d.ts"
+                      },
+                      "./analytics": {
+                        "import": "./dist/analytics/index.esm.js",
+                        "require": "./dist/analytics/index.js",
+                        "types": "./dist/analytics/index.d.ts"
+                      },
+                      "./networking": {
+                        "import": "./dist/networking/index.esm.js",
+                        "require": "./dist/networking/index.js",
+                        "types": "./dist/networking/index.d.ts"
+                      },
+                      "./utils": {
+                        "import": "./dist/utils/index.esm.js",
+                        "require": "./dist/utils/index.js",
+                        "types": "./dist/utils/index.d.ts"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/recommendations/package.json",
+          {
+            "projects": {
+              "packages/recommendations": {
+                "root": "packages/recommendations",
+                "name": "@cvplus/recommendations",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsup --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:ci": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:ci"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest run",
+                      "runCommand": "npm run test:ci"
+                    }
+                  },
+                  "test:coverage": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:coverage"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest run --coverage",
+                      "runCommand": "npm run test:coverage"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "lint:fix": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint:fix"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint src --ext .ts,.tsx --fix",
+                      "runCommand": "npm run lint:fix"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cvplus",
+                  "npm:recommendations",
+                  "npm:ai",
+                  "npm:cv",
+                  "npm:performance",
+                  "npm:caching"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "dev",
+                      "test",
+                      "test:ci",
+                      "test:coverage",
+                      "type-check",
+                      "lint",
+                      "lint:fix",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus recommendations system module with performance optimization and AI integration",
+                  "js": {
+                    "packageName": "@cvplus/recommendations",
+                    "packageExports": {
+                      ".": {
+                        "types": "./dist/index.d.ts",
+                        "import": "./dist/index.esm.js",
+                        "require": "./dist/index.js"
+                      }
+                    },
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/shell/package.json",
+          {
+            "projects": {
+              "packages/shell": {
+                "root": "packages/shell",
+                "name": "@cvplus/shell",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc && vite build",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "preview": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "preview"
+                    },
+                    "metadata": {
+                      "scriptContent": "vite preview",
+                      "runCommand": "npm run preview"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest",
+                      "runCommand": "npm run test"
+                    }
+                  },
+                  "test:ui": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "test:ui"
+                    },
+                    "metadata": {
+                      "scriptContent": "vitest --ui",
+                      "runCommand": "npm run test:ui"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "lint"
+                    },
+                    "metadata": {
+                      "scriptContent": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+                      "runCommand": "npm run lint"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "dev",
+                      "build",
+                      "preview",
+                      "test",
+                      "test:ui",
+                      "lint",
+                      "type-check"
+                    ]
+                  },
+                  "description": "CVPlus Shell Application - Main app orchestrator for all submodules",
+                  "js": {
+                    "packageName": "@cvplus/shell",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        [
+          "packages/workflow/package.json",
+          {
+            "projects": {
+              "packages/workflow": {
+                "root": "packages/workflow",
+                "name": "@cvplus/workflow",
+                "targets": {
+                  "build": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c",
+                      "runCommand": "npm run build"
+                    }
+                  },
+                  "build:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c -w",
+                      "runCommand": "npm run build:watch"
+                    }
+                  },
+                  "build:dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment NODE_ENV:development",
+                      "runCommand": "npm run build:dev"
+                    }
+                  },
+                  "build:prod": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "build:prod"
+                    },
+                    "metadata": {
+                      "scriptContent": "rollup -c --environment NODE_ENV:production",
+                      "runCommand": "npm run build:prod"
+                    }
+                  },
+                  "clean": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "clean"
+                    },
+                    "metadata": {
+                      "scriptContent": "rm -rf dist",
+                      "runCommand": "npm run clean"
+                    }
+                  },
+                  "type-check": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit",
+                      "runCommand": "npm run type-check"
+                    }
+                  },
+                  "type-check:watch": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "type-check:watch"
+                    },
+                    "metadata": {
+                      "scriptContent": "tsc --noEmit --watch",
+                      "runCommand": "npm run type-check:watch"
+                    }
+                  },
+                  "dev": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "dev"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run build:dev -- --watch",
+                      "runCommand": "npm run dev"
+                    }
+                  },
+                  "prepublishOnly": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "prepublishOnly"
+                    },
+                    "metadata": {
+                      "scriptContent": "npm run clean && npm run build:prod",
+                      "runCommand": "npm run prepublishOnly"
+                    }
+                  },
+                  "validate-dependencies": {
+                    "executor": "nx:run-script",
+                    "options": {
+                      "script": "validate-dependencies"
+                    },
+                    "metadata": {
+                      "scriptContent": "./scripts/validate-dependencies.sh",
+                      "runCommand": "npm run validate-dependencies"
+                    }
+                  }
+                },
+                "tags": [
+                  "npm:public",
+                  "npm:cvplus",
+                  "npm:workflow",
+                  "npm:job-management",
+                  "npm:feature-orchestration",
+                  "npm:templates",
+                  "npm:certification-badges",
+                  "npm:firebase-functions"
+                ],
+                "metadata": {
+                  "targetGroups": {
+                    "NPM Scripts": [
+                      "build",
+                      "build:watch",
+                      "build:dev",
+                      "build:prod",
+                      "clean",
+                      "type-check",
+                      "type-check:watch",
+                      "dev",
+                      "prepublishOnly",
+                      "validate-dependencies"
+                    ]
+                  },
+                  "description": "CVPlus workflow management module for job processing, feature orchestration, templates, and certification badges",
+                  "js": {
+                    "packageName": "@cvplus/workflow",
+                    "packageMain": "dist/index.js",
+                    "isInPackageManagerWorkspaces": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      ],
+      "name": "AggregateCreateNodesError"
+    }
+  ],
+  "computedAt": 1757818746379
 }
