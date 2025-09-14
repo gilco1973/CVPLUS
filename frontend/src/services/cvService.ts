@@ -7,6 +7,7 @@
 // Core CV operations
 export {
   CVServiceCore,
+  CVUploadResponse,
   createJob,
   createDevelopmentJob,
   uploadCV,
@@ -122,3 +123,11 @@ export { analyzeAchievements, generateAchievementShowcase } from './lazyAnalyzer
 
 // Types
 export type { Job } from '../types/cv';
+
+// Upload function compatible with CVUpload component - override the legacy one
+export const uploadCV = async (
+  formData: FormData,
+  onProgress?: (progress: number) => void
+): Promise<CVUploadResponse> => {
+  return CVServiceCore.uploadCVWithProgress(formData, onProgress);
+};

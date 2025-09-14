@@ -148,26 +148,66 @@ service cloud.firestore {
     // ========================================
     // CV AND JOB MANAGEMENT
     // ========================================
-    
-    // Jobs collection with premium feature validation
+
+    // CV Jobs collection - enhanced for T041-T044 functionality
+    match /cv_jobs/{jobId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId &&
+        request.resource.data.keys().hasAll(['userId', 'status', 'createdAt']);
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId &&
+        (!('userId' in request.resource.data.diff(resource.data).changedKeys()) ||
+         request.resource.data.userId == resource.data.userId);
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Processed CVs collection - users can read their own, functions can write
+    match /processed_cvs/{cvId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId ||
+         (exists(resource.data.publicProfile) && resource.data.publicProfile.isPublic == true));
+      allow create: if isFunctionCall() &&
+        request.resource.data.keys().hasAll(['userId', 'jobId', 'processedData']);
+      allow update: if isFunctionCall() ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId &&
+         !('processedData' in request.resource.data.diff(resource.data).changedKeys()));
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Generated Content collection - multimedia assets (T045-T046)
+    match /generated_content/{contentId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isFunctionCall() &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'status']);
+      allow update: if isFunctionCall();
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Jobs collection with premium feature validation (legacy)
     match /jobs/{jobId} {
-      allow read: if isAuthenticated() && 
-        (request.auth.uid == resource.data.userId || 
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId ||
          resource.data.isPublic == true);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
         request.auth.uid == request.resource.data.userId;
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
         request.auth.uid == resource.data.userId;
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
         request.auth.uid == resource.data.userId;
     }
-    
-    // Generated CVs - users can manage their own
+
+    // Generated CVs - users can manage their own (legacy)
     match /generatedCVs/{cvId} {
-      allow read, write: if isAuthenticated() && 
+      allow read, write: if isAuthenticated() &&
         request.auth.uid == resource.data.userId;
     }
-    
+
     // CV Hash Records - functions only (for duplicate detection)
     match /cvHashRecords/{hashId} {
       allow read: if false;
@@ -230,26 +270,46 @@ service cloud.firestore {
     }
 
     // ========================================
-    // ANALYTICS AND REVENUE DATA
+    // ANALYTICS AND REVENUE DATA (Enhanced T051)
     // ========================================
-    
-    // Analytics - admin read, functions write
+
+    // User Analytics - users can read their own data, functions write
+    match /user_analytics/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId || isAdmin();
+      allow write: if isFunctionCall();
+    }
+
+    // Entity Analytics - flexible analytics for different entity types
+    match /entity_analytics/{entityType}/{entityId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+      allow write: if isFunctionCall();
+    }
+
+    // Analytics Insights - generated insights from analytics data
+    match /analytics_insights/{insightId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+      allow write: if isFunctionCall();
+    }
+
+    // Analytics - admin read, functions write (legacy)
     match /analytics/{document=**} {
       allow read: if isAdmin();
       allow write: if isFunctionCall();
     }
-    
+
     // Revenue analytics and conversion tracking - admin/functions only
     match /conversionMetrics/{metricId} {
       allow read: if isAdmin();
       allow write: if isFunctionCall();
     }
-    
+
     match /revenueAnalytics/{analyticsId} {
       allow read: if isAdmin();
       allow write: if isFunctionCall();
     }
-    
+
     // Feature usage analytics for business intelligence
     match /featureUsageAnalytics/{usageId} {
       allow read: if isAdmin();
@@ -257,9 +317,55 @@ service cloud.firestore {
     }
 
     // ========================================
+    // PUBLIC PROFILES AND SHARING (T047-T050)
+    // ========================================
+
+    // Public Profiles - public read access, owner and functions can write
+    match /public_profiles/{profileId} {
+      allow read: if resource.data.isPublic == true ||
+        isAuthenticated() && request.auth.uid == resource.data.userId ||
+        isAdmin();
+      allow create: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId &&
+        request.resource.data.keys().hasAll(['userId', 'cvId', 'isPublic', 'createdAt']);
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId &&
+        (!('userId' in request.resource.data.diff(resource.data).changedKeys()) ||
+         request.resource.data.userId == resource.data.userId);
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Contact Form Submissions - functions can create and read, users can read their own submissions
+    match /contact_submissions/{submissionId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.fromUserId ||
+         request.auth.uid == resource.data.toUserId) ||
+        isAdmin();
+      allow create: if isFunctionCall() &&
+        request.resource.data.keys().hasAll(['fromUserId', 'toUserId', 'submittedAt', 'message']);
+      allow update: if isFunctionCall(); // Only functions can update status
+      allow delete: if isAdmin(); // Only admins can delete contact submissions
+    }
+
+    // Profile View Analytics - anonymous read for public profiles, user read for own profiles
+    match /profile_analytics/{profileId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.profileOwner || isAdmin());
+      allow create, update: if isFunctionCall(); // Functions track analytics
+      allow delete: if false; // Preserve analytics data
+    }
+
+    // Contact Form Rate Limiting - functions manage, users can read their own
+    match /contact_rate_limits/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isFunctionCall();
+    }
+
+    // ========================================
     // PUBLIC AND READ-ONLY DATA
     // ========================================
-    
+
     // Allow reading public templates
     match /templates/{templateId} {
       allow read: if true;
@@ -332,26 +438,97 @@ service cloud.firestore {
     }
 
     // ========================================
+    // SYSTEM LOGGING AND MONITORING (T057)
+    // ========================================
+
+    // Error Logs - admin read, functions write
+    match /error_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve error logs for debugging
+    }
+
+    // API Logs - admin read, functions write
+    match /api_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve API logs for monitoring
+    }
+
+    // User Action Logs - users can read their own logs, functions write
+    match /user_action_logs/{logId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && request.auth.uid == resource.data.context.userId);
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve user action logs
+    }
+
+    // System Logs - admin read, functions write
+    match /system_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve system logs
+    }
+
+    // General Logs - admin read, functions write
+    match /logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+      allow delete: if false; // Preserve all logs
+    }
+
+    // System Errors - admin read, functions write
+    match /system_errors/{errorId} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+      allow delete: if false; // Never delete system errors
+    }
+
+    // System Metrics - admin read, functions write
+    match /system_metrics/{metricType} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+
+      // Daily error counts and metrics
+      match /daily/{date} {
+        allow read: if isAdmin();
+        allow write: if isFunctionCall();
+      }
+    }
+
+    // Rate Limit Storage - functions manage rate limit data
+    match /rate_limits/{limitKey} {
+      allow read: if false; // Rate limit data is internal
+      allow write: if isFunctionCall();
+    }
+
+    // Rate Limit Bypasses - admin read, functions manage
+    match /rate_limit_bypasses/{bypassKey} {
+      allow read: if isAdmin();
+      allow write: if isFunctionCall();
+    }
+
+    // ========================================
     // ADMIN AND SUPPORT COLLECTIONS
     // ========================================
-    
+
     // Support tickets - users can manage their own, admins can read all
     match /supportTickets/{ticketId} {
-      allow read: if isAuthenticated() && 
+      allow read: if isAuthenticated() &&
                      (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                        request.auth.uid == request.resource.data.userId;
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
                        (request.auth.uid == resource.data.userId || isAdmin());
       allow delete: if isAdmin();
     }
-    
+
     // System health monitoring - admin only
     match /systemHealth/{healthId} {
       allow read: if isAdmin();
       allow write: if isFunctionCall();
     }
-    
+
     // Audit logs - admin read only, functions write
     match /auditLogs/{logId} {
       allow read: if isAdmin();

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone, FileRejection } from 'react-dropzone';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { logger } from '@cvplus/logging';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -21,13 +22,32 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading 
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+    logger.logDebug('FileUpload: File drop initiated', {
+      event: 'file.upload.drop_initiated',
+      acceptedCount: acceptedFiles.length,
+      rejectedCount: rejectedFiles.length,
+      component: 'FileUpload'
+    });
+
     setError(null);
 
     if (rejectedFiles.length > 0) {
       const rejection = rejectedFiles[0];
-      if (rejection.errors[0]?.code === 'file-too-large') {
+      const errorCode = rejection.errors[0]?.code;
+
+      logger.logWarning('FileUpload: File rejected during drop', {
+        event: 'file.upload.file_rejected',
+        fileName: rejection.file.name,
+        fileSize: rejection.file.size,
+        fileType: rejection.file.type,
+        errorCode: errorCode,
+        errorMessage: rejection.errors[0]?.message,
+        component: 'FileUpload'
+      });
+
+      if (errorCode === 'file-too-large') {
         setError('File size must be less than 10MB');
-      } else if (rejection.errors[0]?.code === 'file-invalid-type') {
+      } else if (errorCode === 'file-invalid-type') {
         setError('Please upload a PDF, DOCX, DOC, or CSV file');
       } else {
         setError('Invalid file. Please try again.');
@@ -36,7 +56,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading 
     }
 
     if (acceptedFiles.length > 0) {
-      onFileSelect(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+
+      logger.logInfo('FileUpload: File accepted successfully', {
+        event: 'file.upload.file_accepted',
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        component: 'FileUpload'
+      });
+
+      onFileSelect(file);
     }
   }, [onFileSelect]);
 

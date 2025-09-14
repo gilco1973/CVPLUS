@@ -34,3 +34,9 @@
 [submodule "packages/workflow"]
 	path = packages/workflow
 	url = git@github.com:gilco1973/cvplus-workflow.git
+[submodule "packages/logging"]
+	path = packages/logging
+	url = git@github.com:gilco1973/cvplus-logging.git
+[submodule "packages/shell"]
+	path = packages/shell
+	url = git@github.com:gilco1973/cvplus-shell.git

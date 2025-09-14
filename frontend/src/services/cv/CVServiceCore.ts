@@ -16,15 +16,27 @@ import { recommendationsDebugger } from '../../utils/debugRecommendations';
 import { RequestManager } from '../RequestManager';
 import { strictModeAwareRequestManager } from '../../utils/strictModeAwareRequestManager';
 import { auth } from '../../lib/firebase';
-import type { 
-  Job, 
-  JobCreateParams, 
-  FileUploadParams, 
+import type {
+  Job,
+  JobCreateParams,
+  FileUploadParams,
   CVProcessParams,
   CVAnalysisParams,
   AsyncCVGenerationResponse,
   AsyncCVGenerationParams
 } from '../../types/cv';
+
+// CVUpload response type matching Firebase Function
+export interface CVUploadResponse {
+  jobId: string;
+  status: string;
+  userId: string;
+  features: string[];
+  creditsUsed: number;
+  remainingCredits: number;
+  createdAt: string;
+  estimatedCompletionTime: string;
+}
 
 /**
  * Main CV Service orchestrating all CV-related operations
@@ -217,6 +229,71 @@ export class CVServiceCore {
   // Feature management
   static async skipFeature(jobId: string, featureId: string) {
     return CVParser.skipFeature(jobId, featureId);
+  }
+
+  // CV Upload with progress tracking (for CVUpload component)
+  static async uploadCVWithProgress(
+    formData: FormData,
+    onProgress?: (progress: number) => void
+  ): Promise<CVUploadResponse> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('User must be authenticated to upload CV');
+    }
+
+    // Get auth token
+    const token = await user.getIdToken();
+
+    // Create XMLHttpRequest for progress tracking
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          onProgress(percentComplete);
+        }
+      });
+
+      // Handle completion
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (error) {
+            reject(new Error('Invalid JSON response from server'));
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            reject(new Error(error.message || `Upload failed with status ${xhr.status}`));
+          } catch {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      });
+
+      // Handle errors
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error occurred during upload'));
+      });
+
+      // Handle timeout
+      xhr.addEventListener('timeout', () => {
+        reject(new Error('Upload timeout - please try again'));
+      });
+
+      // Configure request
+      const functionUrl = import.meta.env.VITE_FIREBASE_FUNCTION_URL || 'http://localhost:5001';
+      xhr.open('POST', `${functionUrl}/uploadCV`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.timeout = 60000; // 60 second timeout
+
+      // Send request
+      xhr.send(formData);
+    });
   }
 }
 

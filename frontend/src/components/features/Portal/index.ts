@@ -1,24 +1,13 @@
 /**
- * Portal Components Export
- * 
- * Central export file for all portal-related components
+ * One Click Portal Frontend Components
+ *
+ * React components for the CVPlus One Click Portal feature.
+ * These components will be implemented in T042-T043.
+ *
+ * @author CVPlus Team
+ * @version 1.0.0
  */
 
-export { PortalChatInterface } from './PortalChatInterface';
-
-// Re-export types for convenience
-export type {
-  PortalChatInterfaceProps,
-  PortalLayoutProps,
-  PortalDeploymentStatusProps,
-  PortalSectionsProps,
-  PortalQRIntegrationProps
-} from '../../../types/portal-component-props';
-
-export type {
-  PortalConfig,
-  ChatConfig,
-  ChatMessage,
-  PortalError,
-  RAGSourceDocument
-} from '../../../types/portal-types';
+// Portal components - will be implemented in Phase 3.5
+export * from './OneClickPortalGenerator';    // T042 - Portal generation UI
+export * from './PortalAnalyticsDashboard';   // T043 - Portal analytics dashboard

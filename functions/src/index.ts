@@ -78,6 +78,13 @@ export { sendSchedulingEmail } from './scripts/functions/sendSchedulingEmail';
 // ============================================================================
 // All CV processing, analysis, and enhancement functions
 
+// New CV Processing Functions (T041-T044)
+export { uploadCV } from './functions/cv/upload';
+export { uploadCVFromUrl } from './functions/cv/url';
+export { getCVStatus } from './functions/cv/status';
+export { downloadProcessedCV } from './functions/cv/download';
+
+// Existing CV Processing Functions from submodules
 export {
   processCV,
   generateCV,
@@ -136,8 +143,12 @@ export {
 // ============================================================================
 // Media generation, podcasts, videos, QR codes, and multimedia processing
 
+// New Multimedia Functions (T045-T046)
+export { generatePodcast } from './functions/multimedia/podcast';
+export { generateVideo } from './functions/multimedia/video';
+
+// Existing Multimedia Functions from submodules
 export {
-  generatePodcast,
   podcastStatus,
   podcastStatusPublic,
   generateVideoIntroduction,
@@ -170,6 +181,10 @@ export {
 // ============================================================================
 // Analytics, metrics, reporting, and business intelligence
 
+// New Analytics Functions (T051)
+export { getAnalytics } from './functions/analytics/get';
+
+// Existing Analytics Functions from submodules
 export {
   trackExternalDataUsage,
   getUserExternalDataUsageStats,
@@ -248,8 +263,14 @@ export {
 // ============================================================================
 // Public profiles, web portals, social integration, QR codes, and testimonials
 
+// New Public Profile Functions (T047-T050)
+export { createPublicProfile } from './functions/profile/create';
+export { viewPublicProfile } from './functions/profile/view';
+export { updatePublicProfile } from './functions/profile/update';
+export { contactProfileOwner } from './functions/profile/contact';
+
+// Existing Public Profile Functions from submodules
 export {
-  createPublicProfile,
   getPublicProfile,
   updatePublicProfileSettings,
   submitContactForm,
@@ -383,11 +404,150 @@ export {
 } from '@cvplus/i18n/backend';
 
 // ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+// Health check, API documentation, and maintenance functions
+
+import { onRequest } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { Request, Response } from 'firebase-functions';
+
+/**
+ * Health check endpoint for monitoring
+ */
+export const healthCheck = onRequest(
+  {
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    maxInstances: 10,
+    cors: {
+      origin: true,
+      methods: ['GET', 'OPTIONS'],
+      allowedHeaders: ['Content-Type'],
+      credentials: false
+    }
+  },
+  async (req: Request, res: Response) => {
+    try {
+      if (req.method === 'OPTIONS') {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type');
+        res.status(200).send('');
+        return;
+      }
+
+      if (req.method !== 'GET') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+
+      const healthData = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: CVPLUS_FUNCTIONS_VERSION,
+        environment: process.env.NODE_ENV || 'production',
+        newFunctions: {
+          cv: ['uploadCV', 'uploadCVFromUrl', 'getCVStatus', 'downloadProcessedCV'],
+          multimedia: ['generatePodcast', 'generateVideo'],
+          profile: ['createPublicProfile', 'viewPublicProfile', 'updatePublicProfile', 'contactProfileOwner'],
+          analytics: ['getAnalytics']
+        }
+      };
+
+      res.set({
+        'Cache-Control': 'public, max-age=60',
+        'Content-Type': 'application/json'
+      });
+
+      res.status(200).json(healthData);
+
+    } catch (error) {
+      console.error('Health check failed:', error);
+      res.status(500).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Health check failed'
+      });
+    }
+  }
+);
+
+/**
+ * Cleanup expired data (scheduled function)
+ */
+export const cleanupExpiredData = onSchedule(
+  {
+    schedule: '0 2 * * *', // Daily at 2 AM
+    timeZone: 'UTC',
+    memory: '512MiB',
+    timeoutSeconds: 300
+  },
+  async (event) => {
+    try {
+      console.log('Starting expired data cleanup...');
+
+      const firestore = admin.firestore();
+      const now = admin.firestore.Timestamp.now();
+      const threeDaysAgo = admin.firestore.Timestamp.fromDate(
+        new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      );
+
+      let cleanupCount = 0;
+
+      // Cleanup expired rate limit records
+      const rateLimitQuery = await firestore
+        .collectionGroup('requests')
+        .where('timestamp', '<', threeDaysAgo)
+        .limit(100)
+        .get();
+
+      for (const doc of rateLimitQuery.docs) {
+        await doc.ref.delete();
+        cleanupCount++;
+      }
+
+      // Cleanup expired download URLs
+      const tempDownloadsQuery = await firestore
+        .collection('temp_downloads')
+        .where('expiresAt', '<', now)
+        .limit(50)
+        .get();
+
+      for (const doc of tempDownloadsQuery.docs) {
+        await doc.ref.delete();
+        cleanupCount++;
+      }
+
+      console.log(`Cleanup completed. Removed ${cleanupCount} expired records.`);
+
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      throw error;
+    }
+  }
+);
+
+// ============================================================================
 // SYSTEM INFORMATION
 // ============================================================================
-export const CVPLUS_FUNCTIONS_VERSION = '4.0.0';
-export const MIGRATION_STATUS = 'PHASE_4_COMPLETE';
-export const ARCHITECTURE_DATE = '2025-08-29';
-export const TOTAL_FUNCTIONS_COUNT = 150; // Approximate total across all submodules
+export const CVPLUS_FUNCTIONS_VERSION = '4.1.0';
+export const MIGRATION_STATUS = 'PHASE_4_COMPLETE_WITH_NEW_FUNCTIONS';
+export const ARCHITECTURE_DATE = '2025-09-13';
+// ============================================================================
+// ONE CLICK PORTAL FUNCTIONS
+// ============================================================================
+// Portal generation, chat, and analytics functions
+
+export {
+  generatePortal,
+  getPortalStatus,
+  startChatSession,
+  sendChatMessage,
+  getPortalAnalytics
+} from './portal';
+
+export const TOTAL_FUNCTIONS_COUNT = 166; // Updated count with portal functions
 export const ROOT_FUNCTIONS_COUNT = 4;
 export const SUBMODULE_COUNT = 11;
+export const NEW_FUNCTIONS_COUNT = 16; // T041-T051 + Portal functions (T005)

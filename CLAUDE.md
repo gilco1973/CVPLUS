@@ -100,6 +100,56 @@ You are an AI software engineer operating with strict execution standards. Apply
 CVPlus is an AI-powered CV transformation platform that takes traditional CVs "From Paper to Powerful", reinventing them into interactive, multimedia-rich professional profiles. The system uses Anthropic's Claude API for intelligent CV analysis and provides personalized recommendations with cutting-edge interactive features.
 Use sub agents from ~/.local/share/claude-007-agents/.claude/agents in everything you do.
 
+## Recent Development Context (Updated 2025-09-13)
+
+### CVPlus Feature Implementation
+Currently implementing the complete CVPlus platform with the following key components:
+
+**Core Features**:
+- CV upload and AI analysis (OpenAI GPT-4, Anthropic Claude)
+- ATS optimization with 0-100 compatibility scoring
+- Personality insights (MBTI/Big Five analysis)
+- Multimedia generation (ElevenLabs podcasts, D-ID videos)
+- Interactive timeline and portfolio galleries
+- Public profile sharing with privacy controls
+- Contact forms and calendar integration
+
+**Technical Stack**:
+- Frontend: React 18 + TypeScript + Vite + Tailwind CSS
+- Backend: Firebase Functions + Firestore + Storage
+- AI Services: OpenAI GPT-4, Anthropic Claude, ElevenLabs, D-ID
+- Testing: Vitest (frontend), Jest (backend)
+- Architecture: Modular submodule system (12 independent git repos)
+
+**Performance Targets**:
+- CV processing: <60 seconds end-to-end
+- API response: <500ms p95 latency
+- File upload: 10MB max, <5 seconds
+- Concurrent users: 10,000 target capacity
+
+**Data Model Entities**:
+- UserProfile: Authentication, subscription, preferences
+- CVJob: Processing requests with status tracking
+- ProcessedCV: Structured CV content with AI insights
+- GeneratedContent: Multimedia assets (audio, video, documents)
+- PublicProfile: Shareable profiles with analytics
+- AnalyticsData: Engagement metrics and tracking
+
+**API Endpoints**:
+- `/cv/upload` - CV file upload with feature selection
+- `/cv/status/{jobId}` - Processing status monitoring
+- `/multimedia/podcast` - AI podcast generation
+- `/multimedia/video` - AI video creation with avatars
+- `/profile/public` - Public profile management
+- `/analytics/{entityType}/{entityId}` - Usage analytics
+
+**Development Phase**: Currently in Phase 1 (Design & Contracts)
+- ✅ Research completed - resolved all NEEDS CLARIFICATION items
+- ✅ Data model designed with full entity relationships
+- ✅ API contracts specified (OpenAPI 3.0.3)
+- ✅ Quickstart guide created with test scenarios
+- ⏳ Next: Task generation and implementation planning
+
 ## Project Structure
 ```
 /Users/gklainert/Documents/cvplus/
@@ -174,6 +224,27 @@ CVPlus is actively being developed with the following key features implemented:
 - Certification badge system
 - Public profile sharing
 - Real-time processing status tracking
+
+## Active Migration Project (Feature 005)
+**Current Branch**: `005-migration-plan-migrate`
+**Status**: Implementation planning complete, ready for task generation
+
+**Migration Scope**: Complete code migration from root repository to submodules
+- **Objective**: Achieve 100% architectural compliance with submodule-only business logic
+- **Target**: Migrate remaining service files, models, and new API functions to appropriate submodules
+- **Preservation**: Maintain all 166+ Firebase Function exports and external API contracts
+- **Validation**: Zero breaking changes, TypeScript compilation, full test suite, deployment success
+
+**Submodule Architecture**: 18+ independent git repositories under /packages/
+- core, auth, cv-processing, multimedia, analytics, premium, workflow, admin, public-profiles, recommendations, payments, i18n, etc.
+
+**Key Migration Units**:
+- Services: ai-analysis.service.ts, cv-processor.service.ts → cv-processing submodule
+- Models: analytics.service.ts, public-profile.service.ts → analytics/public-profiles submodules
+- New APIs: CV upload/status, multimedia generation, profile management → respective submodules
+- Import chains: Update to @cvplus/[module]/backend pattern (already established)
+
+**Migration Approach**: Incremental domain-based batches with atomic rollback capability
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
