@@ -15,6 +15,17 @@
     "test:integration": "jest tests/integration",
     "test:unit": "jest tests/unit",
     "test:performance": "jest tests/performance",
+    "test:load": "ts-node tests/load/run-load-tests.ts",
+    "test:load:baseline": "ts-node tests/load/run-load-tests.ts --scenario=baseline",
+    "test:load:medium": "ts-node tests/load/run-load-tests.ts --scenario=medium",
+    "test:load:high": "ts-node tests/load/run-load-tests.ts --scenario=high",
+    "test:load:stress": "ts-node tests/load/run-load-tests.ts --scenario=stress",
+    "test:load:10k": "ts-node tests/load/run-load-tests.ts --scenario=stress --users=10000",
+    "test:load:breakpoint": "ts-node tests/load/run-load-tests.ts --scenario=breakpoint",
+    "test:load:recovery": "ts-node tests/load/run-load-tests.ts --scenario=recovery",
+    "test:load:complete": "ts-node tests/load/run-load-tests.ts --scenario=complete",
+    "test:load:jest": "jest tests/load/concurrent-load.test.ts",
+    "test:load:validate": "ts-node tests/load/validate-load-tests.ts",
     "test:e2e": "npm run test:contract && npm run test:integration",
     "test:e2e:real-apis": "E2E_MOCK_APIS=false npm run test:e2e",
     "test:smoke": "jest tests/contract --testTimeout=30000",
@@ -86,7 +97,7 @@
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
-    "@cvplus/core": "workspace:*"
+    "@cvplus/core": "file:../core"
   },
   "files": [
     "dist",

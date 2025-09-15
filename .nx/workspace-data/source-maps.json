@@ -3978,6 +3978,50 @@
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.35": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.36": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.37": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.38": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.39": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.40": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.41": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.42": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.43": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.44": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.45": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
@@ -4279,6 +4323,314 @@
       "nx/core/package-json"
     ],
     "targets.test:performance.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:baseline.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:medium.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:high.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:stress.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:10k.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:breakpoint.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:recovery.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:complete.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:jest.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:load:validate.metadata.runCommand": [
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
     ],

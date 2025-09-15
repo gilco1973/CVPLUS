@@ -8,28 +8,28 @@
 ## Execution Flow (main)
 ```
 1. Parse user description from Input
-   ’ Comprehensive logging system for CVPlus platform and all packages identified
+   ï¿½ Comprehensive logging system for CVPlus platform and all packages identified
 2. Extract key concepts from description
-   ’ Actors: developers, administrators, security analysts, operations teams
-   ’ Actions: log events, monitor performance, debug issues, track usage, audit security
-   ’ Data: application logs, security events, performance metrics, error traces
-   ’ Constraints: privacy compliance, performance impact, storage costs, retention policies
+   ï¿½ Actors: developers, administrators, security analysts, operations teams
+   ï¿½ Actions: log events, monitor performance, debug issues, track usage, audit security
+   ï¿½ Data: application logs, security events, performance metrics, error traces
+   ï¿½ Constraints: privacy compliance, performance impact, storage costs, retention policies
 3. For each unclear aspect:
-   ’ Marked specific log retention and compliance requirements
+   ï¿½ Marked specific log retention and compliance requirements
 4. Fill User Scenarios & Testing section
-   ’ Primary flow: Event logging to centralized analysis and alerting
+   ï¿½ Primary flow: Event logging to centralized analysis and alerting
 5. Generate Functional Requirements
-   ’ Structured logging, centralized collection, real-time monitoring, compliance
+   ï¿½ Structured logging, centralized collection, real-time monitoring, compliance
 6. Identify Key Entities
-   ’ Log entries, log streams, alerts, audit trails
+   ï¿½ Log entries, log streams, alerts, audit trails
 7. Run Review Checklist
-   ’ All sections completed with marked clarifications
+   ï¿½ All sections completed with marked clarifications
 8. Return: SUCCESS (spec ready for planning)
 ```
 
 ---
 
-## ¡ Quick Guidelines
+## ï¿½ Quick Guidelines
 -  Focus on WHAT users need and WHY
 - L Avoid HOW to implement (no tech stack, APIs, code structure)
 - =e Written for business stakeholders, not developers
@@ -86,7 +86,7 @@ As a platform operator, I want comprehensive logging across all CVPlus component
 - **FR-008**: System MUST log all subscription and billing events including payment processing, subscription changes, and credit usage
 - **FR-009**: System MUST log all public profile interactions including views, contact form submissions, and content sharing
 - **FR-010**: System MUST log all administrative actions including user management, system configuration changes, and data exports
-- **FR-011**: System MUST provide structured logging with consistent format across all CVPlus packages (core, auth, cv-processing, multimedia, analytics, premium, recommendations, public-profiles, admin, workflow, payments, i18n)
+- **FR-011**: System MUST provide structured logging with consistent format across all CVPlus packages via dedicated @cvplus/logging submodule (Layer 0 infrastructure module imported by core, auth, cv-processing, multimedia, analytics, premium, recommendations, public-profiles, admin, workflow, payments, i18n)
 - **FR-012**: System MUST assign correlation IDs to track requests across multiple services and packages
 - **FR-013**: System MUST classify log entries by severity levels (DEBUG, INFO, WARN, ERROR, FATAL)
 - **FR-014**: System MUST categorize log entries by domain (security, performance, business, system, audit)
@@ -94,13 +94,13 @@ As a platform operator, I want comprehensive logging across all CVPlus component
 - **FR-016**: System MUST provide log aggregation and centralized collection from all packages
 - **FR-017**: System MUST support log filtering and search capabilities for operations teams
 - **FR-018**: System MUST automatically redact or mask sensitive information (PII, credentials, payment data) in log entries
-- **FR-019**: System MUST retain logs for [NEEDS CLARIFICATION: retention period not specified - varies by log type and compliance requirements]
+- **FR-019**: System MUST retain logs for specified periods: security events (2 years), performance metrics (90 days), debug logs (30 days), audit trails (7 years for compliance)
 - **FR-020**: System MUST provide log export capabilities for compliance audits and external analysis
 - **FR-021**: System MUST alert administrators for critical system events and security incidents
 - **FR-022**: System MUST track log storage utilization and implement automated cleanup policies
 - **FR-023**: System MUST provide performance monitoring through log-based metrics and dashboards
 - **FR-024**: System MUST support log rotation and archival to manage storage costs
-- **FR-025**: System MUST ensure logging operations do not impact application performance by more than [NEEDS CLARIFICATION: acceptable performance impact threshold not specified]
+- **FR-025**: System MUST ensure logging operations do not impact application performance by more than 2% response time increase and 5% memory usage increase
 
 ### Key Entities *(include if feature involves data)*
 - **Log Entry**: Individual log record containing timestamp, severity, message, context data, and correlation information
@@ -122,11 +122,25 @@ As a platform operator, I want comprehensive logging across all CVPlus component
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
 - [x] Dependencies and assumptions identified
+
+---
+
+## Architecture Notes *(added 2025-09-14)*
+
+### CVPlus Layer Architecture Position
+The comprehensive logging system is implemented as **@cvplus/logging** - a dedicated Layer 0 infrastructure submodule that provides logging services to all other CVPlus packages.
+
+**Layer Dependencies:**
+- **Layer 0**: @cvplus/logging (no CVPlus dependencies, only external npm packages)
+- **Layer 1**: @cvplus/core, @cvplus/shell (depend on logging)
+- **Layer 2**: All domain packages (auth, cv-processing, etc. - depend on logging and core)
+
+This architecture ensures logging is available as foundational infrastructure across the entire CVPlus ecosystem without circular dependencies.
 
 ---
 
@@ -140,5 +154,6 @@ As a platform operator, I want comprehensive logging across all CVPlus component
 - [x] Requirements generated
 - [x] Entities identified
 - [x] Review checklist passed
+- [x] Architecture clarified as Layer 0 submodule (2025-09-14)
 
 ---

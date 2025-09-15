@@ -2,34 +2,34 @@
 
 **Feature Branch**: `004-one-click-portal`
 **Created**: 2025-09-13
-**Status**: Draft
+**Status**: âœ… Backend Complete - Frontend In Progress
 **Input**: User description: "One Click Portal- used as a paid premium feature. creates a fully working web portal for applicants to exhibit their work and should contain a RAG application based on the applicants CV so the recruiter can chat with th AI about the candidate's cv. partially implemented. examine /Users/gklainert/Documents/cvplus/frontend/src/components/features/Portal and create a separate Portal module for the new feature"
 
 ## Execution Flow (main)
 ```
 1. Parse user description from Input
-   ’ Feature identified: One Click Portal for premium users
+   ï¿½ Feature identified: One Click Portal for premium users
 2. Extract key concepts from description
-   ’ Actors: Job applicants, Recruiters/hiring managers
-   ’ Actions: Generate portal, exhibit work, AI chat about CV
-   ’ Data: CV content, portal configuration, chat history
-   ’ Constraints: Premium feature, RAG-based AI responses
+   ï¿½ Actors: Job applicants, Recruiters/hiring managers
+   ï¿½ Actions: Generate portal, exhibit work, AI chat about CV
+   ï¿½ Data: CV content, portal configuration, chat history
+   ï¿½ Constraints: Premium feature, RAG-based AI responses
 3. For each unclear aspect:
-   ’ All requirements clearly defined from existing implementation analysis
+   ï¿½ All requirements clearly defined from existing implementation analysis
 4. Fill User Scenarios & Testing section
-   ’ Primary flow: Premium user generates portal with one click
+   ï¿½ Primary flow: Premium user generates portal with one click
 5. Generate Functional Requirements
-   ’ Each requirement is testable and measurable
+   ï¿½ Each requirement is testable and measurable
 6. Identify Key Entities (CV data, portal config, chat sessions, RAG embeddings)
 7. Run Review Checklist
-   ’ No [NEEDS CLARIFICATION] markers remain
-   ’ Implementation details avoided, focused on business requirements
+   ï¿½ No [NEEDS CLARIFICATION] markers remain
+   ï¿½ Implementation details avoided, focused on business requirements
 8. Return: SUCCESS (spec ready for planning)
 ```
 
 ---
 
-## ¡ Quick Guidelines
+## ï¿½ Quick Guidelines
 -  Focus on WHAT users need and WHY
 - L Avoid HOW to implement (no tech stack, APIs, code structure)
 - =e Written for business stakeholders, not developers

@@ -12,6 +12,8 @@ import { https } from 'firebase-functions/v2';
 import { Request, Response } from 'express';
 import { getFirestore } from 'firebase-admin/firestore';
 import { authenticateUser } from '../middleware/auth.middleware';
+import { RAGService } from '@cvplus/public-profiles/backend/services/rag.service';
+import { ClaudeService, ChatContext } from '@cvplus/public-profiles/backend/services/claude.service';
 
 /**
  * Send Chat Message Request Body
@@ -165,9 +167,13 @@ async function handleSendChatMessage(req: Request, res: Response): Promise<void>
       context: context || {},
     };
 
-    // TODO: Generate AI response using Anthropic Claude API
-    // This will be fully implemented in the TDD phase
-    const aiResponse = await generateAIResponse(message, cvData, sessionData.context);
+    // Generate AI response using RAG system
+    const aiResponse = await generateRAGResponse(
+      message,
+      portalData?.processedCvId || sessionData.processedCvId,
+      cvData,
+      sessionData
+    );
 
     // Create AI message object
     const aiMessage = {
@@ -215,13 +221,13 @@ async function handleSendChatMessage(req: Request, res: Response): Promise<void>
 }
 
 /**
- * Generate AI response using CV data and context
- * This is a placeholder implementation - full implementation will use Anthropic Claude API
+ * Generate RAG-powered AI response using Claude
  */
-async function generateAIResponse(
+async function generateRAGResponse(
   userMessage: string,
+  processedCvId: string,
   cvData: any,
-  sessionContext: any
+  sessionData: any
 ): Promise<{
   message: string;
   context?: {
@@ -230,59 +236,82 @@ async function generateAIResponse(
     suggestedFollowUps?: string[];
   };
 }> {
-  // TODO: Replace with actual Anthropic Claude API integration
-  // This is a mock implementation for T005 setup
+  try {
+    // Initialize RAG and Claude services
+    const ragService = new RAGService();
+    const claudeService = new ClaudeService();
 
+    console.log(`Generating RAG response for CV ${processedCvId}, query: "${userMessage}"`);
+
+    // Step 1: Search for relevant CV content
+    const ragContext = await ragService.searchRelevantContent(processedCvId, userMessage);
+
+    // Step 2: Build chat context
+    const chatContext: ChatContext = {
+      cvOwnerName: cvData?.personalInfo?.name,
+      cvTitle: cvData?.personalInfo?.title || cvData?.summary?.title,
+      language: sessionData?.context?.language || 'en',
+      responseStyle: sessionData?.context?.responseStyle || 'professional',
+      conversationHistory: sessionData?.messages?.slice(-5)?.map((msg: any) => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.message,
+        timestamp: msg.timestamp
+      })) || []
+    };
+
+    // Step 3: Generate Claude response
+    const claudeResponse = await claudeService.generateResponse(
+      userMessage,
+      ragContext,
+      chatContext
+    );
+
+    console.log(`RAG response generated with ${ragContext.results.length} context chunks, confidence: ${ragContext.confidence.toFixed(3)}`);
+
+    return {
+      message: claudeResponse.message,
+      context: {
+        sources: claudeResponse.sources,
+        confidence: claudeResponse.confidence,
+        suggestedFollowUps: claudeResponse.suggestedFollowUps,
+      },
+    };
+
+  } catch (error) {
+    console.error('Error generating RAG response:', error);
+
+    // Fallback to simple response if RAG fails
+    return generateFallbackResponse(userMessage, cvData);
+  }
+}
+
+/**
+ * Generate fallback response when RAG system is unavailable
+ */
+function generateFallbackResponse(
+  userMessage: string,
+  cvData: any
+): {
+  message: string;
+  context?: {
+    sources?: string[];
+    confidence?: number;
+    suggestedFollowUps?: string[];
+  };
+} {
   const name = cvData?.personalInfo?.name || 'this professional';
 
-  // Simple keyword-based responses (to be replaced with Claude API)
-  let response = '';
-  let sources: string[] = [];
-  let suggestedFollowUps: string[] = [];
-
-  const lowerMessage = userMessage.toLowerCase();
-
-  if (lowerMessage.includes('experience') || lowerMessage.includes('work')) {
-    response = `${name} has extensive experience in their field. `;
-    if (cvData?.experience?.length > 0) {
-      const latest = cvData.experience[0];
-      response += `Most recently, they worked as ${latest.title} at ${latest.company}.`;
-      sources.push('Work Experience');
-    }
-    suggestedFollowUps = ['Tell me about their skills', 'What projects have they worked on?'];
-  } else if (lowerMessage.includes('skill')) {
-    response = `${name} has a diverse skill set. `;
-    if (cvData?.skills?.length > 0) {
-      response += `Their key skills include ${cvData.skills.slice(0, 3).join(', ')}.`;
-      sources.push('Skills Section');
-    }
-    suggestedFollowUps = ['What about their education?', 'Tell me about their experience'];
-  } else if (lowerMessage.includes('education')) {
-    response = `Regarding education, `;
-    if (cvData?.education?.length > 0) {
-      const edu = cvData.education[0];
-      response += `${name} studied ${edu.degree || edu.field} at ${edu.institution}.`;
-      sources.push('Education');
-    } else {
-      response += `specific educational details are not prominently featured in their profile.`;
-    }
-    suggestedFollowUps = ['What are their main skills?', 'Tell me about their work experience'];
-  } else {
-    response = `Thank you for your question about ${name}. I'm here to help you learn more about their professional background, experience, and skills. What specific aspect would you like to know more about?`;
-    suggestedFollowUps = [
-      'Tell me about their experience',
-      'What skills do they have?',
-      'What is their educational background?',
-    ];
-  }
-
   return {
-    message: response,
+    message: `I'm sorry, but I'm currently experiencing technical difficulties with my advanced search capabilities. I can still help you learn about ${name}, but my responses may be more limited. Please try asking your question again, or contact support if the issue persists.`,
     context: {
-      sources,
-      confidence: 0.8, // Mock confidence score
-      suggestedFollowUps,
-    },
+      sources: ['System Message'],
+      confidence: 0.5,
+      suggestedFollowUps: [
+        'Tell me about their experience',
+        'What skills do they have?',
+        'What is their educational background?'
+      ]
+    }
   };
 }
 

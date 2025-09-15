@@ -12,6 +12,8 @@ import { https } from 'firebase-functions/v2';
 import { Request, Response } from 'express';
 import { getFirestore } from 'firebase-admin/firestore';
 import { authenticateUser } from '../middleware/auth.middleware';
+import { RAGService } from '@cvplus/public-profiles/backend/services/rag.service';
+import { ClaudeService } from '@cvplus/public-profiles/backend/services/claude.service';
 
 /**
  * Start Chat Session Request Body
@@ -41,6 +43,8 @@ interface StartChatSessionResponse {
     cvOwnerName?: string;
     availableTopics?: string[];
     sessionExpiry?: string;
+    ragEnabled?: boolean;
+    embeddingsReady?: boolean;
   };
   error?: string;
 }
@@ -135,8 +139,29 @@ async function handleStartChatSession(req: Request, res: Response): Promise<void
     // Save session to Firestore
     await db.collection('chatSessions').doc(sessionId).set(chatSessionData);
 
+    // Initialize RAG services for chat
+    const ragService = new RAGService();
+    const claudeService = new ClaudeService();
+
+    // Verify RAG system is ready
+    const hasEmbeddings = await ragService.hasCVEmbeddings(portalData.processedCvId);
+    let ragReady = hasEmbeddings;
+
+    if (!hasEmbeddings) {
+      console.log(`No embeddings found for CV ${portalData.processedCvId}, attempting to generate...`);
+      // Attempt to generate embeddings if they don't exist
+      ragReady = await ragService.processAndStoreCVEmbeddings(cvData);
+    }
+
     // Generate welcome message based on CV data
-    const welcomeMessage = generateWelcomeMessage(cvData, preferences?.language);
+    const welcomeMessage = ragReady
+      ? claudeService.generateWelcomeMessage({
+          cvOwnerName: cvData?.personalInfo?.name,
+          cvTitle: cvData?.personalInfo?.title || cvData?.summary?.title,
+          language: preferences?.language,
+          responseStyle: preferences?.responseStyle
+        })
+      : generateWelcomeMessage(cvData, preferences?.language);
 
     // Extract available topics from CV
     const availableTopics = extractAvailableTopics(cvData);
@@ -151,6 +176,8 @@ async function handleStartChatSession(req: Request, res: Response): Promise<void
         cvOwnerName: cvData?.personalInfo?.name || 'Professional',
         availableTopics,
         sessionExpiry: sessionExpiry.toISOString(),
+        ragEnabled: ragReady,
+        embeddingsReady: hasEmbeddings
       },
     };
 
