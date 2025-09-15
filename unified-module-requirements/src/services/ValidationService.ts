@@ -9,19 +9,21 @@
  * - Performance monitoring and reporting
  */
 
-import { ModuleStructure, ModuleStructureUtils } from '../models/ModuleStructure';
-import { ComplianceRule, ComplianceRuleUtils, BuiltInRules } from '../models/ComplianceRule';
-import { FileSystemService } from './FileSystemService';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { ModuleStructure, ModuleStructureUtils } from '../models/ModuleStructure.js';
+import { ComplianceRule, ComplianceRuleUtils, BuiltInRules } from '../models/ComplianceRule.js';
+import { FileSystemService } from './FileSystemService.js';
 import {
   ValidationReport,
   ValidationResult,
   ValidationReportUtils
-} from '../models/ValidationReport';
+} from '../models/ValidationReport.js';
 import {
   BatchResult,
   BatchProgress,
   ValidationError
-} from '../models/types';
+} from '../models/types.js';
 
 export interface ValidationOptions {
   /** Rules to include (if empty, include all enabled rules) */
@@ -357,8 +359,8 @@ export class ValidationService {
       const startTime = Date.now();
 
       try {
-        // Execute rule validator (simplified implementation)
-        const result = this.executeRule(rule, moduleStructure);
+        // Execute rule validator with REAL validation logic
+        const result = await this.executeRule(rule, moduleStructure);
 
         result.executionTime = Date.now() - startTime;
         results.push(result);
@@ -384,24 +386,102 @@ export class ValidationService {
   }
 
   /**
-   * Execute a single validation rule
+   * Execute a single validation rule with REAL validation logic
    */
-  private executeRule(rule: ComplianceRule, moduleStructure: ModuleStructure): ValidationResult {
-    // Simplified rule execution - this would be more complex in real implementation
-    const passed = Math.random() > 0.3; // Simulate some rules failing
+  private async executeRule(rule: ComplianceRule, moduleStructure: ModuleStructure): Promise<ValidationResult> {
+    const resultId = `${rule.ruleId}_${Date.now()}`;
+    const startTime = Date.now();
 
-    return {
-      resultId: `${rule.ruleId}_${Date.now()}`,
-      ruleId: rule.ruleId,
-      ruleName: rule.name,
-      status: passed ? 'PASS' : 'FAIL',
-      severity: rule.severity,
-      message: passed ? 'Rule passed' : `Rule failed: ${rule.description}`,
-      remediation: 'Manual fix required',
-      canAutoFix: false,
-      executionTime: 0,
-      context: { moduleId: moduleStructure.moduleId }
-    };
+    try {
+      // REAL validation logic based on rule ID
+      const validationResult = await this.performRealValidation(rule, moduleStructure);
+
+      const result: ValidationResult = {
+        resultId,
+        ruleId: rule.ruleId,
+        ruleName: rule.name,
+        status: validationResult.passed ? 'PASS' : 'FAIL',
+        severity: rule.severity,
+        message: validationResult.message,
+        remediation: validationResult.remediation || rule.remediation || 'No remediation available',
+        canAutoFix: validationResult.canAutoFix || false,
+        executionTime: Date.now() - startTime,
+        context: validationResult.context || { moduleId: moduleStructure.moduleId }
+      };
+
+      if (validationResult.filePath) {
+        result.filePath = validationResult.filePath;
+      }
+      if (validationResult.lineNumber) {
+        result.lineNumber = validationResult.lineNumber;
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        resultId,
+        ruleId: rule.ruleId,
+        ruleName: rule.name,
+        status: 'ERROR',
+        severity: rule.severity,
+        message: `Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        remediation: 'Fix validation error and retry',
+        canAutoFix: false,
+        executionTime: Date.now() - startTime,
+        context: { moduleId: moduleStructure.moduleId, error: String(error) }
+      };
+    }
+  }
+
+  /**
+   * Perform REAL validation based on rule type
+   */
+  private async performRealValidation(rule: ComplianceRule, moduleStructure: ModuleStructure): Promise<{
+    passed: boolean;
+    message: string;
+    remediation?: string | undefined;
+    canAutoFix?: boolean | undefined;
+    context?: any;
+    filePath?: string | undefined;
+    lineNumber?: number | undefined;
+  }> {
+    const modulePath = moduleStructure.path;
+
+    switch (rule.ruleId) {
+      case 'PACKAGE_JSON_EXISTS':
+        return await this.validatePackageJsonExists(modulePath);
+
+      case 'README_EXISTS':
+        return await this.validateReadmeExists(modulePath);
+
+      case 'TYPESCRIPT_CONFIG_REQUIRED':
+        return await this.validateTypescriptConfig(modulePath);
+
+      case 'TEST_DIRECTORY_REQUIRED':
+        return await this.validateTestDirectory(modulePath);
+
+      case 'BUILD_SCRIPT_REQUIRED':
+        return await this.validateBuildScript(modulePath);
+
+      case 'GITIGNORE_REQUIRED':
+        return await this.validateGitignore(modulePath);
+
+      case 'NO_MOCK_DATA':
+        return await this.validateNoMockData(modulePath);
+
+      case 'FILE_SIZE_LIMIT':
+        return await this.validateFileSizeLimit(modulePath);
+
+      case 'SECURITY_CONFIG_CHECK':
+        return await this.validateSecurityConfig(modulePath);
+
+      default:
+        return {
+          passed: false,
+          message: `Unknown rule: ${rule.ruleId}`,
+          remediation: 'Implement validation logic for this rule'
+        };
+    }
   }
 
   /**
@@ -440,6 +520,372 @@ export class ValidationService {
         fileSystemService: 'connected'
       }
     };
+  }
+
+  /**
+   * REAL VALIDATION METHODS - NO MOCK DATA!
+   */
+
+  private async validatePackageJsonExists(modulePath: string) {
+    const packageJsonPath = path.join(modulePath, 'package.json');
+    try {
+      await fs.access(packageJsonPath, fs.constants.F_OK);
+      const content = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(content);
+
+      return {
+        passed: true,
+        message: `package.json exists and is valid JSON`,
+        filePath: packageJsonPath,
+        context: { name: packageJson.name, version: packageJson.version }
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'package.json file is missing or invalid',
+        remediation: 'Create a valid package.json file with name, version, scripts, and dependencies',
+        canAutoFix: true,
+        filePath: packageJsonPath
+      };
+    }
+  }
+
+  private async validateReadmeExists(modulePath: string) {
+    const readmePath = path.join(modulePath, 'README.md');
+    try {
+      await fs.access(readmePath, fs.constants.F_OK);
+      const content = await fs.readFile(readmePath, 'utf-8');
+
+      if (content.trim().length < 50) {
+        return {
+          passed: false,
+          message: 'README.md exists but is too short (< 50 characters)',
+          remediation: 'Add proper documentation with installation, usage, and API sections',
+          filePath: readmePath
+        };
+      }
+
+      return {
+        passed: true,
+        message: 'README.md exists and has adequate content',
+        filePath: readmePath
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'README.md file is missing',
+        remediation: 'Create a README.md file with module description, installation, and usage instructions',
+        canAutoFix: true,
+        filePath: readmePath
+      };
+    }
+  }
+
+  private async validateTypescriptConfig(modulePath: string) {
+    const tsconfigPath = path.join(modulePath, 'tsconfig.json');
+    try {
+      await fs.access(tsconfigPath, fs.constants.F_OK);
+      const content = await fs.readFile(tsconfigPath, 'utf-8');
+
+      // Basic validation - check if file exists and has reasonable content
+      if (content.trim().length === 0) {
+        return {
+          passed: false,
+          message: 'tsconfig.json exists but is empty',
+          remediation: 'Add proper TypeScript configuration to tsconfig.json',
+          filePath: tsconfigPath
+        };
+      }
+
+      // Check for compilerOptions presence (case-insensitive, comment-tolerant)
+      const hasCompilerOptions = /["']compilerOptions["']\s*:/i.test(content);
+
+      if (!hasCompilerOptions) {
+        return {
+          passed: false,
+          message: 'tsconfig.json exists but missing compilerOptions',
+          remediation: 'Add compilerOptions with target, module, and strict settings',
+          filePath: tsconfigPath
+        };
+      }
+
+      return {
+        passed: true,
+        message: 'tsconfig.json exists and has compilerOptions',
+        filePath: tsconfigPath
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'tsconfig.json file is missing or invalid',
+        remediation: 'Create a tsconfig.json file with proper TypeScript configuration',
+        canAutoFix: true,
+        filePath: tsconfigPath
+      };
+    }
+  }
+
+  private async validateTestDirectory(modulePath: string) {
+    const testPaths = [
+      path.join(modulePath, 'tests'),
+      path.join(modulePath, 'test'),
+      path.join(modulePath, '__tests__'),
+      path.join(modulePath, 'src', '__tests__')
+    ];
+
+    for (const testPath of testPaths) {
+      try {
+        const stats = await fs.stat(testPath);
+        if (stats.isDirectory()) {
+          return {
+            passed: true,
+            message: `Test directory found at ${path.relative(modulePath, testPath)}`,
+            filePath: testPath
+          };
+        }
+      } catch (error) {
+        // Continue checking other paths
+      }
+    }
+
+    return {
+      passed: false,
+      message: 'No test directory found (checked: tests/, test/, __tests__, src/__tests__)',
+      remediation: 'Create a tests/ or __tests__/ directory with test files',
+      canAutoFix: true
+    };
+  }
+
+  private async validateBuildScript(modulePath: string) {
+    const packageJsonPath = path.join(modulePath, 'package.json');
+    try {
+      const content = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(content);
+
+      if (!packageJson.scripts || !packageJson.scripts.build) {
+        return {
+          passed: false,
+          message: 'package.json missing build script',
+          remediation: 'Add "build" script to package.json scripts section',
+          canAutoFix: true,
+          filePath: packageJsonPath
+        };
+      }
+
+      return {
+        passed: true,
+        message: `Build script found: ${packageJson.scripts.build}`,
+        filePath: packageJsonPath
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'Cannot read package.json to check build script',
+        remediation: 'Ensure package.json exists and is valid JSON',
+        filePath: packageJsonPath
+      };
+    }
+  }
+
+  private async validateGitignore(modulePath: string) {
+    const gitignorePath = path.join(modulePath, '.gitignore');
+    try {
+      await fs.access(gitignorePath, fs.constants.F_OK);
+      return {
+        passed: true,
+        message: '.gitignore file exists',
+        filePath: gitignorePath
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: '.gitignore file is missing',
+        remediation: 'Create .gitignore file to exclude node_modules/, dist/, *.log, .DS_Store',
+        canAutoFix: true,
+        filePath: gitignorePath
+      };
+    }
+  }
+
+  private async validateNoMockData(modulePath: string) {
+    try {
+      const files = await this.findFiles(modulePath, /\.(ts|js|json)$/);
+      const mockPatterns = [
+        /mock/i, /fake/i, /dummy/i, /placeholder/i, /test-data/i,
+        /example-data/i, /sample-data/i, /fixture/i
+      ];
+
+      // Test file patterns - mock data is allowed in these files
+      const testFilePatterns = [
+        /\.test\.(ts|js)$/i,
+        /\.spec\.(ts|js)$/i,
+        /__tests__\//i,
+        /__mocks__\//i
+      ];
+
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf-8');
+        const fileName = path.basename(file).toLowerCase();
+        const relativePath = path.relative(modulePath, file);
+
+        // Skip validation for test files - mock data is allowed in tests
+        if (testFilePatterns.some(pattern => pattern.test(relativePath))) {
+          continue;
+        }
+
+        // Check filename for mock patterns
+        if (mockPatterns.some(pattern => pattern.test(fileName))) {
+          return {
+            passed: false,
+            message: `Mock data file detected: ${relativePath}`,
+            remediation: 'Remove mock data files and use real data sources',
+            filePath: file
+          };
+        }
+
+        // Check content for mock patterns
+        if (mockPatterns.some(pattern => pattern.test(content))) {
+          return {
+            passed: false,
+            message: `Mock data content detected in: ${relativePath}`,
+            remediation: 'Replace mock data with real data sources',
+            filePath: file
+          };
+        }
+      }
+
+      return {
+        passed: true,
+        message: 'No mock data detected in module'
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'Error scanning for mock data',
+        remediation: 'Check file permissions and module structure'
+      };
+    }
+  }
+
+  private async validateFileSizeLimit(modulePath: string) {
+    try {
+      const files = await this.findFiles(modulePath, /\.(ts|js)$/);
+      const violatingFiles = [];
+
+      for (const file of files) {
+        // Skip node_modules and dist directories
+        if (file.includes('node_modules') || file.includes('dist')) continue;
+
+        const content = await fs.readFile(file, 'utf-8');
+        const lineCount = content.split('\n').length;
+
+        if (lineCount > 200) {
+          violatingFiles.push({
+            file: path.relative(modulePath, file),
+            lines: lineCount
+          });
+        }
+      }
+
+      if (violatingFiles.length > 0) {
+        const result: {
+          passed: boolean;
+          message: string;
+          remediation?: string | undefined;
+          canAutoFix?: boolean | undefined;
+          context?: any;
+          filePath?: string | undefined;
+          lineNumber?: number | undefined;
+        } = {
+          passed: false,
+          message: `${violatingFiles.length} files exceed 200-line limit`,
+          remediation: 'Refactor large files into smaller modules',
+          context: { violatingFiles }
+        };
+
+        if (violatingFiles.length > 0 && violatingFiles[0]) {
+          result.filePath = path.join(modulePath, violatingFiles[0].file);
+        }
+
+        return result;
+      }
+
+      return {
+        passed: true,
+        message: 'All source files are under 200 lines'
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'Error checking file sizes',
+        remediation: 'Check file permissions and module structure'
+      };
+    }
+  }
+
+  private async validateSecurityConfig(modulePath: string) {
+    try {
+      const configFiles = await this.findFiles(modulePath, /\.(json|js|ts|env)$/);
+      const sensitivePatterns = [
+        /password\s*[:=]\s*['"][^'"]{8,}['"]/i,  // Password with 8+ chars
+        /secret\s*[:=]\s*['"][^'"]{10,}['"]/i,   // Secret with 10+ chars
+        /api[_-]?key\s*[:=]\s*['"][^'"]{15,}['"]/i, // API key with 15+ chars
+        /token\s*[:=]\s*['"][^'"]{20,}['"]/i,    // Token with 20+ chars
+        /private[_-]?key\s*[:=]\s*['"][^'"]{50,}['"]/i // Private key with 50+ chars
+      ];
+
+      for (const file of configFiles) {
+        // Skip node_modules
+        if (file.includes('node_modules')) continue;
+
+        const content = await fs.readFile(file, 'utf-8');
+
+        for (const pattern of sensitivePatterns) {
+          if (pattern.test(content)) {
+            return {
+              passed: false,
+              message: `Potential sensitive data in: ${path.relative(modulePath, file)}`,
+              remediation: 'Remove hardcoded secrets, use environment variables',
+              filePath: file
+            };
+          }
+        }
+      }
+
+      return {
+        passed: true,
+        message: 'No sensitive data detected in configuration files'
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: 'Error scanning configuration files',
+        remediation: 'Check file permissions and module structure'
+      };
+    }
+  }
+
+  private async findFiles(dir: string, pattern: RegExp): Promise<string[]> {
+    const files: string[] = [];
+
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          const subFiles = await this.findFiles(fullPath, pattern);
+          files.push(...subFiles);
+        } else if (entry.isFile() && pattern.test(entry.name)) {
+          files.push(fullPath);
+        }
+      }
+    } catch (error) {
+      // Ignore permission errors
+    }
+
+    return files;
   }
 
   /**

@@ -19,8 +19,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { ModuleStructure, ModuleFile, ModuleScript, ModuleDependency } from '../models/ModuleStructure';
-import { FileSystemEntry, DirectoryTree } from '../models/types';
+import { ModuleStructure, ModuleFile, ModuleScript, ModuleDependency } from '../models/ModuleStructure.js';
+import { FileSystemEntry, DirectoryTree } from '../models/types.js';
 
 export interface FileDiscoveryOptions {
   /** Include hidden files/directories */

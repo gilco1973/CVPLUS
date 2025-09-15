@@ -1018,6 +1018,275 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/external-data": {
+      "name": "@cvplus/external-data",
+      "type": "lib",
+      "data": {
+        "root": "packages/external-data",
+        "name": "@cvplus/external-data",
+        "tags": [
+          "npm:public",
+          "npm:external-data",
+          "npm:integration",
+          "npm:api",
+          "npm:adapters",
+          "npm:web-scraping",
+          "npm:linkedin",
+          "npm:github",
+          "npm:orchestration",
+          "npm:data-sources",
+          "npm:cvplus"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "build",
+              "build:types",
+              "build:rollup",
+              "build:watch",
+              "clean",
+              "dev",
+              "lint",
+              "lint:fix",
+              "type-check",
+              "test",
+              "test:watch",
+              "test:ci",
+              "test:coverage",
+              "validate-dependencies"
+            ]
+          },
+          "description": "CVPlus External Data Integration - APIs, adapters, and orchestration for external data sources",
+          "js": {
+            "packageName": "@cvplus/external-data",
+            "packageExports": {
+              ".": {
+                "import": "./dist/index.esm.js",
+                "require": "./dist/index.js",
+                "types": "./dist/index.d.ts"
+              },
+              "./frontend": {
+                "import": "./dist/frontend/index.esm.js",
+                "require": "./dist/frontend/index.js",
+                "types": "./dist/frontend/index.d.ts"
+              },
+              "./backend": {
+                "import": "./dist/backend/index.esm.js",
+                "require": "./dist/backend/index.js",
+                "types": "./dist/backend/index.d.ts"
+              },
+              "./types": {
+                "import": "./dist/types/index.esm.js",
+                "require": "./dist/types/index.js",
+                "types": "./dist/types/index.d.ts"
+              },
+              "./shared": {
+                "import": "./dist/shared/index.esm.js",
+                "require": "./dist/shared/index.js",
+                "types": "./dist/shared/index.d.ts"
+              }
+            },
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:types": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:types"
+            },
+            "metadata": {
+              "scriptContent": "tsc --project tsconfig.build.json",
+              "runCommand": "npm run build:types"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:rollup": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:rollup"
+            },
+            "metadata": {
+              "scriptContent": "rollup -c",
+              "runCommand": "npm run build:rollup"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:watch"
+            },
+            "metadata": {
+              "scriptContent": "npm run build:types -- --watch",
+              "runCommand": "npm run build:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "npm run build:watch",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint src --ext .ts,.tsx",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "lint:fix": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint:fix"
+            },
+            "metadata": {
+              "scriptContent": "npm run lint -- --fix",
+              "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "vitest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:watch"
+            },
+            "metadata": {
+              "scriptContent": "vitest --watch",
+              "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:ci": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ci"
+            },
+            "metadata": {
+              "scriptContent": "vitest run",
+              "runCommand": "npm run test:ci"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "vitest run --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "validate-dependencies": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "validate-dependencies"
+            },
+            "metadata": {
+              "scriptContent": "./scripts/validate-dependencies.sh",
+              "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/multimedia": {
       "name": "@cvplus/multimedia",
       "type": "lib",
@@ -25181,6 +25450,11 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "npm:csv-parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:firebase",
         "type": "static"
       },
@@ -25197,6 +25471,11 @@
       {
         "source": "@cvplus/cv-processing",
         "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:mammoth",
         "type": "static"
       },
       {
@@ -25222,6 +25501,173 @@
       {
         "source": "@cvplus/cv-processing",
         "target": "npm:tailwind-merge@2.6.0",
+        "type": "static"
+      }
+    ],
+    "@cvplus/external-data": [
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@rollup/plugin-commonjs",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@rollup/plugin-json",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@rollup/plugin-node-resolve",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@rollup/plugin-typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/jsdom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:rimraf",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:rollup",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:tslib",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:vitest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:axios",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:csv-parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:firebase",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:firebase-admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:jsdom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/external-data",
+        "target": "npm:xml2js",
         "type": "static"
       }
     ],
@@ -25858,6 +26304,11 @@
       },
       {
         "source": "@cvplus/logging",
+        "target": "npm:@types/cls-hooked",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
         "target": "npm:typescript",
         "type": "static"
       },
@@ -25878,12 +26329,42 @@
       },
       {
         "source": "@cvplus/logging",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
         "target": "npm:firebase-admin",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
         "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston-transport",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:cls-hooked",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:nanoid",
         "type": "static"
       }
     ],
@@ -26164,6 +26645,11 @@
       },
       {
         "source": "@cvplus/shell",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "@cvplus/core",
         "type": "static"
       },
@@ -26398,6 +26884,11 @@
       },
       {
         "source": "@cvplus/core",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
         "target": "npm:@types/node",
         "type": "static"
       },
@@ -26418,27 +26909,17 @@
       },
       {
         "source": "@cvplus/core",
+        "target": "npm:ical-generator",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
         "target": "npm:tailwind-merge",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:winston",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
-        "target": "npm:winston-transport",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
         "target": "npm:nanoid@5.1.5",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
-        "target": "npm:cls-hooked",
         "type": "static"
       }
     ],
@@ -56524,5 +57005,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757875008320
+  "computedAt": 1757919777308
 }

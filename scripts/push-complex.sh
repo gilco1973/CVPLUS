@@ -185,16 +185,7 @@ process_module() {
 
     print_status "$module_name: Changes detected, processing..."
 
-    # Add all files
-    git add -A
-
-    # Check if there are staged changes
-    if [[ -z $(git diff --cached --name-only) ]]; then
-        print_status "$module_name: No staged changes after git add"
-        return 0
-    fi
-
-    # Pull with rebase before committing
+    # Pull with rebase BEFORE staging changes to avoid conflicts
     print_status "$module_name: Pulling latest changes with rebase..."
     if git remote get-url origin >/dev/null 2>&1; then
         # Get current branch name
@@ -211,6 +202,15 @@ process_module() {
         fi
     else
         print_warning "$module_name: No remote configured, skipping pull"
+    fi
+
+    # Add all files AFTER pulling
+    git add -A
+
+    # Check if there are staged changes
+    if [[ -z $(git diff --cached --name-only) ]]; then
+        print_status "$module_name: No staged changes after git add"
+        return 0
     fi
 
     # Generate commit message
