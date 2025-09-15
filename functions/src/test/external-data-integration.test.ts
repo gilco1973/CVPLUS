@@ -16,7 +16,7 @@ import {
   WebsiteAdapter,
   ValidationService,
   CacheService
-} from '../services/external-data';
+} from '@cvplus/cv-processing/external-data';
 
 describe('External Data Integration', () => {
   let orchestrator: ExternalDataOrchestrator;
