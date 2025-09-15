@@ -54,14 +54,14 @@ export class LinkedInAdapter {
       
     } catch (error) {
       logger.error('[LINKEDIN-ADAPTER] Failed to fetch LinkedIn data', error);
-      throw new Error(`LinkedIn fetch failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(`LinkedIn fetch failed: ${error.message}`);
     }
   }
 
   /**
    * Fetch data via LinkedIn API (requires OAuth)
    */
-  private async fetchViaAPI(_profileId: string): Promise<any> {
+  private async fetchViaAPI(profileId: string): Promise<any> {
     if (!this.accessToken) {
       throw new Error('LinkedIn API access token not configured');
     }
@@ -247,6 +247,6 @@ export class LinkedInAdapter {
    */
   extractProfileId(url: string): string | null {
     const match = url.match(/linkedin\.com\/in\/([\w-]+)/);
-    return match ? (match[1] || null) : null;
+    return match ? match[1] : null;
   }
 }

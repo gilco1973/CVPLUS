@@ -47,7 +47,7 @@ if (!admin.apps.length) {
     
     // Initialize for emulator environment with correct bucket format for emulator
     admin.initializeApp({
-      projectId: process.env.PROJECT_ID || 'getmycv-ai',
+      projectId: process.env.PROJECT_ID || 'cvplus-ai',
       storageBucket: 'getmycv-ai.firebasestorage.app'
     });
   } else {

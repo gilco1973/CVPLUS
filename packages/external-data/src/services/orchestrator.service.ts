@@ -24,7 +24,7 @@ import { WebSearchAdapter } from './adapters/web-search.adapter';
 import { WebsiteAdapter } from './adapters/website.adapter';
 import { ValidationService } from './validation.service';
 import { CacheService } from './cache.service';
-import { resilienceService } from '../resilience.service';
+import { resilienceService } from '@cvplus/core/src/services/resilience.service';
 
 export class ExternalDataOrchestrator {
   private githubAdapter: GitHubAdapter;

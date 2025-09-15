@@ -381,14 +381,14 @@ service cloud.firestore {
       allow read: if isValidUser(userId);
       allow write: if isFunctionCall();
       
-      match /hourly/{timestamp} {
+      match /hourly/{timeKey} {
         allow read: if isValidUser(userId);
         allow write: if isFunctionCall() || 
                        (isValidUser(userId) && 
                         request.resource.data.count <= 100); // Hourly limit
       }
       
-      match /daily/{timestamp} {
+      match /daily/{timeKey} {
         allow read: if isValidUser(userId);
         allow write: if isFunctionCall() ||
                        (isValidUser(userId) && 

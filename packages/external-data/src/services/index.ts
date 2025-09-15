@@ -11,8 +11,8 @@
 
 // Core external data services - only export what actually exists
 export { ExternalDataOrchestrator } from './orchestrator.service';
-export { ExternalDataValidationService } from './validation.service';
-export { ExternalDataCacheService } from './cache.service';
+export { ValidationService as ExternalDataValidationService } from './validation.service';
+export { CacheService as ExternalDataCacheService } from './cache.service';
 
 // Adapters - export if they exist
 export * from './adapters/website.adapter';

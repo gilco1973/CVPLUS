@@ -15,8 +15,8 @@ export * from './types';
 // No default export to avoid mixing with named exports
 // Migrated staging services
 export { ExternalDataOrchestrator } from './services/orchestrator.service';
-export { ExternalDataValidationService } from './services/validation.service';
-export { ExternalDataCacheService } from './services/cache.service';
+export { ValidationService as ExternalDataValidationService } from './services/validation.service';
+export { CacheService as ExternalDataCacheService } from './services/cache.service';
 export * from './services/adapters/website.adapter';
 export * from './services/adapters/web-search.adapter';
 export * from './services/adapters/linkedin.adapter';

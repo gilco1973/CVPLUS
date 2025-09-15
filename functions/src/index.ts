@@ -47,8 +47,8 @@ if (!admin.apps.length) {
     
     // Initialize for emulator environment with correct bucket format for emulator
     admin.initializeApp({
-      projectId: process.env.PROJECT_ID || 'getmycv-ai',
-      storageBucket: 'getmycv-ai.firebasestorage.app'
+      projectId: process.env.PROJECT_ID || 'cvplus-ai',
+      storageBucket: 'cvplus-ai.firebasestorage.app'
     });
   } else {
     // Initialize for production
@@ -247,13 +247,19 @@ export {
 // ============================================================================
 // Authentication, authorization, and user session management
 
-// Auth functions - TEMPORARILY DISABLED FOR DEPLOYMENT
-/*
 export {
   testAuth,
-  ... auth functions disabled for deployment
+  createSessionCheckpoint,
+  executeCheckpoint,
+  resumeFromCheckpoint,
+  getSessionCheckpoints,
+  processSessionActionQueue,
+  processQueuedActions,
+  retryFailedCheckpoints,
+  syncSessionState,
+  enhanceSessionWithCheckpoints,
+  sessionHealthCheck
 } from '@cvplus/auth/backend';
-*/
 
 // ============================================================================
 // RECOMMENDATIONS FUNCTIONS

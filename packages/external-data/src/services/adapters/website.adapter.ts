@@ -10,7 +10,7 @@
  */
 
 import * as cheerio from 'cheerio';
-import { EnhancedBaseService, EnhancedServiceConfig } from '../../enhanced-base-service';
+import { EnhancedBaseService, EnhancedServiceConfig } from '@cvplus/core/src/services/enhanced-base-service';
 import { 
   PersonalWebsite,
   PortfolioProject,

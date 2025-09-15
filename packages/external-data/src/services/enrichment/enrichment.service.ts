@@ -9,7 +9,7 @@
  * @version 1.0
  */
 
-import { ParsedCV } from '../../../types/job';
+import type { ParsedCV } from '@cvplus/core/src/types';
 import { EnrichedCVData } from '../types';
 import { PortfolioEnrichmentService, PortfolioEnrichmentResult } from './portfolio.enrichment';
 import { CertificationEnrichmentService, CertificationEnrichmentResult } from './certification.enrichment';

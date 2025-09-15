@@ -94,7 +94,7 @@
       "host": "127.0.0.1"
     },
     "logging": {
-      "enabled": true
+      "port": 4400
     },
     "singleProjectMode": true
   }
