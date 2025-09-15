@@ -766,6 +766,11 @@
           "npm:pdf",
           "npm:analysis",
           "npm:generation",
+          "npm:external-data",
+          "npm:enrichment",
+          "npm:linkedin",
+          "npm:github",
+          "npm:web-scraping",
           "npm:cvplus"
         ],
         "metadata": {
@@ -815,6 +820,11 @@
                 "import": "./dist/shared/index.esm.js",
                 "require": "./dist/shared/index.js",
                 "types": "./dist/shared/index.d.ts"
+              },
+              "./external-data": {
+                "import": "./dist/external-data/index.esm.js",
+                "require": "./dist/external-data/index.js",
+                "types": "./dist/external-data/index.d.ts"
               }
             },
             "packageMain": "dist/index.js",
@@ -1486,7 +1496,7 @@
               "validate-dependencies"
             ]
           },
-          "description": "CVPlus Analytics Module - Advanced analytics, revenue tracking, and business intelligence",
+          "description": "CVPlus Analytics Module - Core business intelligence, tracking, and performance analytics",
           "js": {
             "packageName": "@cvplus/analytics",
             "packageExports": {
@@ -1617,6 +1627,514 @@
             "metadata": {
               "scriptContent": "./scripts/validate-dependencies.sh",
               "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
+    "@cvplus/e2e-flows": {
+      "name": "@cvplus/e2e-flows",
+      "type": "lib",
+      "data": {
+        "root": "packages/e2e-flows",
+        "name": "@cvplus/e2e-flows",
+        "tags": [
+          "npm:public",
+          "npm:e2e-testing",
+          "npm:cvplus",
+          "npm:firebase",
+          "npm:jest",
+          "npm:typescript",
+          "npm:test-automation",
+          "npm:api-testing",
+          "npm:mock-data"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "build",
+              "build:watch",
+              "dev",
+              "test",
+              "test:watch",
+              "test:coverage",
+              "test:contract",
+              "test:integration",
+              "test:unit",
+              "test:performance",
+              "test:e2e",
+              "test:e2e:real-apis",
+              "test:smoke",
+              "test:ci",
+              "lint",
+              "lint:fix",
+              "format",
+              "format:check",
+              "health-check",
+              "mock-data:generate",
+              "mock-data:clean",
+              "mock-data:clear-cache",
+              "e2e:run",
+              "e2e:list",
+              "api-test:endpoint",
+              "api-test:suite",
+              "scenario:complete-journey",
+              "scenario:submodule-integration",
+              "scenario:api-contracts",
+              "scenario:load-test",
+              "scenario:regression-check",
+              "dev:start",
+              "test:report",
+              "firebase:emulators",
+              "validate:quickstart"
+            ]
+          },
+          "description": "End-to-end testing flows for CVPlus - comprehensive user journey validation, submodule testing, and API validation",
+          "js": {
+            "packageName": "@cvplus/e2e-flows",
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "tsc",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:watch"
+            },
+            "metadata": {
+              "scriptContent": "tsc --watch",
+              "runCommand": "npm run build:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/index.ts",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "jest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:watch"
+            },
+            "metadata": {
+              "scriptContent": "jest --watch",
+              "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:contract": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:contract"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/contract",
+              "runCommand": "npm run test:contract"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:integration": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:integration"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/integration",
+              "runCommand": "npm run test:integration"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:unit": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:unit"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/unit",
+              "runCommand": "npm run test:unit"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:performance": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:performance"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/performance",
+              "runCommand": "npm run test:performance"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:e2e": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:e2e"
+            },
+            "metadata": {
+              "scriptContent": "npm run test:contract && npm run test:integration",
+              "runCommand": "npm run test:e2e"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:e2e:real-apis": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:e2e:real-apis"
+            },
+            "metadata": {
+              "scriptContent": "E2E_MOCK_APIS=false npm run test:e2e",
+              "runCommand": "npm run test:e2e:real-apis"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:smoke": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:smoke"
+            },
+            "metadata": {
+              "scriptContent": "jest tests/contract --testTimeout=30000",
+              "runCommand": "npm run test:smoke"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:ci": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ci"
+            },
+            "metadata": {
+              "scriptContent": "jest --ci --coverage --maxWorkers=2",
+              "runCommand": "npm run test:ci"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint src tests --ext .ts,.tsx",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "lint:fix": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint:fix"
+            },
+            "metadata": {
+              "scriptContent": "eslint src tests --ext .ts,.tsx --fix",
+              "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format"
+            },
+            "metadata": {
+              "scriptContent": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+              "runCommand": "npm run format"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "format:check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "format:check"
+            },
+            "metadata": {
+              "scriptContent": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+              "runCommand": "npm run format:check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "health-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "health-check"
+            },
+            "metadata": {
+              "scriptContent": "node scripts/health-check.js",
+              "runCommand": "npm run health-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:generate": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:generate"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/mock-data-commands.ts generate",
+              "runCommand": "npm run mock-data:generate"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:clean"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/mock-data-commands.ts clean",
+              "runCommand": "npm run mock-data:clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "mock-data:clear-cache": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "mock-data:clear-cache"
+            },
+            "metadata": {
+              "scriptContent": "rm -rf .cache/mock-data",
+              "runCommand": "npm run mock-data:clear-cache"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "e2e:run": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "e2e:run"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/e2e-commands.ts run",
+              "runCommand": "npm run e2e:run"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "e2e:list": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "e2e:list"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/e2e-commands.ts list",
+              "runCommand": "npm run e2e:list"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "api-test:endpoint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "api-test:endpoint"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/api-test-commands.ts endpoint",
+              "runCommand": "npm run api-test:endpoint"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "api-test:suite": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "api-test:suite"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/cli/api-test-commands.ts suite",
+              "runCommand": "npm run api-test:suite"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:complete-journey": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:complete-journey"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/complete-journey.ts",
+              "runCommand": "npm run scenario:complete-journey"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:submodule-integration": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:submodule-integration"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/submodule-integration.ts",
+              "runCommand": "npm run scenario:submodule-integration"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:api-contracts": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:api-contracts"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/api-contracts.ts",
+              "runCommand": "npm run scenario:api-contracts"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:load-test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:load-test"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/load-test.ts",
+              "runCommand": "npm run scenario:load-test"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scenario:regression-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "scenario:regression-check"
+            },
+            "metadata": {
+              "scriptContent": "ts-node src/scenarios/regression-check.ts",
+              "runCommand": "npm run scenario:regression-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev:start": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev:start"
+            },
+            "metadata": {
+              "scriptContent": "concurrently \"npm run build:watch\" \"npm run test:watch\"",
+              "runCommand": "npm run dev:start"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:report": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:report"
+            },
+            "metadata": {
+              "scriptContent": "jest --coverage --coverageReporters=html",
+              "runCommand": "npm run test:report"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "firebase:emulators": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "firebase:emulators"
+            },
+            "metadata": {
+              "scriptContent": "firebase emulators:start --only firestore,auth,storage",
+              "runCommand": "npm run firebase:emulators"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "validate:quickstart": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "validate:quickstart"
+            },
+            "metadata": {
+              "scriptContent": "ts-node scripts/validate-quickstart.ts",
+              "runCommand": "npm run validate:quickstart"
             },
             "configurations": {},
             "parallelism": true
@@ -24435,7 +24953,17 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "npm:@types/cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:@types/jsdom@21.1.7",
         "type": "static"
       },
       {
@@ -24480,11 +25008,6 @@
       },
       {
         "source": "@cvplus/cv-processing",
-        "target": "npm:@vitest/coverage-v8@2.1.9",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
         "target": "npm:eslint@9.34.0",
         "type": "static"
       },
@@ -24515,7 +25038,17 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:@types/react-dropzone",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:axios",
         "type": "static"
       },
       {
@@ -24525,7 +25058,17 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "npm:cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:clsx",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:csv-parser",
         "type": "static"
       },
       {
@@ -24545,7 +25088,17 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "npm:jsdom@25.0.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:mammoth",
         "type": "static"
       },
       {
@@ -24556,6 +25109,11 @@
       {
         "source": "@cvplus/cv-processing",
         "target": "npm:pdfkit",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:puppeteer@23.11.1",
         "type": "static"
       },
       {
@@ -24571,6 +25129,16 @@
       {
         "source": "@cvplus/cv-processing",
         "target": "npm:tailwind-merge@2.6.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "npm:xml2js",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "@cvplus/analytics",
         "type": "static"
       }
     ],
@@ -24779,7 +25347,82 @@
     "@cvplus/analytics": [
       {
         "source": "@cvplus/analytics",
+        "target": "npm:@rollup/plugin-commonjs",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@rollup/plugin-json",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@rollup/plugin-node-resolve",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@rollup/plugin-typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
         "target": "npm:@types/node@20.19.11",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@typescript-eslint/parser@6.21.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:@vitest/coverage-v8@2.1.9",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:rimraf",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:rollup",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/analytics",
+        "target": "npm:tslib",
         "type": "static"
       },
       {
@@ -24799,17 +25442,7 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "npm:eslint",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
-        "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
-        "target": "npm:@typescript-eslint/parser@6.21.0",
+        "target": "@cvplus/auth",
         "type": "static"
       },
       {
@@ -24819,12 +25452,12 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "@cvplus/auth",
+        "target": "@cvplus/i18n",
         "type": "static"
       },
       {
         "source": "@cvplus/analytics",
-        "target": "@cvplus/i18n",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -24850,6 +25483,108 @@
       {
         "source": "@cvplus/analytics",
         "target": "npm:stripe",
+        "type": "static"
+      }
+    ],
+    "@cvplus/e2e-flows": [
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@types/uuid",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@typescript-eslint/eslint-plugin@7.18.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:@typescript-eslint/parser@7.18.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-tools",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:ts-jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:ts-node@10.9.2",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:axios",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:commander@12.1.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:firebase-functions@4.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:uuid@9.0.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/e2e-flows",
+        "target": "npm:winston",
         "type": "static"
       }
     ],
@@ -25110,6 +25845,11 @@
       },
       {
         "source": "@cvplus/logging",
+        "target": "npm:@types/cls-hooked",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
         "target": "npm:typescript",
         "type": "static"
       },
@@ -25130,12 +25870,42 @@
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:firebase-admin",
+        "target": "npm:@typescript-eslint/eslint-plugin",
         "type": "static"
       },
       {
         "source": "@cvplus/logging",
-        "target": "npm:firebase-functions",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:firebase-admin@11.11.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:firebase-functions@4.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:winston-transport",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:cls-hooked",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/logging",
+        "target": "npm:nanoid@5.1.5",
         "type": "static"
       }
     ],
@@ -25381,12 +26151,12 @@
       },
       {
         "source": "@cvplus/shell",
-        "target": "npm:@typescript-eslint/eslint-plugin",
+        "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
         "type": "static"
       },
       {
         "source": "@cvplus/shell",
-        "target": "npm:@typescript-eslint/parser",
+        "target": "npm:@typescript-eslint/parser@6.21.0",
         "type": "static"
       },
       {
@@ -25396,12 +26166,27 @@
       },
       {
         "source": "@cvplus/shell",
+        "target": "npm:autoprefixer@10.4.21",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "npm:eslint",
         "type": "static"
       },
       {
         "source": "@cvplus/shell",
+        "target": "npm:eslint-plugin-react-refresh@0.4.20",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "npm:postcss",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:tailwindcss@3.4.17",
         "type": "static"
       },
       {
@@ -25416,32 +26201,17 @@
       },
       {
         "source": "@cvplus/shell",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "@cvplus/core",
         "type": "static"
       },
       {
         "source": "@cvplus/shell",
         "target": "@cvplus/auth",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/cv-processing",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/multimedia",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/public-profiles",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/shell",
-        "target": "@cvplus/analytics",
         "type": "static"
       },
       {
@@ -25456,7 +26226,7 @@
       },
       {
         "source": "@cvplus/shell",
-        "target": "npm:react-router-dom",
+        "target": "npm:react-router-dom@6.30.1",
         "type": "static"
       },
       {
@@ -25549,6 +26319,11 @@
       {
         "source": "@cvplus/auth",
         "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/auth",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -25650,6 +26425,11 @@
       },
       {
         "source": "@cvplus/core",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
         "target": "npm:@types/node",
         "type": "static"
       },
@@ -25670,27 +26450,17 @@
       },
       {
         "source": "@cvplus/core",
+        "target": "npm:ical-generator",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/core",
         "target": "npm:tailwind-merge",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:winston",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
-        "target": "npm:winston-transport",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
         "target": "npm:nanoid@5.1.5",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/core",
-        "target": "npm:cls-hooked",
         "type": "static"
       }
     ],
@@ -25768,6 +26538,11 @@
       {
         "source": "@cvplus/i18n",
         "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/i18n",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -55776,5 +56551,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757825705298
+  "computedAt": 1757969798327
 }
