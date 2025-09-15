@@ -841,7 +841,14 @@ export class ValidationService {
         const content = await fs.readFile(file, 'utf-8');
 
         for (const pattern of sensitivePatterns) {
-          if (pattern.test(content)) {
+          const matches = content.match(pattern);
+          if (matches) {
+            // Skip if it's just an enum value (contains only letters, underscores, dashes)
+            const value = matches[0].split(/[:=]/)[1]?.trim().replace(/['"]/g, '');
+            if (value && /^[a-zA-Z_-]+$/.test(value)) {
+              continue; // Skip enum-like values
+            }
+
             return {
               passed: false,
               message: `Potential sensitive data in: ${path.relative(modulePath, file)}`,
