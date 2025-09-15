@@ -26358,7 +26358,7 @@
       },
       {
         "source": "@cvplus/e2e-flows",
-        "target": "npm:@types/node",
+        "target": "npm:@types/node@20.19.14",
         "type": "static"
       },
       {
@@ -27548,6 +27548,11 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "npm:glob",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "npm:jest",
         "type": "static"
       },
@@ -27764,6 +27769,11 @@
       {
         "source": "cvplus-functions",
         "target": "npm:pdf-parse@1.1.1",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "npm:puppeteer",
         "type": "static"
       },
       {
@@ -58384,5 +58394,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757969830693
+  "computedAt": 1757971385219
 }
