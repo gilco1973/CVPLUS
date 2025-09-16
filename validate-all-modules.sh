@@ -125,8 +125,8 @@ check_module_requirements() {
     # 5. Dependency Chain Integrity - Basic check
     echo "  🔗 Dependency Integrity..."
     if [ -f "$module_path/package.json" ]; then
-        # Check for circular dependencies (basic check)
-        self_ref=$(grep -q "\"@cvplus/$module_name\"" "$module_path/package.json" && echo "yes" || echo "no")
+        # Check for circular dependencies (basic check) - exclude "name" field
+        self_ref=$(grep -E "(dependencies|devDependencies|peerDependencies|optionalDependencies)" "$module_path/package.json" -A 20 | grep -q "\"@cvplus/$module_name\"" && echo "yes" || echo "no")
         if [ "$self_ref" = "yes" ]; then
             echo "    ❌ CRITICAL: Self-referential dependency detected"
             violations=$((violations + 1))

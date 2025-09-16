@@ -1689,8 +1689,8 @@
             "packageName": "@cvplus/analytics",
             "packageExports": {
               ".": {
-                "types": "./dist/index.d.ts",
-                "import": "./dist/index.esm.js",
+                "types": "./src/index.ts",
+                "import": "./dist/index.mjs",
                 "require": "./dist/index.js"
               }
             },
@@ -59577,5 +59577,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1758057506506
+  "computedAt": 1758066088248
 }
