@@ -40,3 +40,6 @@
 [submodule "packages/shell"]
 	path = packages/shell
 	url = git@github.com:gilco1973/cvplus-shell.git
+[submodule "packages/cv-enhancements"]
+	path = packages/cv-enhancements
+	url = git@github.com:gilco1973/cvplus-enhancements.git
