@@ -3097,6 +3097,23 @@
           "description": "CVPlus comprehensive logging system with Firebase integration, PII redaction, and performance monitoring",
           "js": {
             "packageName": "@cvplus/logging",
+            "packageExports": {
+              ".": {
+                "import": "./dist/index.js",
+                "require": "./dist/index.js",
+                "types": "./dist/index.d.ts"
+              },
+              "./backend": {
+                "import": "./dist/backend/index.js",
+                "require": "./dist/backend/index.js",
+                "types": "./dist/backend/index.d.ts"
+              },
+              "./frontend": {
+                "import": "./dist/frontend/index.js",
+                "require": "./dist/frontend/index.js",
+                "types": "./dist/frontend/index.d.ts"
+              }
+            },
             "packageMain": "dist/index.js",
             "isInPackageManagerWorkspaces": true
           }
@@ -28279,6 +28296,11 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "@cvplus/processing",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "@cvplus/i18n",
         "type": "static"
       },
@@ -28330,6 +28352,11 @@
       {
         "source": "cvplus-functions",
         "target": "npm:@types/fluent-ffmpeg",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "npm:@types/nodemailer",
         "type": "static"
       },
       {
@@ -59403,5 +59430,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1758042412399
+  "computedAt": 1758045454437
 }

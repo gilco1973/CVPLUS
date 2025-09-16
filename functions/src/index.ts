@@ -198,6 +198,13 @@ export { viewPublicProfile } from '@cvplus/public-profiles/backend/functions/pro
 export { updatePublicProfile } from '@cvplus/public-profiles/backend/functions/profile/update';
 export { contactProfileOwner } from '@cvplus/public-profiles/backend/functions/profile/contact';
 
+// Portal Functions - Migrated to public-profiles submodule
+export { generatePortal } from '@cvplus/public-profiles/backend/functions/portal/generatePortal';
+export { getPortalAnalytics } from '@cvplus/public-profiles/backend/functions/portal/getPortalAnalytics';
+export { getPortalStatus } from '@cvplus/public-profiles/backend/functions/portal/getPortalStatus';
+export { sendChatMessage } from '@cvplus/public-profiles/backend/functions/portal/sendChatMessage';
+export { startChatSession } from '@cvplus/public-profiles/backend/functions/portal/startChatSession';
+
 // Existing Public Profile Functions from submodules
 export {
   getPublicProfile,
