@@ -36,6 +36,7 @@
 ## Path Conventions
 **CVPlus Submodule Structure**:
 - **Level 1 Core**: `/Users/gklainert/Documents/cvplus/packages/core/`
+- **Level 1 Auth**: `/Users/gklainert/Documents/cvplus/packages/auth/`
 - **Level 1 Shell**: `/Users/gklainert/Documents/cvplus/packages/shell/`
 - **Analytics**: `/Users/gklainert/Documents/cvplus/packages/analytics/`
 - **Other Layer 2**: `/Users/gklainert/Documents/cvplus/packages/{module}/`
@@ -43,8 +44,9 @@
 ## Phase 3.1: Diagnostic & Setup
 - [ ] T001 Create recovery feature branch `008-level-one-recovery`
 - [ ] T002 [P] Catalog all TypeScript compilation errors in `/Users/gklainert/Documents/cvplus/packages/core/`
+- [ ] T002a [P] Catalog all TypeScript compilation errors in `/Users/gklainert/Documents/cvplus/packages/auth/`
 - [ ] T003 [P] Analyze dependency violations in Level 1 modules using architectural compliance scan
-- [ ] T004 [P] Document current test status for both Level 1 modules
+- [ ] T004 [P] Document current test status for all three Level 1 modules (core, auth, shell)
 - [ ] T005 Verify git submodule status and integrity for all Level 1 dependencies
 
 ## Phase 3.2: Critical Build Error Resolution ⚠️ MUST COMPLETE BEFORE 3.3
@@ -59,16 +61,20 @@
 
 ## Phase 3.3: TypeScript Compilation Validation (ONLY after errors are fixed)
 - [ ] T013 Validate @cvplus/core builds successfully with `npm run build`
+- [ ] T013a Validate @cvplus/auth builds successfully with `npm run build`
 - [ ] T014 Validate @cvplus/shell continues to build successfully
 - [ ] T015 [P] Run TypeScript strict mode compilation check on core module
-- [ ] T016 [P] Verify no remaining module resolution errors across Level 1 modules
+- [ ] T015a [P] Run TypeScript strict mode compilation check on auth module
+- [ ] T016 [P] Verify no remaining module resolution errors across all three Level 1 modules
 
 ## Phase 3.4: Test Suite Recovery & Validation
 - [ ] T017 Run existing test suite for `/Users/gklainert/Documents/cvplus/packages/core/` and document results
+- [ ] T017a Run existing test suite for `/Users/gklainert/Documents/cvplus/packages/auth/` and document results
 - [ ] T018 Run existing test suite for `/Users/gklainert/Documents/cvplus/packages/shell/` and document results
 - [ ] T019 [P] Fix any test failures in core module test suite
+- [ ] T019a [P] Fix any test failures in auth module test suite
 - [ ] T020 [P] Fix any test failures in shell module test suite
-- [ ] T021 Verify 100% test pass rate for both Level 1 modules
+- [ ] T021 Verify 100% test pass rate for all three Level 1 modules
 - [ ] T022 [P] Run test coverage analysis and document coverage percentages
 
 ## Phase 3.5: Architectural Compliance Validation
@@ -89,7 +95,7 @@
 - [ ] T033 [P] Refactor oversized services in analytics module to comply with 200-line limit
 - [ ] T034 [P] Run ESLint validation on all Level 1 modules and fix violations
 - [ ] T035 [P] Verify all modules follow CVPlus coding standards and naming conventions
-- [ ] T036 [P] Update version numbers for both Level 1 modules to reflect recovery changes
+- [ ] T036 [P] Update version numbers for all three Level 1 modules to reflect recovery changes
 - [ ] T037 Generate comprehensive quality metrics report for all Level 1 modules
 
 ## Phase 3.8: Integration & Platform Validation
@@ -100,7 +106,7 @@
 - [ ] T042 Document platform build success and any remaining integration issues
 
 ## Phase 3.9: Documentation & Rollout
-- [ ] T043 [P] Update CLAUDE.md files in both Level 1 modules to reflect recovery changes
+- [ ] T043 [P] Update CLAUDE.md files in all three Level 1 modules to reflect recovery changes
 - [ ] T044 [P] Create recovery summary documentation with before/after metrics
 - [ ] T045 [P] Update CVPlus Layer Architecture documentation with validated compliance
 - [ ] T046 [P] Generate deployment guide for Level 1 module recovery process
@@ -116,7 +122,7 @@
 **Specific Blockers**:
 - T006 blocks T013 (core build must succeed)
 - T008 blocks T025 (analytics exports needed for Layer 2)
-- T013-T014 block T017-T018 (build before tests)
+- T013-T013a-T014 block T017-T017a-T018 (build before tests)
 - T021 blocks T038 (individual tests before platform build)
 
 ## Parallel Execution Examples
@@ -141,7 +147,7 @@ Task: "Verify modules follow CVPlus coding standards"
 Each phase must achieve specific success metrics:
 
 **Phase 3.2**: Zero TypeScript compilation errors in Level 1 modules
-**Phase 3.3**: 100% build success rate for @cvplus/core and @cvplus/shell
+**Phase 3.3**: 100% build success rate for @cvplus/core, @cvplus/auth, and @cvplus/shell
 **Phase 3.4**: 100% test pass rate for all Level 1 module test suites
 **Phase 3.5**: Zero architectural violations, clean dependency tree
 **Phase 3.8**: Entire CVPlus platform builds successfully from foundation up

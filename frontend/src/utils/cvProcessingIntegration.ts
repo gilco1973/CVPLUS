@@ -53,46 +53,46 @@ const withCVProcessingErrorBoundary = <T extends {}>(
 };
 
 // Lazy load submodule components
-const CVAnalysisResultsModule = lazy(() => 
-  import('@cvplus/cv-processing/frontend')
+const CVAnalysisResultsModule = lazy(() =>
+  import('@cvplus/processing/frontend')
     .then(module => ({ default: module.CVAnalysisResults }))
     .catch(error => {
       console.error('Failed to load CVAnalysisResults from submodule:', error);
       // Fallback to legacy component
-      return import('../components/CVAnalysisResults').then(module => ({ 
+      return import('../components/CVAnalysisResults').then(module => ({
         default: module.CVAnalysisResults || (() => <div>CVAnalysisResults not available</div>)
       }));
     })
 );
 
-const GeneratedCVDisplayModule = lazy(() => 
-  import('@cvplus/cv-processing/frontend')
+const GeneratedCVDisplayModule = lazy(() =>
+  import('@cvplus/processing/frontend')
     .then(module => ({ default: module.GeneratedCVDisplay }))
     .catch(error => {
       console.error('Failed to load GeneratedCVDisplay from submodule:', error);
-      return import('../components/GeneratedCVDisplay').then(module => ({ 
+      return import('../components/GeneratedCVDisplay').then(module => ({
         default: module.GeneratedCVDisplay || (() => <div>GeneratedCVDisplay not available</div>)
       }));
     })
 );
 
-const LivePreviewModule = lazy(() => 
-  import('@cvplus/cv-processing/frontend')
+const LivePreviewModule = lazy(() =>
+  import('@cvplus/processing/frontend')
     .then(module => ({ default: module.LivePreview }))
     .catch(error => {
       console.error('Failed to load LivePreview from submodule:', error);
-      return import('../components/LivePreview').then(module => ({ 
+      return import('../components/LivePreview').then(module => ({
         default: module.LivePreview || (() => <div>LivePreview not available</div>)
       }));
     })
 );
 
-const CVComparisonViewModule = lazy(() => 
-  import('@cvplus/cv-processing/frontend')
+const CVComparisonViewModule = lazy(() =>
+  import('@cvplus/processing/frontend')
     .then(module => ({ default: module.CVComparisonView }))
     .catch(error => {
       console.error('Failed to load CVComparisonView from submodule:', error);
-      return import('../components/cv-comparison/CVComparisonView').then(module => ({ 
+      return import('../components/cv-comparison/CVComparisonView').then(module => ({
         default: module.CVComparisonView || (() => <div>CVComparisonView not available</div>)
       }));
     })

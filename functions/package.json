@@ -39,7 +39,7 @@
     "@cvplus/analytics": "file:../packages/analytics",
     "@cvplus/auth": "file:../packages/auth",
     "@cvplus/core": "file:../packages/core",
-    "@cvplus/cv-processing": "file:../packages/cv-processing",
+    "@cvplus/processing": "file:../packages/processing",
     "@cvplus/i18n": "file:../packages/i18n",
     "@cvplus/multimedia": "file:../packages/multimedia",
     "@cvplus/payments": "file:../packages/payments",

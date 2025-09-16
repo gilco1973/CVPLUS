@@ -1,8 +1,8 @@
 {
   "run": {
     "command": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
-    "startTime": "2025-09-16T03:41:59.357Z",
-    "endTime": "2025-09-16T03:42:04.599Z",
+    "startTime": "2025-09-16T16:36:00.674Z",
+    "endTime": "2025-09-16T16:36:19.961Z",
     "inner": false
   },
   "tasks": [
@@ -11,19 +11,129 @@
       "target": "build",
       "projectName": "@cvplus/logging",
       "hash": "1576725415403996082",
-      "startTime": "2025-09-16T03:41:59.392Z",
-      "endTime": "2025-09-16T03:42:01.625Z",
+      "startTime": "2025-09-16T16:36:00.714Z",
+      "endTime": "2025-09-16T16:36:00.777Z",
       "params": "",
-      "cacheStatus": "cache-miss",
+      "cacheStatus": "local-cache-hit",
       "status": 0
     },
     {
       "taskId": "@cvplus/core:build",
       "target": "build",
       "projectName": "@cvplus/core",
-      "hash": "2269386692882780399",
-      "startTime": "2025-09-16T03:42:01.690Z",
-      "endTime": "2025-09-16T03:42:04.599Z",
+      "hash": "568170889292719493",
+      "startTime": "2025-09-16T16:36:00.779Z",
+      "endTime": "2025-09-16T16:36:00.897Z",
+      "params": "",
+      "cacheStatus": "local-cache-hit",
+      "status": 0
+    },
+    {
+      "taskId": "@cvplus/recommendations:build",
+      "target": "build",
+      "projectName": "@cvplus/recommendations",
+      "hash": "16356133222752882011",
+      "startTime": "2025-09-16T16:36:00.898Z",
+      "endTime": "2025-09-16T16:36:04.312Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/i18n:build",
+      "target": "build",
+      "projectName": "@cvplus/i18n",
+      "hash": "18257310248847473760",
+      "startTime": "2025-09-16T16:36:00.898Z",
+      "endTime": "2025-09-16T16:36:05.911Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "@cvplus/auth:build",
+      "target": "build",
+      "projectName": "@cvplus/auth",
+      "hash": "16506458540824337085",
+      "startTime": "2025-09-16T16:36:00.898Z",
+      "endTime": "2025-09-16T16:36:06.441Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "@cvplus/analytics:build",
+      "target": "build",
+      "projectName": "@cvplus/analytics",
+      "hash": "5738721239390193424",
+      "startTime": "2025-09-16T16:36:06.444Z",
+      "endTime": "2025-09-16T16:36:07.282Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "@cvplus/premium:build",
+      "target": "build",
+      "projectName": "@cvplus/premium",
+      "hash": "14708763744523074338",
+      "startTime": "2025-09-16T16:36:04.312Z",
+      "endTime": "2025-09-16T16:36:07.807Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "frontend:build",
+      "target": "build",
+      "projectName": "frontend",
+      "hash": "3977581526007348536",
+      "startTime": "2025-09-16T16:36:05.920Z",
+      "endTime": "2025-09-16T16:36:09.091Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/multimedia:build",
+      "target": "build",
+      "projectName": "@cvplus/multimedia",
+      "hash": "720365059413157628",
+      "startTime": "2025-09-16T16:36:07.285Z",
+      "endTime": "2025-09-16T16:36:10.497Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/payments:build",
+      "target": "build",
+      "projectName": "@cvplus/payments",
+      "hash": "12789973067359484210",
+      "startTime": "2025-09-16T16:36:09.091Z",
+      "endTime": "2025-09-16T16:36:12.522Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/processing:build",
+      "target": "build",
+      "projectName": "@cvplus/processing",
+      "hash": "8871975808975851078",
+      "startTime": "2025-09-16T16:36:07.807Z",
+      "endTime": "2025-09-16T16:36:15.942Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "@cvplus/workflow:build",
+      "target": "build",
+      "projectName": "@cvplus/workflow",
+      "hash": "18199909227389860969",
+      "startTime": "2025-09-16T16:36:10.498Z",
+      "endTime": "2025-09-16T16:36:19.960Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 1

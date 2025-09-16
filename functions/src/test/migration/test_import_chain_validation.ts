@@ -23,7 +23,7 @@ describe('Import Chain Validation', () => {
 
     // Expected imports after migration
     const expectedImports = [
-      '@cvplus/cv-processing/backend',
+      '@cvplus/processing/backend',
       '@cvplus/multimedia/backend',
       '@cvplus/analytics',
       '@cvplus/public-profiles/backend',

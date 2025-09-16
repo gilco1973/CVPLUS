@@ -47,7 +47,7 @@ describe('API Contract Preservation', () => {
     const indexContent = fs.readFileSync(FUNCTIONS_INDEX_PATH, 'utf8');
 
     const criticalSubmodules = [
-      '@cvplus/cv-processing',
+      '@cvplus/processing',
       '@cvplus/multimedia',
       '@cvplus/analytics',
       '@cvplus/public-profiles',

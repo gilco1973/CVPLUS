@@ -16,7 +16,7 @@ import {
   ExternalDataUsageEvent,
   ExternalDataSecurityAudit,
   RateLimitStatus 
-} from '@cvplus/cv-processing/external-data';
+} from '@cvplus/processing/external-data';
 
 // Mock Firebase Admin
 jest.mock('firebase-admin', () => ({
