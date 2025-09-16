@@ -8613,6 +8613,15 @@
         "hash": "sha512-yYxMVH7Dqw6nO0d5NIV8OQWnitU8k6vXH8NtgqAfIa/IUqRMxRv/NUJJ08VEKbAakwxlgBl5PJdrU0dMPStsnw=="
       }
     },
+    "npm:@kurkle/color": {
+      "type": "npm",
+      "name": "npm:@kurkle/color",
+      "data": {
+        "version": "0.3.4",
+        "packageName": "@kurkle/color",
+        "hash": "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="
+      }
+    },
     "npm:@mapbox/node-pre-gyp": {
       "type": "npm",
       "name": "npm:@mapbox/node-pre-gyp",
@@ -9700,6 +9709,15 @@
         "version": "0.12.5",
         "packageName": "@types/caseless",
         "hash": "sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg=="
+      }
+    },
+    "npm:@types/chart.js": {
+      "type": "npm",
+      "name": "npm:@types/chart.js",
+      "data": {
+        "version": "2.9.41",
+        "packageName": "@types/chart.js",
+        "hash": "sha512-3dvkDvueckY83UyUXtJMalYoH6faOLkWQoaTlJgB4Djde3oORmNP0Jw85HtzTuXyliUHcdp704s0mZFQKio/KQ=="
       }
     },
     "npm:@types/cheerio": {
@@ -11788,6 +11806,15 @@
         "version": "2.1.0",
         "packageName": "chardet",
         "hash": "sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA=="
+      }
+    },
+    "npm:chart.js": {
+      "type": "npm",
+      "name": "npm:chart.js",
+      "data": {
+        "version": "4.5.0",
+        "packageName": "chart.js",
+        "hash": "sha512-aYeC/jDgSEx8SHWZvANYMioYMZ2KX02W6f6uVfyteuCGcadDLcYVHdfdygsTQkQ4TKn5lghoojAsPj5pu0SnvQ=="
       }
     },
     "npm:cheerio": {
@@ -17001,6 +17028,15 @@
         "hash": "sha512-Rs5FVpVcBYRHPLuhHOjgbRhosaQYLtEo3JIeDIbmNo7mSssi1CTzwMh8v36gAzpbzLGXI9wB/yHh+5+3fY1QVw=="
       }
     },
+    "npm:moment": {
+      "type": "npm",
+      "name": "npm:moment",
+      "data": {
+        "version": "2.30.1",
+        "packageName": "moment",
+        "hash": "sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how=="
+      }
+    },
     "npm:moo": {
       "type": "npm",
       "name": "npm:moo",
@@ -18484,6 +18520,15 @@
         "version": "1.22.1",
         "packageName": "re2",
         "hash": "sha512-E4J0EtgyNLdIr0wTg0dQPefuiqNY29KaLacytiUAYYRzxCG+zOkWoUygt1rI+TA1LrhN49/njrfSO1DHtVC5Vw=="
+      }
+    },
+    "npm:react-chartjs-2": {
+      "type": "npm",
+      "name": "npm:react-chartjs-2",
+      "data": {
+        "version": "5.3.0",
+        "packageName": "react-chartjs-2",
+        "hash": "sha512-UfZZFnDsERI3c3CZGxzvNJd02SHjaSJ8kgW1djn65H1KK8rehwTjyrRKOG3VTMG8wtHZ5rgAO5oTHtHi9GCCmw=="
       }
     },
     "npm:react-dropzone": {
@@ -33771,6 +33816,11 @@
       "type": "static"
     },
     {
+      "source": "npm:@types/chart.js",
+      "target": "npm:moment",
+      "type": "static"
+    },
+    {
       "source": "npm:@types/cheerio",
       "target": "npm:@types/node",
       "type": "static"
@@ -36018,6 +36068,11 @@
     {
       "source": "npm:chalk",
       "target": "npm:supports-color",
+      "type": "static"
+    },
+    {
+      "source": "npm:chart.js",
+      "target": "npm:@kurkle/color",
       "type": "static"
     },
     {
@@ -40323,6 +40378,11 @@
     {
       "source": "npm:i18next-icu",
       "target": "npm:intl-messageformat",
+      "type": "static"
+    },
+    {
+      "source": "npm:ical-generator",
+      "target": "npm:moment",
       "type": "static"
     },
     {
@@ -45178,6 +45238,16 @@
     {
       "source": "npm:react",
       "target": "npm:loose-envify",
+      "type": "static"
+    },
+    {
+      "source": "npm:react-chartjs-2",
+      "target": "npm:chart.js",
+      "type": "static"
+    },
+    {
+      "source": "npm:react-chartjs-2",
+      "target": "npm:react",
       "type": "static"
     },
     {

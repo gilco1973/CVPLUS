@@ -595,7 +595,8 @@
               "type-check",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "CVPlus recommendations system module with performance optimization and AI integration",
@@ -741,6 +742,18 @@
             "metadata": {
               "scriptContent": "./scripts/validate-dependencies.sh",
               "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -1493,7 +1506,8 @@
               "test:watch",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "CVPlus Analytics Module - Core business intelligence, tracking, and performance analytics",
@@ -1630,6 +1644,18 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": []
@@ -1700,7 +1726,9 @@
               "dev:start",
               "test:report",
               "firebase:emulators",
-              "validate:quickstart"
+              "validate:quickstart",
+              "type-check",
+              "clean"
             ]
           },
           "description": "End-to-end testing flows for CVPlus - comprehensive user journey validation, submodule testing, and API validation",
@@ -2281,6 +2309,35 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": []
@@ -2858,7 +2915,9 @@
               "test",
               "test:watch",
               "lint",
-              "lint:fix"
+              "lint:fix",
+              "type-check",
+              "clean"
             ]
           },
           "description": "CVPlus comprehensive logging system with Firebase integration, PII redaction, and performance monitoring",
@@ -2956,6 +3015,35 @@
             "metadata": {
               "scriptContent": "eslint src/**/*.{ts,tsx} --fix",
               "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -3242,7 +3330,8 @@
               "test:coverage",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "Comprehensive admin dashboard module for CVPlus platform management",
@@ -3393,6 +3482,18 @@
             "metadata": {
               "scriptContent": "./scripts/validate-dependencies.sh",
               "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -13461,6 +13562,15 @@
         "hash": "sha512-yYxMVH7Dqw6nO0d5NIV8OQWnitU8k6vXH8NtgqAfIa/IUqRMxRv/NUJJ08VEKbAakwxlgBl5PJdrU0dMPStsnw=="
       }
     },
+    "npm:@kurkle/color": {
+      "type": "npm",
+      "name": "npm:@kurkle/color",
+      "data": {
+        "version": "0.3.4",
+        "packageName": "@kurkle/color",
+        "hash": "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="
+      }
+    },
     "npm:@mapbox/node-pre-gyp": {
       "type": "npm",
       "name": "npm:@mapbox/node-pre-gyp",
@@ -14548,6 +14658,15 @@
         "version": "0.12.5",
         "packageName": "@types/caseless",
         "hash": "sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg=="
+      }
+    },
+    "npm:@types/chart.js": {
+      "type": "npm",
+      "name": "npm:@types/chart.js",
+      "data": {
+        "version": "2.9.41",
+        "packageName": "@types/chart.js",
+        "hash": "sha512-3dvkDvueckY83UyUXtJMalYoH6faOLkWQoaTlJgB4Djde3oORmNP0Jw85HtzTuXyliUHcdp704s0mZFQKio/KQ=="
       }
     },
     "npm:@types/cheerio": {
@@ -16636,6 +16755,15 @@
         "version": "2.1.0",
         "packageName": "chardet",
         "hash": "sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA=="
+      }
+    },
+    "npm:chart.js": {
+      "type": "npm",
+      "name": "npm:chart.js",
+      "data": {
+        "version": "4.5.0",
+        "packageName": "chart.js",
+        "hash": "sha512-aYeC/jDgSEx8SHWZvANYMioYMZ2KX02W6f6uVfyteuCGcadDLcYVHdfdygsTQkQ4TKn5lghoojAsPj5pu0SnvQ=="
       }
     },
     "npm:cheerio": {
@@ -21849,6 +21977,15 @@
         "hash": "sha512-Rs5FVpVcBYRHPLuhHOjgbRhosaQYLtEo3JIeDIbmNo7mSssi1CTzwMh8v36gAzpbzLGXI9wB/yHh+5+3fY1QVw=="
       }
     },
+    "npm:moment": {
+      "type": "npm",
+      "name": "npm:moment",
+      "data": {
+        "version": "2.30.1",
+        "packageName": "moment",
+        "hash": "sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how=="
+      }
+    },
     "npm:moo": {
       "type": "npm",
       "name": "npm:moo",
@@ -23332,6 +23469,15 @@
         "version": "1.22.1",
         "packageName": "re2",
         "hash": "sha512-E4J0EtgyNLdIr0wTg0dQPefuiqNY29KaLacytiUAYYRzxCG+zOkWoUygt1rI+TA1LrhN49/njrfSO1DHtVC5Vw=="
+      }
+    },
+    "npm:react-chartjs-2": {
+      "type": "npm",
+      "name": "npm:react-chartjs-2",
+      "data": {
+        "version": "5.3.0",
+        "packageName": "react-chartjs-2",
+        "hash": "sha512-UfZZFnDsERI3c3CZGxzvNJd02SHjaSJ8kgW1djn65H1KK8rehwTjyrRKOG3VTMG8wtHZ5rgAO5oTHtHi9GCCmw=="
       }
     },
     "npm:react-dropzone": {
@@ -25466,7 +25612,37 @@
       },
       {
         "source": "@cvplus/public-profiles",
+        "target": "npm:@testing-library/jest-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@testing-library/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
         "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/jsdom@21.1.7",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/mime-types",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/qrcode",
         "type": "static"
       },
       {
@@ -25481,32 +25657,12 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:@types/qrcode",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/jsdom@21.1.7",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/cheerio",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/validator",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
         "target": "npm:@types/slug",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:@types/mime-types",
+        "target": "npm:@types/validator",
         "type": "static"
       },
       {
@@ -25517,16 +25673,6 @@
       {
         "source": "@cvplus/public-profiles",
         "target": "npm:@typescript-eslint/parser",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@testing-library/react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@testing-library/jest-dom",
         "type": "static"
       },
       {
@@ -25566,7 +25712,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/core",
+        "target": "@cvplus/analytics",
         "type": "static"
       },
       {
@@ -25576,7 +25722,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/i18n",
+        "target": "@cvplus/core",
         "type": "static"
       },
       {
@@ -25586,17 +25732,32 @@
       },
       {
         "source": "@cvplus/public-profiles",
+        "target": "@cvplus/i18n",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
         "target": "@cvplus/multimedia",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/analytics",
+        "target": "npm:@types/node",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:@types/node",
+        "target": "npm:cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:express-rate-limit",
         "type": "static"
       },
       {
@@ -25616,12 +25777,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:react-helmet-async",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:qrcode",
+        "target": "npm:helmet",
         "type": "static"
       },
       {
@@ -25631,17 +25787,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:cheerio",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:helmet",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:express-rate-limit",
+        "target": "npm:mime-types",
         "type": "static"
       },
       {
@@ -25651,7 +25797,12 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:validator",
+        "target": "npm:qrcode",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:react-helmet-async",
         "type": "static"
       },
       {
@@ -25661,7 +25812,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:mime-types",
+        "target": "npm:validator",
         "type": "static"
       }
     ],
@@ -25724,6 +25875,11 @@
       {
         "source": "@cvplus/recommendations",
         "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/recommendations",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -25875,7 +26031,17 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "@cvplus/analytics",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -25950,6 +26116,11 @@
       },
       {
         "source": "@cvplus/cv-processing",
+        "target": "npm:puppeteer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/cv-processing",
         "target": "npm:react-dropzone",
         "type": "static"
       },
@@ -25966,11 +26137,6 @@
       {
         "source": "@cvplus/cv-processing",
         "target": "npm:xml2js",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "@cvplus/analytics",
         "type": "static"
       }
     ],
@@ -26072,17 +26238,22 @@
       },
       {
         "source": "@cvplus/multimedia",
-        "target": "@cvplus/core",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/multimedia",
         "target": "@cvplus/auth",
         "type": "static"
       },
       {
         "source": "@cvplus/multimedia",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/multimedia",
         "target": "@cvplus/i18n",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/multimedia",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26162,12 +26333,12 @@
       },
       {
         "source": "@cvplus/multimedia",
-        "target": "npm:react-intersection-observer",
+        "target": "npm:react-hot-toast",
         "type": "static"
       },
       {
         "source": "@cvplus/multimedia",
-        "target": "npm:react-hot-toast",
+        "target": "npm:react-intersection-observer",
         "type": "static"
       },
       {
@@ -26209,16 +26380,6 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "npm:@types/react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
-        "target": "npm:@types/react-dom",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
         "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
         "type": "static"
       },
@@ -26229,7 +26390,7 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "npm:@vitejs/plugin-react",
+        "target": "npm:@vitest/coverage-v8",
         "type": "static"
       },
       {
@@ -26538,17 +26699,17 @@
       },
       {
         "source": "@cvplus/payments",
-        "target": "@cvplus/core",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/payments",
         "target": "@cvplus/auth",
         "type": "static"
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:stripe@17.7.0",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26563,7 +26724,12 @@
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:firebase-functions",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
+        "target": "npm:@types/react-dom",
         "type": "static"
       },
       {
@@ -26573,17 +26739,17 @@
       },
       {
         "source": "@cvplus/payments",
+        "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
         "target": "npm:react-dom",
         "type": "static"
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:@types/node",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/payments",
-        "target": "npm:@types/react-dom",
+        "target": "npm:stripe@17.7.0",
         "type": "static"
       }
     ],
@@ -26600,46 +26766,6 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:@types/node@20.19.11",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/lodash",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/uuid",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/express",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:typescript",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:rollup",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@rollup/plugin-typescript@11.1.6",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@rollup/plugin-node-resolve@15.3.1",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
         "target": "npm:@rollup/plugin-commonjs@25.0.8",
         "type": "static"
       },
@@ -26650,7 +26776,42 @@
       },
       {
         "source": "@cvplus/workflow",
+        "target": "npm:@rollup/plugin-node-resolve@15.3.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
         "target": "npm:@rollup/plugin-terser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@rollup/plugin-typescript@11.1.6",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/express",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/node@20.19.11",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/uuid",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:rollup",
         "type": "static"
       },
       {
@@ -26665,12 +26826,17 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:firebase-functions@4.9.0",
+        "target": "npm:typescript",
         "type": "static"
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:firebase-admin@11.11.1",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26690,16 +26856,6 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:lodash",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:uuid@9.0.1",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
         "target": "npm:date-fns",
         "type": "static"
       },
@@ -26707,12 +26863,32 @@
         "source": "@cvplus/workflow",
         "target": "npm:express",
         "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:firebase-admin@11.11.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:firebase-functions@4.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:uuid@9.0.1",
+        "type": "static"
       }
     ],
     "@cvplus/logging": [
       {
         "source": "@cvplus/logging",
-        "target": "npm:@types/node",
+        "target": "npm:@types/node@18.19.124",
         "type": "static"
       },
       {
@@ -26784,22 +26960,17 @@
     "@cvplus/premium": [
       {
         "source": "@cvplus/premium",
-        "target": "npm:react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/premium",
         "target": "npm:firebase",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:stripe",
+        "target": "npm:react",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@types/react",
+        "target": "npm:stripe",
         "type": "static"
       },
       {
@@ -26810,6 +26981,11 @@
       {
         "source": "@cvplus/premium",
         "target": "npm:@types/node@20.19.11",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@types/react",
         "type": "static"
       },
       {
@@ -26854,12 +27030,12 @@
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@stripe/stripe-js@4.10.0",
+        "target": "@cvplus/core",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@stripe/react-stripe-js@2.9.0",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26870,6 +27046,16 @@
       {
         "source": "@cvplus/premium",
         "target": "npm:@paypal/react-paypal-js@8.8.3",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@stripe/react-stripe-js@2.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@stripe/stripe-js@4.10.0",
         "type": "static"
       },
       {
@@ -26986,7 +27172,22 @@
       },
       {
         "source": "@cvplus/admin",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/admin",
         "target": "@cvplus/public-profiles",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/admin",
+        "target": "npm:@types/chart.js",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/admin",
+        "target": "npm:chart.js",
         "type": "static"
       },
       {
@@ -27002,6 +27203,11 @@
       {
         "source": "@cvplus/admin",
         "target": "npm:firebase-functions@5.1.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/admin",
+        "target": "npm:react-chartjs-2",
         "type": "static"
       },
       {
@@ -27237,12 +27443,12 @@
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:@types/jest",
+        "target": "npm:@types/cls-hooked",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:@types/cls-hooked",
+        "target": "npm:@types/jest",
         "type": "static"
       },
       {
@@ -27317,12 +27523,12 @@
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:tailwind-merge",
+        "target": "npm:nanoid@5.1.5",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:nanoid@5.1.5",
+        "target": "npm:tailwind-merge",
         "type": "static"
       }
     ],
@@ -41425,6 +41631,13 @@
         "type": "static"
       }
     ],
+    "npm:@types/chart.js": [
+      {
+        "source": "npm:@types/chart.js",
+        "target": "npm:moment",
+        "type": "static"
+      }
+    ],
     "npm:@types/cheerio": [
       {
         "source": "npm:@types/cheerio",
@@ -43671,6 +43884,13 @@
       {
         "source": "npm:chalk",
         "target": "npm:supports-color",
+        "type": "static"
+      }
+    ],
+    "npm:chart.js": [
+      {
+        "source": "npm:chart.js",
+        "target": "npm:@kurkle/color",
         "type": "static"
       }
     ],
@@ -47749,6 +47969,13 @@
       {
         "source": "npm:i18next-icu",
         "target": "npm:intl-messageformat",
+        "type": "static"
+      }
+    ],
+    "npm:ical-generator": [
+      {
+        "source": "npm:ical-generator",
+        "target": "npm:moment",
         "type": "static"
       }
     ],
@@ -52610,6 +52837,18 @@
       {
         "source": "npm:react",
         "target": "npm:loose-envify",
+        "type": "static"
+      }
+    ],
+    "npm:react-chartjs-2": [
+      {
+        "source": "npm:react-chartjs-2",
+        "target": "npm:chart.js",
+        "type": "static"
+      },
+      {
+        "source": "npm:react-chartjs-2",
+        "target": "npm:react",
         "type": "static"
       }
     ],
@@ -58138,5 +58377,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757973294075
+  "computedAt": 1757996365129
 }

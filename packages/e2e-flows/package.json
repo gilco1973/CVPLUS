@@ -50,7 +50,9 @@
     "dev:start": "concurrently \"npm run build:watch\" \"npm run test:watch\"",
     "test:report": "jest --coverage --coverageReporters=html",
     "firebase:emulators": "firebase emulators:start --only firestore,auth,storage",
-    "validate:quickstart": "ts-node scripts/validate-quickstart.ts"
+    "validate:quickstart": "ts-node scripts/validate-quickstart.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist"
   },
   "keywords": [
     "e2e-testing",

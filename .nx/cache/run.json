@@ -1,18 +1,29 @@
 {
   "run": {
-    "command": "nx run core:build",
-    "startTime": "2025-09-14T14:05:59.618Z",
-    "endTime": "2025-09-14T14:06:06.259Z",
+    "command": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
+    "startTime": "2025-09-16T03:41:59.357Z",
+    "endTime": "2025-09-16T03:42:04.599Z",
     "inner": false
   },
   "tasks": [
     {
+      "taskId": "@cvplus/logging:build",
+      "target": "build",
+      "projectName": "@cvplus/logging",
+      "hash": "1576725415403996082",
+      "startTime": "2025-09-16T03:41:59.392Z",
+      "endTime": "2025-09-16T03:42:01.625Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
       "taskId": "@cvplus/core:build",
       "target": "build",
       "projectName": "@cvplus/core",
-      "hash": "9102154540712514823",
-      "startTime": "2025-09-14T14:05:59.650Z",
-      "endTime": "2025-09-14T14:06:06.259Z",
+      "hash": "2269386692882780399",
+      "startTime": "2025-09-16T03:42:01.690Z",
+      "endTime": "2025-09-16T03:42:04.599Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 1

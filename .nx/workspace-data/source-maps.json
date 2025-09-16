@@ -1380,6 +1380,10 @@
       "packages/admin/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.9": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/admin/package.json",
       "nx/core/package-json"
@@ -1660,6 +1664,34 @@
       "packages/admin/package.json",
       "nx/core/package-json"
     ],
+    "targets.clean": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.executor": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options.script": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.scriptContent": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.runCommand": [
+      "packages/admin/package.json",
+      "nx/core/package-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"
@@ -1791,6 +1823,10 @@
       "nx/core/package-json"
     ],
     "metadata.targetGroups.NPM Scripts.7": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.8": [
       "packages/analytics/package.json",
       "nx/core/package-json"
     ],
@@ -2043,6 +2079,34 @@
       "nx/core/package-json"
     ],
     "targets.validate-dependencies.metadata.runCommand": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.executor": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options.script": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.scriptContent": [
+      "packages/analytics/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.runCommand": [
       "packages/analytics/package.json",
       "nx/core/package-json"
     ],
@@ -4022,6 +4086,14 @@
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.46": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.47": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
@@ -5334,6 +5406,62 @@
       "packages/e2e-flows/package.json",
       "nx/core/package-json"
     ],
+    "targets.type-check": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.executor": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options.script": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.scriptContent": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.runCommand": [
+      "packages/e2e-flows/package.json",
+      "nx/core/package-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"
@@ -5371,6 +5499,18 @@
       "nx/target-defaults"
     ],
     "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.parallelism": [
       "nx.json",
       "nx/target-defaults"
     ]
@@ -6166,6 +6306,14 @@
       "packages/logging/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.6": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.7": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/logging/package.json",
       "nx/core/package-json"
@@ -6358,6 +6506,62 @@
       "packages/logging/package.json",
       "nx/core/package-json"
     ],
+    "targets.type-check": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.executor": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.options": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.options.script": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata.scriptContent": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.type-check.metadata.runCommand": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.executor": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options.script": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.scriptContent": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.runCommand": [
+      "packages/logging/package.json",
+      "nx/core/package-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"
@@ -6395,6 +6599,18 @@
       "nx/target-defaults"
     ],
     "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.type-check.parallelism": [
       "nx.json",
       "nx/target-defaults"
     ]
@@ -10024,6 +10240,10 @@
       "packages/recommendations/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.9": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/recommendations/package.json",
       "nx/core/package-json"
@@ -10301,6 +10521,34 @@
       "nx/core/package-json"
     ],
     "targets.validate-dependencies.metadata.runCommand": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.executor": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.options.script": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.scriptContent": [
+      "packages/recommendations/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.clean.metadata.runCommand": [
       "packages/recommendations/package.json",
       "nx/core/package-json"
     ],
