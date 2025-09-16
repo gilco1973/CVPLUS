@@ -11100,6 +11100,10 @@
       "packages/shell/package.json",
       "nx/core/package-json"
     ],
+    "metadata.targetGroups.NPM Scripts.6": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
     "metadata.description": [
       "packages/shell/package.json",
       "nx/core/package-json"
@@ -11292,6 +11296,34 @@
       "packages/shell/package.json",
       "nx/core/package-json"
     ],
+    "targets.test": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.executor": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.options": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.options.script": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata.scriptContent": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata.runCommand": [
+      "packages/shell/package.json",
+      "nx/core/package-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"
@@ -11329,6 +11361,18 @@
       "nx/target-defaults"
     ],
     "targets.type-check.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
       "nx.json",
       "nx/target-defaults"
     ]
@@ -11423,6 +11467,10 @@
       "nx/core/package-json"
     ],
     "metadata.targetGroups.NPM Scripts.9": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.10": [
       "packages/workflow/package.json",
       "nx/core/package-json"
     ],
@@ -11730,6 +11778,34 @@
       "packages/workflow/package.json",
       "nx/core/package-json"
     ],
+    "targets.test": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.executor": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.options": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.options.script": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata.scriptContent": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test.metadata.runCommand": [
+      "packages/workflow/package.json",
+      "nx/core/package-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"
@@ -11755,6 +11831,18 @@
       "nx/target-defaults"
     ],
     "targets.type-check.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
       "nx.json",
       "nx/target-defaults"
     ]

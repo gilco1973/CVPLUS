@@ -11,7 +11,7 @@ import { logger } from '@cvplus/logging';
  * @param moduleId - The module identifier
  * @param body - Partial module state update
  * @returns Updated module recovery state
- */
+  */
 export const updateModuleState = https.onRequest(async (req, res) => {
   try {
     // CORS headers

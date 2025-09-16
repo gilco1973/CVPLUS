@@ -5,7 +5,7 @@
  * 
  * @author Gil Klainert
  * @version 1.0.0
- */
+  */
 
 import { VideoGenerationService } from '../services/video-generation.service';
 import { ParsedCV } from '../types/enhanced-models';

@@ -7,7 +7,7 @@
  * @author Gil Klainert
  * @created 2025-08-25
  * @version 1.0
- */
+  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/test';
 import { initializeTestEnvironment, RulesTestEnvironment } from '@firebase/rules-unit-testing';

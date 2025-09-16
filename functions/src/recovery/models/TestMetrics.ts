@@ -1,7 +1,7 @@
 /**
  * TestMetrics Model - T036
  * CVPlus Level 2 Recovery System
- */
+  */
 
 export interface TestMetrics {
   testRunId: string;
@@ -294,7 +294,8 @@ export function createTestMetrics(moduleId: string, testRunId?: string): TestMet
       maxWorkers: 4,
       timeout: 30000,
       retries: 0,
-      pattern: '**/*.test.{ts,js}',
+      pattern: '**/* .test.{ts,js}',
+  */
       environment: 'node',
       setupFiles: [],
       teardownFiles: []

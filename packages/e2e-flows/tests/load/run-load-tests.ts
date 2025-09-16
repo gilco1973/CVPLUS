@@ -9,7 +9,7 @@
  *   npm run test:load -- --scenario=stress  # Run specific scenario
  *   npm run test:load -- --users=5000       # Run with custom user count
  *   npm run test:load -- --report-only      # Generate report only
- */
+  */
 
 import { Command } from 'commander';
 import { LoadTestScenarios } from './load-test-scenarios';
@@ -43,7 +43,7 @@ class LoadTestRunner {
 
   /**
    * Setup event listeners for monitoring
-   */
+    */
   private setupEventListeners(): void {
     this.monitor.on('metrics', (metrics) => {
       // Update console dashboard every 5 seconds
@@ -68,7 +68,7 @@ class LoadTestRunner {
 
   /**
    * Run load test based on scenario
-   */
+    */
   async runScenario(scenario: string, options: LoadTestOptions): Promise<LoadTestResults> {
     console.log(`\n🚀 Starting Load Test Scenario: ${scenario.toUpperCase()}`);
     console.log('='.repeat(50));
@@ -133,7 +133,7 @@ class LoadTestRunner {
 
   /**
    * Run custom load test scenario
-   */
+    */
   private async runCustomScenario(options: LoadTestOptions): Promise<LoadTestResults> {
     const framework = new LoadTestFramework();
 
@@ -185,7 +185,7 @@ class LoadTestRunner {
 
   /**
    * Generate comprehensive report
-   */
+    */
   async generateReport(results: LoadTestResults, options: LoadTestOptions): Promise<void> {
     const outputDir = options.output || '/Users/gklainert/Documents/cvplus/packages/e2e-flows/tests/load/reports';
 
@@ -225,7 +225,7 @@ class LoadTestRunner {
 
   /**
    * Display results summary in console
-   */
+    */
   private displayResultsSummary(results: LoadTestResults): void {
     const metrics = results.aggregatedMetrics;
 
@@ -273,7 +273,7 @@ class LoadTestRunner {
 
   /**
    * Calculate performance grade
-   */
+    */
   private calculatePerformanceGrade(results: LoadTestResults): string {
     const metrics = results.aggregatedMetrics;
     let score = 100;
@@ -308,7 +308,7 @@ class LoadTestRunner {
 
   /**
    * Cleanup resources
-   */
+    */
   async cleanup(): Promise<void> {
     this.monitor.stopMonitoring();
     await this.scenarios.cleanup();
@@ -317,7 +317,7 @@ class LoadTestRunner {
 
 /**
  * Main execution function
- */
+  */
 async function main(): Promise<void> {
   const program = new Command();
 

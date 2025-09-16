@@ -2,7 +2,7 @@
 /**
  * Test script to verify that CV recommendations no longer contain fabricated metrics
  * This test ensures that the AI hallucination issue has been resolved
- */
+  */
 
 import { CVTransformationService } from '../services/cv-transformation.service';
 import { ParsedCV } from '../types/job';
@@ -37,7 +37,7 @@ const mockCV: ParsedCV = {
 
 /**
  * Tests that recommendations don't contain fabricated specific metrics
- */
+  */
 async function testRecommendationHallucination() {
   console.log('🧪 Testing recommendation hallucination fix...');
   
@@ -124,7 +124,7 @@ async function testRecommendationHallucination() {
 
 /**
  * Tests that fallback recommendations also don't contain fabricated metrics
- */
+  */
 function testFallbackRecommendations() {
   console.log('🧪 Testing fallback recommendations...');
   

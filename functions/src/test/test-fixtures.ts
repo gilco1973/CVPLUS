@@ -6,7 +6,7 @@
  * 
  * @author Gil Klainert
  * @created 2025-08-19
- */
+  */
 
 import { ParsedCV } from '../types/job';
 import { PortalConfig, PortalStatus, PortalUrls, RAGEmbedding, AssetBundle } from '../types/portal';
@@ -600,7 +600,7 @@ export const mockAssetBundle: AssetBundle = {
 export class TestUtils {
   /**
    * Generate a random CV with specified characteristics
-   */
+    */
   static generateRandomCV(options: {
     complexity?: 'minimal' | 'standard' | 'complex';
     industry?: string;
@@ -645,7 +645,7 @@ export class TestUtils {
 
   /**
    * Create mock embeddings for testing
-   */
+    */
   static generateMockEmbeddings(count: number): RAGEmbedding[] {
     return Array(count).fill(null).map((_, i) => ({
       id: `test-embed-${i}`,
@@ -664,21 +664,21 @@ export class TestUtils {
 
   /**
    * Wait for a specified duration (for async testing)
-   */
+    */
   static async wait(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
    * Generate unique test IDs
-   */
+    */
   static generateTestId(prefix: string = 'test'): string {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
    * Deep clone an object for test isolation
-   */
+    */
   static deepClone<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
   }

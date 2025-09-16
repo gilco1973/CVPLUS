@@ -1,7 +1,7 @@
 /**
  * Comprehensive unit tests for TestScenario model
  * Tests all functionality including validation, state transitions, and edge cases
- */
+  */
 
 import { TestScenarioModel, TestStep, TestOutcome, RetryConfig, TestScenarioType, TestScenarioStatus } from '../../../src/models/TestScenario';
 

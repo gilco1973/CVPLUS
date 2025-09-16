@@ -1,7 +1,7 @@
 /**
  * Portfolio Gallery Feature Tests
  * Tests the new React component integration for portfolio gallery
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import { PortfolioGalleryFeature } from '../services/cv-generator/features/PortfolioGalleryFeature';

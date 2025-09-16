@@ -64,12 +64,13 @@ if (!admin.apps.length) {
 // Calendar and Meeting Functions
 // export { bookMeeting } from './scripts/functions/bookMeeting'; // DISABLED FOR DEPLOYMENT
 // Calendar integration functions - DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   generateCalendarEvents,
   ... calendar functions temporarily disabled for deployment
 } from './scripts/functions/calendarIntegration';
-*/
+/*  */
 
 // ============================================================================
 // CV PROCESSING FUNCTIONS
@@ -85,13 +86,14 @@ export { downloadProcessedCV } from '@cvplus/processing/backend/functions/cv/dow
 // Existing CV Processing Functions from submodules
 // CV Processing Functions from submodules - TEMPORARILY DISABLED FOR DEPLOYMENT
 // TODO: Re-enable after submodule dependencies are properly set up
-/*
+/* 
+  */
 export {
   processCV,
   generateCV,
   ... other functions temporarily disabled for deployment
 } from '@cvplus/processing/backend';
-*/
+/*  */
 
 // ============================================================================
 // MULTIMEDIA FUNCTIONS
@@ -104,12 +106,13 @@ export { generateVideo } from '@cvplus/multimedia/backend/functions/multimedia/v
 
 // Multimedia Functions from submodules - TEMPORARILY DISABLED FOR DEPLOYMENT
 // TODO: Re-enable after submodule dependencies are properly set up
-/*
+/* 
+  */
 export {
   podcastStatus,
   ... other multimedia functions temporarily disabled for deployment
 } from '@cvplus/multimedia/backend';
-*/
+/*  */
 
 // ============================================================================
 // ANALYTICS FUNCTIONS
@@ -151,12 +154,13 @@ export {
 // Job monitoring, templates, feature management, and workflow orchestration
 
 // Workflow functions - TEMPORARILY DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   injectCompletedFeatures,
   ... workflow functions disabled for deployment
 } from '@cvplus/workflow/backend';
-*/
+/*  */
 
 // ============================================================================
 // ADMIN FUNCTIONS
@@ -282,6 +286,21 @@ export {
 } from '@cvplus/recommendations/backend';
 
 // ============================================================================
+// ENHANCEMENTS FUNCTIONS
+// ============================================================================
+// CV enhancement features, calendar integration, and professional networking
+
+export {
+  processEnhancements,
+  syncCalendar,
+  createBooking,
+  generateAvailabilityCalendar,
+  sendSchedulingEmail,
+  getCalendarData,
+  enhancementsHealthCheck
+} from '@cvplus/enhancements/backend';
+
+// ============================================================================
 // PAYMENTS FUNCTIONS
 // ============================================================================
 // Payment processing, subscriptions, and billing management
@@ -328,12 +347,13 @@ export {
 // Translation services and multi-language support
 
 // I18n functions - TEMPORARILY DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   translateCV,
   ... i18n functions disabled for deployment
 } from '@cvplus/i18n/backend';
-*/
+/*  */
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -346,7 +366,7 @@ import { Request, Response } from 'express';
 
 /**
  * Health check endpoint for monitoring
- */
+  */
 export const healthCheck = onRequest(
   {
     timeoutSeconds: 30,
@@ -402,7 +422,7 @@ export const healthCheck = onRequest(
 
 /**
  * Cleanup expired data (scheduled function)
- */
+  */
 export const cleanupExpiredData = onSchedule(
   {
     schedule: '0 2 * * *', // Daily at 2 AM

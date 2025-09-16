@@ -1,7 +1,7 @@
 /**
  * Test Runner for CVPlus CV Processing
  * Executes comprehensive tests and generates report
- */
+  */
 
 import { CVParser } from '../services/cvParser';
 import { AchievementsAnalysisService } from '../services/achievements-analysis.service';

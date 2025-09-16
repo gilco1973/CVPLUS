@@ -1,7 +1,7 @@
 /**
  * Firebase Integration for E2E Testing
  * Handles Firebase emulator setup, data seeding, and cleanup for testing
- */
+  */
 
 export interface FirebaseEmulatorConfig {
   projectId: string;

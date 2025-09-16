@@ -1,7 +1,7 @@
 /**
  * Timeline Generation Test
  * Comprehensive test to identify and fix timeline generation 500 errors
- */
+  */
 
 import { timelineGenerationService } from '../services/timeline-generation.service';
 import { SafeFirestoreService } from '../utils/safe-firestore.service';
@@ -66,7 +66,7 @@ const mockParsedCV = {
 
 /**
  * Test timeline generation end-to-end
- */
+  */
 async function testTimelineGeneration() {
   console.log('\n=== TIMELINE GENERATION TEST ===');
   
@@ -246,7 +246,7 @@ async function testTimelineGeneration() {
 
 /**
  * Test SafeFirestoreService operations
- */
+  */
 async function testSafeFirestoreOperations() {
   console.log('\n=== SAFE FIRESTORE TEST ===');
   
@@ -315,7 +315,7 @@ async function testSafeFirestoreOperations() {
 
 /**
  * Main test execution
- */
+  */
 async function runTests() {
   console.log('Starting Timeline Generation Diagnostic Tests...');
   console.log('='.repeat(50));

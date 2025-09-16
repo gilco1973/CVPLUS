@@ -1,7 +1,7 @@
 /**
  * Performance Report Generator
  * Generates comprehensive HTML and JSON reports from performance test results
- */
+  */
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -60,14 +60,14 @@ export class PerformanceReportGenerator {
 
   /**
    * Add a performance test result
-   */
+    */
   public addResult(result: PerformanceTestResult): void {
     this.results.push(result);
   }
 
   /**
    * Add multiple results from a service
-   */
+    */
   public addServiceResults(serviceName: string, serviceResults: Record<string, any>): void {
     for (const [testName, testData] of Object.entries(serviceResults)) {
       if (testData && typeof testData === 'object') {
@@ -91,7 +91,7 @@ export class PerformanceReportGenerator {
 
   /**
    * Generate complete performance report
-   */
+    */
   public generateReport(): PerformanceReport {
     const summary = this.generateSummary();
     const systemInfo = this.getSystemInfo();
@@ -109,7 +109,7 @@ export class PerformanceReportGenerator {
 
   /**
    * Save report to JSON file
-   */
+    */
   public async saveJsonReport(filename?: string): Promise<string> {
     const report = this.generateReport();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -124,7 +124,7 @@ export class PerformanceReportGenerator {
 
   /**
    * Save report to HTML file
-   */
+    */
   public async saveHtmlReport(filename?: string): Promise<string> {
     const report = this.generateReport();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -140,7 +140,7 @@ export class PerformanceReportGenerator {
 
   /**
    * Generate dashboard with all reports
-   */
+    */
   public async generateDashboard(): Promise<string> {
     const report = this.generateReport();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

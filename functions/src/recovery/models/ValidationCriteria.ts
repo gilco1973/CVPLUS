@@ -1,7 +1,7 @@
 /**
  * ValidationCriteria Model - T033
  * CVPlus Level 2 Recovery System
- */
+  */
 
 export interface ValidationCriteria {
   criteriaId: string;

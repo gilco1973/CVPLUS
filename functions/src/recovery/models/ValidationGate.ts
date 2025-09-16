@@ -1,7 +1,7 @@
 /**
  * ValidationGate Model - T032
  * CVPlus Level 2 Recovery System
- */
+  */
 
 export interface ValidationGate {
   gateId: string;

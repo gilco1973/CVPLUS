@@ -1,7 +1,7 @@
 /**
  * Phase 1.3 Implementation Tests
  * Comprehensive test suite for Firestore pre-write validation layer
- */
+  */
 
 import { FirestoreValidationService, ValidationOptions } from '../utils/firestore-validation.service';
 import { SafeFirestoreService } from '../utils/safe-firestore.service';

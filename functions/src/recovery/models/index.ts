@@ -2,7 +2,7 @@
  * Recovery Models Index - CVPlus Level 2 Recovery System
  *
  * Exports all data models for the recovery system (T030-T037)
- */
+  */
 
 // Core Recovery Models
 export * from './ModuleRecoveryState';

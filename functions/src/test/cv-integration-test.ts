@@ -3,7 +3,7 @@ import { ParsedCV } from '../services/cvParser';
 
 /**
  * Integration test to verify complete CV generation with Contact Form and Social Media Links
- */
+  */
 async function testCVIntegration() {
   console.log('🔄 Testing Complete CV Generation with Features');
   console.log('='.repeat(60));

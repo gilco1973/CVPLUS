@@ -27,7 +27,7 @@ const VALID_MODULE_IDS = [
 /**
  * Get all modules with their current status
  * GET /modules
- */
+  */
 export const getModules = onCall(
   { cors: true },
   async (request) => {
@@ -93,7 +93,7 @@ export const getModules = onCall(
 /**
  * Get specific module details
  * GET /modules/{moduleId}
- */
+  */
 export const getModule = onCall(
   { cors: true },
   async (request) => {
@@ -161,7 +161,7 @@ export const getModule = onCall(
 /**
  * Update module configuration or trigger actions
  * PUT /modules/{moduleId}
- */
+  */
 export const updateModule = onCall(
   { cors: true },
   async (request) => {
@@ -253,7 +253,7 @@ export const updateModule = onCall(
 /**
  * Build specific module
  * POST /modules/{moduleId}/build
- */
+  */
 export const buildModule = onCall(
   { cors: true },
   async (request) => {
@@ -362,7 +362,7 @@ export const buildModule = onCall(
 /**
  * Get module dependencies
  * GET /modules/{moduleId}/dependencies
- */
+  */
 export const getModuleDependencies = onCall(
   { cors: true },
   async (request) => {
@@ -419,7 +419,7 @@ export const getModuleDependencies = onCall(
 /**
  * Get module build status
  * GET /modules/{moduleId}/build-status
- */
+  */
 export const getModuleBuildStatus = onCall(
   { cors: true },
   async (request) => {
@@ -467,7 +467,7 @@ export const getModuleBuildStatus = onCall(
 
 /**
  * Get module layer information
- */
+  */
 function getModuleLayerInfo(moduleId: string): {
   layer: number;
   allowedDependencies: string[];
@@ -478,12 +478,13 @@ function getModuleLayerInfo(moduleId: string): {
     'processing': { layer: 2, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'] },
     'multimedia': { layer: 2, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'] },
     'analytics': { layer: 2, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'] },
+    'enhancements': { layer: 3, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'] },
     'premium': { layer: 3, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'] },
     'public-profiles': { layer: 3, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'] },
     'recommendations': { layer: 3, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'] },
-    'admin': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] },
-    'workflow': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] },
-    'payments': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] }
+    'admin': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] },
+    'workflow': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] },
+    'payments': { layer: 4, deps: ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] }
   };
 
   const info = layerMap[moduleId];

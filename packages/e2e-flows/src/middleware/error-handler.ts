@@ -1,7 +1,7 @@
 /**
  * Error Handling and Logging Middleware
  * Comprehensive error handling, logging, and monitoring for E2E testing flows
- */
+  */
 
 export interface ErrorContext {
   requestId?: string;

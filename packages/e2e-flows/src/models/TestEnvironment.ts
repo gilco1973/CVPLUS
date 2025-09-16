@@ -1,7 +1,7 @@
 /**
  * TestEnvironment entity model
  * Defines configuration and deployment context for test execution.
- */
+  */
 
 export interface ServiceEndpoint {
   name: string;

@@ -22,7 +22,7 @@ const validationService = new ValidationService();
 /**
  * Get workspace health status
  * GET /workspace/health
- */
+  */
 export const getWorkspaceHealth = onCall(
   { cors: true },
   async (request) => {
@@ -110,7 +110,7 @@ export const getWorkspaceHealth = onCall(
 /**
  * Initialize recovery session
  * POST /recovery/sessions
- */
+  */
 export const initializeRecoverySession = onCall(
   { cors: true },
   async (request) => {
@@ -154,7 +154,7 @@ export const initializeRecoverySession = onCall(
 /**
  * Execute recovery session
  * POST /recovery/sessions/{sessionId}/execute
- */
+  */
 export const executeRecoverySession = onCall(
   { cors: true },
   async (request) => {
@@ -204,7 +204,7 @@ export const executeRecoverySession = onCall(
 /**
  * Get recovery session status
  * GET /recovery/sessions/{sessionId}
- */
+  */
 export const getRecoverySession = onCall(
   { cors: true },
   async (request) => {
@@ -259,7 +259,7 @@ export const getRecoverySession = onCall(
 /**
  * Get recovery progress for a session
  * GET /recovery/sessions/{sessionId}/progress
- */
+  */
 export const getRecoveryProgress = onCall(
   { cors: true },
   async (request) => {
@@ -296,7 +296,7 @@ export const getRecoveryProgress = onCall(
 /**
  * Cancel recovery session
  * POST /recovery/sessions/{sessionId}/cancel
- */
+  */
 export const cancelRecoverySession = onCall(
   { cors: true },
   async (request) => {
@@ -332,7 +332,7 @@ export const cancelRecoverySession = onCall(
 /**
  * Validate module
  * POST /modules/{moduleId}/validate
- */
+  */
 export const validateModule = onCall(
   { cors: true },
   async (request) => {
@@ -365,7 +365,7 @@ export const validateModule = onCall(
 /**
  * Get validation summary for multiple modules
  * POST /modules/validate-batch
- */
+  */
 export const validateModules = onCall(
   { cors: true },
   async (request) => {
@@ -402,7 +402,7 @@ export const validateModules = onCall(
 /**
  * Get module health check
  * GET /modules/{moduleId}/health
- */
+  */
 export const getModuleHealth = onCall(
   { cors: true },
   async (request) => {
@@ -435,7 +435,7 @@ export const getModuleHealth = onCall(
 /**
  * Recover single module
  * POST /modules/{moduleId}/recover
- */
+  */
 export const recoverModule = onCall(
   { cors: true },
   async (request) => {
@@ -472,7 +472,7 @@ export const recoverModule = onCall(
 /**
  * Get all active recovery sessions
  * GET /recovery/sessions
- */
+  */
 export const getActiveSessions = onCall(
   { cors: true },
   async (request) => {

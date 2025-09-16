@@ -1,7 +1,7 @@
 /**
  * Test script for authentication fixes
  * Tests the enhanced authentication middleware and premium guard
- */
+  */
 
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { initializeApp } from 'firebase/app';

@@ -10,7 +10,7 @@ import { ModuleRecoveryService } from './ModuleRecoveryService';
 /**
  * Orchestrates multi-phase recovery operations across all CVPlus modules
  * Manages recovery sessions, phase transitions, and cross-module dependencies
- */
+  */
 export class PhaseOrchestrationService {
   private moduleRecoveryService: ModuleRecoveryService;
   private activeSessions: Map<string, RecoverySession> = new Map();
@@ -26,7 +26,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Initialize a new recovery session for workspace-wide recovery
-   */
+    */
   async initializeRecoverySession(
     sessionId: string,
     targetModules: string[] = this.validModuleIds
@@ -77,7 +77,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Execute complete recovery session across all phases
-   */
+    */
   async executeRecoverySession(sessionId: string): Promise<RecoverySession> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
@@ -119,7 +119,7 @@ export class PhaseOrchestrationService {
   /**
    * Phase 1: Emergency Stabilization
    * Stabilize critical modules first (auth, core infrastructure)
-   */
+    */
   private async executePhase1EmergencyStabilization(session: RecoverySession): Promise<void> {
     const phaseStart = Date.now();
     session.currentPhase = 1;
@@ -147,7 +147,7 @@ export class PhaseOrchestrationService {
   /**
    * Phase 2: Dependency Resolution
    * Resolve dependencies following layer architecture
-   */
+    */
   private async executePhase2DependencyResolution(session: RecoverySession): Promise<void> {
     const phaseStart = Date.now();
     session.currentPhase = 2;
@@ -182,7 +182,7 @@ export class PhaseOrchestrationService {
   /**
    * Phase 3: Build Recovery
    * Restore build capability for all modules
-   */
+    */
   private async executePhase3BuildRecovery(session: RecoverySession): Promise<void> {
     const phaseStart = Date.now();
     session.currentPhase = 3;
@@ -216,7 +216,7 @@ export class PhaseOrchestrationService {
   /**
    * Phase 4: Integration Testing
    * Verify cross-module integration and compatibility
-   */
+    */
   private async executePhase4IntegrationTesting(session: RecoverySession): Promise<void> {
     const phaseStart = Date.now();
     session.currentPhase = 4;
@@ -239,7 +239,7 @@ export class PhaseOrchestrationService {
   /**
    * Phase 5: Validation and Completion
    * Final validation and cleanup
-   */
+    */
   private async executePhase5ValidationCompletion(session: RecoverySession): Promise<void> {
     const phaseStart = Date.now();
     session.currentPhase = 5;
@@ -267,7 +267,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Stabilize a single module during Phase 1
-   */
+    */
   private async stabilizeModule(moduleId: string, session: RecoverySession): Promise<void> {
     const moduleState = session.moduleStates.get(moduleId);
     if (!moduleState) return;
@@ -285,7 +285,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Resolve dependencies for a module during Phase 2
-   */
+    */
   private async resolveDependencies(moduleId: string, session: RecoverySession): Promise<void> {
     const moduleState = session.moduleStates.get(moduleId);
     if (!moduleState) return;
@@ -301,7 +301,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Recover build capability for a module during Phase 3
-   */
+    */
   private async recoverModuleBuild(moduleId: string, session: RecoverySession): Promise<void> {
     const moduleState = session.moduleStates.get(moduleId);
     if (!moduleState) return;
@@ -330,7 +330,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Test core integrations during Phase 4
-   */
+    */
   private async testCoreIntegrations(session: RecoverySession): Promise<void> {
     // Test auth integration
     if (session.targetModules.includes('auth')) {
@@ -347,7 +347,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Test layer integrations during Phase 4
-   */
+    */
   private async testLayerIntegrations(session: RecoverySession): Promise<void> {
     // Test Layer 2 integrations
     const layer2Modules = ['processing', 'multimedia', 'analytics'].filter(id => session.targetModules.includes(id));
@@ -370,7 +370,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Test cross-module compatibility during Phase 4
-   */
+    */
   private async testCrossModuleCompatibility(session: RecoverySession): Promise<void> {
     // Compatibility testing logic would go here
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -378,7 +378,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Validate module recovery during Phase 5
-   */
+    */
   private async validateModuleRecovery(moduleId: string, session: RecoverySession): Promise<void> {
     const moduleState = session.moduleStates.get(moduleId);
     if (!moduleState) return;
@@ -406,7 +406,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Assess overall workspace health
-   */
+    */
   private async assessWorkspaceHealth(moduleIds: string[]): Promise<WorkspaceHealth> {
     const moduleHealthScores: Record<string, number> = {};
     let totalScore = 0;
@@ -459,7 +459,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Generate recovery report
-   */
+    */
   private async generateRecoveryReport(session: RecoverySession): Promise<void> {
     // Recovery report generation logic would go here
     // In actual implementation, would create detailed report with metrics, logs, etc.
@@ -468,21 +468,21 @@ export class PhaseOrchestrationService {
 
   /**
    * Get active recovery session
-   */
+    */
   getRecoverySession(sessionId: string): RecoverySession | undefined {
     return this.activeSessions.get(sessionId);
   }
 
   /**
    * Get all active recovery sessions
-   */
+    */
   getAllActiveSessions(): RecoverySession[] {
     return Array.from(this.activeSessions.values());
   }
 
   /**
    * Cancel a recovery session
-   */
+    */
   async cancelRecoverySession(sessionId: string): Promise<void> {
     const session = this.activeSessions.get(sessionId);
     if (session) {
@@ -493,7 +493,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Get recovery progress for a session
-   */
+    */
   getRecoveryProgress(sessionId: string): RecoveryProgress | null {
     const session = this.activeSessions.get(sessionId);
     if (!session) return null;
@@ -519,7 +519,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Get phase description
-   */
+    */
   private getPhaseDescription(phase: number): string {
     const descriptions = {
       1: 'Emergency Stabilization',
@@ -533,7 +533,7 @@ export class PhaseOrchestrationService {
 
   /**
    * Estimate completion time
-   */
+    */
   private estimateCompletion(session: RecoverySession): Date {
     const completedPhases = Object.values(session.phaseProgress).filter(p => p.completed);
     const averagePhaseTime = completedPhases.length > 0

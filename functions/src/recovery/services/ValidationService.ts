@@ -9,7 +9,7 @@ import {
 /**
  * Comprehensive validation service for CVPlus Level 2 Recovery System
  * Provides validation capabilities for modules, sessions, and workspace health
- */
+  */
 export class ValidationService {
   private validModuleIds = [
     'auth', 'i18n', 'processing', 'multimedia', 'analytics',
@@ -30,17 +30,18 @@ export class ValidationService {
     'processing': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'], // Layer 2
     'multimedia': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'], // Layer 2
     'analytics': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'], // Layer 2
+    'enhancements': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'], // Layer 3
     'premium': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'], // Layer 3
     'public-profiles': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'], // Layer 3
     'recommendations': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'], // Layer 3
-    'admin': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'], // Layer 4
-    'workflow': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'], // Layer 4
-    'payments': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] // Layer 4
+    'admin': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'], // Layer 4
+    'workflow': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'], // Layer 4
+    'payments': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'] // Layer 4
   };
 
   /**
    * Validate a single module's recovery state and health
-   */
+    */
   async validateModule(moduleId: string): Promise<ValidationResult> {
     if (!this.validModuleIds.includes(moduleId)) {
       return {
@@ -124,7 +125,7 @@ export class ValidationService {
 
   /**
    * Validate module file structure and required files
-   */
+    */
   private async validateModuleStructure(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -179,7 +180,7 @@ export class ValidationService {
 
   /**
    * Validate module configuration files
-   */
+    */
   private async validateModuleConfiguration(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -222,7 +223,7 @@ export class ValidationService {
 
   /**
    * Validate package.json configuration
-   */
+    */
   private async validatePackageJson(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -300,7 +301,7 @@ export class ValidationService {
 
   /**
    * Validate tsconfig.json configuration
-   */
+    */
   private async validateTsConfig(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -322,7 +323,8 @@ export class ValidationService {
           declaration: true,
           outDir: 'dist'
         },
-        include: ['src/**/*'],
+        include: ['src*/* '],
+  */
         exclude: ['node_modules', 'dist']
       };
 
@@ -357,7 +359,7 @@ export class ValidationService {
 
   /**
    * Validate module dependencies and layer compliance
-   */
+    */
   private async validateModuleDependencies(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -406,7 +408,7 @@ export class ValidationService {
 
   /**
    * Get forbidden dependencies for a module based on layer architecture
-   */
+    */
   private getForbiddenDependencies(moduleId: string): string[] {
     const forbidden: string[] = [];
 
@@ -448,7 +450,7 @@ export class ValidationService {
 
   /**
    * Validate module build capability
-   */
+    */
   private async validateModuleBuild(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -493,7 +495,7 @@ export class ValidationService {
 
   /**
    * Validate module integration points
-   */
+    */
   private async validateModuleIntegration(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -536,7 +538,7 @@ export class ValidationService {
 
   /**
    * Validate module exports
-   */
+    */
   private async validateModuleExports(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -572,7 +574,7 @@ export class ValidationService {
 
   /**
    * Validate module imports
-   */
+    */
   private async validateModuleImports(moduleId: string): Promise<{
     isValid: boolean;
     errors: string[];
@@ -607,7 +609,7 @@ export class ValidationService {
 
   /**
    * Validate an entire recovery session
-   */
+    */
   async validateRecoverySession(session: RecoverySession): Promise<ValidationResult> {
     const sessionErrors: string[] = [];
     const sessionWarnings: string[] = [];
@@ -670,7 +672,7 @@ export class ValidationService {
 
   /**
    * Validate session phases
-   */
+    */
   private validateSessionPhases(session: RecoverySession): {
     isValid: boolean;
     errors: string[];
@@ -711,7 +713,7 @@ export class ValidationService {
 
   /**
    * Validate workspace health
-   */
+    */
   async validateWorkspaceHealth(workspaceHealth: WorkspaceHealth): Promise<ValidationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -764,7 +766,7 @@ export class ValidationService {
 
   /**
    * Validate multiple modules in batch
-   */
+    */
   async validateMultipleModules(moduleIds: string[]): Promise<ValidationResult[]> {
     const validationPromises = moduleIds.map(moduleId => this.validateModule(moduleId));
     return Promise.all(validationPromises);
@@ -772,7 +774,7 @@ export class ValidationService {
 
   /**
    * Get validation summary for multiple modules
-   */
+    */
   async getValidationSummary(moduleIds: string[]): Promise<{
     totalModules: number;
     validModules: number;

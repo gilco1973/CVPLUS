@@ -3,7 +3,7 @@
  * 
  * This test verifies that the "recommendations.forEach is not a function" error 
  * has been fixed by ensuring recommendations are always arrays.
- */
+  */
 
 import { ATSOptimizationOrchestrator } from '../services/ats-optimization/ATSOptimizationOrchestrator';
 import { RecommendationService } from '../services/ats-optimization/RecommendationService';

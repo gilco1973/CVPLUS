@@ -1,7 +1,7 @@
 /**
  * DependencyInfo Model - T034
  * CVPlus Level 2 Recovery System
- */
+  */
 
 export interface DependencyInfo {
   dependencyId: string;

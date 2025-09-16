@@ -13,7 +13,7 @@ import { WorkspaceHealth } from '../../../src/models/WorkspaceHealth';
 /**
  * Core service for managing module recovery operations in CVPlus Level 2 Recovery System
  * Handles emergency stabilization, health assessment, and recovery orchestration
- */
+  */
 export class ModuleRecoveryService {
   private recoveryStates: Map<string, ModuleRecoveryState> = new Map();
   private validModuleIds = [
@@ -24,7 +24,7 @@ export class ModuleRecoveryService {
 
   /**
    * Initialize recovery state for a specific module
-   */
+    */
   async initializeModuleRecovery(moduleId: string): Promise<ModuleRecoveryState> {
     if (!this.validModuleIds.includes(moduleId)) {
       throw new Error(`Invalid module ID: ${moduleId}. Must be one of: ${this.validModuleIds.join(', ')}`);
@@ -71,7 +71,7 @@ export class ModuleRecoveryService {
 
   /**
    * Execute recovery process for a module
-   */
+    */
   async executeRecovery(moduleId: string): Promise<RecoveryProgress> {
     const state = this.recoveryStates.get(moduleId);
     if (!state) {
@@ -142,7 +142,7 @@ export class ModuleRecoveryService {
 
   /**
    * Perform comprehensive health check for a module
-   */
+    */
   async performHealthCheck(moduleId: string): Promise<ModuleHealthCheck> {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -232,7 +232,7 @@ export class ModuleRecoveryService {
 
   /**
    * Analyze module dependencies and their health
-   */
+    */
   async analyzeDependencies(moduleId: string): Promise<DependencyStatus[]> {
     const dependencies: DependencyStatus[] = [];
 
@@ -243,12 +243,13 @@ export class ModuleRecoveryService {
       'processing': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'],
       'multimedia': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'],
       'analytics': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n'],
+      'enhancements': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'],
       'premium': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'],
       'public-profiles': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'],
       'recommendations': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics'],
-      'admin': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'],
-      'workflow': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'],
-      'payments': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations']
+      'admin': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'],
+      'workflow': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations'],
+      'payments': ['@cvplus/core', '@cvplus/auth', '@cvplus/i18n', '@cvplus/processing', '@cvplus/multimedia', '@cvplus/analytics', '@cvplus/enhancements', '@cvplus/premium', '@cvplus/public-profiles', '@cvplus/recommendations']
     };
 
     const deps = moduleDependencies[moduleId] || [];
@@ -269,7 +270,7 @@ export class ModuleRecoveryService {
 
   /**
    * Determine the appropriate recovery strategy based on health check
-   */
+    */
   private determineRecoveryStrategy(healthCheck: ModuleHealthCheck): RecoveryStrategy {
     if (healthCheck.score >= 70) {
       return 'repair';
@@ -282,7 +283,7 @@ export class ModuleRecoveryService {
 
   /**
    * Emergency stabilization phase
-   */
+    */
   private async emergencyStabilization(moduleId: string): Promise<void> {
     const state = this.recoveryStates.get(moduleId)!;
 
@@ -301,7 +302,7 @@ export class ModuleRecoveryService {
 
   /**
    * Resolve module dependencies
-   */
+    */
   private async resolveDependencies(moduleId: string): Promise<void> {
     const state = this.recoveryStates.get(moduleId)!;
 
@@ -313,7 +314,7 @@ export class ModuleRecoveryService {
 
   /**
    * Recover module build capability
-   */
+    */
   private async recoverBuild(moduleId: string): Promise<void> {
     const state = this.recoveryStates.get(moduleId)!;
 
@@ -339,7 +340,7 @@ export class ModuleRecoveryService {
 
   /**
    * Validate recovery completion
-   */
+    */
   private async validateRecovery(moduleId: string): Promise<ValidationResult> {
     const healthCheck = await this.performHealthCheck(moduleId);
     const state = this.recoveryStates.get(moduleId)!;
@@ -365,7 +366,7 @@ export class ModuleRecoveryService {
 
   /**
    * Update recovery phase and progress
-   */
+    */
   private async updateRecoveryPhase(
     moduleId: string,
     phase: ModuleRecoveryState['phase']
@@ -379,7 +380,7 @@ export class ModuleRecoveryService {
 
   /**
    * Calculate average recovery time
-   */
+    */
   private calculateAverageRecoveryTime(state: ModuleRecoveryState): number {
     const totalRecoveries = state.metrics.successfulRecoveries + state.metrics.failedRecoveries;
     if (totalRecoveries === 0) return 0;
@@ -390,21 +391,21 @@ export class ModuleRecoveryService {
 
   /**
    * Get current recovery state for a module
-   */
+    */
   getRecoveryState(moduleId: string): ModuleRecoveryState | undefined {
     return this.recoveryStates.get(moduleId);
   }
 
   /**
    * Get recovery states for all modules
-   */
+    */
   getAllRecoveryStates(): ModuleRecoveryState[] {
     return Array.from(this.recoveryStates.values());
   }
 
   /**
    * Check if module recovery is in progress
-   */
+    */
   isRecoveryInProgress(moduleId: string): boolean {
     const state = this.recoveryStates.get(moduleId);
     return state?.phase !== 'completed' && state?.phase !== 'failed';
@@ -412,7 +413,7 @@ export class ModuleRecoveryService {
 
   /**
    * Get recovery metrics for a module
-   */
+    */
   getRecoveryMetrics(moduleId: string): RecoveryMetrics | undefined {
     return this.recoveryStates.get(moduleId)?.metrics;
   }

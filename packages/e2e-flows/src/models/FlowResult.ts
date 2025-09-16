@@ -1,7 +1,7 @@
 /**
  * FlowResult entity model
  * Captures test execution outcomes including performance metrics, validation results, and error details.
- */
+  */
 
 export interface StepResult {
   stepOrder: number;

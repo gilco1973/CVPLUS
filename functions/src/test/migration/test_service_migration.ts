@@ -3,7 +3,7 @@
  * Task: T010 - Migration unit test: Service file classification
  *
  * This test MUST FAIL initially to follow TDD principles
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import * as fs from 'fs';

@@ -1,7 +1,7 @@
 /**
  * APITestCase entity model
  * Represents individual backend API validation scenarios with curl commands and expected responses.
- */
+  */
 
 export interface ResponseAssertion {
   type: 'status' | 'header' | 'body' | 'schema' | 'performance' | 'custom';

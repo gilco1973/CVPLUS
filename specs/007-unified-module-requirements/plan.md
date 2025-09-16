@@ -31,6 +31,20 @@
 ## Summary
 Standardize all CVPlus submodules with consistent structural requirements, documentation, configuration, and validation. This enables developers to quickly understand and maintain any module while ensuring reliable CI/CD processes. The primary requirement is establishing unified standards for README files, package.json scripts, directory structure, TypeScript configuration, entry points, testing setup, naming conventions, and dependency management across all 18+ submodules in the CVPlus ecosystem.
 
+## Critical Architectural Requirements
+
+**🚨 MANDATORY MODULE STANDARDS** - Each module MUST comply with ALL of the following:
+
+1. **Code Segregation Principle**: Each module should NOT have ANY code not required by it. If such code exists, it MUST be immediately migrated to the relevant modules where it belongs.
+
+2. **Distribution Architecture**: Each module MUST be closed to direct code usage and reference and open to distribution. Every module MUST have a `dist/` folder with properly built and packaged code for consumption.
+
+3. **Real Implementation Only**: NO stubs, placeholders, commented out code, or mock implementations are allowed. ONLY real, functional implementations are permitted.
+
+4. **Build and Test Standards**: All modules MUST have a clean build without errors and warnings, and their tests MUST pass completely.
+
+5. **Dependency Chain Integrity**: Each module MUST maintain the correct dependency chain without circular dependencies or architectural violations.
+
 ## Technical Context
 **Language/Version**: TypeScript 5.0+, Node.js 18+
 **Primary Dependencies**: Varies by module (Firebase Functions, React, Express, etc.)
@@ -50,6 +64,13 @@ Standardize all CVPlus submodules with consistent structural requirements, docum
 - Using framework directly? YES (Node.js fs, path modules directly)
 - Single data model? YES (ModuleStructure, ComplianceRule, ValidationReport)
 - Avoiding patterns? YES (direct file operations, no unnecessary abstractions)
+
+**Critical Architectural Compliance**:
+- Code segregation validation? YES (detect misplaced code, suggest migrations)
+- Distribution architecture enforcement? YES (validate dist/ folder existence and contents)
+- Mock/stub detection? YES (scan for placeholders, commented code, incomplete implementations)
+- Build/test validation? YES (verify clean builds and passing tests)
+- Dependency chain analysis? YES (detect circular dependencies and violations)
 
 **Architecture**:
 - EVERY feature as library? YES (validation-lib, template-lib, reporting-lib)
@@ -199,6 +220,12 @@ ios/ or android/
 - Each quickstart scenario → integration test task
 - Implementation tasks to make contract/integration tests pass
 - CLI implementation tasks for validation, template generation, and reporting
+- **Critical Architectural Validation Tasks**:
+  - Code segregation scanner → detect misplaced code across modules [P]
+  - Distribution architecture validator → verify dist/ folder compliance [P]
+  - Mock/stub detector → scan for non-implementation code [P]
+  - Build validation engine → verify clean builds across all modules [P]
+  - Dependency chain analyzer → detect circular dependencies and violations [P]
 
 **Ordering Strategy (TDD-first)**:
 1. **Contract Tests Phase** (Red phase):
@@ -243,10 +270,11 @@ ios/ or android/
 **Estimated Output**: 32-38 numbered, ordered tasks in tasks.md
 
 **Libraries and CLI Commands to Implement**:
-1. **validation-lib** + CLI: `cvplus-validator validate|validate-all|fix|ecosystem|trends`
+1. **validation-lib** + CLI: `cvplus-validator validate|validate-all|fix|ecosystem|trends|segregation|distribution|mocks|builds|dependencies`
 2. **template-lib** + CLI: `cvplus-generator list-templates|create`
 3. **reporting-lib** + CLI: `cvplus-reporter generate|monitor|trends`
 4. **migration-lib** + CLI: `cvplus-migrator analyze|plan|migrate`
+5. **architecture-lib** + CLI: `cvplus-architect scan-segregation|check-distribution|detect-mocks|validate-builds|analyze-dependencies`
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 

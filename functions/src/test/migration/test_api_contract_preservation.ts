@@ -3,7 +3,7 @@
  * Task: T004 - Contract test: Validate all 166+ function exports preserved
  *
  * This test MUST FAIL initially to follow TDD principles
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import * as fs from 'fs';

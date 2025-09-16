@@ -7,7 +7,7 @@ import { logger } from '@cvplus/logging';
  * Retrieves all Level 2 module recovery states
  *
  * @returns Array of module recovery states with health metrics
- */
+  */
 export const getAllModules = https.onRequest(async (req, res) => {
   try {
     // CORS headers

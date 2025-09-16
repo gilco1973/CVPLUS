@@ -14,7 +14,7 @@ const execAsync = promisify(exec);
  * @param moduleId - The module identifier
  * @param body - Build options (force, clean, etc.)
  * @returns Build results and updated module state
- */
+  */
 export const buildModule = https.onRequest(async (req, res) => {
   try {
     // CORS headers

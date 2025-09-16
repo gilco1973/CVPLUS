@@ -29,7 +29,7 @@ const ALL_MODULES = [
 /**
  * Get comprehensive workspace status
  * GET /workspace/status
- */
+  */
 export const getWorkspaceStatus = onCall(
   { cors: true },
   async (request) => {
@@ -157,7 +157,7 @@ export const getWorkspaceStatus = onCall(
 /**
  * Initialize workspace-wide recovery
  * POST /workspace/recovery/initialize
- */
+  */
 export const initializeWorkspaceRecovery = onCall(
   { cors: true },
   async (request) => {
@@ -223,7 +223,7 @@ export const initializeWorkspaceRecovery = onCall(
 /**
  * Execute workspace-wide recovery
  * POST /workspace/recovery/execute
- */
+  */
 export const executeWorkspaceRecovery = onCall(
   { cors: true },
   async (request) => {
@@ -288,7 +288,7 @@ export const executeWorkspaceRecovery = onCall(
 /**
  * Build entire workspace
  * POST /workspace/build
- */
+  */
 export const buildWorkspace = onCall(
   { cors: true },
   async (request) => {
@@ -400,7 +400,7 @@ export const buildWorkspace = onCall(
 /**
  * Validate entire workspace
  * POST /workspace/validate
- */
+  */
 export const validateWorkspace = onCall(
   { cors: true },
   async (request) => {
@@ -468,7 +468,7 @@ export const validateWorkspace = onCall(
 /**
  * Reset workspace to clean state
  * POST /workspace/reset
- */
+  */
 export const resetWorkspace = onCall(
   { cors: true },
   async (request) => {
@@ -570,7 +570,7 @@ export const resetWorkspace = onCall(
 
 /**
  * Helper function to build a single module
- */
+  */
 async function buildSingleModule(moduleId: string, force: boolean, skipTests: boolean): Promise<any> {
   const buildStartTime = new Date();
 
@@ -605,7 +605,7 @@ async function buildSingleModule(moduleId: string, force: boolean, skipTests: bo
 
 /**
  * Helper function to group modules by layer for parallel building
- */
+  */
 function groupModulesByLayer(modules: string[]): string[][] {
   const layers: Record<number, string[]> = {
     1: ['auth', 'i18n'],
@@ -628,7 +628,7 @@ function groupModulesByLayer(modules: string[]): string[][] {
 
 /**
  * Helper function to estimate recovery duration
- */
+  */
 function estimateRecoveryDuration(moduleCount: number, priority: string): number {
   const baseTimePerModule = priority === 'critical' ? 30000 : priority === 'high' ? 60000 : 120000;
   return moduleCount * baseTimePerModule;

@@ -1,7 +1,7 @@
 /**
  * Timeline Processing Only Test
  * Test timeline generation without Firebase storage to verify the fix
- */
+  */
 
 import { timelineGenerationServiceV2 } from '../services/timeline-generation.service';
 
@@ -63,7 +63,7 @@ const mockParsedCV = {
 
 /**
  * Test timeline processing without storage
- */
+  */
 async function testTimelineProcessingOnly() {
   console.log('\n=== TIMELINE PROCESSING ONLY TEST ===');
   

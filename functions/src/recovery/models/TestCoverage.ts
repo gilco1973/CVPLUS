@@ -1,7 +1,7 @@
 /**
  * TestCoverage Model - T037
  * CVPlus Level 2 Recovery System
- */
+  */
 
 export interface TestCoverage {
   coverageId: string;

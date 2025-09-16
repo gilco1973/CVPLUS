@@ -1,7 +1,7 @@
 /**
  * PerformanceCollector - Comprehensive performance metrics collection
  * Collects, analyzes, and reports performance data during E2E test execution
- */
+  */
 
 export interface PerformanceMetric {
   timestamp: Date;

@@ -1,7 +1,7 @@
 /**
  * Quickstart Validation Tests
  * Validates that all quickstart scenarios work with the actual implementation
- */
+  */
 
 import { E2EFlowsService } from '../../src/services/E2EFlowsService';
 import { MockDataService } from '../../src/services/MockDataService';

@@ -1,7 +1,7 @@
 /**
  * TestScenario entity model
  * Represents a complete test flow with steps, expected outcomes, and validation criteria.
- */
+  */
 
 export interface TestStep {
   order: number;

@@ -3,7 +3,7 @@
 /**
  * Contact Form JavaScript Debug Test
  * Debug why the initContactForm() function is not executing in generated HTML
- */
+  */
 
 import { ContactFormFeature } from '../services/cv-generator/features/ContactFormFeature';
 import { FeatureRegistry } from '../services/cv-generator/features/FeatureRegistry';

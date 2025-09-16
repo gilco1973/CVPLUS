@@ -3,7 +3,7 @@
  * Task: T007 - Build validation test: TypeScript compilation success
  *
  * This test must PASS throughout migration to ensure no breaking changes
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import { execSync } from 'child_process';

@@ -3,74 +3,74 @@
  * CVPlus Level 2 Recovery System
  *
  * Represents a recovery phase in the Level 2 recovery process
- */
+  */
 
 export interface RecoveryPhase {
-  /** Unique phase identifier */
+  /** Unique phase identifier  */
   phaseId: string;
 
-  /** Human-readable phase name */
+  /** Human-readable phase name  */
   name: string;
 
-  /** Phase description */
+  /** Phase description  */
   description: string;
 
-  /** Phase execution order */
+  /** Phase execution order  */
   order: number;
 
-  /** Current phase status */
+  /** Current phase status  */
   status: PhaseStatus;
 
-  /** Phase category */
+  /** Phase category  */
   category: PhaseCategory;
 
-  /** Required dependencies (other phases) */
+  /** Required dependencies (other phases)  */
   dependencies: PhaseDependency[];
 
-  /** Validation gates for this phase */
+  /** Validation gates for this phase  */
   validationGates: ValidationGate[];
 
-  /** Tasks to be executed in this phase */
+  /** Tasks to be executed in this phase  */
   tasks: PhaseTask[];
 
-  /** Modules affected by this phase */
+  /** Modules affected by this phase  */
   affectedModules: string[];
 
-  /** Estimated execution time in milliseconds */
+  /** Estimated execution time in milliseconds  */
   estimatedDuration: number;
 
-  /** Actual execution time in milliseconds */
+  /** Actual execution time in milliseconds  */
   actualDuration?: number;
 
-  /** Phase execution start time */
+  /** Phase execution start time  */
   startTime?: string;
 
-  /** Phase execution end time */
+  /** Phase execution end time  */
   endTime?: string;
 
-  /** Current execution progress (0-100) */
+  /** Current execution progress (0-100)  */
   progress: number;
 
-  /** Phase execution results */
+  /** Phase execution results  */
   executionResults?: PhaseExecutionResult;
 
-  /** Phase configuration */
+  /** Phase configuration  */
   configuration: PhaseConfiguration;
 
-  /** Phase metrics */
+  /** Phase metrics  */
   metrics: PhaseMetrics;
 
-  /** Phase metadata */
+  /** Phase metadata  */
   metadata: {
-    /** Phase version */
+    /** Phase version  */
     version: string;
-    /** Last updated timestamp */
+    /** Last updated timestamp  */
     lastUpdated: string;
-    /** Created by */
+    /** Created by  */
     createdBy: string;
-    /** Phase documentation URL */
+    /** Phase documentation URL  */
     documentationUrl?: string;
-    /** Phase tags for categorization */
+    /** Phase tags for categorization  */
     tags: string[];
   };
 }
@@ -96,218 +96,218 @@ export type PhaseCategory =
   | 'security';
 
 export interface PhaseDependency {
-  /** Dependent phase ID */
+  /** Dependent phase ID  */
   phaseId: string;
-  /** Dependency type */
+  /** Dependency type  */
   type: 'strict' | 'soft' | 'optional';
-  /** Dependency reason/description */
+  /** Dependency reason/description  */
   reason: string;
-  /** Whether dependency must be completed or just started */
+  /** Whether dependency must be completed or just started  */
   completionRequired: boolean;
 }
 
 export interface ValidationGate {
-  /** Unique gate identifier */
+  /** Unique gate identifier  */
   gateId: string;
-  /** Gate name */
+  /** Gate name  */
   name: string;
-  /** Gate description */
+  /** Gate description  */
   description: string;
-  /** Whether gate is required for phase completion */
+  /** Whether gate is required for phase completion  */
   required: boolean;
-  /** Gate execution order within phase */
+  /** Gate execution order within phase  */
   order: number;
-  /** Current gate status */
+  /** Current gate status  */
   status: 'pending' | 'running' | 'passed' | 'failed' | 'skipped';
-  /** Validation criteria */
+  /** Validation criteria  */
   criteria: ValidationCriteria[];
-  /** Gate configuration */
+  /** Gate configuration  */
   configuration: {
-    /** Timeout in milliseconds */
+    /** Timeout in milliseconds  */
     timeout: number;
-    /** Retry attempts */
+    /** Retry attempts  */
     retryAttempts: number;
-    /** Minimum passing score */
+    /** Minimum passing score  */
     passingScore: number;
-    /** Whether to auto-fix issues */
+    /** Whether to auto-fix issues  */
     autoFix: boolean;
   };
 }
 
 export interface ValidationCriteria {
-  /** Criteria identifier */
+  /** Criteria identifier  */
   criteriaId: string;
-  /** Criteria name */
+  /** Criteria name  */
   name: string;
-  /** Criteria description */
+  /** Criteria description  */
   description: string;
-  /** Criteria weight in overall validation */
+  /** Criteria weight in overall validation  */
   weight: number;
-  /** Criteria type */
+  /** Criteria type  */
   type: 'boolean' | 'numeric' | 'percentage' | 'enum';
-  /** Expected value or range */
+  /** Expected value or range  */
   expectedValue: any;
-  /** Actual measured value */
+  /** Actual measured value  */
   actualValue?: any;
-  /** Criteria status */
+  /** Criteria status  */
   status: 'pending' | 'passed' | 'failed' | 'warning';
-  /** Error message if failed */
+  /** Error message if failed  */
   errorMessage?: string;
 }
 
 export interface PhaseTask {
-  /** Unique task identifier */
+  /** Unique task identifier  */
   taskId: string;
-  /** Task name */
+  /** Task name  */
   name: string;
-  /** Task description */
+  /** Task description  */
   description: string;
-  /** Task type */
+  /** Task type  */
   type: 'script' | 'validation' | 'build' | 'test' | 'configuration' | 'manual';
-  /** Task execution order within phase */
+  /** Task execution order within phase  */
   order: number;
-  /** Current task status */
+  /** Current task status  */
   status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
-  /** Task dependencies within phase */
+  /** Task dependencies within phase  */
   dependencies: string[];
-  /** Modules this task applies to */
+  /** Modules this task applies to  */
   applicableModules: string[];
-  /** Task configuration */
+  /** Task configuration  */
   configuration: {
-    /** Script path or command */
+    /** Script path or command  */
     script?: string;
-    /** Working directory */
+    /** Working directory  */
     workingDirectory?: string;
-    /** Environment variables */
+    /** Environment variables  */
     environment?: Record<string, string>;
-    /** Timeout in milliseconds */
+    /** Timeout in milliseconds  */
     timeout: number;
-    /** Whether task can run in parallel */
+    /** Whether task can run in parallel  */
     parallel: boolean;
-    /** Retry configuration */
+    /** Retry configuration  */
     retry: {
       attempts: number;
       backoff: number;
     };
   };
-  /** Task execution result */
+  /** Task execution result  */
   result?: TaskExecutionResult;
 }
 
 export interface TaskExecutionResult {
-  /** Task execution start time */
+  /** Task execution start time  */
   startTime: string;
-  /** Task execution end time */
+  /** Task execution end time  */
   endTime: string;
-  /** Task execution duration */
+  /** Task execution duration  */
   duration: number;
-  /** Task exit code */
+  /** Task exit code  */
   exitCode: number;
-  /** Task standard output */
+  /** Task standard output  */
   stdout: string;
-  /** Task standard error */
+  /** Task standard error  */
   stderr: string;
-  /** Task execution logs */
+  /** Task execution logs  */
   logs: string[];
-  /** Task metrics */
+  /** Task metrics  */
   metrics: Record<string, any>;
 }
 
 export interface PhaseExecutionResult {
-  /** Phase execution ID */
+  /** Phase execution ID  */
   executionId: string;
-  /** Phase execution start time */
+  /** Phase execution start time  */
   startTime: string;
-  /** Phase execution end time */
+  /** Phase execution end time  */
   endTime: string;
-  /** Phase execution duration */
+  /** Phase execution duration  */
   duration: number;
-  /** Number of tasks executed */
+  /** Number of tasks executed  */
   tasksExecuted: number;
-  /** Number of tasks succeeded */
+  /** Number of tasks succeeded  */
   tasksSucceeded: number;
-  /** Number of tasks failed */
+  /** Number of tasks failed  */
   tasksFailed: number;
-  /** Number of tasks skipped */
+  /** Number of tasks skipped  */
   tasksSkipped: number;
-  /** Validation gate results */
+  /** Validation gate results  */
   validationResults: ValidationGateResult[];
-  /** Module impact assessment */
+  /** Module impact assessment  */
   moduleImpact: Record<string, ModuleImpact>;
-  /** Phase execution logs */
+  /** Phase execution logs  */
   logs: string[];
-  /** Performance metrics */
+  /** Performance metrics  */
   performanceMetrics: {
-    /** Memory usage peak */
+    /** Memory usage peak  */
     peakMemoryUsage: number;
-    /** CPU usage average */
+    /** CPU usage average  */
     averageCpuUsage: number;
-    /** Network I/O */
+    /** Network I/O  */
     networkIO: number;
-    /** Disk I/O */
+    /** Disk I/O  */
     diskIO: number;
   };
 }
 
 export interface ValidationGateResult {
-  /** Gate identifier */
+  /** Gate identifier  */
   gateId: string;
-  /** Gate execution status */
+  /** Gate execution status  */
   status: 'passed' | 'failed' | 'warning' | 'skipped';
-  /** Gate score (0-100) */
+  /** Gate score (0-100)  */
   score: number;
-  /** Gate execution duration */
+  /** Gate execution duration  */
   duration: number;
-  /** Criteria results */
+  /** Criteria results  */
   criteriaResults: ValidationCriteriaResult[];
-  /** Gate recommendations */
+  /** Gate recommendations  */
   recommendations: string[];
 }
 
 export interface ValidationCriteriaResult {
-  /** Criteria identifier */
+  /** Criteria identifier  */
   criteriaId: string;
-  /** Criteria status */
+  /** Criteria status  */
   status: 'passed' | 'failed' | 'warning';
-  /** Actual value measured */
+  /** Actual value measured  */
   actualValue: any;
-  /** Score contribution */
+  /** Score contribution  */
   score: number;
-  /** Error details if failed */
+  /** Error details if failed  */
   error?: string;
 }
 
 export interface ModuleImpact {
-  /** Whether module was affected by phase */
+  /** Whether module was affected by phase  */
   affected: boolean;
-  /** Changes made to module */
+  /** Changes made to module  */
   changes: string[];
-  /** Health score change */
+  /** Health score change  */
   healthDelta: number;
-  /** Build status change */
+  /** Build status change  */
   buildStatusChange?: string;
-  /** Test status change */
+  /** Test status change  */
   testStatusChange?: string;
-  /** Files modified */
+  /** Files modified  */
   filesModified: string[];
-  /** Configuration changes */
+  /** Configuration changes  */
   configurationChanges: Record<string, any>;
 }
 
 export interface PhaseConfiguration {
-  /** Phase execution mode */
+  /** Phase execution mode  */
   executionMode: 'sequential' | 'parallel' | 'mixed';
-  /** Whether to continue on task failure */
+  /** Whether to continue on task failure  */
   continueOnFailure: boolean;
-  /** Whether to rollback on phase failure */
+  /** Whether to rollback on phase failure  */
   rollbackOnFailure: boolean;
-  /** Maximum parallel tasks */
+  /** Maximum parallel tasks  */
   maxParallelTasks: number;
-  /** Phase timeout in milliseconds */
+  /** Phase timeout in milliseconds  */
   timeout: number;
-  /** Environment variables */
+  /** Environment variables  */
   environment: Record<string, string>;
-  /** Resource limits */
+  /** Resource limits  */
   resourceLimits: {
     memory: number;
     cpu: number;
@@ -316,19 +316,19 @@ export interface PhaseConfiguration {
 }
 
 export interface PhaseMetrics {
-  /** Total phase executions */
+  /** Total phase executions  */
   totalExecutions: number;
-  /** Successful executions */
+  /** Successful executions  */
   successfulExecutions: number;
-  /** Failed executions */
+  /** Failed executions  */
   failedExecutions: number;
-  /** Average execution time */
+  /** Average execution time  */
   averageExecutionTime: number;
-  /** Success rate percentage */
+  /** Success rate percentage  */
   successRate: number;
-  /** Performance trend */
+  /** Performance trend  */
   performanceTrend: 'improving' | 'stable' | 'declining';
-  /** Last execution metrics */
+  /** Last execution metrics  */
   lastExecution?: {
     timestamp: string;
     duration: number;
@@ -339,7 +339,7 @@ export interface PhaseMetrics {
 
 /**
  * Predefined recovery phases for CVPlus Level 2 Recovery
- */
+  */
 export const RECOVERY_PHASES: RecoveryPhase[] = [
   {
     phaseId: 'emergency-stabilization',
@@ -609,7 +609,7 @@ export const RECOVERY_PHASES: RecoveryPhase[] = [
 
 /**
  * Factory functions for RecoveryPhase
- */
+  */
 export function createRecoveryPhase(
   phaseId: string,
   name: string,
@@ -662,7 +662,7 @@ export function createRecoveryPhase(
 
 /**
  * Utility functions for RecoveryPhase
- */
+  */
 export function isPhaseReady(phase: RecoveryPhase, completedPhases: string[]): boolean {
   return phase.dependencies.every(dep =>
     !dep.completionRequired || completedPhases.includes(dep.phaseId)

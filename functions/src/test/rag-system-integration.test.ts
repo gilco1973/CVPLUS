@@ -9,7 +9,7 @@
  *
  * @author CVPlus Team
  * @version 1.0.0
- */
+  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { EmbeddingService, CVEmbeddingDocument } from '@cvplus/public-profiles/backend/services/embedding.service';

@@ -9,7 +9,7 @@
  * - System resource monitoring
  * - Bottleneck identification and analysis
  * - Graceful degradation and recovery testing
- */
+  */
 
 import { Worker } from 'worker_threads';
 import { cpus, loadavg, freemem, totalmem } from 'os';
@@ -105,7 +105,7 @@ export interface LoadTestRecommendation {
 
 /**
  * Worker Thread Function for Concurrent User Simulation
- */
+  */
 async function concurrentUserWorker(
   userConfig: any,
   testFunction: Function
@@ -178,7 +178,7 @@ async function concurrentUserWorker(
 
 /**
  * Load Testing Framework Class
- */
+  */
 export class LoadTestFramework extends EventEmitter {
   private workers: Worker[] = [];
   private systemMonitorInterval: NodeJS.Timeout | null = null;
@@ -190,7 +190,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Execute load test with specified configuration
-   */
+    */
   async executeLoadTest(
     config: LoadTestConfig,
     testFunction: (userConfig: any) => Promise<void>
@@ -237,7 +237,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Execute load test with ramp-up, sustain, and ramp-down phases
-   */
+    */
   private async executeLoadTestPhases(
     config: LoadTestConfig,
     testFunction: (userConfig: any) => Promise<void>
@@ -264,7 +264,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Execute ramp-up phase with gradual user increase
-   */
+    */
   private async executeRampUpPhase(
     config: LoadTestConfig,
     testFunction: (userConfig: any) => Promise<void>
@@ -306,7 +306,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Execute sustain phase with target user count
-   */
+    */
   private async executeSustainPhase(
     config: LoadTestConfig,
     testFunction: (userConfig: any) => Promise<void>
@@ -342,7 +342,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Execute ramp-down phase with gradual user decrease
-   */
+    */
   private async executeRampDownPhase(
     config: LoadTestConfig,
     testFunction: (userConfig: any) => Promise<void>
@@ -356,7 +356,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Start a single concurrent user simulation
-   */
+    */
   private async startConcurrentUser(
     userId: string,
     config: LoadTestConfig,
@@ -375,7 +375,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Start system resource monitoring
-   */
+    */
   private startSystemMonitoring(interval: number): void {
     this.systemMonitorInterval = setInterval(() => {
       const metrics: SystemResourceMetrics = {
@@ -409,7 +409,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Stop system monitoring
-   */
+    */
   private stopSystemMonitoring(): void {
     if (this.systemMonitorInterval) {
       clearInterval(this.systemMonitorInterval);
@@ -419,7 +419,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Calculate aggregated metrics from user metrics
-   */
+    */
   private calculateAggregatedMetrics(userMetrics: ConcurrentUserMetrics[]): any {
     if (userMetrics.length === 0) {
       return {
@@ -501,7 +501,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Generate recommendations based on test results
-   */
+    */
   private generateRecommendations(
     aggregatedMetrics: any,
     systemMetrics: SystemResourceMetrics[]
@@ -558,7 +558,7 @@ export class LoadTestFramework extends EventEmitter {
 
   /**
    * Stop all active workers and cleanup
-   */
+    */
   async stop(): Promise<void> {
     console.log('Stopping load test framework...');
 
@@ -574,12 +574,12 @@ export class LoadTestFramework extends EventEmitter {
 
 /**
  * Utility functions for load testing
- */
+  */
 export class LoadTestUtils {
 
   /**
    * Calculate percentile from array of numbers
-   */
+    */
   static calculatePercentile(values: number[], percentile: number): number {
     if (values.length === 0) return 0;
 
@@ -590,7 +590,7 @@ export class LoadTestUtils {
 
   /**
    * Generate load test report in markdown format
-   */
+    */
   static generateMarkdownReport(results: LoadTestResults): string {
     const report = `
 # Load Test Report: ${results.config.name}
@@ -641,7 +641,7 @@ ${LoadTestUtils.calculatePerformanceGrade(results)}
 
   /**
    * Calculate overall performance grade
-   */
+    */
   static calculatePerformanceGrade(results: LoadTestResults): string {
     let score = 100;
     const metrics = results.aggregatedMetrics;

@@ -18,7 +18,20 @@ const moduleRecoveryService = new ModuleRecoveryService();
 const phaseOrchestrationService = new PhaseOrchestrationService(moduleRecoveryService);
 
 // Phase definitions for CVPlus Level 2 Recovery
-const RECOVERY_PHASES = {
+// Type definition for phase objects
+type PhaseDefinition = {
+  name: string;
+  description: string;
+  estimatedDuration: number;
+  dependencies: number[];
+  criticalModules?: string[];
+  layerOrder?: string[][];
+  buildOrder?: string[][];
+  integrationTests?: string[];
+  validationSteps?: string[];
+};
+
+const RECOVERY_PHASES: Record<number, PhaseDefinition> = {
   1: {
     name: 'Emergency Stabilization',
     description: 'Stabilize critical modules and resolve immediate issues',
@@ -79,12 +92,12 @@ const RECOVERY_PHASES = {
 /**
  * Get information about all recovery phases
  * GET /phases
- */
+  */
 export const getPhases = onCall(
   { cors: true },
   async (request) => {
     try {
-      const phases = Object.entries(RECOVERY_PHASES).map(([phaseNumber, phase]) => ({
+      const phases = Object.entries(RECOVERY_PHASES).map(([phaseNumber, phase]: [string, PhaseDefinition]) => ({
         phase: parseInt(phaseNumber),
         name: phase.name,
         description: phase.description,
@@ -124,7 +137,7 @@ export const getPhases = onCall(
 /**
  * Get specific phase information
  * GET /phases/{phaseNumber}
- */
+  */
 export const getPhase = onCall(
   { cors: true },
   async (request) => {
@@ -180,7 +193,7 @@ export const getPhase = onCall(
 /**
  * Execute a specific phase for a recovery session
  * POST /phases/{phaseNumber}/execute
- */
+  */
 export const executePhase = onCall(
   { cors: true },
   async (request) => {
@@ -314,7 +327,7 @@ export const executePhase = onCall(
 /**
  * Get phase execution status for a recovery session
  * GET /phases/status/{sessionId}
- */
+  */
 export const getPhaseStatus = onCall(
   { cors: true },
   async (request) => {
@@ -384,7 +397,7 @@ export const getPhaseStatus = onCall(
 /**
  * Skip a specific phase (for testing or emergency situations)
  * POST /phases/{phaseNumber}/skip
- */
+  */
 export const skipPhase = onCall(
   { cors: true },
   async (request) => {
@@ -474,12 +487,12 @@ export const skipPhase = onCall(
 /**
  * Get phase dependencies and execution order
  * GET /phases/dependencies
- */
+  */
 export const getPhaseDependencies = onCall(
   { cors: true },
   async (request) => {
     try {
-      const dependencies = Object.entries(RECOVERY_PHASES).map(([phaseNumber, phase]) => ({
+      const dependencies = Object.entries(RECOVERY_PHASES).map(([phaseNumber, phase]: [string, PhaseDefinition]) => ({
         phase: parseInt(phaseNumber),
         name: phase.name,
         dependencies: phase.dependencies,
@@ -524,9 +537,9 @@ export const getPhaseDependencies = onCall(
 
 /**
  * Helper function to execute Phase 1: Emergency Stabilization
- */
+  */
 async function executePhase1EmergencyStabilization(session: any, options: any): Promise<void> {
-  const criticalModules = RECOVERY_PHASES[1].criticalModules;
+  const criticalModules = RECOVERY_PHASES[1].criticalModules || [];
 
   for (const moduleId of criticalModules) {
     if (session.targetModules.includes(moduleId)) {
@@ -538,9 +551,9 @@ async function executePhase1EmergencyStabilization(session: any, options: any): 
 
 /**
  * Helper function to execute Phase 2: Dependency Resolution
- */
+  */
 async function executePhase2DependencyResolution(session: any, options: any): Promise<void> {
-  const layerOrder = RECOVERY_PHASES[2].layerOrder;
+  const layerOrder = RECOVERY_PHASES[2].layerOrder || [];
 
   for (const layer of layerOrder) {
     // Process modules in layer in parallel
@@ -554,9 +567,9 @@ async function executePhase2DependencyResolution(session: any, options: any): Pr
 
 /**
  * Helper function to execute Phase 3: Build Recovery
- */
+  */
 async function executePhase3BuildRecovery(session: any, options: any): Promise<void> {
-  const buildOrder = RECOVERY_PHASES[3].buildOrder;
+  const buildOrder = RECOVERY_PHASES[3].buildOrder || [];
 
   for (const layer of buildOrder) {
     for (const moduleId of layer) {
@@ -570,9 +583,9 @@ async function executePhase3BuildRecovery(session: any, options: any): Promise<v
 
 /**
  * Helper function to execute Phase 4: Integration Testing
- */
+  */
 async function executePhase4IntegrationTesting(session: any, options: any): Promise<void> {
-  const integrationTests = RECOVERY_PHASES[4].integrationTests;
+  const integrationTests = RECOVERY_PHASES[4].integrationTests || [];
 
   for (const testType of integrationTests) {
     // Run integration test
@@ -582,9 +595,9 @@ async function executePhase4IntegrationTesting(session: any, options: any): Prom
 
 /**
  * Helper function to execute Phase 5: Validation and Completion
- */
+  */
 async function executePhase5ValidationCompletion(session: any, options: any): Promise<void> {
-  const validationSteps = RECOVERY_PHASES[5].validationSteps;
+  const validationSteps = RECOVERY_PHASES[5].validationSteps || [];
 
   for (const step of validationSteps) {
     // Execute validation step
@@ -594,18 +607,18 @@ async function executePhase5ValidationCompletion(session: any, options: any): Pr
 
 /**
  * Helper function to get phase-specific results
- */
+  */
 function getPhaseSpecificResults(phaseNum: number, session: any): any {
   switch (phaseNum) {
     case 1:
       return {
-        stabilizedModules: RECOVERY_PHASES[1].criticalModules.filter(m => session.targetModules.includes(m)),
+        stabilizedModules: (RECOVERY_PHASES[1].criticalModules || []).filter(m => session.targetModules.includes(m)),
         criticalIssuesResolved: true
       };
     case 2:
       return {
         dependenciesResolved: session.targetModules.length,
-        layersProcessed: RECOVERY_PHASES[2].layerOrder.length
+        layersProcessed: (RECOVERY_PHASES[2].layerOrder || []).length
       };
     case 3:
       return {
@@ -614,7 +627,7 @@ function getPhaseSpecificResults(phaseNum: number, session: any): any {
       };
     case 4:
       return {
-        integrationTestsPassed: RECOVERY_PHASES[4].integrationTests.length,
+        integrationTestsPassed: (RECOVERY_PHASES[4].integrationTests || []).length,
         crossModuleCompatibility: true
       };
     case 5:

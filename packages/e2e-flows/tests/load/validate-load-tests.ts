@@ -3,7 +3,7 @@
 /**
  * Load Testing Validation Script
  * Quick validation of load testing framework and dependencies
- */
+  */
 
 import { LoadTestFramework } from './load-testing-framework';
 import { LoadTestValidator, LoadTestMonitor } from './load-test-utilities';

@@ -8,7 +8,7 @@ import { logger } from '@cvplus/logging';
  *
  * @param moduleId - The module identifier (auth, i18n, cv-processing, etc.)
  * @returns Detailed module recovery state with metrics and history
- */
+  */
 export const getModuleState = https.onRequest(async (req, res) => {
   try {
     // CORS headers
