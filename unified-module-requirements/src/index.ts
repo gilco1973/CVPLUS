@@ -1,12 +1,26 @@
-// Main entry point for CVPlus Unified Module Requirements
-// This file will be populated during Phase 3.3 implementation
+import { createApp } from './app';
 
-export * from './models/index.js';
-export * from './lib/index.js';
-export * from './services/ValidationService.js';
-export * from './services/TemplateService.js';
-export * from './services/ReportingService.js';
-export * from './services/FileSystemService.js';
+const PORT = process.env['PORT'] || 3000;
 
-// Placeholder to satisfy TypeScript compilation
+async function startServer(): Promise<void> {
+  try {
+    const app = await createApp();
+
+    app.listen(PORT, () => {
+      console.log(`CVPlus Unified Module Requirements server running on port ${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`API docs: http://localhost:${PORT}/api/v1`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start server if this file is run directly
+if (require.main === module) {
+  void startServer();
+}
+
+export { createApp };
 export const version = '1.0.0';
