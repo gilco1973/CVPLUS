@@ -1,8 +1,8 @@
 {
   "run": {
-    "command": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
-    "startTime": "2025-09-16T17:35:56.478Z",
-    "endTime": "2025-09-16T17:36:26.015Z",
+    "command": "nx run-many --target=build --projects=core,auth,i18n,processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
+    "startTime": "2025-09-17T00:32:42.905Z",
+    "endTime": "2025-09-17T00:32:48.909Z",
     "inner": false
   },
   "tasks": [
@@ -10,9 +10,9 @@
       "taskId": "@cvplus/logging:build",
       "target": "build",
       "projectName": "@cvplus/logging",
-      "hash": "9526499355086303426",
-      "startTime": "2025-09-16T17:35:56.516Z",
-      "endTime": "2025-09-16T17:35:58.233Z",
+      "hash": "148217832359923066",
+      "startTime": "2025-09-17T00:32:42.942Z",
+      "endTime": "2025-09-17T00:32:45.515Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
@@ -21,75 +21,9 @@
       "taskId": "@cvplus/core:build",
       "target": "build",
       "projectName": "@cvplus/core",
-      "hash": "12308588309112704368",
-      "startTime": "2025-09-16T17:35:58.286Z",
-      "endTime": "2025-09-16T17:36:11.837Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 0
-    },
-    {
-      "taskId": "@cvplus/premium:build",
-      "target": "build",
-      "projectName": "@cvplus/premium",
-      "hash": "14601944230498059334",
-      "startTime": "2025-09-16T17:36:11.922Z",
-      "endTime": "2025-09-16T17:36:15.509Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 1
-    },
-    {
-      "taskId": "@cvplus/auth:build",
-      "target": "build",
-      "projectName": "@cvplus/auth",
-      "hash": "116864715867262410",
-      "startTime": "2025-09-16T17:36:11.922Z",
-      "endTime": "2025-09-16T17:36:16.082Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 1
-    },
-    {
-      "taskId": "@cvplus/i18n:build",
-      "target": "build",
-      "projectName": "@cvplus/i18n",
-      "hash": "17075190809628576526",
-      "startTime": "2025-09-16T17:36:11.922Z",
-      "endTime": "2025-09-16T17:36:16.241Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 0
-    },
-    {
-      "taskId": "@cvplus/recommendations:build",
-      "target": "build",
-      "projectName": "@cvplus/recommendations",
-      "hash": "2477616910733361249",
-      "startTime": "2025-09-16T17:36:15.509Z",
-      "endTime": "2025-09-16T17:36:18.926Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 1
-    },
-    {
-      "taskId": "frontend:build",
-      "target": "build",
-      "projectName": "frontend",
-      "hash": "13434128676674462010",
-      "startTime": "2025-09-16T17:36:16.257Z",
-      "endTime": "2025-09-16T17:36:19.491Z",
-      "params": "",
-      "cacheStatus": "cache-miss",
-      "status": 1
-    },
-    {
-      "taskId": "@cvplus/workflow:build",
-      "target": "build",
-      "projectName": "@cvplus/workflow",
-      "hash": "1315568799001648181",
-      "startTime": "2025-09-16T17:36:16.083Z",
-      "endTime": "2025-09-16T17:36:26.015Z",
+      "hash": "8674961062952800304",
+      "startTime": "2025-09-17T00:32:45.567Z",
+      "endTime": "2025-09-17T00:32:48.909Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 1

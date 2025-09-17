@@ -2,21 +2,7 @@
   "files": [],
   "references": [
     { "path": "./packages/logging" },
-    { "path": "./packages/core" },
-    { "path": "./packages/shell" },
-    { "path": "./packages/auth" },
-    { "path": "./packages/i18n" },
-    { "path": "./packages/processing" },
-    { "path": "./packages/multimedia" },
-    { "path": "./packages/analytics" },
-    { "path": "./packages/premium" },
-    { "path": "./packages/recommendations" },
-    { "path": "./packages/public-profiles" },
-    { "path": "./packages/admin" },
-    { "path": "./packages/workflow" },
-    { "path": "./packages/payments" },
-    { "path": "./frontend" },
-    { "path": "./functions" }
+    { "path": "./packages/core" }
   ],
   "compilerOptions": {
     "baseUrl": ".",

@@ -42,4 +42,4 @@
 	url = git@github.com:gilco1973/cvplus-enhancements.git
 [submodule "packages/processing"]
 	path = packages/processing
-	url = git@github.com:gilco1973/cvplus-cv-processing.git
+	url = git@github.com:gilco1973/cvplus-processing.git

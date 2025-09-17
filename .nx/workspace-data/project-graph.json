@@ -26176,11 +26176,6 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/processing",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
         "target": "@cvplus/i18n",
         "type": "static"
       },
@@ -26192,6 +26187,11 @@
       {
         "source": "@cvplus/public-profiles",
         "target": "@cvplus/multimedia",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "@cvplus/processing",
         "type": "static"
       },
       {
@@ -26333,16 +26333,6 @@
       },
       {
         "source": "@cvplus/recommendations",
-        "target": "npm:firebase",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/recommendations",
-        "target": "npm:firebase-admin",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/recommendations",
         "target": "npm:lodash",
         "type": "static"
       }
@@ -26360,7 +26350,7 @@
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:@types/node",
+        "target": "npm:@types/node@20.19.15",
         "type": "static"
       },
       {
@@ -26375,12 +26365,17 @@
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:@typescript-eslint/eslint-plugin",
+        "target": "npm:@types/nodemailer",
         "type": "static"
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:@typescript-eslint/parser",
+        "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/enhancements",
+        "target": "npm:@typescript-eslint/parser@6.21.0",
         "type": "static"
       },
       {
@@ -26390,12 +26385,12 @@
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:rimraf",
+        "target": "npm:rimraf@5.0.10",
         "type": "static"
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:tsup",
+        "target": "npm:tsup@7.2.0",
         "type": "static"
       },
       {
@@ -26410,7 +26405,12 @@
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:@vitest/coverage-v8",
+        "target": "npm:@vitest/coverage-v8@1.6.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/enhancements",
+        "target": "npm:@vitest/ui",
         "type": "static"
       },
       {
@@ -26445,22 +26445,37 @@
       },
       {
         "source": "@cvplus/enhancements",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/enhancements",
+        "target": "npm:@anthropic-ai/sdk",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/enhancements",
         "target": "npm:firebase-admin",
         "type": "static"
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:firebase-functions",
+        "target": "npm:firebase-functions@4.9.0",
         "type": "static"
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:googleapis",
+        "target": "npm:nodemailer",
         "type": "static"
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:ical-generator",
+        "target": "npm:googleapis@126.0.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/enhancements",
+        "target": "npm:ical-generator@4.1.0",
         "type": "static"
       },
       {
@@ -26475,7 +26490,7 @@
       },
       {
         "source": "@cvplus/enhancements",
-        "target": "npm:uuid",
+        "target": "npm:uuid@9.0.1",
         "type": "static"
       }
     ],
@@ -26734,7 +26749,7 @@
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:@types/jsdom",
+        "target": "npm:@types/jsdom@21.1.7",
         "type": "static"
       },
       {
@@ -26784,12 +26799,12 @@
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:@vitest/coverage-v8",
+        "target": "npm:@vitest/coverage-v8@1.6.1",
         "type": "static"
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:eslint",
+        "target": "npm:eslint@9.35.0",
         "type": "static"
       },
       {
@@ -26809,7 +26824,7 @@
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:vitest@2.1.9",
+        "target": "npm:vitest",
         "type": "static"
       },
       {
@@ -26874,12 +26889,12 @@
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:firebase-functions",
+        "target": "npm:firebase-functions@5.1.1",
         "type": "static"
       },
       {
         "source": "@cvplus/processing",
-        "target": "npm:jsdom",
+        "target": "npm:jsdom@25.0.1",
         "type": "static"
       },
       {
@@ -28388,7 +28403,7 @@
       },
       {
         "source": "cvplus-functions",
-        "target": "@cvplus/processing",
+        "target": "@cvplus/enhancements",
         "type": "static"
       },
       {
@@ -28413,17 +28428,17 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "@cvplus/processing",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "@cvplus/public-profiles",
         "type": "static"
       },
       {
         "source": "cvplus-functions",
         "target": "@cvplus/recommendations",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
-        "target": "npm:ioredis",
         "type": "static"
       },
       {
@@ -28513,7 +28528,22 @@
       },
       {
         "source": "cvplus-functions",
+        "target": "npm:ioredis",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
         "target": "npm:isomorphic-dompurify@2.26.0",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "npm:json2csv",
+        "type": "static"
+      },
+      {
+        "source": "cvplus-functions",
+        "target": "npm:jszip",
         "type": "static"
       },
       {
@@ -28574,16 +28604,6 @@
       {
         "source": "cvplus-functions",
         "target": "npm:validator",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
-        "target": "npm:json2csv",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
-        "target": "npm:jszip",
         "type": "static"
       }
     ],
@@ -59577,5 +59597,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1758068275509
+  "computedAt": 1758077888554
 }

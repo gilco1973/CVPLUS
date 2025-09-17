@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
-    "build": "nx run-many --target=build --projects=core,auth,i18n,cv-processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
+    "build": "nx run-many --target=build --projects=core,auth,i18n,processing,multimedia,analytics,premium,recommendations,public-profiles,admin,workflow,payments,frontend,functions",
     "build:graph": "nx dep-graph",
     "build:affected": "nx affected --target=build",
     "build:layer0": "npm run build --workspace=@cvplus/core",
