@@ -1,248 +1,249 @@
-# Implementation Plan: Frontend Unified Module with Microservices Architecture
+# Implementation Plan: Frontend Unified Module
 
-**Branch**: `012-frontend-unified-module` | **Date**: 2025-09-16 | **Spec**: [spec.md](./spec.md)
+**Branch**: `012-frontend-unified-module` | **Date**: 2025-09-17 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/012-frontend-unified-module/spec.md`
 
-## Execution Flow (/plan command scope)
-```
-1. Load feature spec from Input path
-   → Create unified frontend module with microservices architecture
-2. Fill Technical Context (scan for NEEDS CLARIFICATION)
-   → Detect Project Type: web application (frontend+backend)
-   → Set Structure Decision: Frontend microservices with domain separation
-3. Evaluate Constitution Check section below
-   → Frontend microservices maintain separation of concerns
-   → Each microservice follows CVPlus architectural patterns
-4. Execute Phase 0 → research.md (microservices architecture analysis)
-5. Execute Phase 1 → data-model.md, contracts/, quickstart.md, CLAUDE.md
-6. Re-evaluate Constitution Check section
-   → Microservices architecture approved for maintainability
-7. Plan Phase 2 → Task generation for microservices implementation
-8. STOP - Ready for /tasks command
-```
-
 ## Summary
-Create a unified `packages/frontend` module organized as domain-specific microservices, consolidating 985+ frontend files while maintaining separation of concerns through microservice architecture aligned with CVPlus domain boundaries.
+
+Comprehensive migration of ALL frontend code including massive root frontend application with 554+ TypeScript/React files from `/frontend/` directory to microservices architecture in `packages/frontend/`. This migration consolidates 295+ React components, 46+ hooks, 83+ services, 36+ pages, 67+ utilities, and 27+ type definitions into a unified, modular frontend architecture.
 
 ## Technical Context
-**Language/Version**: TypeScript 5.8+, React 19
-**Primary Dependencies**: Vite, Tailwind CSS, Firebase SDK, CVPlus packages
-**Storage**: Firebase Firestore, Local Storage, Session Storage
-**Testing**: Vitest, React Testing Library, Firebase Emulators
-**Target Platform**: Modern browsers, mobile-responsive web application
-**Project Type**: web - Frontend microservices within unified module
-**Performance Goals**: <200ms component load, 60fps animations, <3s initial load
-**Constraints**: Maintain domain boundaries, preserve existing functionality, ensure proper imports
-**Scale/Scope**: 985+ files, 10+ domain microservices, single source of truth
+
+**Language/Version**: TypeScript 5.8.3, React 19.1.0, Node.js (latest LTS)
+**Primary Dependencies**: React, Vite, Tailwind CSS, Firebase, React Router, Zustand, React Hook Form
+**Storage**: Firebase Firestore, Firebase Storage, Local Storage for caching
+**Testing**: Vitest, React Testing Library, Jest for unit tests
+**Target Platform**: Modern web browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
+**Project Type**: Web application with microservices frontend architecture
+**Performance Goals**: <3s initial load, <500ms component load, 60fps animations
+**Constraints**: Maintain existing functionality, preserve all user workflows, ensure modular boundaries
+**Scale/Scope**: 554+ files migration, 17 microservices, full CVPlus frontend consolidation
 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 **Simplicity**:
-- Projects: 1 (unified frontend module with internal microservices)
-- Using framework directly? Yes (React, Vite, Tailwind without unnecessary wrappers)
-- Single data model? Domain-specific models within microservices
-- Avoiding patterns? No unnecessary abstraction layers
+- Projects: 2 (frontend module + shared utilities)
+- Using React/Vite directly (no unnecessary wrappers)
+- Single component model (React components with TypeScript)
+- Avoiding anti-patterns (no prop drilling, clean separation of concerns)
 
 **Architecture**:
-- EVERY feature as library? Frontend microservices as internal libraries
-- Libraries listed: auth-ui, cv-processing-ui, multimedia-ui, analytics-ui, premium-ui, public-profiles-ui, admin-ui, workflow-ui, payments-ui, core-ui
-- CLI per library: Build scripts and dev tools for each microservice
-- Library docs: Complete documentation for each microservice
+- Frontend organized as microservices (auth-ui, processing-ui, premium-ui, etc.)
+- Libraries listed: shared components, domain-specific components, utilities, types
+- Each microservice exports clean public API
+- Documentation in each microservice README
 
 **Testing (NON-NEGOTIABLE)**:
-- RED-GREEN-Refactor cycle enforced? Tests written before implementation
-- Git commits show tests before implementation? Strict TDD enforcement
-- Order: Contract→Integration→E2E→Unit strictly followed
-- Real dependencies used? Firebase emulators for integration testing
-- Integration tests for: microservice boundaries, domain interactions
-- FORBIDDEN: Implementation before test, skipping RED phase
+- Comprehensive testing for all migrated components
+- Integration tests for microservice boundaries
+- End-to-end tests for critical user flows
+- No implementation without corresponding tests
 
 **Observability**:
-- Structured logging included? Per-microservice logging with domain context
-- Frontend logs → backend? Unified logging stream to analytics
-- Error context sufficient? Domain-specific error tracking
+- Structured logging for migration process
+- Error boundaries for all microservices
+- Performance monitoring for component loads
 
 **Versioning**:
-- Version number assigned? 1.0.0 with microservice versioning
-- BUILD increments on every change? Automated versioning per microservice
-- Breaking changes handled? Migration guides and backward compatibility
+- Version: 1.0.0 for unified frontend module
+- Breaking changes managed through microservice boundaries
+- Migration plan includes rollback procedures
 
 ## Project Structure
 
 ### Documentation (this feature)
 ```
 specs/012-frontend-unified-module/
-├── plan.md              # This file (/plan command output)
-├── research.md          # Phase 0 output (/plan command)
-├── data-model.md        # Phase 1 output (/plan command)
-├── quickstart.md        # Phase 1 output (/plan command)
-├── microservices.md     # Microservices architecture documentation
-└── tasks.md             # Phase 2 output (/tasks command)
+├── plan.md              # This file (comprehensive migration plan)
+├── research.md          # Analysis of current frontend structure
+├── data-model.md        # Component categorization and relationships
+├── quickstart.md        # Migration execution guide
+├── contracts/           # Microservice interfaces and boundaries
+└── tasks.md             # Detailed task breakdown (generated later)
 ```
 
-### Source Code (repository root)
+### Target Frontend Structure
 ```
 packages/frontend/
 ├── src/
 │   ├── microservices/
-│   │   ├── auth-ui/              # Authentication & session management UI
-│   │   │   ├── components/       # SignInDialog, AuthGuard, PermissionGate
-│   │   │   ├── hooks/            # useAuth, usePermissions, useSession
-│   │   │   ├── contexts/         # AuthContext, SessionContext
-│   │   │   ├── types/            # Auth-specific types
-│   │   │   └── index.ts          # Auth UI exports
-│   │   ├── cv-processing-ui/     # CV analysis & processing UI
-│   │   │   ├── components/       # CVUpload, CVPreview, AnalysisResults
-│   │   │   ├── hooks/            # useCV, useCVAnalysis, useCVGeneration
-│   │   │   ├── contexts/         # CVContext, AnalysisContext
-│   │   │   ├── types/            # CV processing types
-│   │   │   └── index.ts          # CV processing UI exports
-│   │   ├── multimedia-ui/        # Media generation & processing UI
-│   │   │   ├── components/       # VideoPlayer, AudioRecorder, ImageEditor
-│   │   │   ├── hooks/            # useMediaProcessing, useVideoGeneration
-│   │   │   └── index.ts          # Multimedia UI exports
-│   │   ├── analytics-ui/         # Analytics & reporting UI
-│   │   │   ├── components/       # Charts, Dashboards, Reports
-│   │   │   ├── hooks/            # useAnalytics, useMetrics
-│   │   │   └── index.ts          # Analytics UI exports
-│   │   ├── premium-ui/           # Premium features & billing UI
-│   │   │   ├── components/       # SubscriptionForm, FeatureGates
-│   │   │   ├── hooks/            # usePremium, useSubscription
-│   │   │   └── index.ts          # Premium UI exports
-│   │   ├── public-profiles-ui/   # Public profiles & social UI
-│   │   │   ├── components/       # ProfileViewer, SocialSharing
-│   │   │   ├── hooks/            # usePublicProfile, useSocialFeatures
-│   │   │   └── index.ts          # Public profiles UI exports
-│   │   ├── admin-ui/            # Admin tools & monitoring UI
-│   │   │   ├── components/       # AdminDashboard, UserManagement
-│   │   │   ├── hooks/            # useAdmin, useSystemMetrics
-│   │   │   └── index.ts          # Admin UI exports
-│   │   ├── workflow-ui/         # Job workflow & management UI
-│   │   │   ├── components/       # WorkflowBuilder, JobTracker
-│   │   │   ├── hooks/            # useWorkflow, useJobManagement
-│   │   │   └── index.ts          # Workflow UI exports
-│   │   ├── payments-ui/         # Payment processing UI
-│   │   │   ├── components/       # PaymentForm, BillingHistory
-│   │   │   ├── hooks/            # usePayments, useTransactions
-│   │   │   └── index.ts          # Payments UI exports
-│   │   └── core-ui/             # Shared UI components & utilities
-│   │       ├── components/       # Layout, Navigation, Common UI
-│   │       ├── hooks/            # useTheme, useI18n, useNavigation
-│   │       ├── contexts/         # ThemeContext, I18nContext
-│   │       ├── types/            # Shared frontend types
-│   │       ├── utils/            # Shared utilities
-│   │       └── index.ts          # Core UI exports
-│   ├── app/                      # Main application shell
-│   │   ├── App.tsx               # Root application component
-│   │   ├── main.tsx              # Application entry point
-│   │   └── providers.tsx         # Application providers wrapper
-│   ├── shared/                   # Cross-microservice shared code
-│   │   ├── components/           # Truly shared components
-│   │   ├── hooks/                # Cross-domain hooks
-│   │   ├── types/                # Global types
-│   │   └── utils/                # Global utilities
-│   └── index.ts                  # Main module exports
-├── public/                       # Static assets
-├── tests/                        # Cross-microservice tests
-│   ├── integration/              # Microservice integration tests
-│   └── e2e/                      # End-to-end tests
-├── docs/                         # Frontend module documentation
-├── package.json                  # Dependencies and scripts
-├── tsconfig.json                 # TypeScript configuration
-├── vite.config.ts                # Build configuration
-└── vitest.config.ts              # Test configuration
+│   │   ├── auth-ui/           # Authentication & user management
+│   │   ├── processing-ui/     # CV processing & analysis
+│   │   ├── premium-ui/        # Premium features & billing
+│   │   ├── admin-ui/          # Admin tools & monitoring
+│   │   ├── analytics-ui/      # Analytics & reporting
+│   │   ├── multimedia-ui/     # Video/audio/media generation
+│   │   ├── public-profiles-ui/# Public profile management
+│   │   ├── workflow-ui/       # Job workflow management
+│   │   ├── payments-ui/       # Payment processing
+│   │   ├── shell-ui/          # Main orchestration layer
+│   │   └── core-ui/           # Shared components & utilities
+│   ├── shared/
+│   │   ├── components/        # Cross-cutting UI components
+│   │   ├── hooks/             # Shared React hooks
+│   │   ├── utils/             # Utility functions
+│   │   ├── types/             # Shared TypeScript types
+│   │   └── services/          # Cross-cutting services
+│   └── index.ts               # Public API exports
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
 ```
 
-**Structure Decision**: Frontend microservices within unified module for domain separation with shared infrastructure
+**Structure Decision**: Web application with microservices frontend architecture
 
-## Phase 0: Outline & Research
+## Phase 0: Current State Analysis & Research
 
-### Microservices Architecture Research
-1. **Frontend Microservices Patterns**:
-   - Domain-driven design applied to frontend architecture
-   - Independent deployability within unified module
-   - Shared infrastructure with domain isolation
-   - Cross-cutting concerns handled by core-ui microservice
+### Root Frontend Analysis Results
 
-2. **CVPlus Domain Mapping**:
-   - Each CVPlus backend module gets corresponding frontend microservice
-   - Clear boundaries between authentication, CV processing, multimedia, etc.
-   - Shared components in core-ui for common functionality
-   - Cross-domain communication through well-defined interfaces
+**Component Distribution**:
+- **Features components**: 91 files (largest category)
+- **CV-related components**: 23 files
+- **Common/Layout components**: 15 files
+- **Analysis components**: 13 files
+- **Pricing/Premium components**: 12 files
+- **Pages components**: 10 files
+- **Admin components**: 1 file
+- **Charts/Analytics components**: 1 file
 
-3. **Technical Implementation**:
-   - Barrel exports from each microservice
-   - Shared build system with microservice-specific optimization
-   - Independent testing strategies per microservice
-   - Unified deployment with microservice versioning
+**Hooks Distribution**:
+- **Total hooks**: 46 files
+- Domain-specific hooks (CV, templates, features)
+- Shared utility hooks (async mode, session, error recovery)
 
-**Output**: research.md with microservices architecture decisions and patterns
+**Services Distribution**:
+- **CV services**: Domain-specific CV processing
+- **Enhancement services**: CV improvement features
+- **Features services**: Feature management
+- **Performance services**: Optimization utilities
+- **Error recovery services**: Error handling
+- **Navigation services**: Routing utilities
 
-## Phase 1: Design & Contracts
+**Pages Distribution**:
+- **CV-focused pages**: CVAnalysisPage, CVFeaturesPage, CVPreviewPage
+- **Feature pages**: FeatureSelectionPage, FinalResultsPage
+- **Template pages**: EnhancedTemplatesPage
+- **Policy pages**: FairUsePolicyPage, AboutPage
 
-### Frontend Microservices Design
-1. **Microservice Boundaries**:
-   - auth-ui: Authentication, session management, permissions
-   - cv-processing-ui: CV upload, analysis, generation, preview
-   - multimedia-ui: Media processing, video generation, audio handling
-   - analytics-ui: Charts, dashboards, reporting, metrics
-   - premium-ui: Subscription management, billing, feature gates
-   - public-profiles-ui: Profile sharing, social features, testimonials
-   - admin-ui: System administration, user management, monitoring
-   - workflow-ui: Job management, workflow automation, task tracking
-   - payments-ui: Payment processing, transaction history, billing
-   - core-ui: Shared components, layout, navigation, theming
+**Output**: research.md documenting current frontend structure and categorization strategy
 
-2. **Cross-Microservice Contracts**:
-   - Event-driven communication between microservices
-   - Shared type definitions for cross-domain data
-   - API contracts for microservice interactions
-   - Error handling and state management patterns
+## Phase 1: Migration Design & Microservice Mapping
 
-3. **Shared Infrastructure**:
-   - Common build system and development tools
-   - Shared TypeScript configuration and linting
-   - Unified testing framework with microservice isolation
-   - Common styling system and design tokens
+### Component-to-Microservice Mapping
 
-**Output**: data-model.md, /contracts/*, quickstart.md, CLAUDE.md
+**Processing-UI Microservice**:
+- `/analysis/*` components (13 files)
+- `/cv-*` components (23 files)
+- `/enhancement/*` components
+- CV-related hooks and services
+- Pages: CVAnalysisPage, CVFeaturesPage, CVPreviewPage
 
-## Phase 2: Task Planning Approach
-*This section describes what the /tasks command will do - DO NOT execute during /plan*
+**Core-UI Microservice (Shared)**:
+- `/common/*` components (15 files)
+- `/layout/*` components
+- `/error-boundaries/*` components
+- `/help/*` components
+- Shared hooks and utilities
+
+**Premium-UI Microservice**:
+- `/pricing/*` components (12 files)
+- Premium features from `/features/*`
+- Billing-related components
+- Subscription management
+
+**Admin-UI Microservice**:
+- `/admin-integration/*` components (1 file)
+- Administrative features
+- User management tools
+
+**Analytics-UI Microservice**:
+- `/charts/*` components (1 file)
+- Performance monitoring components
+- Analytics dashboards
+
+**Multimedia-UI Microservice**:
+- Media-related features from `/features/*`
+- Video/audio components
+- Portal generation features
+
+**Shell-UI Microservice (Orchestration)**:
+- Main application pages
+- Navigation components
+- Top-level routing
+
+**Shared Libraries**:
+- Cross-cutting components, hooks, utilities, types
+- Common services used by multiple microservices
+
+**Output**: data-model.md with complete component categorization and microservice boundaries
+
+## Phase 2: Migration Task Planning Approach
 
 **Task Generation Strategy**:
-- Create each microservice structure and configuration
-- Migrate domain-specific components to appropriate microservices
-- Setup shared infrastructure and cross-microservice communication
-- Implement proper import/export patterns for microservices
-- Validate microservice boundaries and dependencies
+1. **Shared Infrastructure Setup** (Priority 1):
+   - Create shared libraries structure
+   - Set up microservice base templates
+   - Configure build system integration
 
-**Microservice Implementation Order**:
-1. Core Infrastructure: core-ui microservice setup
-2. Authentication Foundation: auth-ui microservice
-3. Domain Microservices: cv-processing-ui, multimedia-ui, analytics-ui
-4. Business Microservices: premium-ui, public-profiles-ui, payments-ui
-5. Operations Microservices: admin-ui, workflow-ui
-6. Integration & Testing: Cross-microservice integration and validation
+2. **Core Dependencies Migration** (Priority 2):
+   - Migrate shared components to core-ui
+   - Migrate shared hooks and utilities
+   - Migrate shared types and services
 
-**Estimated Output**: 45-50 numbered, ordered tasks for microservices implementation
+3. **Domain-Specific Migration** (Priority 3):
+   - Migrate components by microservice domain
+   - Update internal imports within each microservice
+   - Ensure proper exports for each microservice
+
+4. **Configuration & Build** (Priority 4):
+   - Migrate build configurations
+   - Update package.json dependencies
+   - Configure microservice module resolution
+
+5. **Cross-Reference Updates** (Priority 5):
+   - Update all external imports to @cvplus/frontend
+   - Fix circular dependencies
+   - Update relative path references
+
+6. **Verification & Testing** (Priority 6):
+   - Test each microservice independently
+   - Verify end-to-end functionality
+   - Performance validation
+
+7. **Final Cleanup** (Priority 7):
+   - Remove original root frontend directory
+   - Clean up temporary migration artifacts
+   - Update documentation
+
+**Ordering Strategy**:
+- Infrastructure before implementation
+- Shared dependencies before domain-specific code
+- Bottom-up approach (utilities → components → pages)
+- Microservice boundaries respected throughout
+
+**Estimated Output**: 35-40 numbered, ordered tasks in tasks.md covering complete migration
+
+## Phase 3+: Implementation Execution
+
+**Phase 3**: Detailed task generation (/tasks command creates tasks.md)
+**Phase 4**: Systematic migration execution following task order
+**Phase 5**: Verification, testing, and final cleanup
 
 ## Complexity Tracking
-*Microservices architecture justified for maintainability and domain separation*
 
-| Consideration | Justification | Alternative Rejected Because |
-|---------------|---------------|------------------------------|
-| Microservices Architecture | Maintains domain boundaries, improves maintainability, enables independent development | Monolithic frontend would create tight coupling between domains |
-| Multiple Microservices | Each CVPlus domain needs UI isolation, prevents cross-domain contamination | Single frontend module would mix authentication, payments, and CV processing concerns |
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| Large file count (554+ files) | Legacy application with extensive functionality | Partial migration would leave architectural inconsistency |
+| Multiple microservices (17) | Domain separation required for modularity | Monolithic structure violates CVPlus architecture |
+| Complex dependency mapping | Existing component interdependencies | Simplified structure would break existing functionality |
 
 ## Progress Tracking
-*This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 0: Research complete (frontend structure analyzed)
+- [x] Phase 1: Design complete (microservice mapping defined)
+- [x] Phase 2: Task planning complete (migration strategy outlined)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
@@ -250,30 +251,19 @@ packages/frontend/
 **Gate Status**:
 - [x] Initial Constitution Check: PASS
 - [x] Post-Design Constitution Check: PASS
-- [x] All technical constraints resolved
-- [x] Microservices architecture approved for domain separation
+- [x] All NEEDS CLARIFICATION resolved
+- [x] Complexity deviations documented
+
+**Migration Milestones**:
+- [x] Specification updated with comprehensive scope
+- [x] Root frontend structure analyzed (554+ files catalogued)
+- [x] Microservice mapping strategy defined
+- [x] Component categorization completed
+- [ ] Shared libraries infrastructure created
+- [ ] Domain-specific migration execution
+- [ ] Import chain updates completed
+- [ ] End-to-end verification passed
+- [ ] Original frontend directory removed
 
 ---
-
-## Microservices Architecture Benefits
-
-### Domain Separation
-- **Clear Boundaries**: Each microservice handles a specific CVPlus domain
-- **Independent Development**: Teams can work on different microservices simultaneously
-- **Reduced Coupling**: Changes in one domain don't affect other domains
-- **Focused Testing**: Domain-specific testing strategies and coverage
-
-### Technical Benefits
-- **Modular Architecture**: Easy to understand, maintain, and extend
-- **Selective Loading**: Only load microservices needed for specific features
-- **Independent Versioning**: Each microservice can evolve at its own pace
-- **Shared Infrastructure**: Common build, test, and deployment processes
-
-### CVPlus Integration
-- **Backend Alignment**: Frontend microservices align with backend module structure
-- **API Consistency**: Each microservice consumes its corresponding backend APIs
-- **Type Safety**: Shared types between frontend and backend modules
-- **Security Boundaries**: Authentication and authorization per microservice
-
----
-*Based on Constitution v2.1.1 - Enhanced for Frontend Microservices Architecture*
+*Based on CVPlus Frontend Consolidation Requirements - Complete architectural compliance transformation*

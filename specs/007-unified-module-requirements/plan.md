@@ -45,6 +45,8 @@ Standardize all CVPlus submodules with consistent structural requirements, docum
 
 5. **Dependency Chain Integrity**: Each module MUST maintain the correct dependency chain without circular dependencies or architectural violations.
 
+6. **Pre-Creation Verification Principle**: Each module MUST NOT create new files BEFORE verifying those files and/or functionality exists in other modules it can import AND before verifying the missing functionality REALLY BELONGS TO ITS MODULE's RESPONSIBILITY and concern AND it does NOT break the CVPLUS architecture, responsibility and chain of dependencies.
+
 ## Technical Context
 **Language/Version**: TypeScript 5.0+, Node.js 18+
 **Primary Dependencies**: Varies by module (Firebase Functions, React, Express, etc.)

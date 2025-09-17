@@ -485,14 +485,8 @@ export const ARCHITECTURE_DATE = '2025-09-13';
 // ONE CLICK PORTAL FUNCTIONS
 // ============================================================================
 // Portal generation, chat, and analytics functions
-
-export {
-  generatePortal,
-  getPortalStatus,
-  startChatSession,
-  sendChatMessage,
-  getPortalAnalytics
-} from './portal';
+// NOTE: Portal functions are already exported above from @cvplus/public-profiles/backend
+// No additional portal exports needed here as they're available from the public-profiles submodule
 
 export const TOTAL_FUNCTIONS_COUNT = 166; // Updated count with portal functions
 export const ROOT_FUNCTIONS_COUNT = 4;

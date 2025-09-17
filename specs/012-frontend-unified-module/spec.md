@@ -5,34 +5,36 @@
 **Status**: Draft
 **Input**: User description: "frontend unified module: create a frontend  module to be the single source for all frontend web app for the project. migrate all frontend code from all other modules including the root to that frontend module"
 
+**Updated Scope**: Comprehensive migration of ALL frontend code including massive root frontend application with 295+ React components, 46+ hooks, 83+ services, 36+ pages, 67+ utilities, and 27+ type definitions from `/frontend/` directory to microservices architecture in `packages/frontend/`
+
 ## Execution Flow (main)
 ```
 1. Parse user description from Input
-   ’ Create unified frontend module as single source of truth for all web application code
+   ï¿½ Create unified frontend module as single source of truth for all web application code
 2. Extract key concepts from description
-   ’ Actors: developers, build system, deployment pipeline
-   ’ Actions: create module, migrate code, consolidate architecture
-   ’ Data: React components, TypeScript types, configuration files, assets
-   ’ Constraints: maintain functionality, preserve module boundaries, ensure proper imports
+   ï¿½ Actors: developers, build system, deployment pipeline
+   ï¿½ Actions: create module, migrate code, consolidate architecture
+   ï¿½ Data: React components, TypeScript types, configuration files, assets
+   ï¿½ Constraints: maintain functionality, preserve module boundaries, ensure proper imports
 3. For each unclear aspect:
-   ’ Build system integration approach specified
-   ’ Module structure follows CVPlus architectural patterns
+   ï¿½ Build system integration approach specified
+   ï¿½ Module structure follows CVPlus architectural patterns
 4. Fill User Scenarios & Testing section
-   ’ Development workflow remains seamless
-   ’ All frontend functionality preserved after migration
+   ï¿½ Development workflow remains seamless
+   ï¿½ All frontend functionality preserved after migration
 5. Generate Functional Requirements
-   ’ All requirements are testable and measurable
+   ï¿½ All requirements are testable and measurable
 6. Identify Key Entities
-   ’ Frontend module, component libraries, configuration files, build artifacts
+   ï¿½ Frontend module, component libraries, configuration files, build artifacts
 7. Run Review Checklist
-   ’ No implementation details specified in requirements
-   ’ All business requirements clearly defined
+   ï¿½ No implementation details specified in requirements
+   ï¿½ All business requirements clearly defined
 8. Return: SUCCESS (spec ready for planning)
 ```
 
 ---
 
-## ¡ Quick Guidelines
+## ï¿½ Quick Guidelines
 -  Focus on WHAT users need and WHY
 - L Avoid HOW to implement (no tech stack, APIs, code structure)
 - =e Written for business stakeholders, not developers
@@ -57,27 +59,67 @@ As a developer working on the CVPlus project, I need all frontend web applicatio
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
+
+#### Core Migration Requirements
 - **FR-001**: System MUST create a unified packages/frontend module that serves as the single source for all web application code
-- **FR-002**: System MUST migrate all React components (.tsx/.jsx files) from all existing modules to the unified frontend module
-- **FR-003**: System MUST migrate all TypeScript type definitions related to frontend from all modules to the unified frontend module
-- **FR-004**: System MUST migrate all frontend configuration files (package.json, tsconfig.json, vite.config.ts, etc.) from root frontend directory to the unified module
-- **FR-005**: System MUST migrate all static assets (HTML, CSS, images) from the root frontend directory to the unified module
-- **FR-006**: System MUST update all import statements across the codebase to reference @cvplus/frontend for frontend components and types
-- **FR-007**: System MUST preserve all existing frontend functionality during and after migration
-- **FR-008**: System MUST maintain proper module boundaries where backend modules do not contain frontend code
-- **FR-009**: System MUST ensure the unified frontend module follows CVPlus architectural patterns for git submodules
-- **FR-010**: System MUST preserve all environment configurations and build scripts in the unified module
-- **FR-011**: System MUST update the root-level build system to reference the unified frontend module
-- **FR-012**: System MUST remove all frontend code from non-frontend modules after successful migration
-- **FR-013**: System MUST maintain all existing npm dependencies related to frontend development in the unified module
+- **FR-002**: System MUST migrate ALL 295+ React components from root /frontend/ directory to appropriate microservices in packages/frontend
+- **FR-003**: System MUST migrate ALL 46+ React hooks from root /frontend/ directory to appropriate microservices in packages/frontend
+- **FR-004**: System MUST migrate ALL 83+ services from root /frontend/ directory to appropriate microservices in packages/frontend
+- **FR-005**: System MUST migrate ALL 36+ pages from root /frontend/ directory to appropriate microservices in packages/frontend
+- **FR-006**: System MUST migrate ALL 67+ utilities from root /frontend/ directory to appropriate microservices in packages/frontend
+- **FR-007**: System MUST migrate ALL 27+ type definitions from root /frontend/ directory to appropriate microservices in packages/frontend
+
+#### Microservice Organization Requirements
+- **FR-008**: System MUST organize migrated components by business domain across existing microservices (auth-ui, processing-ui, premium-ui, etc.)
+- **FR-009**: System MUST create shared libraries structure for cross-cutting concerns (shared/components, shared/hooks, shared/utils, shared/types)
+- **FR-010**: System MUST ensure each microservice is fully self-contained with proper exports and dependencies
+- **FR-011**: System MUST maintain clear microservice boundaries without circular dependencies
+
+#### Configuration & Build Requirements
+- **FR-012**: System MUST migrate all frontend configuration files (package.json, tsconfig.json, vite.config.ts, etc.) from root frontend directory to the unified module
+- **FR-013**: System MUST migrate all static assets (HTML, CSS, images) from the root frontend directory to the unified module
+- **FR-014**: System MUST preserve all environment configurations and build scripts in the unified module
+- **FR-015**: System MUST update the root-level build system to reference the unified frontend module
+- **FR-016**: System MUST maintain all existing npm dependencies related to frontend development in the unified module
+
+#### Import & Reference Updates
+- **FR-017**: System MUST update all import statements across the entire codebase to reference @cvplus/frontend for frontend components and types
+- **FR-018**: System MUST ensure proper module resolution for all microservice imports
+- **FR-019**: System MUST fix any circular dependencies created during migration
+
+#### Quality & Compliance Requirements
+- **FR-020**: System MUST preserve all existing frontend functionality during and after migration
+- **FR-021**: System MUST maintain proper module boundaries where backend modules do not contain frontend code
+- **FR-022**: System MUST ensure the unified frontend module follows CVPlus architectural patterns for git submodules
+- **FR-023**: System MUST verify each microservice builds independently and passes all tests
+- **FR-024**: System MUST remove original root frontend directory (/frontend/) after successful migration verification
 
 ### Key Entities *(include if feature involves data)*
-- **Frontend Module**: The new unified packages/frontend module containing all web application code, components, types, and configurations
-- **Source Locations**: Current frontend code scattered across root/frontend directory and various packages with .tsx/.jsx files
-- **Component Library**: All React components currently distributed across multiple modules that need consolidation
-- **Type Definitions**: TypeScript interfaces and types related to frontend functionality across modules
-- **Configuration Files**: Build, environment, and development configuration files for frontend tooling
-- **Import References**: All import statements across the codebase that reference frontend code and need updating
+
+#### Primary Data Entities
+- **Root Frontend Application**: Massive legacy frontend at `/frontend/` with 554+ TypeScript/React files requiring migration
+- **Unified Frontend Module**: Target packages/frontend module with microservices architecture containing all web application code
+- **Microservice Domains**: 17 existing UI microservices (auth-ui, processing-ui, premium-ui, admin-ui, etc.) that will receive migrated code
+- **Shared Libraries**: Common components, hooks, utilities, and types used across multiple microservices
+
+#### Migration Source Data
+- **React Components**: 295+ .tsx files from root frontend requiring domain-based categorization and migration
+- **React Hooks**: 46+ custom hooks requiring microservice assignment and dependency analysis
+- **Service Layer**: 83+ service files requiring domain mapping and import chain updates
+- **Page Components**: 36+ page-level components requiring orchestration layer assignment
+- **Utility Libraries**: 67+ utility functions requiring shared vs domain-specific categorization
+- **Type Definitions**: 27+ TypeScript type files requiring cross-microservice usage analysis
+
+#### Configuration & Build Entities
+- **Build Configurations**: package.json, tsconfig.json, vite.config.ts, eslint.config.js requiring migration and update
+- **Environment Files**: .env files, Firebase configurations requiring consolidation
+- **Static Assets**: HTML templates, CSS files, images requiring asset pipeline migration
+- **Dependency Chains**: npm dependencies requiring deduplication and proper microservice assignment
+
+#### Code Reference Entities
+- **Import Statements**: All import references across 13+ backend submodules requiring @cvplus/frontend updates
+- **Relative Path References**: Internal frontend imports requiring microservice-aware path resolution
+- **Circular Dependencies**: Potential dependency cycles requiring architectural resolution during migration
 
 ---
 

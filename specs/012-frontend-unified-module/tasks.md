@@ -275,11 +275,87 @@ import { ComponentName } from '../../../auth-ui/components/ComponentName';
 - **Development Experience**: IDE integration, automated validation, and clear error messages
 - **Performance Monitoring**: Bundle analysis and lazy loading validation per microservice
 
+## Root Frontend Migration (CRITICAL ADDITION)
+
+### Phase 3.X: Root Frontend Migration - Massive Legacy Migration
+**Source**: `/Users/gklainert/Documents/cvplus/frontend/` (554+ files)
+**Target**: `packages/frontend/src/microservices/` (distributed by domain)
+
+#### Critical Root Frontend Components Migration
+- [ ] T200 [P] Migrate features components (91 files) from frontend/src/components/features/ to appropriate microservices
+- [ ] T201 [P] Migrate CV-related components (23 files) from frontend/src/components/cv-* to processing-ui/components/
+- [ ] T202 [P] Migrate analysis components (13 files) from frontend/src/components/analysis/ to processing-ui/components/
+- [ ] T203 [P] Migrate pricing components (12 files) from frontend/src/components/pricing/ to premium-ui/components/
+- [ ] T204 [P] Migrate common/layout components (15 files) from frontend/src/components/common to core-ui/components/
+- [ ] T205 [P] Migrate pages components (10 files) from frontend/src/pages/ to shell-ui/pages/
+- [ ] T206 [P] Migrate enhancement components from frontend/src/components/enhancement/ to processing-ui/components/
+- [ ] T207 [P] Migrate admin-integration components from frontend/src/components/admin-integration/ to admin-ui/components/
+
+#### Root Frontend Hooks Migration (46+ files)
+- [ ] T208 [P] Migrate CV hooks from frontend/src/hooks/useCVGeneration.ts to processing-ui/hooks/
+- [ ] T209 [P] Migrate feature hooks from frontend/src/hooks/useFeature*.ts to appropriate microservices
+- [ ] T210 [P] Migrate premium hooks from frontend/src/hooks/usePremium.ts to premium-ui/hooks/
+- [ ] T211 [P] Migrate session hooks from frontend/src/hooks/useEnhancedSession.ts to auth-ui/hooks/
+- [ ] T212 [P] Migrate utility hooks from frontend/src/hooks/useAsync*.ts to core-ui/hooks/
+
+#### Root Frontend Services Migration (83+ files)
+- [ ] T213 [P] Migrate CV services from frontend/src/services/cv/ to processing-ui/services/
+- [ ] T214 [P] Migrate enhancement services from frontend/src/services/enhancement/ to processing-ui/services/
+- [ ] T215 [P] Migrate features services from frontend/src/services/features/ to appropriate microservices
+- [ ] T216 [P] Migrate performance services from frontend/src/services/performance/ to core-ui/services/
+- [ ] T217 [P] Migrate error-recovery services from frontend/src/services/error-recovery/ to core-ui/services/
+
+#### Root Frontend Pages Migration (36+ files)
+- [ ] T218 Migrate CVAnalysisPage.tsx from frontend/src/pages/ to processing-ui/pages/
+- [ ] T219 Migrate CVFeaturesPage.tsx from frontend/src/pages/ to processing-ui/pages/
+- [ ] T220 Migrate CVPreviewPage*.tsx from frontend/src/pages/ to processing-ui/pages/
+- [ ] T221 Migrate FeatureSelectionPage.tsx from frontend/src/pages/ to shell-ui/pages/
+- [ ] T222 Migrate EnhancedTemplatesPage.tsx from frontend/src/pages/ to processing-ui/pages/
+- [ ] T223 Migrate FinalResultsPage*.tsx from frontend/src/pages/ to shell-ui/pages/
+
+#### Root Frontend Utils and Types Migration (94+ files)
+- [ ] T224 [P] Migrate utility functions (67 files) from frontend/src/utils/ to appropriate microservices
+- [ ] T225 [P] Migrate type definitions (27 files) from frontend/src/types/ to shared/types/ and microservice types/
+- [ ] T226 [P] Migrate test utilities from frontend/src/__tests__/ to appropriate microservice test directories
+
+#### Root Frontend Configuration Migration
+- [ ] T227 Migrate frontend/package.json dependencies to packages/frontend/package.json
+- [ ] T228 Migrate frontend/vite.config.ts to packages/frontend/vite.config.ts
+- [ ] T229 Migrate frontend/tsconfig.json to packages/frontend/tsconfig.json
+- [ ] T230 Migrate frontend/tailwind.config.js to packages/frontend/tailwind.config.js
+- [ ] T231 Migrate frontend/.env* files to packages/frontend/
+- [ ] T232 Migrate frontend/index.html to packages/frontend/index.html
+
+#### Root Frontend Asset Migration
+- [ ] T233 [P] Migrate static assets from frontend/public/ to packages/frontend/public/
+- [ ] T234 [P] Migrate CSS files from frontend/src/styles/ to packages/frontend/src/styles/
+- [ ] T235 [P] Migrate image assets from frontend/src/assets/ to packages/frontend/src/assets/
+
+#### Root Frontend Import Path Updates (CRITICAL)
+- [ ] T236 Update all internal imports within migrated root frontend components
+- [ ] T237 Update all cross-references from backend modules to use @cvplus/frontend paths
+- [ ] T238 Fix circular dependencies created by root frontend migration
+- [ ] T239 Validate all migrated components still function correctly
+
+#### Root Frontend Cleanup
+- [ ] T240 Verify all 554+ files successfully migrated from root frontend
+- [ ] T241 Remove original root frontend directory: /Users/gklainert/Documents/cvplus/frontend/
+- [ ] T242 Update workspace configurations to remove root frontend references
+- [ ] T243 Final verification that no frontend code remains outside packages/frontend
+
 ## File Count Summary
-- **Total Files to Organize**: 985+ files from root frontend and package frontends
+- **Root Frontend Files**: 554+ files requiring migration from `/frontend/` directory
+  - **Components**: 295+ React components → distributed across microservices
+  - **Hooks**: 46+ React hooks → migrated to appropriate domains
+  - **Services**: 83+ service files → domain-specific microservices
+  - **Pages**: 36+ page components → shell-ui and domain pages
+  - **Utils**: 67+ utility functions → shared and domain-specific
+  - **Types**: 27+ TypeScript definitions → shared and microservice types
+- **Package Frontend Files**: Additional files from existing package frontend structure
+- **Total Migration Scope**: 554+ files from root + package reorganization
 - **Microservices Created**: 10 domain-specific microservices
 - **Shared Infrastructure**: Core-UI microservice + application shell
-- **Result**: Domain-separated architecture within unified module
+- **Result**: Complete consolidation of ALL frontend code in packages/frontend with domain separation
 
 ## Notes
 - [P] tasks = different microservices/domains, no dependencies
