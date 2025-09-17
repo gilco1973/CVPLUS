@@ -43,3 +43,6 @@
 [submodule "packages/processing"]
 	path = packages/processing
 	url = git@github.com:gilco1973/cvplus-processing.git
+[submodule "packages/frontend"]
+	path = packages/frontend
+	url = git@github.com:gilco1973/cvplus-frontend.git
