@@ -595,7 +595,8 @@
               "type-check",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "CVPlus recommendations system module with performance optimization and AI integration",
@@ -744,89 +745,56 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": []
       }
     },
-    "@cvplus/cv-processing": {
-      "name": "@cvplus/cv-processing",
+    "@cvplus/enhancements": {
+      "name": "@cvplus/enhancements",
       "type": "lib",
       "data": {
-        "root": "packages/cv-processing",
-        "name": "@cvplus/cv-processing",
+        "root": "packages/enhancements",
+        "name": "@cvplus/enhancements",
         "tags": [
           "npm:public",
+          "npm:cvplus",
           "npm:cv",
-          "npm:processing",
-          "npm:ai",
-          "npm:anthropic",
-          "npm:claude",
-          "npm:firebase",
-          "npm:pdf",
-          "npm:analysis",
-          "npm:generation",
-          "npm:external-data",
-          "npm:enrichment",
-          "npm:linkedin",
-          "npm:github",
-          "npm:web-scraping",
-          "npm:cvplus"
+          "npm:enhancements",
+          "npm:calendar",
+          "npm:booking",
+          "npm:networking",
+          "npm:career"
         ],
         "metadata": {
           "targetGroups": {
             "NPM Scripts": [
               "build",
-              "build:types",
-              "build:rollup",
-              "build:watch",
-              "clean",
               "dev",
+              "test",
+              "test:ui",
+              "test:coverage",
+              "type-check",
               "lint",
               "lint:fix",
-              "type-check",
-              "test",
-              "test:watch",
-              "test:ci",
-              "test:coverage",
-              "validate-dependencies"
+              "clean"
             ]
           },
-          "description": "CVPlus CV Processing - Core CV analysis, generation, and processing functionality with AI integration",
+          "description": "CVPlus CV Enhancement Features - Basic non-premium enhancements for all users",
           "js": {
-            "packageName": "@cvplus/cv-processing",
-            "packageExports": {
-              ".": {
-                "import": "./dist/index.esm.js",
-                "require": "./dist/index.js",
-                "types": "./dist/index.d.ts"
-              },
-              "./frontend": {
-                "import": "./dist/frontend/index.esm.js",
-                "require": "./dist/frontend/index.js",
-                "types": "./dist/frontend/index.d.ts"
-              },
-              "./backend": {
-                "import": "./dist/backend/index.esm.js",
-                "require": "./dist/backend/index.js",
-                "types": "./dist/backend/index.d.ts"
-              },
-              "./types": {
-                "import": "./dist/types/index.esm.js",
-                "require": "./dist/types/index.js",
-                "types": "./dist/types/index.d.ts"
-              },
-              "./shared": {
-                "import": "./dist/shared/index.esm.js",
-                "require": "./dist/shared/index.js",
-                "types": "./dist/shared/index.d.ts"
-              },
-              "./external-data": {
-                "import": "./dist/external-data/index.esm.js",
-                "require": "./dist/external-data/index.js",
-                "types": "./dist/external-data/index.d.ts"
-              }
-            },
+            "packageName": "@cvplus/enhancements",
             "packageMain": "dist/index.js",
             "isInPackageManagerWorkspaces": true
           }
@@ -838,7 +806,7 @@
               "script": "build"
             },
             "metadata": {
-              "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+              "scriptContent": "tsup",
               "runCommand": "npm run build"
             },
             "configurations": {},
@@ -852,65 +820,76 @@
             ],
             "cache": true
           },
-          "build:types": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build:types"
-            },
-            "metadata": {
-              "scriptContent": "tsc --project tsconfig.build.json",
-              "runCommand": "npm run build:types"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "build:rollup": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build:rollup"
-            },
-            "metadata": {
-              "scriptContent": "rollup -c",
-              "runCommand": "npm run build:rollup"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "build:watch": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "build:watch"
-            },
-            "metadata": {
-              "scriptContent": "npm run build:types -- --watch",
-              "runCommand": "npm run build:watch"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "clean": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "clean"
-            },
-            "metadata": {
-              "scriptContent": "rimraf dist",
-              "runCommand": "npm run clean"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
           "dev": {
             "executor": "nx:run-script",
             "options": {
               "script": "dev"
             },
             "metadata": {
-              "scriptContent": "npm run build:watch",
+              "scriptContent": "tsup --watch",
               "runCommand": "npm run dev"
             },
             "configurations": {},
             "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "vitest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:ui": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ui"
+            },
+            "metadata": {
+              "scriptContent": "vitest --ui",
+              "runCommand": "npm run test:ui"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "vitest --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
           },
           "lint": {
             "executor": "nx:run-script",
@@ -935,91 +914,20 @@
               "script": "lint:fix"
             },
             "metadata": {
-              "scriptContent": "npm run lint -- --fix",
+              "scriptContent": "eslint src --ext .ts,.tsx --fix",
               "runCommand": "npm run lint:fix"
             },
             "configurations": {},
             "parallelism": true
           },
-          "type-check": {
+          "clean": {
             "executor": "nx:run-script",
             "options": {
-              "script": "type-check"
+              "script": "clean"
             },
             "metadata": {
-              "scriptContent": "tsc --noEmit",
-              "runCommand": "npm run type-check"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "^production"
-            ],
-            "cache": true
-          },
-          "test": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test"
-            },
-            "metadata": {
-              "scriptContent": "vitest",
-              "runCommand": "npm run test"
-            },
-            "configurations": {},
-            "parallelism": true,
-            "inputs": [
-              "default",
-              "^production",
-              "{workspaceRoot}/jest.preset.js"
-            ],
-            "cache": true
-          },
-          "test:watch": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test:watch"
-            },
-            "metadata": {
-              "scriptContent": "vitest --watch",
-              "runCommand": "npm run test:watch"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "test:ci": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test:ci"
-            },
-            "metadata": {
-              "scriptContent": "vitest run",
-              "runCommand": "npm run test:ci"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "test:coverage": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "test:coverage"
-            },
-            "metadata": {
-              "scriptContent": "vitest run --coverage",
-              "runCommand": "npm run test:coverage"
-            },
-            "configurations": {},
-            "parallelism": true
-          },
-          "validate-dependencies": {
-            "executor": "nx:run-script",
-            "options": {
-              "script": "validate-dependencies"
-            },
-            "metadata": {
-              "scriptContent": "./scripts/validate-dependencies.sh",
-              "runCommand": "npm run validate-dependencies"
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -1468,6 +1376,285 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/processing": {
+      "name": "@cvplus/processing",
+      "type": "lib",
+      "data": {
+        "root": "packages/processing",
+        "name": "@cvplus/processing",
+        "tags": [
+          "npm:public",
+          "npm:cv",
+          "npm:processing",
+          "npm:ai",
+          "npm:anthropic",
+          "npm:claude",
+          "npm:firebase",
+          "npm:pdf",
+          "npm:analysis",
+          "npm:generation",
+          "npm:external-data",
+          "npm:enrichment",
+          "npm:linkedin",
+          "npm:github",
+          "npm:web-scraping",
+          "npm:cvplus"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "build",
+              "build:types",
+              "build:rollup",
+              "build:watch",
+              "clean",
+              "dev",
+              "lint",
+              "lint:fix",
+              "type-check",
+              "test",
+              "test:watch",
+              "test:ci",
+              "test:coverage",
+              "validate-dependencies"
+            ]
+          },
+          "description": "CVPlus CV Processing - Core CV analysis, generation, and processing functionality with AI integration",
+          "js": {
+            "packageName": "@cvplus/processing",
+            "packageExports": {
+              ".": {
+                "import": "./dist/index.esm.js",
+                "require": "./dist/index.js",
+                "types": "./dist/index.d.ts"
+              },
+              "./frontend": {
+                "import": "./dist/frontend/index.esm.js",
+                "require": "./dist/frontend/index.js",
+                "types": "./dist/frontend/index.d.ts"
+              },
+              "./backend": {
+                "import": "./dist/backend/index.esm.js",
+                "require": "./dist/backend/index.js",
+                "types": "./dist/backend/index.d.ts"
+              },
+              "./types": {
+                "import": "./dist/types/index.esm.js",
+                "require": "./dist/types/index.js",
+                "types": "./dist/types/index.d.ts"
+              },
+              "./shared": {
+                "import": "./dist/shared/index.esm.js",
+                "require": "./dist/shared/index.js",
+                "types": "./dist/shared/index.d.ts"
+              },
+              "./external-data": {
+                "import": "./dist/external-data/index.esm.js",
+                "require": "./dist/external-data/index.js",
+                "types": "./dist/external-data/index.d.ts"
+              }
+            },
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "npm run clean && npm run build:types && npm run build:rollup",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:types": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:types"
+            },
+            "metadata": {
+              "scriptContent": "tsc --project tsconfig.build.json",
+              "runCommand": "npm run build:types"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:rollup": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:rollup"
+            },
+            "metadata": {
+              "scriptContent": "rollup -c",
+              "runCommand": "npm run build:rollup"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:watch"
+            },
+            "metadata": {
+              "scriptContent": "npm run build:types -- --watch",
+              "runCommand": "npm run build:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "npm run build:watch",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint src --ext .ts,.tsx",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "lint:fix": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint:fix"
+            },
+            "metadata": {
+              "scriptContent": "npm run lint -- --fix",
+              "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "vitest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:watch": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:watch"
+            },
+            "metadata": {
+              "scriptContent": "vitest --watch",
+              "runCommand": "npm run test:watch"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:ci": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:ci"
+            },
+            "metadata": {
+              "scriptContent": "vitest run",
+              "runCommand": "npm run test:ci"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test:coverage": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:coverage"
+            },
+            "metadata": {
+              "scriptContent": "vitest run --coverage",
+              "runCommand": "npm run test:coverage"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "validate-dependencies": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "validate-dependencies"
+            },
+            "metadata": {
+              "scriptContent": "./scripts/validate-dependencies.sh",
+              "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/analytics": {
       "name": "@cvplus/analytics",
       "type": "lib",
@@ -1493,7 +1680,8 @@
               "test:watch",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "CVPlus Analytics Module - Core business intelligence, tracking, and performance analytics",
@@ -1501,8 +1689,8 @@
             "packageName": "@cvplus/analytics",
             "packageExports": {
               ".": {
-                "types": "./dist/index.d.ts",
-                "import": "./dist/index.esm.js",
+                "types": "./src/index.ts",
+                "import": "./dist/index.mjs",
                 "require": "./dist/index.js"
               }
             },
@@ -1627,6 +1815,18 @@
             "metadata": {
               "scriptContent": "./scripts/validate-dependencies.sh",
               "runCommand": "npm run validate-dependencies"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -2286,6 +2486,216 @@
         "implicitDependencies": []
       }
     },
+    "@cvplus/frontend": {
+      "name": "@cvplus/frontend",
+      "type": "app",
+      "data": {
+        "root": "packages/frontend",
+        "name": "@cvplus/frontend",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {
+            "NPM Scripts": [
+              "dev",
+              "build",
+              "build:lib",
+              "build:check",
+              "lint",
+              "preview",
+              "test",
+              "test:run",
+              "type-check",
+              "clean"
+            ]
+          },
+          "description": "CVPlus Frontend Unified Module - Single source for all web application components",
+          "js": {
+            "packageName": "@cvplus/frontend",
+            "packageExports": {
+              ".": {
+                "import": "./dist/index.js",
+                "types": "./dist/index.d.ts"
+              },
+              "./components": {
+                "import": "./dist/components/index.js",
+                "types": "./dist/components/index.d.ts"
+              },
+              "./hooks": {
+                "import": "./dist/hooks/index.js",
+                "types": "./dist/hooks/index.d.ts"
+              },
+              "./contexts": {
+                "import": "./dist/contexts/index.js",
+                "types": "./dist/contexts/index.d.ts"
+              },
+              "./types": {
+                "import": "./dist/types/index.js",
+                "types": "./dist/types/index.d.ts"
+              },
+              "./utils": {
+                "import": "./dist/utils/index.js",
+                "types": "./dist/utils/index.d.ts"
+              },
+              "./providers": {
+                "import": "./dist/providers/index.js",
+                "types": "./dist/providers/index.d.ts"
+              }
+            },
+            "packageMain": "dist/index.js",
+            "isInPackageManagerWorkspaces": true
+          }
+        },
+        "targets": {
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "metadata": {
+              "scriptContent": "vite",
+              "runCommand": "npm run dev"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build"
+            },
+            "metadata": {
+              "scriptContent": "tsc && vite build",
+              "runCommand": "npm run build"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "dependsOn": [
+              "^build"
+            ],
+            "inputs": [
+              "production",
+              "^production"
+            ],
+            "cache": true
+          },
+          "build:lib": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:lib"
+            },
+            "metadata": {
+              "scriptContent": "tsup",
+              "runCommand": "npm run build:lib"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "build:check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "build:check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit --skipLibCheck && vite build",
+              "runCommand": "npm run build:check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "lint"
+            },
+            "metadata": {
+              "scriptContent": "eslint .",
+              "runCommand": "npm run lint"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json"
+            ],
+            "cache": true
+          },
+          "preview": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "preview"
+            },
+            "metadata": {
+              "scriptContent": "vite preview",
+              "runCommand": "npm run preview"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "vitest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
+          },
+          "test:run": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test:run"
+            },
+            "metadata": {
+              "scriptContent": "vitest run",
+              "runCommand": "npm run test:run"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rm -rf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    },
     "@cvplus/payments": {
       "name": "@cvplus/payments",
       "type": "lib",
@@ -2687,7 +3097,8 @@
               "type-check:watch",
               "dev",
               "prepublishOnly",
-              "validate-dependencies"
+              "validate-dependencies",
+              "test"
             ]
           },
           "description": "CVPlus workflow management module for job processing, feature orchestration, templates, and certification badges",
@@ -2830,6 +3241,24 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "jest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
           }
         },
         "implicitDependencies": []
@@ -2858,12 +3287,31 @@
               "test",
               "test:watch",
               "lint",
-              "lint:fix"
+              "lint:fix",
+              "type-check",
+              "clean"
             ]
           },
           "description": "CVPlus comprehensive logging system with Firebase integration, PII redaction, and performance monitoring",
           "js": {
             "packageName": "@cvplus/logging",
+            "packageExports": {
+              ".": {
+                "import": "./dist/index.js",
+                "require": "./dist/index.js",
+                "types": "./dist/index.d.ts"
+              },
+              "./backend": {
+                "import": "./dist/backend/index.js",
+                "require": "./dist/backend/index.js",
+                "types": "./dist/backend/index.d.ts"
+              },
+              "./frontend": {
+                "import": "./dist/frontend/index.js",
+                "require": "./dist/frontend/index.js",
+                "types": "./dist/frontend/index.d.ts"
+              }
+            },
             "packageMain": "dist/index.js",
             "isInPackageManagerWorkspaces": true
           }
@@ -2956,6 +3404,35 @@
             "metadata": {
               "scriptContent": "eslint src/**/*.{ts,tsx} --fix",
               "runCommand": "npm run lint:fix"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "type-check": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "type-check"
+            },
+            "metadata": {
+              "scriptContent": "tsc --noEmit",
+              "runCommand": "npm run type-check"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production"
+            ],
+            "cache": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
             },
             "configurations": {},
             "parallelism": true
@@ -3242,7 +3719,8 @@
               "test:coverage",
               "lint",
               "lint:fix",
-              "validate-dependencies"
+              "validate-dependencies",
+              "clean"
             ]
           },
           "description": "Comprehensive admin dashboard module for CVPlus platform management",
@@ -3396,6 +3874,18 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": []
@@ -3423,7 +3913,9 @@
               "build",
               "lint",
               "preview",
-              "type-check"
+              "type-check",
+              "clean",
+              "test"
             ]
           },
           "description": "CVPlus Shell - Main orchestrator application for the CVPlus platform",
@@ -3511,6 +4003,36 @@
               "^production"
             ],
             "cache": true
+          },
+          "clean": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "clean"
+            },
+            "metadata": {
+              "scriptContent": "rimraf dist",
+              "runCommand": "npm run clean"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "test"
+            },
+            "metadata": {
+              "scriptContent": "jest",
+              "runCommand": "npm run test"
+            },
+            "configurations": {},
+            "parallelism": true,
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "cache": true
           }
         },
         "implicitDependencies": []
@@ -3596,7 +4118,7 @@
               "script": "test"
             },
             "metadata": {
-              "scriptContent": "jest",
+              "scriptContent": "jest --passWithNoTests",
               "runCommand": "npm run test"
             },
             "configurations": {},
@@ -25466,7 +25988,37 @@
       },
       {
         "source": "@cvplus/public-profiles",
+        "target": "npm:@testing-library/jest-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@testing-library/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
         "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/jsdom@21.1.7",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/mime-types",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:@types/qrcode",
         "type": "static"
       },
       {
@@ -25481,32 +26033,12 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:@types/qrcode",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/jsdom@21.1.7",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/cheerio",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@types/validator",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
         "target": "npm:@types/slug",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:@types/mime-types",
+        "target": "npm:@types/validator",
         "type": "static"
       },
       {
@@ -25517,16 +26049,6 @@
       {
         "source": "@cvplus/public-profiles",
         "target": "npm:@typescript-eslint/parser",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@testing-library/react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:@testing-library/jest-dom",
         "type": "static"
       },
       {
@@ -25566,7 +26088,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/core",
+        "target": "@cvplus/analytics",
         "type": "static"
       },
       {
@@ -25576,12 +26098,17 @@
       },
       {
         "source": "@cvplus/public-profiles",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
         "target": "@cvplus/i18n",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/cv-processing",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -25591,12 +26118,22 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "@cvplus/analytics",
+        "target": "@cvplus/processing",
         "type": "static"
       },
       {
         "source": "@cvplus/public-profiles",
         "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:express-rate-limit",
         "type": "static"
       },
       {
@@ -25616,12 +26153,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:react-helmet-async",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:qrcode",
+        "target": "npm:helmet",
         "type": "static"
       },
       {
@@ -25631,17 +26163,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:cheerio",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:helmet",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/public-profiles",
-        "target": "npm:express-rate-limit",
+        "target": "npm:mime-types",
         "type": "static"
       },
       {
@@ -25651,7 +26173,12 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:validator",
+        "target": "npm:qrcode",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/public-profiles",
+        "target": "npm:react-helmet-async",
         "type": "static"
       },
       {
@@ -25661,7 +26188,7 @@
       },
       {
         "source": "@cvplus/public-profiles",
-        "target": "npm:mime-types",
+        "target": "npm:validator",
         "type": "static"
       }
     ],
@@ -25728,12 +26255,7 @@
       },
       {
         "source": "@cvplus/recommendations",
-        "target": "npm:firebase",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/recommendations",
-        "target": "npm:firebase-admin",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -25742,235 +26264,125 @@
         "type": "static"
       }
     ],
-    "@cvplus/cv-processing": [
+    "@cvplus/enhancements": [
       {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:react",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:react-dom",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:typescript",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@rollup/plugin-commonjs",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@rollup/plugin-json",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@rollup/plugin-node-resolve",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@rollup/plugin-typescript",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/cheerio",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/jest",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/jsdom@21.1.7",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:@types/lodash",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/node",
+        "source": "@cvplus/enhancements",
+        "target": "npm:@types/uuid",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/pdfkit",
+        "source": "@cvplus/enhancements",
+        "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/react",
+        "source": "@cvplus/enhancements",
+        "target": "npm:@typescript-eslint/parser@6.21.0",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/react-dom",
+        "source": "@cvplus/enhancements",
+        "target": "npm:eslint",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/xml2js",
+        "source": "@cvplus/enhancements",
+        "target": "npm:rimraf@5.0.10",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@typescript-eslint/eslint-plugin",
+        "source": "@cvplus/enhancements",
+        "target": "npm:typescript",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@typescript-eslint/parser",
+        "source": "@cvplus/enhancements",
+        "target": "npm:vitest",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@vitejs/plugin-react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:@vitest/coverage-v8@1.6.1",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:eslint@9.34.0",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:rimraf",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:rollup",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:tslib",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:vitest@2.1.9",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@anthropic-ai/sdk",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "@cvplus/core",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:@types/react-dropzone",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/auth",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:axios",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/i18n",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:canvas",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/processing",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:cheerio",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/multimedia",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:clsx",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/analytics",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:csv-parser",
+        "source": "@cvplus/enhancements",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:firebase",
+        "source": "@cvplus/enhancements",
+        "target": "npm:@anthropic-ai/sdk",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:firebase-admin",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:firebase-functions@5.1.1",
+        "source": "@cvplus/enhancements",
+        "target": "npm:firebase-functions@4.9.0",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:jsdom@25.0.1",
+        "source": "@cvplus/enhancements",
+        "target": "npm:date-fns",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
+        "source": "@cvplus/enhancements",
         "target": "npm:lodash",
         "type": "static"
       },
       {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:mammoth",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:pdf-lib",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:pdfkit",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:react-dropzone",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:sharp@0.32.6",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:tailwind-merge@2.6.0",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "npm:xml2js",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/cv-processing",
-        "target": "@cvplus/analytics",
+        "source": "@cvplus/enhancements",
+        "target": "npm:uuid@9.0.1",
         "type": "static"
       }
     ],
@@ -26072,17 +26484,22 @@
       },
       {
         "source": "@cvplus/multimedia",
-        "target": "@cvplus/core",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/multimedia",
         "target": "@cvplus/auth",
         "type": "static"
       },
       {
         "source": "@cvplus/multimedia",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/multimedia",
         "target": "@cvplus/i18n",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/multimedia",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26162,17 +26579,254 @@
       },
       {
         "source": "@cvplus/multimedia",
-        "target": "npm:react-intersection-observer",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/multimedia",
         "target": "npm:react-hot-toast",
         "type": "static"
       },
       {
         "source": "@cvplus/multimedia",
+        "target": "npm:react-intersection-observer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/multimedia",
         "target": "npm:sharp",
+        "type": "static"
+      }
+    ],
+    "@cvplus/processing": [
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@rollup/plugin-commonjs",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@rollup/plugin-json",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@rollup/plugin-node-resolve",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@rollup/plugin-typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/jsdom@21.1.7",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/pdfkit",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/xml2js",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@vitest/coverage-v8@1.6.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:rimraf",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:rollup",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:tslib",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:vitest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@anthropic-ai/sdk",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "@cvplus/analytics",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:@types/react-dropzone",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:axios",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:canvas",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:cheerio",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:clsx",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:csv-parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:firebase",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:firebase-admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:firebase-functions@5.1.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:jsdom@25.0.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:mammoth",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:pdf-lib",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:pdfkit",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:puppeteer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:react-dropzone",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:sharp@0.32.6",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:tailwind-merge@2.6.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/processing",
+        "target": "npm:xml2js",
         "type": "static"
       }
     ],
@@ -26209,16 +26863,6 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "npm:@types/react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
-        "target": "npm:@types/react-dom",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/analytics",
         "target": "npm:@typescript-eslint/eslint-plugin@6.21.0",
         "type": "static"
       },
@@ -26229,7 +26873,7 @@
       },
       {
         "source": "@cvplus/analytics",
-        "target": "npm:@vitejs/plugin-react",
+        "target": "npm:@vitest/coverage-v8",
         "type": "static"
       },
       {
@@ -26460,6 +27104,298 @@
         "type": "static"
       }
     ],
+    "@cvplus/frontend": [
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@eslint/js",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@jest/globals",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@testing-library/jest-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@testing-library/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@types/jest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@types/react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@types/react-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@vitejs/plugin-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:autoprefixer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:eslint-plugin-react-hooks",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:eslint-plugin-react-refresh",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:globals",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:jsdom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:postcss",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:tailwindcss",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:tsup",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:typescript",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:vite",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:vitest",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/auth",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/i18n",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/processing",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/multimedia",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/analytics",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/premium",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/public-profiles",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/recommendations",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/admin",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/workflow",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "@cvplus/payments",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:@types/qrcode",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:axios",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:clsx",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:date-fns",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:diff",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:firebase",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:i18next",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:i18next-browser-languagedetector",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:i18next-http-backend",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:lucide-react",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:qrcode",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-dropzone",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-hot-toast",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-i18next",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-intersection-observer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:react-router-dom",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:tailwind-merge",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:tldts",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:web-vitals",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/frontend",
+        "target": "npm:zod",
+        "type": "static"
+      }
+    ],
     "@cvplus/payments": [
       {
         "source": "@cvplus/payments",
@@ -26538,17 +27474,17 @@
       },
       {
         "source": "@cvplus/payments",
-        "target": "@cvplus/core",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/payments",
         "target": "@cvplus/auth",
         "type": "static"
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:stripe@17.7.0",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26563,7 +27499,12 @@
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:firebase-functions",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
+        "target": "npm:@types/react-dom",
         "type": "static"
       },
       {
@@ -26573,17 +27514,17 @@
       },
       {
         "source": "@cvplus/payments",
+        "target": "npm:firebase-functions",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/payments",
         "target": "npm:react-dom",
         "type": "static"
       },
       {
         "source": "@cvplus/payments",
-        "target": "npm:@types/node",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/payments",
-        "target": "npm:@types/react-dom",
+        "target": "npm:stripe@17.7.0",
         "type": "static"
       }
     ],
@@ -26600,46 +27541,6 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:@types/node@20.19.11",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/lodash",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/uuid",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@types/express",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:typescript",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:rollup",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@rollup/plugin-typescript@11.1.6",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:@rollup/plugin-node-resolve@15.3.1",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
         "target": "npm:@rollup/plugin-commonjs@25.0.8",
         "type": "static"
       },
@@ -26650,7 +27551,42 @@
       },
       {
         "source": "@cvplus/workflow",
+        "target": "npm:@rollup/plugin-node-resolve@15.3.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
         "target": "npm:@rollup/plugin-terser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@rollup/plugin-typescript@11.1.6",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/express",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/node@20.19.11",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:@types/uuid",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:rollup",
         "type": "static"
       },
       {
@@ -26665,12 +27601,17 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:firebase-functions@4.9.0",
+        "target": "npm:typescript",
         "type": "static"
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:firebase-admin@11.11.1",
+        "target": "@cvplus/core",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26690,16 +27631,6 @@
       },
       {
         "source": "@cvplus/workflow",
-        "target": "npm:lodash",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
-        "target": "npm:uuid@9.0.1",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/workflow",
         "target": "npm:date-fns",
         "type": "static"
       },
@@ -26707,12 +27638,32 @@
         "source": "@cvplus/workflow",
         "target": "npm:express",
         "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:firebase-admin@11.11.1",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:firebase-functions@4.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:lodash",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/workflow",
+        "target": "npm:uuid@9.0.1",
+        "type": "static"
       }
     ],
     "@cvplus/logging": [
       {
         "source": "@cvplus/logging",
-        "target": "npm:@types/node",
+        "target": "npm:@types/node@18.19.124",
         "type": "static"
       },
       {
@@ -26784,22 +27735,17 @@
     "@cvplus/premium": [
       {
         "source": "@cvplus/premium",
-        "target": "npm:react",
-        "type": "static"
-      },
-      {
-        "source": "@cvplus/premium",
         "target": "npm:firebase",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:stripe",
+        "target": "npm:react",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@types/react",
+        "target": "npm:stripe",
         "type": "static"
       },
       {
@@ -26810,6 +27756,11 @@
       {
         "source": "@cvplus/premium",
         "target": "npm:@types/node@20.19.11",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@types/react",
         "type": "static"
       },
       {
@@ -26854,12 +27805,12 @@
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@stripe/stripe-js@4.10.0",
+        "target": "@cvplus/core",
         "type": "static"
       },
       {
         "source": "@cvplus/premium",
-        "target": "npm:@stripe/react-stripe-js@2.9.0",
+        "target": "@cvplus/logging",
         "type": "static"
       },
       {
@@ -26870,6 +27821,16 @@
       {
         "source": "@cvplus/premium",
         "target": "npm:@paypal/react-paypal-js@8.8.3",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@stripe/react-stripe-js@2.9.0",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/premium",
+        "target": "npm:@stripe/stripe-js@4.10.0",
         "type": "static"
       },
       {
@@ -26986,6 +27947,11 @@
       },
       {
         "source": "@cvplus/admin",
+        "target": "@cvplus/logging",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/admin",
         "target": "@cvplus/public-profiles",
         "type": "static"
       },
@@ -27038,6 +28004,11 @@
       },
       {
         "source": "@cvplus/shell",
+        "target": "npm:autoprefixer",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "npm:eslint",
         "type": "static"
       },
@@ -27048,7 +28019,17 @@
       },
       {
         "source": "@cvplus/shell",
+        "target": "npm:eslint-plugin-react-refresh",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
         "target": "npm:postcss",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/shell",
+        "target": "npm:tailwindcss",
         "type": "static"
       },
       {
@@ -27058,7 +28039,7 @@
       },
       {
         "source": "@cvplus/shell",
-        "target": "npm:vite",
+        "target": "npm:vite@4.5.14",
         "type": "static"
       },
       {
@@ -27237,12 +28218,12 @@
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:@types/jest",
+        "target": "npm:@types/cls-hooked",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:@types/cls-hooked",
+        "target": "npm:@types/jest",
         "type": "static"
       },
       {
@@ -27317,12 +28298,12 @@
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:tailwind-merge",
+        "target": "npm:nanoid@5.1.5",
         "type": "static"
       },
       {
         "source": "@cvplus/core",
-        "target": "npm:nanoid@5.1.5",
+        "target": "npm:tailwind-merge",
         "type": "static"
       }
     ],
@@ -27360,6 +28341,11 @@
       {
         "source": "@cvplus/i18n",
         "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "@cvplus/i18n",
+        "target": "npm:@vitest/coverage-v8",
         "type": "static"
       },
       {
@@ -27581,11 +28567,6 @@
       },
       {
         "source": "cvplus-functions",
-        "target": "@cvplus/cv-processing",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
         "target": "@cvplus/i18n",
         "type": "static"
       },
@@ -27641,11 +28622,6 @@
       },
       {
         "source": "cvplus-functions",
-        "target": "npm:@types/nodemailer@6.4.19",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
         "target": "npm:@types/qrcode",
         "type": "static"
       },
@@ -27657,11 +28633,6 @@
       {
         "source": "cvplus-functions",
         "target": "npm:cheerio",
-        "type": "static"
-      },
-      {
-        "source": "cvplus-functions",
-        "target": "npm:colors@1.4.0",
         "type": "static"
       },
       {
@@ -27803,16 +28774,6 @@
       },
       {
         "source": "frontend",
-        "target": "npm:@testing-library/user-event@14.6.1",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@types/diff@7.0.2",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "npm:@types/jest@30.0.0",
         "type": "static"
       },
@@ -27833,12 +28794,12 @@
       },
       {
         "source": "frontend",
-        "target": "npm:@typescript-eslint/eslint-plugin@8.40.0",
+        "target": "npm:@typescript-eslint/eslint-plugin",
         "type": "static"
       },
       {
         "source": "frontend",
-        "target": "npm:@typescript-eslint/parser@8.40.0",
+        "target": "npm:@typescript-eslint/parser",
         "type": "static"
       },
       {
@@ -27848,7 +28809,7 @@
       },
       {
         "source": "frontend",
-        "target": "npm:@vitejs/plugin-react-swc@3.11.0",
+        "target": "npm:autoprefixer",
         "type": "static"
       },
       {
@@ -27859,6 +28820,11 @@
       {
         "source": "frontend",
         "target": "npm:eslint-plugin-react-hooks@5.2.0",
+        "type": "static"
+      },
+      {
+        "source": "frontend",
+        "target": "npm:eslint-plugin-react-refresh",
         "type": "static"
       },
       {
@@ -27878,22 +28844,12 @@
       },
       {
         "source": "frontend",
-        "target": "npm:rollup-plugin-analyzer@4.0.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:tailwindcss-animate@1.0.7",
+        "target": "npm:tailwindcss",
         "type": "static"
       },
       {
         "source": "frontend",
         "target": "npm:typescript@5.8.3",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:typescript-eslint@8.40.0",
         "type": "static"
       },
       {
@@ -27908,72 +28864,7 @@
       },
       {
         "source": "frontend",
-        "target": "npm:webpack-bundle-analyzer@4.10.2",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "@cvplus/i18n",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@headlessui/react@2.2.7",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@heroicons/react@2.2.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@hookform/resolvers@5.2.1",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@radix-ui/react-dialog@1.1.15",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@radix-ui/react-dropdown-menu@2.1.16",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@radix-ui/react-select@2.2.6",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@radix-ui/react-tabs@1.1.13",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@radix-ui/react-toast@1.2.15",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@stripe/react-stripe-js@3.9.1",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@stripe/stripe-js@7.8.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@types/dompurify@3.0.5",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@types/file-saver@2.0.7",
         "type": "static"
       },
       {
@@ -27983,32 +28874,12 @@
       },
       {
         "source": "frontend",
-        "target": "npm:@types/react-audio-player@0.11.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:@types/wavesurfer.js@6.0.12",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "npm:axios",
         "type": "static"
       },
       {
         "source": "frontend",
-        "target": "npm:class-variance-authority@0.7.1",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "npm:clsx",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:colors@1.4.0",
         "type": "static"
       },
       {
@@ -28023,27 +28894,7 @@
       },
       {
         "source": "frontend",
-        "target": "npm:dompurify@3.2.6",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:file-saver@2.0.5",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "npm:firebase@12.1.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:framer-motion@12.23.12",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:html2canvas@1.4.1",
         "type": "static"
       },
       {
@@ -28059,16 +28910,6 @@
       {
         "source": "frontend",
         "target": "npm:i18next-http-backend@3.0.2",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:image-conversion@2.1.1",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:immer@10.1.1",
         "type": "static"
       },
       {
@@ -28093,32 +28934,12 @@
       },
       {
         "source": "frontend",
-        "target": "npm:react-audio-player@0.17.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:react-circular-progressbar@2.2.0",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:react-device-detect@2.2.3",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
         "target": "npm:react-dom@19.1.1",
         "type": "static"
       },
       {
         "source": "frontend",
         "target": "npm:react-dropzone",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:react-hook-form@7.62.0",
         "type": "static"
       },
       {
@@ -28143,12 +28964,12 @@
       },
       {
         "source": "frontend",
-        "target": "npm:recharts@3.1.2",
+        "target": "npm:tailwind-merge",
         "type": "static"
       },
       {
         "source": "frontend",
-        "target": "npm:tailwind-merge",
+        "target": "npm:tldts",
         "type": "static"
       },
       {
@@ -28159,11 +28980,6 @@
       {
         "source": "frontend",
         "target": "npm:zod@4.0.17",
-        "type": "static"
-      },
-      {
-        "source": "frontend",
-        "target": "npm:zustand@5.0.7",
         "type": "static"
       }
     ],
@@ -58138,5 +58954,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757973294075
+  "computedAt": 1758087951279
 }
