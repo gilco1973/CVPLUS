@@ -1,7 +1,7 @@
 /**
  * Simple Performance Tests
  * Basic performance validation tests that can run quickly
- */
+  */
 
 import { MockDataService } from '../../src/services/MockDataService';
 import { APITestingService } from '../../src/services/APITestingService';

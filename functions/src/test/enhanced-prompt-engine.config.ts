@@ -5,17 +5,17 @@
  * 
  * @author Gil Klainert
  * @version 1.0.0
- */
+  */
 
 import { ParsedCV } from '../types/enhanced-models';
 
 /**
  * Test data fixtures for different industry professionals
- */
+  */
 export const testFixtures = {
   /**
    * Technology professional with comprehensive background
-   */
+    */
   technologyProfessional: {
     personalInfo: {
       name: 'Alex Rodriguez',
@@ -52,7 +52,7 @@ export const testFixtures = {
 
   /**
    * Marketing professional with growth focus
-   */
+    */
   marketingProfessional: {
     personalInfo: {
       name: 'Maria Santos',
@@ -86,7 +86,7 @@ export const testFixtures = {
 
   /**
    * Finance professional with analytical background
-   */
+    */
   financeProfessional: {
     personalInfo: {
       name: 'David Kim',
@@ -120,7 +120,7 @@ export const testFixtures = {
 
   /**
    * Minimal CV for edge case testing
-   */
+    */
   minimalCV: {
     personalInfo: {
       name: 'John Doe'
@@ -129,7 +129,7 @@ export const testFixtures = {
 
   /**
    * CV with missing critical information
-   */
+    */
   incompleteCV: {
     personalInfo: {
       name: 'Jane Smith',
@@ -148,11 +148,11 @@ export const testFixtures = {
 
 /**
  * Mock responses for testing different scenarios
- */
+  */
 export const mockResponses = {
   /**
    * High-quality OpenAI response for technology professional
-   */
+    */
   technologyScript: {
     context: 'Experienced full-stack developer with expertise in modern web technologies and cloud architecture',
     optimization: 'Technology sector positioning with innovation focus and technical excellence',
@@ -172,7 +172,7 @@ export const mockResponses = {
 
   /**
    * Medium-quality response for testing fallbacks
-   */
+    */
   fallbackScript: {
     context: 'Professional with relevant experience and skills',
     optimization: 'General business positioning with professional focus',
@@ -192,7 +192,7 @@ export const mockResponses = {
 
   /**
    * Error response for testing error handling
-   */
+    */
   errorResponse: {
     error: 'API quota exceeded',
     code: 'insufficient_quota',
@@ -202,11 +202,11 @@ export const mockResponses = {
 
 /**
  * Test configuration settings
- */
+  */
 export const testConfig = {
   /**
    * Timeout settings for different test types
-   */
+    */
   timeouts: {
     unit: 5000,        // 5 seconds for unit tests
     integration: 15000, // 15 seconds for integration tests
@@ -215,7 +215,7 @@ export const testConfig = {
 
   /**
    * Quality thresholds for validation
-   */
+    */
   qualityThresholds: {
     minimum: 7.0,
     target: 8.5,
@@ -224,7 +224,7 @@ export const testConfig = {
 
   /**
    * Performance targets
-   */
+    */
   performance: {
     maxGenerationTime: 10000,  // 10 seconds
     maxScriptLength: 300,      // 300 words for long scripts
@@ -233,7 +233,7 @@ export const testConfig = {
 
   /**
    * Industry template validation
-   */
+    */
   industryValidation: {
     requiredTemplates: [
       'technology',
@@ -250,11 +250,11 @@ export const testConfig = {
 
 /**
  * Utility functions for testing
- */
+  */
 export const testUtils = {
   /**
    * Create a mock CV with specified characteristics
-   */
+    */
   createMockCV: (overrides: Partial<ParsedCV> = {}): ParsedCV => {
     const baseCV: ParsedCV = {
       personalInfo: {
@@ -285,7 +285,7 @@ export const testUtils = {
 
   /**
    * Validate script quality metrics
-   */
+    */
   validateQualityMetrics: (metrics: any): boolean => {
     return (
       typeof metrics.overallScore === 'number' &&
@@ -300,7 +300,7 @@ export const testUtils = {
 
   /**
    * Validate script content
-   */
+    */
   validateScriptContent: (script: string, cv: ParsedCV): boolean => {
     const wordCount = script.split(' ').length;
     const hasName = cv.personalInfo?.name ? script.includes(cv.personalInfo.name) : true;
@@ -312,7 +312,7 @@ export const testUtils = {
 
   /**
    * Generate random test data
-   */
+    */
   generateRandomCV: (): ParsedCV => {
     const names = ['Alice Johnson', 'Bob Wilson', 'Carol Davis', 'David Chen', 'Emily Rodriguez'];
     const companies = ['TechCorp', 'InnovateCo', 'GrowthLabs', 'DataSystems', 'CloudSolutions'];
@@ -342,7 +342,7 @@ export const testUtils = {
 
   /**
    * Mock OpenAI response generator
-   */
+    */
   createMockOpenAIResponse: (content: string) => ({
     choices: [
       {
@@ -355,7 +355,7 @@ export const testUtils = {
 
   /**
    * Mock industry template
-   */
+    */
   createMockTemplate: (templateId: string) => ({
     id: templateId,
     name: `${templateId.charAt(0).toUpperCase() + templateId.slice(1)} Template`,
@@ -381,18 +381,18 @@ export const testUtils = {
 
   /**
    * Delay utility for testing async operations
-   */
+    */
   delay: (ms: number): Promise<void> => 
     new Promise(resolve => setTimeout(resolve, ms))
 };
 
 /**
  * Jest setup helpers
- */
+  */
 export const jestHelpers = {
   /**
    * Setup mocks for enhanced prompt engine tests
-   */
+    */
   setupPromptEngineMocks: () => {
     // Mock OpenAI
     jest.mock('openai', () => ({
@@ -427,7 +427,7 @@ export const jestHelpers = {
 
   /**
    * Setup mocks for video generation tests
-   */
+    */
   setupVideoGenerationMocks: () => {
     // Mock Firebase Admin
     jest.mock('firebase-admin', () => ({
@@ -459,7 +459,7 @@ export const jestHelpers = {
 
   /**
    * Reset all mocks
-   */
+    */
   resetMocks: () => {
     jest.clearAllMocks();
     jest.resetModules();

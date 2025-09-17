@@ -6,7 +6,7 @@
  * 
  * @author Gil Klainert
  * @version 1.0.0
- */
+  */
 
 import { PerformanceMonitorService, VideoGenerationMetrics } from '../services/performance-monitor.service';
 import { AnalyticsEngineService, BusinessMetrics } from '../services/analytics-engine.service';
@@ -486,7 +486,7 @@ describe('Video Monitoring System', () => {
 
 /**
  * Test Configuration and Setup
- */
+  */
 describe('Monitoring System Configuration', () => {
   test('should enable and disable monitoring', () => {
     VideoMonitoringHooks.setMonitoringEnabled(false);
@@ -508,7 +508,7 @@ describe('Monitoring System Configuration', () => {
 
 /**
  * Performance Benchmarks
- */
+  */
 describe('Performance Benchmarks', () => {
   test('should complete monitoring operations within time limits', async () => {
     const startTime = Date.now();

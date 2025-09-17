@@ -10,7 +10,7 @@
  * @author Gil Klainert
  * @created 2025-08-19
  * @version 1.0
- */
+  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import * as admin from 'firebase-admin';

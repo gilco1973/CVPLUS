@@ -1,7 +1,7 @@
 /**
  * SubmoduleFlow entity model
  * Isolated test scenarios for individual CVPlus submodules with dependency mocking.
- */
+  */
 
 import { TestScenario } from './TestScenario';
 

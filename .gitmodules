@@ -25,9 +25,6 @@
 [submodule "packages/admin"]
 	path = packages/admin
 	url = git@github.com:gilco1973/cvplus-admin.git
-[submodule "packages/cv-processing"]
-	path = packages/cv-processing
-	url = git@github.com:gilco1973/cvplus-cv-processing.git
 [submodule "packages/payments"]
 	path = packages/payments
 	url = git@github.com:gilco1973/cvplus-payments.git
@@ -40,3 +37,12 @@
 [submodule "packages/shell"]
 	path = packages/shell
 	url = git@github.com:gilco1973/cvplus-shell.git
+[submodule "packages/enhancements"]
+	path = packages/enhancements
+	url = git@github.com:gilco1973/cvplus-enhancements.git
+[submodule "packages/processing"]
+	path = packages/processing
+	url = git@github.com:gilco1973/cvplus-processing.git
+[submodule "packages/frontend"]
+	path = packages/frontend
+	url = git@github.com:gilco1973/cvplus-frontend.git

@@ -1,7 +1,7 @@
 /**
  * RegressionBaseline entity model
  * Historical test results used for comparative analysis and change detection.
- */
+  */
 
 export interface BaselineMetrics {
   responseTime: {

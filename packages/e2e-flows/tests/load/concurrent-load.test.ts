@@ -7,7 +7,7 @@
  * - Progressive load testing from 100 to 15K users
  * - Real-time monitoring and reporting
  * - System resource validation
- */
+  */
 
 import { LoadTestScenarios } from './load-test-scenarios';
 import { LoadTestResults } from './load-testing-framework';
@@ -46,7 +46,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 1: Baseline Load (100 concurrent users)
      * Purpose: Establish performance baseline
      * Expected: Error rate < 1%, Response time < 500ms
-     */
+      */
     test('should handle 100 concurrent users (baseline)', async () => {
       console.log('\n🔥 Starting Baseline Load Test (100 users)...');
 
@@ -74,7 +74,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 2: Medium Load (1,000 concurrent users)
      * Purpose: Test typical production load
      * Expected: Error rate < 2%, Response time < 1000ms
-     */
+      */
     test('should handle 1,000 concurrent users (medium load)', async () => {
       console.log('\n🔥 Starting Medium Load Test (1,000 users)...');
 
@@ -105,7 +105,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 3: High Load (5,000 concurrent users)
      * Purpose: Test peak hours capacity
      * Expected: Error rate < 3%, Response time < 2000ms
-     */
+      */
     test('should handle 5,000 concurrent users (high load)', async () => {
       console.log('\n🔥 Starting High Load Test (5,000 users)...');
 
@@ -138,7 +138,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 4: Stress Load (10,000 concurrent users) - PRIMARY TARGET
      * Purpose: Test maximum target capacity
      * Expected: Error rate < 5%, Response time < 3000ms
-     */
+      */
     test('should handle 10,000 concurrent users (stress load) - TARGET CAPACITY', async () => {
       console.log('\n🚀 Starting STRESS LOAD TEST (10,000 users) - PRIMARY TARGET!');
       console.log('   This is the primary test for 10K concurrent user validation');
@@ -201,7 +201,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 5: Break Point Test (15,000 concurrent users)
      * Purpose: Find system breaking point and failure modes
      * Expected: Higher error rates acceptable, focus on graceful degradation
-     */
+      */
     test('should identify system breaking point at 15,000+ concurrent users', async () => {
       console.log('\n💥 Starting BREAK POINT TEST (15,000 users)...');
       console.log('   Purpose: Identify system limits and failure patterns');
@@ -247,7 +247,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Test 6: Recovery Test (500 concurrent users after stress)
      * Purpose: Validate system recovery after high load
      * Expected: Return to baseline performance levels
-     */
+      */
     test('should recover to baseline performance after stress conditions', async () => {
       console.log('\n🔄 Starting RECOVERY TEST (500 users)...');
       console.log('   Purpose: Validate system recovery after stress testing');
@@ -304,7 +304,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
      * Comprehensive Suite: Run all load tests in sequence
      * Purpose: Complete validation from baseline to breaking point
      * Note: This test is optional and takes 2-3 hours to complete
-     */
+      */
     test.skip('should run complete load test suite (FULL VALIDATION)', async () => {
       console.log('\n🌟 Starting COMPLETE LOAD TEST SUITE...');
       console.log('   This comprehensive test takes 2-3 hours to complete');
@@ -338,7 +338,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
     /**
      * Performance regression test
      * Compare current performance against historical baselines
-     */
+      */
     test('should not show performance regression compared to baseline', async () => {
       console.log('\n📈 Running Performance Regression Detection...');
 
@@ -376,7 +376,7 @@ describe('Concurrent Load Testing - CVPlus E2E Flows', () => {
 
 /**
  * Individual service load tests
- */
+  */
 describe('Individual Service Load Testing', () => {
   let loadTestScenarios: LoadTestScenarios;
 
@@ -391,7 +391,7 @@ describe('Individual Service Load Testing', () => {
   /**
    * MockDataService load test
    * Test concurrent mock data generation
-   */
+    */
   test('should handle concurrent MockDataService operations under load', async () => {
     console.log('\n🧪 Testing MockDataService under load...');
 
@@ -431,7 +431,7 @@ describe('Individual Service Load Testing', () => {
   /**
    * APITestingService load test
    * Test concurrent API validations
-   */
+    */
   test('should handle concurrent APITestingService operations under load', async () => {
     console.log('\n🔌 Testing APITestingService under load...');
 
@@ -471,7 +471,7 @@ describe('Individual Service Load Testing', () => {
   /**
    * E2EFlowsService load test
    * Test concurrent E2E flow executions
-   */
+    */
   test('should handle concurrent E2EFlowsService operations under load', async () => {
     console.log('\n🔄 Testing E2EFlowsService under load...');
 

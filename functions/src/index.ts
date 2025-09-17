@@ -1,5 +1,5 @@
 // Import polyfills first
-import './utils/polyfills';
+import '@cvplus/core/utils/polyfills';
 import * as admin from 'firebase-admin';
 
 // ============================================================================
@@ -19,7 +19,7 @@ import * as admin from 'firebase-admin';
 // ✓ sendSchedulingEmail.ts - Email scheduling orchestration
 //
 // SUBMODULE ORGANIZATION:
-// ✓ packages/cv-processing/ - CV analysis, processing, and enhancement
+// ✓ packages/processing/ - CV analysis, processing, and enhancement
 // ✓ packages/multimedia/ - Media generation, podcasts, videos, QR codes
 // ✓ packages/analytics/ - Analytics, metrics, reporting, business intelligence
 // ✓ packages/workflow/ - Job monitoring, templates, feature management
@@ -64,12 +64,13 @@ if (!admin.apps.length) {
 // Calendar and Meeting Functions
 // export { bookMeeting } from './scripts/functions/bookMeeting'; // DISABLED FOR DEPLOYMENT
 // Calendar integration functions - DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   generateCalendarEvents,
   ... calendar functions temporarily disabled for deployment
 } from './scripts/functions/calendarIntegration';
-*/
+/*  */
 
 // ============================================================================
 // CV PROCESSING FUNCTIONS
@@ -77,21 +78,22 @@ export {
 // All CV processing, analysis, and enhancement functions
 
 // CV Processing Functions - Migrated to submodule (T041-T044)
-export { uploadCV } from '@cvplus/cv-processing/backend/functions/cv/upload';
-export { uploadCVFromUrl } from '@cvplus/cv-processing/backend/functions/cv/url';
-export { getCVStatus } from '@cvplus/cv-processing/backend/functions/cv/status';
-export { downloadProcessedCV } from '@cvplus/cv-processing/backend/functions/cv/download';
+export { uploadCV } from '@cvplus/processing/backend/functions/cv/upload';
+export { uploadCVFromUrl } from '@cvplus/processing/backend/functions/cv/url';
+export { getCVStatus } from '@cvplus/processing/backend/functions/cv/status';
+export { downloadProcessedCV } from '@cvplus/processing/backend/functions/cv/download';
 
 // Existing CV Processing Functions from submodules
 // CV Processing Functions from submodules - TEMPORARILY DISABLED FOR DEPLOYMENT
 // TODO: Re-enable after submodule dependencies are properly set up
-/*
+/* 
+  */
 export {
   processCV,
   generateCV,
   ... other functions temporarily disabled for deployment
-} from '@cvplus/cv-processing/backend';
-*/
+} from '@cvplus/processing/backend';
+/*  */
 
 // ============================================================================
 // MULTIMEDIA FUNCTIONS
@@ -104,12 +106,13 @@ export { generateVideo } from '@cvplus/multimedia/backend/functions/multimedia/v
 
 // Multimedia Functions from submodules - TEMPORARILY DISABLED FOR DEPLOYMENT
 // TODO: Re-enable after submodule dependencies are properly set up
-/*
+/* 
+  */
 export {
   podcastStatus,
   ... other multimedia functions temporarily disabled for deployment
 } from '@cvplus/multimedia/backend';
-*/
+/*  */
 
 // ============================================================================
 // ANALYTICS FUNCTIONS
@@ -151,12 +154,13 @@ export {
 // Job monitoring, templates, feature management, and workflow orchestration
 
 // Workflow functions - TEMPORARILY DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   injectCompletedFeatures,
   ... workflow functions disabled for deployment
 } from '@cvplus/workflow/backend';
-*/
+/*  */
 
 // ============================================================================
 // ADMIN FUNCTIONS
@@ -197,6 +201,13 @@ export { createPublicProfile } from '@cvplus/public-profiles/backend/functions/p
 export { viewPublicProfile } from '@cvplus/public-profiles/backend/functions/profile/view';
 export { updatePublicProfile } from '@cvplus/public-profiles/backend/functions/profile/update';
 export { contactProfileOwner } from '@cvplus/public-profiles/backend/functions/profile/contact';
+
+// Portal Functions - Migrated to public-profiles submodule
+export { generatePortal } from '@cvplus/public-profiles/backend/functions/portal/generatePortal';
+export { getPortalAnalytics } from '@cvplus/public-profiles/backend/functions/portal/getPortalAnalytics';
+export { getPortalStatus } from '@cvplus/public-profiles/backend/functions/portal/getPortalStatus';
+export { sendChatMessage } from '@cvplus/public-profiles/backend/functions/portal/sendChatMessage';
+export { startChatSession } from '@cvplus/public-profiles/backend/functions/portal/startChatSession';
 
 // Existing Public Profile Functions from submodules
 export {
@@ -275,6 +286,21 @@ export {
 } from '@cvplus/recommendations/backend';
 
 // ============================================================================
+// ENHANCEMENTS FUNCTIONS
+// ============================================================================
+// CV enhancement features, calendar integration, and professional networking
+
+export {
+  processEnhancements,
+  syncCalendar,
+  createBooking,
+  generateAvailabilityCalendar,
+  sendSchedulingEmail,
+  getCalendarData,
+  enhancementsHealthCheck
+} from '@cvplus/enhancements/backend';
+
+// ============================================================================
 // PAYMENTS FUNCTIONS
 // ============================================================================
 // Payment processing, subscriptions, and billing management
@@ -321,12 +347,13 @@ export {
 // Translation services and multi-language support
 
 // I18n functions - TEMPORARILY DISABLED FOR DEPLOYMENT
-/*
+/* 
+  */
 export {
   translateCV,
   ... i18n functions disabled for deployment
 } from '@cvplus/i18n/backend';
-*/
+/*  */
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -339,7 +366,7 @@ import { Request, Response } from 'express';
 
 /**
  * Health check endpoint for monitoring
- */
+  */
 export const healthCheck = onRequest(
   {
     timeoutSeconds: 30,
@@ -395,7 +422,7 @@ export const healthCheck = onRequest(
 
 /**
  * Cleanup expired data (scheduled function)
- */
+  */
 export const cleanupExpiredData = onSchedule(
   {
     schedule: '0 2 * * *', // Daily at 2 AM
@@ -458,14 +485,8 @@ export const ARCHITECTURE_DATE = '2025-09-13';
 // ONE CLICK PORTAL FUNCTIONS
 // ============================================================================
 // Portal generation, chat, and analytics functions
-
-export {
-  generatePortal,
-  getPortalStatus,
-  startChatSession,
-  sendChatMessage,
-  getPortalAnalytics
-} from './portal';
+// NOTE: Portal functions are already exported above from @cvplus/public-profiles/backend
+// No additional portal exports needed here as they're available from the public-profiles submodule
 
 export const TOTAL_FUNCTIONS_COUNT = 166; // Updated count with portal functions
 export const ROOT_FUNCTIONS_COUNT = 4;

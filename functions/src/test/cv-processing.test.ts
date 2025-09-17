@@ -1,7 +1,7 @@
 /**
  * Comprehensive CV Processing Tests for CVPlus
  * Tests the complete flow with Gil Klainert's CV content
- */
+  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import * as admin from 'firebase-admin';
@@ -33,7 +33,8 @@ EDUCATION: EMBA Northwestern/Tel Aviv (2019), M.A. Organizational Development (2
 
 // Expected parsed structure for validation
 // Expected parsed structure for validation (commented out as unused)
-/*
+/* 
+  */
 const _EXPECTED_PARSED_STRUCTURE = {
   personalInfo: {
     name: 'Gil Klainert',
@@ -83,7 +84,7 @@ const _EXPECTED_PARSED_STRUCTURE = {
     })
   ])
 };
-*/
+/*  */
 
 describe('CVPlus CV Processing Integration Tests', () => {
   let cvParser: CVParser;

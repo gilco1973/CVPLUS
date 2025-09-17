@@ -1,7 +1,7 @@
 /**
  * Performance Report Generator
  * Generates comprehensive HTML and JSON reports from performance test results
- */
+  */
 export interface PerformanceTestResult {
     testName: string;
     service: string;
@@ -48,27 +48,27 @@ export declare class PerformanceReportGenerator {
     constructor(outputDir?: string);
     /**
      * Add a performance test result
-     */
+      */
     addResult(result: PerformanceTestResult): void;
     /**
      * Add multiple results from a service
-     */
+      */
     addServiceResults(serviceName: string, serviceResults: Record<string, any>): void;
     /**
      * Generate complete performance report
-     */
+      */
     generateReport(): PerformanceReport;
     /**
      * Save report to JSON file
-     */
+      */
     saveJsonReport(filename?: string): Promise<string>;
     /**
      * Save report to HTML file
-     */
+      */
     saveHtmlReport(filename?: string): Promise<string>;
     /**
      * Generate dashboard with all reports
-     */
+      */
     generateDashboard(): Promise<string>;
     private generateSummary;
     private getSystemInfo;

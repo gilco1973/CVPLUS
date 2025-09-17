@@ -1,7 +1,7 @@
 /**
  * TestOrchestrator - Central coordinator for E2E test execution
  * Manages test lifecycle, resource allocation, and cross-service coordination
- */
+  */
 
 import { E2EFlowsService, MockDataService, APITestingService } from '../services';
 import { FirebaseIntegration } from '../integrations/firebase.integration';

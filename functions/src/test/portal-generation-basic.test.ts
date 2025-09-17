@@ -6,7 +6,7 @@
  *
  * @author CVPlus Team
  * @created 2025-09-14
- */
+  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 

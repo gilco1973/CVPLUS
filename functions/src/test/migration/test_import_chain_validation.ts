@@ -1,9 +1,10 @@
 /**
  * Import Chain Validation Test
- * Task: T005 - Contract test: Validate @cvplus/* import resolution
+ * Task: T005 - Contract test: Validate @cvplus/*  import resolution
+  */
  *
  * This test MUST FAIL initially to follow TDD principles
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import * as fs from 'fs';
@@ -12,7 +13,8 @@ import { execSync } from 'child_process';
 const FUNCTIONS_INDEX_PATH = '/Users/gklainert/Documents/cvplus/functions/src/index.ts';
 
 describe('Import Chain Validation', () => {
-  test('should have valid @cvplus/* import paths after migration', async () => {
+  test('should have valid @cvplus/*  import paths after migration', async () => {
+  */
     const indexContent = fs.readFileSync(FUNCTIONS_INDEX_PATH, 'utf8');
 
     // Extract all @cvplus imports
@@ -23,7 +25,7 @@ describe('Import Chain Validation', () => {
 
     // Expected imports after migration
     const expectedImports = [
-      '@cvplus/cv-processing/backend',
+      '@cvplus/processing/backend',
       '@cvplus/multimedia/backend',
       '@cvplus/analytics',
       '@cvplus/public-profiles/backend',

@@ -1,7 +1,7 @@
 /**
  * Performance Testing Utilities
  * Helper functions and classes for measuring and monitoring performance during tests
- */
+  */
 
 export interface PerformanceMetrics {
   duration: number;
@@ -46,7 +46,7 @@ export class PerformanceMonitor {
 
   /**
    * Start performance monitoring
-   */
+    */
   public start(): void {
     this.startTime = Date.now();
     this.startMemory = this.takeMemorySnapshot();
@@ -65,7 +65,7 @@ export class PerformanceMonitor {
 
   /**
    * Stop performance monitoring and return metrics
-   */
+    */
   public stop(): PerformanceMetrics {
     this.endTime = Date.now();
     this.isMonitoring = false;
@@ -83,21 +83,21 @@ export class PerformanceMonitor {
 
   /**
    * Record a successful operation
-   */
+    */
   public recordOperation(): void {
     this.operations++;
   }
 
   /**
    * Record an error
-   */
+    */
   public recordError(): void {
     this.errors++;
   }
 
   /**
    * Get current performance snapshot
-   */
+    */
   public getCurrentSnapshot(): Partial<PerformanceMetrics> {
     const currentTime = Date.now();
     const currentMemory = this.takeMemorySnapshot();
@@ -114,7 +114,7 @@ export class PerformanceMonitor {
 
   /**
    * Check if performance meets specified thresholds
-   */
+    */
   public meetsThresholds(thresholds: PerformanceThresholds): {
     passed: boolean;
     violations: string[];
@@ -188,7 +188,7 @@ export class PerformanceMonitor {
 
 /**
  * Performance test runner with automatic threshold checking
- */
+  */
 export class PerformanceTestRunner {
   private monitor: PerformanceMonitor;
 
@@ -198,7 +198,7 @@ export class PerformanceTestRunner {
 
   /**
    * Run a performance test with automatic monitoring
-   */
+    */
   public async runTest<T>(
     testName: string,
     testFunction: (monitor: PerformanceMonitor) => Promise<T>,
@@ -246,11 +246,11 @@ export class PerformanceTestRunner {
 
 /**
  * Utility functions for performance testing
- */
+  */
 export class PerformanceUtils {
   /**
    * Create a load test with specified concurrency and duration
-   */
+    */
   public static async createLoadTest<T>(
     operationFunction: () => Promise<T>,
     concurrency: number,
@@ -298,7 +298,7 @@ export class PerformanceUtils {
 
   /**
    * Measure memory usage of a function
-   */
+    */
   public static async measureMemoryUsage<T>(
     operation: () => Promise<T>
   ): Promise<{
@@ -342,7 +342,7 @@ export class PerformanceUtils {
 
   /**
    * Create a stress test that gradually increases load
-   */
+    */
   public static async createStressTest<T>(
     operationFunction: () => Promise<T>,
     initialConcurrency: number,
@@ -394,7 +394,7 @@ export class PerformanceUtils {
 
   /**
    * Benchmark function execution time
-   */
+    */
   public static async benchmark<T>(
     name: string,
     operation: () => Promise<T>,
@@ -446,7 +446,7 @@ export class PerformanceUtils {
 
   /**
    * Generate performance report
-   */
+    */
   public static generateReport(
     testName: string,
     metrics: PerformanceMetrics,
@@ -486,11 +486,11 @@ ${additionalData ? `## Additional Data\n${JSON.stringify(additionalData, null, 2
 
 /**
  * Performance assertion helpers for Jest tests
- */
+  */
 export const performanceAssertions = {
   /**
    * Assert that execution time is under threshold
-   */
+    */
   expectDurationUnder: (actual: number, threshold: number, message?: string) => {
     expect(actual).toBeLessThan(threshold);
     if (message) {
@@ -500,7 +500,7 @@ export const performanceAssertions = {
 
   /**
    * Assert that memory usage is under threshold
-   */
+    */
   expectMemoryUnder: (actual: number, threshold: number, message?: string) => {
     expect(actual).toBeLessThan(threshold);
     if (message) {
@@ -510,7 +510,7 @@ export const performanceAssertions = {
 
   /**
    * Assert that operations per second meets minimum threshold
-   */
+    */
   expectThroughputAbove: (actual: number, threshold: number, message?: string) => {
     expect(actual).toBeGreaterThan(threshold);
     if (message) {
@@ -520,7 +520,7 @@ export const performanceAssertions = {
 
   /**
    * Assert that error rate is under threshold
-   */
+    */
   expectErrorRateUnder: (actual: number, threshold: number, message?: string) => {
     expect(actual).toBeLessThan(threshold);
     if (message) {

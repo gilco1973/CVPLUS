@@ -1,7 +1,7 @@
 /**
  * Integration tests for generateCVPreview function
  * Tests the core functionality without complex mocking
- */
+  */
 
 describe('generateCVPreview Integration Tests', () => {
   

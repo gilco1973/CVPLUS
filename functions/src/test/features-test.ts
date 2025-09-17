@@ -5,7 +5,7 @@ import { ParsedCV } from '../services/cvParser';
 
 /**
  * Test script to verify Contact Form and Social Media Links features
- */
+  */
 async function testFeatures() {
   console.log('🧪 Testing Contact Form and Social Media Links Features');
   console.log('='.repeat(60));

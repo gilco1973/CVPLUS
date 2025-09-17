@@ -3,7 +3,7 @@
 /**
  * Manual CV Processing Test
  * Direct test execution without Jest for quick validation
- */
+  */
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';

@@ -1,7 +1,7 @@
 /**
  * Integration Performance Tests
  * Tests the integrated performance of all services working together
- */
+  */
 
 import { MockDataService } from '../../src/services/MockDataService';
 import { APITestingService } from '../../src/services/APITestingService';

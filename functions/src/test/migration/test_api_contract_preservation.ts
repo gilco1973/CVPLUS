@@ -3,7 +3,7 @@
  * Task: T004 - Contract test: Validate all 166+ function exports preserved
  *
  * This test MUST FAIL initially to follow TDD principles
- */
+  */
 
 import { describe, test, expect } from '@jest/globals';
 import * as fs from 'fs';
@@ -47,7 +47,7 @@ describe('API Contract Preservation', () => {
     const indexContent = fs.readFileSync(FUNCTIONS_INDEX_PATH, 'utf8');
 
     const criticalSubmodules = [
-      '@cvplus/cv-processing',
+      '@cvplus/processing',
       '@cvplus/multimedia',
       '@cvplus/analytics',
       '@cvplus/public-profiles',

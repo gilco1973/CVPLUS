@@ -1,7 +1,7 @@
 /**
  * Load Testing Utilities for CVPlus E2E Flows
  * Helper functions, monitoring tools, and analysis utilities for load testing
- */
+  */
 
 import { EventEmitter } from 'events';
 import { Worker } from 'worker_threads';
@@ -52,7 +52,7 @@ export interface LoadTestReport {
 
 /**
  * Real-time Load Test Monitor
- */
+  */
 export class LoadTestMonitor extends EventEmitter {
   private metrics: LoadTestMetrics[] = [];
   private monitoringInterval: NodeJS.Timeout | null = null;
@@ -68,7 +68,7 @@ export class LoadTestMonitor extends EventEmitter {
 
   /**
    * Start monitoring load test metrics
-   */
+    */
   startMonitoring(): void {
     if (this.isMonitoring) return;
 
@@ -114,7 +114,7 @@ export class LoadTestMonitor extends EventEmitter {
 
   /**
    * Stop monitoring
-   */
+    */
   stopMonitoring(): void {
     if (!this.isMonitoring) return;
 
@@ -129,7 +129,7 @@ export class LoadTestMonitor extends EventEmitter {
 
   /**
    * Update current metrics
-   */
+    */
   updateMetrics(users: number, rps: number, responseTime: number, errorRate: number): void {
     this.activeUsers = users;
     this.currentRPS = rps;
@@ -139,14 +139,14 @@ export class LoadTestMonitor extends EventEmitter {
 
   /**
    * Get collected metrics
-   */
+    */
   getMetrics(): LoadTestMetrics[] {
     return [...this.metrics];
   }
 
   /**
    * Generate real-time dashboard display
-   */
+    */
   displayRealtimeDashboard(): void {
     const latest = this.metrics[this.metrics.length - 1];
     if (!latest) return;
@@ -178,7 +178,7 @@ export class LoadTestMonitor extends EventEmitter {
 
 /**
  * Concurrent User Simulator using Worker Threads
- */
+  */
 export class ConcurrentUserSimulator {
   private workers: Worker[] = [];
 
@@ -188,7 +188,7 @@ export class ConcurrentUserSimulator {
 
   /**
    * Simulate concurrent users with realistic behavior patterns
-   */
+    */
   async simulateUsers(
     userCount: number,
     duration: number,
@@ -229,7 +229,7 @@ export class ConcurrentUserSimulator {
 
   /**
    * Simulate individual user behavior
-   */
+    */
   private async simulateIndividualUser(
     userId: string,
     duration: number,
@@ -264,7 +264,7 @@ export class ConcurrentUserSimulator {
 
   /**
    * Cleanup worker threads
-   */
+    */
   async cleanup(): Promise<void> {
     const terminationPromises = this.workers.map(worker => worker.terminate());
     await Promise.all(terminationPromises);
@@ -274,12 +274,12 @@ export class ConcurrentUserSimulator {
 
 /**
  * Load Test Report Generator
- */
+  */
 export class LoadTestReportGenerator {
 
   /**
    * Generate comprehensive load test report
-   */
+    */
   static generateReport(
     testName: string,
     targetUsers: number,
@@ -334,7 +334,7 @@ export class LoadTestReportGenerator {
 
   /**
    * Generate performance recommendations
-   */
+    */
   private static generateRecommendations(
     summary: any,
     metrics: LoadTestMetrics[]
@@ -387,7 +387,7 @@ export class LoadTestReportGenerator {
 
   /**
    * Calculate overall performance score (0-100)
-   */
+    */
   private static calculatePerformanceScore(summary: any): number {
     let score = 100;
 
@@ -416,7 +416,7 @@ export class LoadTestReportGenerator {
 
   /**
    * Export report to markdown file
-   */
+    */
   static exportToMarkdown(report: LoadTestReport, outputPath: string): void {
     const performanceScore = this.calculatePerformanceScore(report.summary);
     const grade = performanceScore >= 90 ? 'A' : performanceScore >= 80 ? 'B' :
@@ -476,7 +476,7 @@ ${this.generateMetricsTable(report.metrics.slice(0, 10))} <!-- First 10 metrics 
 
   /**
    * Generate simple ASCII chart for resource usage
-   */
+    */
   private static generateResourceChart(values: number[], label: string): string {
     if (values.length === 0) return 'No data available';
 
@@ -499,7 +499,7 @@ ${chart.join('\n')}
 
   /**
    * Generate metrics table
-   */
+    */
   private static generateMetricsTable(metrics: LoadTestMetrics[]): string {
     if (metrics.length === 0) return 'No metrics available';
 
@@ -516,7 +516,7 @@ ${chart.join('\n')}
 
   /**
    * Export report to JSON file
-   */
+    */
   static exportToJson(report: LoadTestReport, outputPath: string): void {
     fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
     console.log(`📊 JSON report exported to: ${outputPath}`);
@@ -525,12 +525,12 @@ ${chart.join('\n')}
 
 /**
  * Load Test Configuration Validator
- */
+  */
 export class LoadTestValidator {
 
   /**
    * Validate load test configuration
-   */
+    */
   static validateConfig(config: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -574,7 +574,7 @@ export class LoadTestValidator {
 
   /**
    * Validate system capacity for load test
-   */
+    */
   static validateSystemCapacity(targetUsers: number): { capable: boolean; warnings: string[] } {
     const warnings: string[] = [];
     const cpuCount = cpus().length;
@@ -609,13 +609,13 @@ export class LoadTestValidator {
 
 /**
  * Load Test Scenario Builder
- */
+  */
 export class LoadTestScenarioBuilder {
   private config: any = {};
 
   /**
    * Set target users
-   */
+    */
   withTargetUsers(users: number): LoadTestScenarioBuilder {
     this.config.targetUsers = users;
     return this;
@@ -623,7 +623,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Set test duration
-   */
+    */
   withDuration(seconds: number): LoadTestScenarioBuilder {
     this.config.duration = seconds;
     return this;
@@ -631,7 +631,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Set ramp-up duration
-   */
+    */
   withRampUp(seconds: number): LoadTestScenarioBuilder {
     this.config.rampUpDuration = seconds;
     return this;
@@ -639,7 +639,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Set think time between requests
-   */
+    */
   withThinkTime(milliseconds: number): LoadTestScenarioBuilder {
     this.config.thinkTime = milliseconds;
     return this;
@@ -647,7 +647,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Set request timeout
-   */
+    */
   withTimeout(milliseconds: number): LoadTestScenarioBuilder {
     this.config.timeout = milliseconds;
     return this;
@@ -655,7 +655,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Build the scenario configuration
-   */
+    */
   build(): any {
     const validation = LoadTestValidator.validateConfig(this.config);
     if (!validation.valid) {
@@ -667,7 +667,7 @@ export class LoadTestScenarioBuilder {
 
   /**
    * Build predefined scenario
-   */
+    */
   static buildScenario(type: 'baseline' | 'medium' | 'high' | 'stress'): any {
     const builder = new LoadTestScenarioBuilder();
 

@@ -5,7 +5,7 @@ import { ParsedCV } from '../types/job';
 /**
  * Comprehensive test suite for CV improvement functionality
  * This demonstrates the full workflow from analysis to transformation
- */
+  */
 
 // Sample CV data for testing
 const sampleCV: ParsedCV = {

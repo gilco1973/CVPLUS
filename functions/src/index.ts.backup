@@ -19,7 +19,7 @@ import * as admin from 'firebase-admin';
 // ✓ sendSchedulingEmail.ts - Email scheduling orchestration
 //
 // SUBMODULE ORGANIZATION:
-// ✓ packages/cv-processing/ - CV analysis, processing, and enhancement
+// ✓ packages/processing/ - CV analysis, processing, and enhancement
 // ✓ packages/multimedia/ - Media generation, podcasts, videos, QR codes
 // ✓ packages/analytics/ - Analytics, metrics, reporting, business intelligence
 // ✓ packages/workflow/ - Job monitoring, templates, feature management
@@ -77,10 +77,10 @@ export {
 // All CV processing, analysis, and enhancement functions
 
 // CV Processing Functions - Migrated to submodule (T041-T044)
-export { uploadCV } from '@cvplus/cv-processing/backend/functions/cv/upload';
-export { uploadCVFromUrl } from '@cvplus/cv-processing/backend/functions/cv/url';
-export { getCVStatus } from '@cvplus/cv-processing/backend/functions/cv/status';
-export { downloadProcessedCV } from '@cvplus/cv-processing/backend/functions/cv/download';
+export { uploadCV } from '@cvplus/processing/backend/functions/cv/upload';
+export { uploadCVFromUrl } from '@cvplus/processing/backend/functions/cv/url';
+export { getCVStatus } from '@cvplus/processing/backend/functions/cv/status';
+export { downloadProcessedCV } from '@cvplus/processing/backend/functions/cv/download';
 
 // Existing CV Processing Functions from submodules
 // CV Processing Functions from submodules - TEMPORARILY DISABLED FOR DEPLOYMENT
@@ -90,7 +90,7 @@ export {
   processCV,
   generateCV,
   ... other functions temporarily disabled for deployment
-} from '@cvplus/cv-processing/backend';
+} from '@cvplus/processing/backend';
 */
 
 // ============================================================================

@@ -1,7 +1,7 @@
 /**
  * Jest Global Teardown for Load Testing
  * Cleanup after high-concurrency load tests
- */
+  */
 
 import fs from 'fs';
 import path from 'path';

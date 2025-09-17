@@ -3,7 +3,7 @@
 /**
  * Contact Form Validation Test
  * Tests the complete contact form integration including Firebase compatibility
- */
+  */
 
 import { ContactFormFeature } from '../services/cv-generator/features/ContactFormFeature';
 import { ParsedCV } from '../services/cvParser';

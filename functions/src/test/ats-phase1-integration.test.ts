@@ -1,6 +1,6 @@
 /**
  * Integration tests for ATS Phase 1 implementation
- */
+  */
 
 import { AdvancedATSOptimizationService } from '../services/ats-optimization.service';
 import type { ParsedCV } from '../types/job';

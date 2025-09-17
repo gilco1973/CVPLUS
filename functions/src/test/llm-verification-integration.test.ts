@@ -20,7 +20,7 @@ import * as path from 'path';
  * 5. Error handling and fallback mechanisms
  * 6. Audit trail verification
  * 7. End-to-end integration test
- */
+  */
 
 // Gil Klainert's CV sample data for testing
 const GIL_KLAINERT_CV_DATA = {
@@ -247,7 +247,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 1: Configuration Validation
-   */
+    */
   async testConfigurationValidation(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -313,7 +313,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 2: Service Initialization
-   */
+    */
   async testServiceInitialization(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -360,7 +360,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 3: Standard CV Parsing (Baseline)
-   */
+    */
   async testStandardCVParsing(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -409,7 +409,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 4: Verified CV Parsing
-   */
+    */
   async testVerifiedCVParsing(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -466,7 +466,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 5: Error Handling and Fallback
-   */
+    */
   async testErrorHandlingAndFallback(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -522,7 +522,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 6: Performance Comparison
-   */
+    */
   async testPerformanceComparison(): Promise<ComparisonResults> {
     console.log('🧪 Testing performance comparison (standard vs verified)...');
     
@@ -599,7 +599,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Test 7: End-to-End Integration Test
-   */
+    */
   async testEndToEndIntegration(): Promise<TestResults> {
     const startTime = Date.now();
     
@@ -685,7 +685,7 @@ class LLMVerificationIntegrationTest {
 
   /**
    * Run all tests and generate comprehensive report
-   */
+    */
   async runAllTests(): Promise<{
     results: TestResults[];
     performanceComparison: ComparisonResults;

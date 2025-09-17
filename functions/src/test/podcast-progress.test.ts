@@ -1,6 +1,6 @@
 /**
  * Test suite for podcast progress tracking functionality
- */
+  */
 
 import { PodcastGenerationService } from '../services/podcast-generation.service';
 import * as admin from 'firebase-admin';

@@ -5,7 +5,7 @@ import { JobMonitoringService } from '../services/job-monitoring.service';
 /**
  * Comprehensive test suite to validate CV generation fixes
  * Tests all scenarios that previously caused jobs to get stuck
- */
+  */
 
 // Mock Firebase admin if not already initialized
 if (admin.apps.length === 0) {
@@ -40,7 +40,7 @@ describe('CV Generation Fix Validation', () => {
   
   /**
    * Test 1: Verify enhancedFeatures field is always initialized
-   */
+    */
   test('should initialize enhancedFeatures field even with empty features array', async () => {
     console.log('🧪 Test 1: Verifying enhancedFeatures initialization...');
     
@@ -80,7 +80,7 @@ describe('CV Generation Fix Validation', () => {
   
   /**
    * Test 2: Verify timeout handling prevents infinite hangs
-   */
+    */
   test('should handle timeouts gracefully without hanging', async () => {
     console.log('🧪 Test 2: Testing timeout handling...');
     
@@ -131,7 +131,7 @@ describe('CV Generation Fix Validation', () => {
   
   /**
    * Test 3: Verify stuck job monitoring works
-   */
+    */
   test('should detect and recover stuck jobs', async () => {
     console.log('🧪 Test 3: Testing stuck job recovery...');
     
@@ -166,7 +166,7 @@ describe('CV Generation Fix Validation', () => {
   
   /**
    * Test 4: Verify parallel feature processing doesn't cause issues
-   */
+    */
   test('should handle multiple features without conflicts', async () => {
     console.log('🧪 Test 4: Testing parallel feature processing...');
     
@@ -233,7 +233,7 @@ describe('CV Generation Fix Validation', () => {
   
   /**
    * Test 5: Verify job status is always properly updated
-   */
+    */
   test('should never leave jobs in generating status', async () => {
     console.log('🧪 Test 5: Testing job status updates...');
     
@@ -270,7 +270,7 @@ describe('CV Generation Fix Validation', () => {
 
 /**
  * Integration test runner
- */
+  */
 export async function runCVGenerationFixValidation(): Promise<void> {
   console.log('\n🚀 Starting CV Generation Fix Validation Suite...');
   

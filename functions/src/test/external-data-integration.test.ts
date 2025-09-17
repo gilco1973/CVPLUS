@@ -6,7 +6,7 @@
  * @author Gil Klainert
  * @created 2025-08-23
  * @version 1.0
- */
+  */
 
 import { 
   ExternalDataOrchestrator,
@@ -16,7 +16,7 @@ import {
   WebsiteAdapter,
   ValidationService,
   CacheService
-} from '@cvplus/cv-processing/external-data';
+} from '@cvplus/processing/external-data';
 
 describe('External Data Integration', () => {
   let orchestrator: ExternalDataOrchestrator;
