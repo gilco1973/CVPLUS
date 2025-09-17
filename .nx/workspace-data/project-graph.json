@@ -3939,7 +3939,7 @@
               "script": "test"
             },
             "metadata": {
-              "scriptContent": "jest",
+              "scriptContent": "jest --passWithNoTests",
               "runCommand": "npm run test"
             },
             "configurations": {},
@@ -7225,15 +7225,6 @@
         "hash": "sha512-uug3FEEGv0r+jrecvUUpbY8lLisvIjg6AAic6a2bSP5OEOLeJsDSnvhCDov7ipFFMXS3orMpzlmi0ZcuGkBbow=="
       }
     },
-    "npm:@types/node@20.19.15": {
-      "type": "npm",
-      "name": "npm:@types/node@20.19.15",
-      "data": {
-        "version": "20.19.15",
-        "packageName": "@types/node",
-        "hash": "sha512-W3bqcbLsRdFDVcmAM5l6oLlcl67vjevn8j1FPZ4nx+K5jNoWCh+FC/btxFoBPnvQlrHHDwfjp1kjIEDfwJ0Mog=="
-      }
-    },
     "npm:@types/node@20.19.14": {
       "type": "npm",
       "name": "npm:@types/node@20.19.14",
@@ -7241,6 +7232,15 @@
         "version": "20.19.14",
         "packageName": "@types/node",
         "hash": "sha512-gqiKWld3YIkmtrrg9zDvg9jfksZCcPywXVN7IauUGhilwGV/yOyeUsvpR796m/Jye0zUzMXPKe8Ct1B79A7N5Q=="
+      }
+    },
+    "npm:@types/node@20.19.15": {
+      "type": "npm",
+      "name": "npm:@types/node@20.19.15",
+      "data": {
+        "version": "20.19.15",
+        "packageName": "@types/node",
+        "hash": "sha512-W3bqcbLsRdFDVcmAM5l6oLlcl67vjevn8j1FPZ4nx+K5jNoWCh+FC/btxFoBPnvQlrHHDwfjp1kjIEDfwJ0Mog=="
       }
     },
     "npm:@types/node@18.19.124": {
@@ -57619,13 +57619,6 @@
         "type": "static"
       }
     ],
-    "npm:@types/node@20.19.15": [
-      {
-        "source": "npm:@types/node@20.19.15",
-        "target": "npm:undici-types",
-        "type": "static"
-      }
-    ],
     "npm:@types/node@20.19.14": [
       {
         "source": "npm:@types/node@20.19.14",
@@ -57667,6 +57660,13 @@
       {
         "source": "npm:firebase-functions@4.9.0",
         "target": "npm:firebase-admin@11.11.1",
+        "type": "static"
+      }
+    ],
+    "npm:@types/node@20.19.15": [
+      {
+        "source": "npm:@types/node@20.19.15",
+        "target": "npm:undici-types",
         "type": "static"
       }
     ],
@@ -59577,5 +59577,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1758066088248
+  "computedAt": 1758068275509
 }

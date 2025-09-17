@@ -2034,15 +2034,6 @@
         "hash": "sha512-uug3FEEGv0r+jrecvUUpbY8lLisvIjg6AAic6a2bSP5OEOLeJsDSnvhCDov7ipFFMXS3orMpzlmi0ZcuGkBbow=="
       }
     },
-    "npm:@types/node@20.19.15": {
-      "type": "npm",
-      "name": "npm:@types/node@20.19.15",
-      "data": {
-        "version": "20.19.15",
-        "packageName": "@types/node",
-        "hash": "sha512-W3bqcbLsRdFDVcmAM5l6oLlcl67vjevn8j1FPZ4nx+K5jNoWCh+FC/btxFoBPnvQlrHHDwfjp1kjIEDfwJ0Mog=="
-      }
-    },
     "npm:@types/node@20.19.14": {
       "type": "npm",
       "name": "npm:@types/node@20.19.14",
@@ -2050,6 +2041,15 @@
         "version": "20.19.14",
         "packageName": "@types/node",
         "hash": "sha512-gqiKWld3YIkmtrrg9zDvg9jfksZCcPywXVN7IauUGhilwGV/yOyeUsvpR796m/Jye0zUzMXPKe8Ct1B79A7N5Q=="
+      }
+    },
+    "npm:@types/node@20.19.15": {
+      "type": "npm",
+      "name": "npm:@types/node@20.19.15",
+      "data": {
+        "version": "20.19.15",
+        "packageName": "@types/node",
+        "hash": "sha512-W3bqcbLsRdFDVcmAM5l6oLlcl67vjevn8j1FPZ4nx+K5jNoWCh+FC/btxFoBPnvQlrHHDwfjp1kjIEDfwJ0Mog=="
       }
     },
     "npm:@types/node@18.19.124": {
@@ -51018,11 +51018,6 @@
       "type": "static"
     },
     {
-      "source": "npm:@types/node@20.19.15",
-      "target": "npm:undici-types",
-      "type": "static"
-    },
-    {
       "source": "npm:@types/express@4.17.3",
       "target": "npm:@types/body-parser",
       "type": "static"
@@ -52085,11 +52080,6 @@
     {
       "source": "npm:whatwg-url@7.1.0",
       "target": "npm:webidl-conversions@4.0.2",
-      "type": "static"
-    },
-    {
-      "source": "npm:@types/node@20.19.15",
-      "target": "npm:undici-types",
       "type": "static"
     },
     {
